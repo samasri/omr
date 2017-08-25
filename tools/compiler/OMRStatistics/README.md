@@ -1,5 +1,5 @@
 # OMR Statistics
-This is a clang plugin that runs on the source code of the file provided in the makefile and collects information about it. Listed below is each of this plugins functionalities.
+This is a clang plugin built for clang-3.8 that runs on the source code of the file provided in the makefile and collects information about it. Listed below is each of this plugins functionalities.
 
 # Print hierarchies
 Prints out all class hierarchies in this source file (and all its includes).
