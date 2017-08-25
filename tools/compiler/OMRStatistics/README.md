@@ -4,7 +4,9 @@ This is a clang plugin that runs on the source code of the file provided in the 
 # Print hierarchies
 Prints out all class hierarchies in this source file (and all its includes).
 ## Output Format
+```
 <Base Class Name> --> <Parent Class Name> --> ... --> <Top Class Name>
+```
 ## Known bug
 Sometimes (in 2 cases to be exact) a class would have 2 children, which results in one of the hierarchies to be broken.
 To explain when does this bug occur, consider the following 2 example hierarchies:
