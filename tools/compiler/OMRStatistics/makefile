@@ -27,14 +27,14 @@ SO = ./plugin.so
 CPP = plugin.cpp
 # Path to object file (temporary)
 O = plugin.o
-# Plugin name
-PL = omr-checker
+# Plugin name (in the source code)
+PL = omr-statistics
 # Variables & rules to test the plugin on OMR files
-CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -add-plugin -Xclang omr-checker
+CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -add-plugin -Xclang $(PL)
 
 # Test my plugin on the CodeGenerator classes
 default: $(SO)
-	@echo "Executing CodeGenerator with the new plugin..."
+	@echo Executing with the new plugin...
 	@echo "-----------------------------------------"
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -o $(O) -c $(SF) 
 
