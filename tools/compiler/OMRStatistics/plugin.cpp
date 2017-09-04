@@ -35,8 +35,9 @@
 
 #include "plugin.hpp"
 	   
-void OMRChecker::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecordDecl* inputClass, std::map<std::string, std::vector<std::string>> &map) {
+void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecordDecl* inputClass, std::map<std::string, std::vector<std::string>> &map) {
 	std::string className = inputClass->getQualifiedNameAsString();
+	
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
 		std::string functionName = (*A)->getNameAsString();
@@ -53,7 +54,7 @@ void OMRChecker::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecord
 	}
 }
 
-void OMRChecker::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDecl *decl, std::map<std::string, std::string> &map) {
+void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDecl *decl, std::map<std::string, std::string> &map) {
 	//Initializing variables preparing for the iterations
 	const CXXRecordDecl * currentClass = decl;
 	CXXRecordDecl::base_class_const_iterator BI, BE;
@@ -85,7 +86,7 @@ void OMRChecker::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDe
 	}
 }
 
-bool OMRChecker::ExtensibleClassCheckingVisitor::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
+bool OMRStatistics::ExtensibleClassCheckingVisitor::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
 	if(!decl || !decl->isClass() || !decl->hasDefinition()) return true;;
 	
 	recordFunctions(decl, Class2Methods);
@@ -94,35 +95,36 @@ bool OMRChecker::ExtensibleClassCheckingVisitor::VisitCXXRecordDecl(const CXXRec
 	return true;
 }
 
-OMRChecker::Hierarchy::~Hierarchy() {
+OMRStatistics::Hierarchy::~Hierarchy() {
 	//Delete the base and top to prevent memory leaks
 	delete base;
 	delete top;
 }
 
-bool OMRChecker::Hierarchy::operator==(const Hierarchy& other) {
+bool OMRStatistics::Hierarchy::operator==(const Hierarchy& other) {
 	return (base->name.compare(other.base->name) == 0);
 }
 
-bool OMRChecker::Hierarchy::operator==(const std::string other) {
+bool OMRStatistics::Hierarchy::operator==(const std::string other) {
 	return (base->name.compare(other) == 0);
 }
 
-bool OMRChecker::Hierarchy::operator!=(const Hierarchy& other) {
+bool OMRStatistics::Hierarchy::operator!=(const Hierarchy& other) {
 	return !(*this == other);
 }
 
-bool OMRChecker::Hierarchy::operator!=(const std::string other) {
+bool OMRStatistics::Hierarchy::operator!=(const std::string other) {
 	return !(*this == other);
 }
 
 //Tracks the occurences of each method, what classes, when overriden, and when overloaded
-OMRChecker::MethodTracker::MethodTracker(Hierarchy* hierarchy, std::string methodName, std::string className) {
+OMRStatistics::MethodTracker::MethodTracker(Hierarchy* hierarchy, std::string methodName, std::string className) {
 	//Instantiations
 	this->methodName = methodName;
 	classesOverriden = new std::unordered_set<std::string>();
 	class2NbOfTimesOverloaded = new std::map<std::string, int>();		nbOfOccurences = 1;
 	myHierarchy = hierarchy;
+	isOverloaded = 0;
 	
 	addOccurence(className);
 	
@@ -131,7 +133,7 @@ OMRChecker::MethodTracker::MethodTracker(Hierarchy* hierarchy, std::string metho
 	myHierarchy->methodTrackers->push_back(*this);
 }
 
-void OMRChecker::MethodTracker::addOccurence(std::string className) {
+void OMRStatistics::MethodTracker::addOccurence(std::string className) {
 	nbOfOccurences++;
 	
 	//Search classesOverriden for the current class where the method occurred
@@ -139,25 +141,28 @@ void OMRChecker::MethodTracker::addOccurence(std::string className) {
 	auto end = class2NbOfTimesOverloaded->end();
 	int nbOfOverloads = itr->second;
 	//If method already appeared in this class, then this is an overload
-	if(itr != end) itr->second = nbOfOverloads + 1;
+	if(itr != end) {
+		itr->second = nbOfOverloads + 1;
+		isOverloaded = 1;
+	}
 	else {
 		//This is the first occurrence for this method in this class
 		classesOverriden->insert(className);
-		class2NbOfTimesOverloaded->emplace(className, 1);
+		class2NbOfTimesOverloaded->emplace(className, 0);
 	}
 }
 
 
-bool OMRChecker::MethodTracker::operator==(const MethodTracker& other) {
+bool OMRStatistics::MethodTracker::operator==(const MethodTracker& other) {
 	return (methodName.compare(other.methodName) == 0);
 }
 
-bool OMRChecker::MethodTracker::operator==(const std::string other) {
+bool OMRStatistics::MethodTracker::operator==(const std::string other) {
 	return (methodName.compare(other) == 0);
 }
 
 //Search the top of each class hierarchy for the input class name
-OMRChecker::HierarchySearchResult* OMRChecker::OMRCheckingConsumer::isFoundInHierarchy(std::string child, std::string parent) {
+OMRStatistics::HierarchySearchResult* OMRStatistics::OMRCheckingConsumer::isFoundInHierarchy(std::string child, std::string parent) {
 	HierarchySearchResult* result = new HierarchySearchResult();
 	int counter = 0;
 			
@@ -184,7 +189,7 @@ OMRChecker::HierarchySearchResult* OMRChecker::OMRCheckingConsumer::isFoundInHie
 	return result;
 }
 
-void OMRChecker::OMRCheckingConsumer::refineHierarchies() {
+void OMRStatistics::OMRCheckingConsumer::refineHierarchies() {
 	//Record all bases and tops at that point
 	std::unordered_set<std::string>
 		*bases = new std::unordered_set<std::string>(), 
@@ -222,7 +227,7 @@ void OMRChecker::OMRCheckingConsumer::refineHierarchies() {
 	}
 }
 
-void OMRChecker::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std::string> &map) {
+void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std::string> &map) {
 	for(auto current : map) {
 		std::string currentClassName = current.first;
 		std::string currentParentName = current.second;
@@ -262,7 +267,7 @@ void OMRChecker::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std:
 	refineHierarchies();
 }
 
-void OMRChecker::OMRCheckingConsumer::printHierarchy() {
+void OMRStatistics::OMRCheckingConsumer::printHierarchy() {
 	for(Hierarchy* current : hierarchies) {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
@@ -275,7 +280,7 @@ void OMRChecker::OMRCheckingConsumer::printHierarchy() {
 	}
 }
 
-OMRChecker::MethodTracker* OMRChecker::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method) {
+OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method) {
 	auto trackers = hierarchy->methodTrackers;
 	auto b = trackers->begin();
 	auto e = trackers->end();
@@ -284,9 +289,10 @@ OMRChecker::MethodTracker* OMRChecker::OMRCheckingConsumer::searchForTracker(Hie
 	return nullptr;
 }
 
-void OMRChecker::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassCheckingVisitor &visitor) {
+void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassCheckingVisitor &visitor) {
 	for(auto hierarchy : hierarchies) {
 		LinkedNode* current = hierarchy->base;
+		auto map = visitor.Class2Methods;
 		//Iterate through each hierarchy's classes
 		while(current) {
 			auto map = visitor.Class2Methods;
@@ -311,7 +317,7 @@ void OMRChecker::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassCheckingV
 	}
 }
 
-void OMRChecker::OMRCheckingConsumer::printMethodInfo() {
+void OMRStatistics::OMRCheckingConsumer::printMethodInfo() {
 	for(auto hierarchy : hierarchies) {
 		auto baseClassName = hierarchy->base->name;
 		if(baseClassName.find("TR::") == std::string::npos) continue;
@@ -321,23 +327,22 @@ void OMRChecker::OMRCheckingConsumer::printMethodInfo() {
 		for(auto tracker : methodTrackers) {
 			std::string method = tracker.methodName;
 			int nbOfOverrides = tracker.classesOverriden->size();
-			int nbOfOverloads = tracker.class2NbOfTimesOverloaded->size();
-			if(nbOfOverrides > 1 || nbOfOverloads > 0)
+			if(nbOfOverrides > 1 || tracker.isOverloaded)
 				llvm::outs() << "\tMethod name: " << method << "\n";
 			else continue;
 			if(nbOfOverrides > 1) {
 				llvm::outs() << "\t\tWas overrided in the following classes:\n";
 				for(std::string className : *(tracker.classesOverriden)) llvm::outs() << "\t\t\t" << className << "\n";
 			}
-			if(nbOfOverloads > 0) {
+			if(tracker.isOverloaded) {
 				llvm::outs() << "\t\tWas overloaded in these classes:\n";
-				for(auto pair : *(tracker.class2NbOfTimesOverloaded)) llvm::outs() << "\t\t\t" << pair.first << ", " << pair.second << " time(s)\n";
+				for(auto pair : *(tracker.class2NbOfTimesOverloaded)) if(pair.second > 0) llvm::outs() << "\t\t\t" << pair.first << ", " << pair.second << " time(s)\n";
 			}
 		}
 	}
 }
 
-void OMRChecker::OMRCheckingConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
+void OMRStatistics::OMRCheckingConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
 	for(auto pair : map) {
 		std::string className = pair.first;
 		std::vector<std::string> methods = pair.second;
@@ -347,16 +352,28 @@ void OMRChecker::OMRCheckingConsumer::printClass2Method(std::map<std::string, st
 	}
 }
 
-std::unique_ptr<ASTConsumer> OMRChecker::CheckingAction::CreateASTConsumer(CompilerInstance &CI, llvm::StringRef filename) {
+void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Context) {
+	ExtensibleClassCheckingVisitor extchkVisitor(&Context);
+	extchkVisitor.TraverseDecl(Context.getTranslationUnitDecl());
+	
+	fillHierarchies(extchkVisitor.classHierarchy);
+	collectMethodInfo(extchkVisitor);
+	
+	printHierarchy(); //Plugin 3
+	
+	printMethodInfo(); //Plugin 1
+}
+
+std::unique_ptr<ASTConsumer> OMRStatistics::CheckingAction::CreateASTConsumer(CompilerInstance &CI, llvm::StringRef filename) {
 	return std::unique_ptr<ASTConsumer>(new OMRCheckingConsumer(filename));
 }
 
-bool OMRChecker::CheckingAction::ParseArgs(const CompilerInstance &CI, const std::vector<std::string>& args) {
+bool OMRStatistics::CheckingAction::ParseArgs(const CompilerInstance &CI, const std::vector<std::string>& args) {
 	return true;
 }
 #undef trace
 #endif
 
-// Register OMRChecker checking action in a plugin registry.
-static FrontendPluginRegistry::Add<OMRChecker::CheckingAction>
+// Register OMRStatistics checking action in a plugin registry.
+static FrontendPluginRegistry::Add<OMRStatistics::CheckingAction>
 X("omr-statistics", "OMR statistics");

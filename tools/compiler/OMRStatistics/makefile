@@ -36,10 +36,35 @@ CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -add-plugin -Xclang $(PL)
 default: $(SO)
 	@echo Executing with the new plugin...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -o $(O) -c $(SF) 
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $(SF) 
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@echo "Building my plugin..."
 	@$(GXX) `llvm-config --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
 	@$(GXX) -shared `llvm-config --ldflags` -o $(SO) $(O)
 	@rm $(O)
+
+.PHONY: test test1
+# Run test cases
+test: test1 test2 test3 test4 test5
+
+test1: $(SO)
+	@echo Executing Test 1...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test1.cpp > tests/test1.out
+
+
+test2: $(SO)
+	@echo Executing Test 2...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test2.cpp > tests/test2.out
+
+test3: $(SO)
+	@echo Executing Test 3...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test3.cpp > tests/test3.out
+
+test4: $(SO)
+	@echo Executing Test 4...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test4.cpp > tests/test4.out
+
+test5: $(SO)
+	@echo Executing Test 5...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test5.cpp > tests/test5.out
