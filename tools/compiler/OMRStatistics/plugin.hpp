@@ -11,7 +11,7 @@
 using namespace llvm;
 using namespace clang;
 
-namespace OMRChecker {
+namespace OMRStatistics {
 	
 	class ExtensibleClassCheckingVisitor : public RecursiveASTVisitor<ExtensibleClassCheckingVisitor> {
 	
@@ -64,6 +64,7 @@ namespace OMRChecker {
 		std::unordered_set<std::string>* classesOverriden; //Tracks the classes where this method was overriden
 		std::map<std::string, int>* class2NbOfTimesOverloaded; //Records how many times is this function overloaded in each class (class --> # of overloads in that class)
 		Hierarchy* myHierarchy; //Hierarchy were this method is occurring
+		bool isOverloaded; //If the method is overloaded at any point during any class in that hierarchy
 		
 		MethodTracker(Hierarchy* hierarchy, std::string methodName, std::string className);
 		//Add an occurence for this method
@@ -112,18 +113,7 @@ namespace OMRChecker {
 		//Prints Class2Methods in ExtensibleClassCheckingVisitor
 		void printClass2Method(std::map<std::string, std::vector<std::string>> &map);
 		
-		virtual void HandleTranslationUnit(ASTContext &Context) {
-			ExtensibleClassCheckingVisitor extchkVisitor(&Context);
-			extchkVisitor.TraverseDecl(Context.getTranslationUnitDecl());
-			
-			fillHierarchies(extchkVisitor.classHierarchy);
-			
-			printHierarchy(); //Plugin 3
-			
-			collectMethodInfo(extchkVisitor);
-			printMethodInfo(); //Plugin 1
-		
-		}
+		virtual void HandleTranslationUnit(ASTContext &Context);
 	};
 	
 	class CheckingAction : public PluginASTAction {
