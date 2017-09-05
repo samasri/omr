@@ -1,26 +1,21 @@
-# OMR Statistics
-This is a clang plugin that runs on the source code of the file provided in the makefile and collects information about it. Listed below is each of this plugins functionalities.
+# Overview
+This is a clang plugin that runs on the source code of the file provided in the makefile and collects information about it.
 
-# Print hierarchies
+# How to build and run
+Running make will build the plugin and run it on OMRCodeGenerator.cpp (in omr/compiler/codegen)
+Running make test will test the plugins on all the test cases available so far and makes sure all outputs are as expected
+
+## Functionality of the plugin
+## Print hierarchies
 Prints out all class hierarchies in this source file (and all its includes).
-## Output Format
-<Base Class Name> --> <Parent Class Name> --> ... --> <Top Class Name>
+### Output Format
+`<Base Class Name> --> <Parent Class Name> --> ... --> <Top Class Name>`
 ## Known bug
-Sometimes (in 2 cases to be exact) a class would have 2 children, which results in one of the hierarchies to be broken.
-To explain when does this bug occur, consider the following 2 example hierarchies:
-```c++
-class A {};
-class B : A {};
-class C : B {};
-class D : B {};
-```
-The hierarchies from this plugin will be as follows:
-C --> B --> A
-D --> B
+When a class has 2 children, one of the hierarchies in the plugin output is broken. This case is elaborated in one of the test cases.
 
-# Print Method Information
+## Print Method Information
 Prints out each method in each of the class hierarchies, which classes it is overriden in, and how many times it is overloaded in each class.
-## Output Format
+### Output Format
 ```
 <Hierarchy base class name>
 	<Method Name>
@@ -35,3 +30,12 @@ Prints out each method in each of the class hierarchies, which classes it is ove
 			<className where it is overloaded>, <# of times overloaded>
 			...
 ```
+
+# Testing
+This plugin has 5 test cases till now:
+* Test 1: Testing the hierarchy functionality
+* Test 2: Testing the override functionality when printing method information
+* Test 3: Testing the overload functionality when printing method information
+* Test 4: Testing the override and overload functionalities together
+* Test 5: This should fail, this case elaborates the previously described bug
+* Test 6: Complicated c++ file to test the hierarchy functionality (yet to come)
