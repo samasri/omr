@@ -1,14 +1,22 @@
 import java.io.File;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class Test {
 	
+	final static int NB_OF_TESTS = 5;
+	
 	public static void main(String[] arg) throws Exception {
-		System.out.println("Hello World!");
-		File f1 = new File("test1.out");
-		File f2 = new File("test1.outC");
-		if(check(f1, f2)) System.out.println("Passed");
-		else System.out.println("Failed");
+		ArrayList<Integer> fails = new ArrayList<Integer>();
+		for(int i = 1; i <= NB_OF_TESTS; i++) {
+			String name = "tests/test" + i;
+			if (!check(new File(name + ".out"), new File(name + ".outC"))) 
+				fails.add(i);
+		}
+		if(fails.size() > 0) System.out.print("Failed tests: ");
+		else System.out.println("All tests succeeded");
+		for(int i = 0; i < fails.size(); i++) System.out.print(fails.get(i));
+		System.out.println();
 	}
 	
 	public static boolean check(File f1, File f2) throws Exception {
