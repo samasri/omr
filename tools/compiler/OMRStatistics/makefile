@@ -44,9 +44,12 @@ $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@$(GXX) -shared `llvm-config --ldflags` -o $(SO) $(O)
 	@rm $(O)
 
-.PHONY: test test1
 # Run test cases
-test: test1 test2 test3 test4 test5
+test: tests/Test.class test1 test2 test3 test4 test5 
+	@java -cp tests Test
+
+tests/Test.class: tests/Test.java
+	@javac tests/Test.java
 
 test1: $(SO)
 	@echo Executing Test 1...
