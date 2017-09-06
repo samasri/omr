@@ -13,9 +13,12 @@ public class Test {
 			if (!check(new File(name + ".out"), new File(name + ".outC"))) 
 				fails.add(i);
 		}
-		if(fails.size() > 0) System.out.print("Failed tests: ");
+		if(fails.size() > 0) System.out.print("Failed tests are of numbers: ");
 		else System.out.println("All tests succeeded");
-		for(int i = 0; i < fails.size(); i++) System.out.print(fails.get(i));
+		for(int i = 0; i < fails.size(); i++) {
+			if(i != 0) System.out.print(", " + fails.get(i));
+			System.out.print(fails.get(i));
+		}
 		System.out.println();
 	}
 	

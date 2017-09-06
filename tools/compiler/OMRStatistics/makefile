@@ -45,7 +45,7 @@ $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@rm $(O)
 
 # Run test cases
-test: tests/Test.class test1 test2 test3 test4 test5 
+test: tests/Test.class test1 test2 test3 test4 test5
 	@java -cp tests Test
 
 tests/Test.class: tests/Test.java
