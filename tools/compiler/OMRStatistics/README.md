@@ -38,4 +38,3 @@ This plugin has 5 test cases till now:
 * Test 3: Testing the overload functionality when printing method information
 * Test 4: Testing the override and overload functionalities together
 * Test 5: This should fail, this case elaborates the previously described bug
-* Test 6: Complicated c++ file to test the hierarchy functionality (yet to come)
