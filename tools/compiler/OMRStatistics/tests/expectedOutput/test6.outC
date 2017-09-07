@@ -1,0 +1,9 @@
+TR::A --> TR::B --> TR::C --> TR::D
+TR::A:
+	Method name: a
+		Was overrided in the following classes:
+			TR::D
+			TR::C
+			TR::B
+		Was overloaded in these classes:
+			TR::B, 1 time(s)

@@ -4,19 +4,25 @@ import java.util.ArrayList;
 
 public class Test {
 	
-	final static int NB_OF_TESTS = 5;
 	
 	public static void main(String[] arg) throws Exception {
 		ArrayList<Integer> fails = new ArrayList<Integer>();
-		for(int i = 1; i <= NB_OF_TESTS; i++) {
-			String name = "tests/test" + i;
-			if (!check(new File(name + ".out"), new File(name + ".outC"))) 
-				fails.add(i);
+		
+		File dir = new File("tests/input");
+		File[] inputs = dir.listFiles();
+		for(File input : inputs) {
+			File expectedOutput = new File("tests/expectedOutput/" + input.getName().replace("cpp", "outC"));
+			File output = new File("tests/" + input.getName().replace("cpp", "out"));
+			if (!check(output, expectedOutput)) {
+				int testNb = Integer.parseInt("" + input.getName().charAt(input.getName().length() - 5));
+				fails.add(testNb);
+				System.out.println("added " + testNb);
+			}
 		}
-		if(fails.size() > 0) System.out.print("Failed tests are of numbers: ");
+		if(fails.size() > 0) System.out.print("Failed test(s) are of number(s): ");
 		else System.out.println("All tests succeeded");
 		for(int i = 0; i < fails.size(); i++) {
-			if(i != 0) System.out.print(", " + fails.get(i));
+			if(i != 0) System.out.print(", ");
 			System.out.print(fails.get(i));
 		}
 		System.out.println();
