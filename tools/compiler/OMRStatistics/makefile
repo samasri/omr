@@ -45,29 +45,38 @@ $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@rm $(O)
 
 # Run test cases
-test: tests/Test.class test1 test2 test3 test4 test5
+test: tests/Test.class test1 test2 test3 test4 test5 test6 test7
 	@java -cp tests Test
+	rm tests/*.out
 
 tests/Test.class: tests/Test.java
 	@javac tests/Test.java
 
 test1: $(SO)
 	@echo Executing Test 1...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test1.cpp > tests/test1.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test1.cpp > tests/test1.out
 
 
 test2: $(SO)
 	@echo Executing Test 2...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test2.cpp > tests/test2.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test2.cpp > tests/test2.out
 
 test3: $(SO)
 	@echo Executing Test 3...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test3.cpp > tests/test3.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test3.cpp > tests/test3.out
 
 test4: $(SO)
 	@echo Executing Test 4...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test4.cpp > tests/test4.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test4.cpp > tests/test4.out
 
 test5: $(SO)
 	@echo Executing Test 5...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/test5.cpp > tests/test5.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test5.cpp > tests/test5.out
+
+test6: $(SO)
+	@echo Executing Test 6...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test6.cpp > tests/test6.out
+
+test7: $(SO)
+	@echo Executing Test 7...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test7.cpp > tests/test7.out
