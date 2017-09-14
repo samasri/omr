@@ -2,8 +2,8 @@
 This is a clang plugin that runs on the source code of the file provided in the makefile and collects information about it.
 
 # How to build and run
-Running `make` will build the plugin and run it on _OMRCodeGenerator.cpp_ (in _omr/compiler/codegen_)
-Running `make` test will test the plugins on all the test cases available so far and makes sure all outputs are as expected
+* Running `make` will build the plugin and run it on _OMRCodeGenerator.cpp_ (in _omr/compiler/codegen_)
+* Running `make test` will test the plugins on all the available test cases and makes sure all outputs are as expected
 
 # Functionality of the plugin
 This plugin has 2 main functions:
