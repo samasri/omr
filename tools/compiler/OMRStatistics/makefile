@@ -45,12 +45,9 @@ $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@rm $(O)
 
 # Run test cases
-test: tests/Test.class test1 test2 test3 test4 test5 test6 test7
-	@java -cp tests Test
-	rm tests/*.out
-
-tests/Test.class: tests/Test.java
-	@javac tests/Test.java
+test: test1 test2 test3 test4 test5 test6 test7
+	 @python tests/python.py
+	 @rm tests/*.out
 
 test1: $(SO)
 	@echo Executing Test 1...
