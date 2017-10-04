@@ -17,19 +17,10 @@ When a class has 2 children, one of the hierarchies in the plugin output is brok
 ## 2. Print Method Information
 Prints out each method in each of the class hierarchies, which classes it is overriden in, and how many times it is overloaded in each class.
 ### Output Format
+The output is in csv format. If a method is overloaded, a record will be shown including the class where it was overloaded and the number of times it was overloaded in that class. Whereas if the method was overriden, the output will contain multiple records, each representing an occurence of the method in the specified class (the _Number of Times Overloaded_ space will be kept void).
 ```
 <Hierarchy base class name>
-	<Method Name>
-		Overriden in:
-			<className where it is overloaded>
-			<className where it is overloaded>
-			<className where it is overloaded>
-			...
-		Overloaded in:
-			<className where it is overloaded>, <# of times overloaded>
-			<className where it is overloaded>, <# of times overloaded>
-			<className where it is overloaded>, <# of times overloaded>
-			...
+<Method Name>,<Type: override or overload>, <Class Name>, <Number of Times Overloaded>
 ```
 
 # Testing
@@ -41,3 +32,5 @@ This plugin has 5 test cases till now:
 * Test 5: Testing the overload functionality when printing method information
 * Test 6: Testing the override and overload functionalities together
 * Test 7: This should fail, this case elaborates the previously described bug
+
+
