@@ -4,6 +4,7 @@
 #include <list>
 #include <algorithm>
 #include <assert.h>
+#include <fstream>
 #include <iostream>
 #include <unordered_set>
 
@@ -109,7 +110,7 @@ namespace OMRStatistics {
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
 		void printHierarchy();
 		//Iterates through the MethodTrackers in each Hierarchy and prints the information in an organized way
-		void printMethodInfo();
+		void printMethodInfo(bool printOverloads, bool printOverrides);
 		//Prints Class2Methods in ExtensibleClassCheckingVisitor
 		void printClass2Method(std::map<std::string, std::vector<std::string>> &map);
 		
