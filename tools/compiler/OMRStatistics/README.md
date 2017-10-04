@@ -22,6 +22,11 @@ The output is in csv format. If a method is overloaded, a record will be shown i
 <Hierarchy base class name>
 <Method Name>,<Type: override or overload>, <Class Name>, <Number of Times Overloaded>
 ```
+## Trigerring Functionality
+In order to triger different functionalities of the tool, a config file is present. The config file is made of 3 lines; each line has a 0 or a 1. 0 to turn off that feature and 1 to turn on that feature. The lines represent the following features:
+1. Hierarchy (so 1 would allow the program to print the hierarchy of the classes)
+2. Overloaded functions (so 1 would allow the program to print the overloaded functions)
+3. Overriden functions (so 1 would allow the program to print the overriden functions)
 
 # Testing
 This plugin has 5 test cases till now:
