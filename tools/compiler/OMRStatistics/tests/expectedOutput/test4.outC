@@ -1,6 +1,4 @@
 TR::C --> TR::B --> TR::A
 TR::C:
-	Method name: a
-		Was overrided in the following classes:
-			TR::A
-			TR::C
+a,override,TR::A
+a,override,TR::C

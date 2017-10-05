@@ -1,0 +1,8 @@
+TR::B --> TR::A
+TR::B:
+a(),override,TR::A
+a(),override,TR::B
+a(int a),override,TR::A
+a(int a),override,TR::B
+a,overload,TR::A, 1
+a,overload,TR::B, 1
