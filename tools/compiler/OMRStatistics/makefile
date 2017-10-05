@@ -45,7 +45,7 @@ $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@rm $(O)
 
 # Run test cases
-test: test1 test2 test3 test4 test5 test6 test7
+test: test1 test2 test3 test4 test5 test6 test7 test8
 	 @python tests/python.py
 	 @rm tests/*.out
 
@@ -77,3 +77,7 @@ test6: $(SO)
 test7: $(SO)
 	@echo Executing Test 7...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test7.cpp > tests/test7.out
+
+test8: $(SO)
+	@echo Executing Test 8...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test8.cpp > tests/test8.out
