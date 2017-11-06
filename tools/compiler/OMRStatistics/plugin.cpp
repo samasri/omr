@@ -318,12 +318,14 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 }
 
 void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloads, bool printOverrides) {
+	
 	for(auto hierarchy : hierarchies) {
 		auto baseClassName = hierarchy->base->name;
 		if(baseClassName.find("TR::") == std::string::npos) continue;
 		auto methodTrackers = *(hierarchy->methodTrackers);
 		if(methodTrackers.size() != 0) llvm::outs() << baseClassName << ":\n";
 		else continue;
+		llvm::outs() << "I reach here\n";
 		for(auto tracker : methodTrackers) {
 			std::string method = tracker.methodName;
 			int nbOfOverrides = tracker.classesOverriden->size();
