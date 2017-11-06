@@ -1,0 +1,3308 @@
+TR::GlobalSingletonAllocator:
+GlobalSingletonAllocator,overload,TR::GlobalSingletonAllocator, 1
+operator=,override,TRPersistentMemoryAllocator
+operator=,override,TR::GlobalSingletonAllocator
+allocate,override,TRPersistentMemoryAllocator
+allocate,override,CS2::stat_allocator
+deallocate,override,TRPersistentMemoryAllocator
+deallocate,override,CS2::stat_allocator
+reallocate,override,TRPersistentMemoryAllocator
+reallocate,override,CS2::stat_allocator
+TRPersistentMemoryAllocator,overload,TRPersistentMemoryAllocator, 2
+TR::AutomaticSymbol:
+AutomaticSymbol,override,OMR::AutomaticSymbol
+AutomaticSymbol,override,TR::AutomaticSymbol
+AutomaticSymbol,overload,OMR::AutomaticSymbol, 5
+AutomaticSymbol,overload,TR::AutomaticSymbol, 3
+operator=,override,TR::Symbol
+operator=,override,TR::AutomaticSymbol
+operator=,override,OMR::AutomaticSymbol
+operator=,override,TR::RegisterMappedSymbol
+operator=,override,OMR::RegisterMappedSymbol
+operator=,overload,OMR::AutomaticSymbol, 1
+operator=,overload,OMR::RegisterMappedSymbol, 3
+operator=,overload,TR::AutomaticSymbol, 1
+operator=,overload,TR::RegisterMappedSymbol, 1
+operator=,overload,TR::Symbol, 1
+~AutomaticSymbol,override,OMR::AutomaticSymbol
+~AutomaticSymbol,override,TR::AutomaticSymbol
+self,override,OMR::RegisterMappedSymbol
+self,override,OMR::AutomaticSymbol
+self,overload,OMR::RegisterMappedSymbol, 1
+RegisterMappedSymbol,override,OMR::RegisterMappedSymbol
+RegisterMappedSymbol,override,TR::RegisterMappedSymbol
+RegisterMappedSymbol,overload,OMR::RegisterMappedSymbol, 9
+RegisterMappedSymbol,overload,TR::RegisterMappedSymbol, 4
+~RegisterMappedSymbol,override,OMR::RegisterMappedSymbol
+~RegisterMappedSymbol,override,TR::RegisterMappedSymbol
+~RegisterMappedSymbol,overload,OMR::RegisterMappedSymbol, 1
+getOffset,overload,OMR::RegisterMappedSymbol, 1
+setOffset,overload,OMR::RegisterMappedSymbol, 1
+getGCMapIndex,overload,OMR::RegisterMappedSymbol, 1
+setGCMapIndex,overload,OMR::RegisterMappedSymbol, 1
+getLiveLocalIndex,overload,OMR::RegisterMappedSymbol, 1
+setLiveLocalIndex,overload,OMR::RegisterMappedSymbol, 1
+isLiveLocalIndexUninitialized,overload,OMR::RegisterMappedSymbol, 1
+setLiveLocalIndexUninitialized,overload,OMR::RegisterMappedSymbol, 1
+getMethodMetaDataType,overload,OMR::RegisterMappedSymbol, 1
+setMethodMetaDataType,overload,OMR::RegisterMappedSymbol, 1
+Symbol,overload,TR::Symbol, 4
+TR::Block:
+Block,override,OMR::Block
+Block,override,TR::Block
+Block,overload,OMR::Block, 3
+Block,overload,TR::Block, 3
+operator=,override,OMR::Block
+operator=,override,TR::CFGNode
+operator=,override,TR::Block
+operator=,overload,TR::Block, 1
+operator=,overload,TR::CFGNode, 1
+~Block,override,OMR::Block
+~Block,override,TR::Block
+createEmptyBlock,overload,OMR::Block, 1
+asBlock,override,TR::CFGNode
+asBlock,override,OMR::Block
+removeFromCFG,override,TR::CFGNode
+removeFromCFG,override,OMR::Block
+collectReferencedAutoSymRefsIn,overload,OMR::Block, 1
+operator new,overload,TR::CFGNode, 5
+operator new[],overload,TR::CFGNode, 4
+operator delete,overload,TR::CFGNode, 3
+operator delete[],overload,TR::CFGNode, 2
+CFGNode,overload,TR::CFGNode, 3
+addSuccessor,overload,TR::CFGNode, 1
+addPredecessor,overload,TR::CFGNode, 1
+addExceptionSuccessor,overload,TR::CFGNode, 1
+addExceptionPredecessor,overload,TR::CFGNode, 1
+normalizeFrequency,overload,TR::CFGNode, 1
+TR::LabelSymbol:
+LabelSymbol,override,OMR::LabelSymbol
+LabelSymbol,override,TR::LabelSymbol
+LabelSymbol,overload,OMR::LabelSymbol, 4
+LabelSymbol,overload,TR::LabelSymbol, 2
+operator=,override,OMR::Symbol
+operator=,override,OMR::LabelSymbol
+operator=,override,TR::LabelSymbol
+operator=,overload,OMR::LabelSymbol, 1
+operator=,overload,TR::LabelSymbol, 1
+~LabelSymbol,override,OMR::LabelSymbol
+~LabelSymbol,override,TR::LabelSymbol
+self,override,OMR::Symbol
+self,override,OMR::LabelSymbol
+getName,override,OMR::Symbol
+getName,override,OMR::LabelSymbol
+Symbol,override,OMR::Symbol
+Symbol,override,TR::Symbol
+Symbol,overload,OMR::Symbol, 3
+~Symbol,override,OMR::Symbol
+~Symbol,override,TR::Symbol
+operator new,overload,OMR::Symbol, 5
+operator new[],overload,OMR::Symbol, 4
+operator delete,overload,OMR::Symbol, 3
+operator delete[],overload,OMR::Symbol, 2
+TR::ResolvedMethodSymbol:
+ResolvedMethodSymbol,override,OMR::ResolvedMethodSymbol
+ResolvedMethodSymbol,override,TR::ResolvedMethodSymbol
+ResolvedMethodSymbol,overload,OMR::ResolvedMethodSymbol, 2
+operator=,override,TR::ResolvedMethodSymbol
+operator=,override,OMR::ResolvedMethodSymbol
+operator=,override,TR::MethodSymbol
+operator=,override,OMR::MethodSymbol
+operator=,overload,OMR::MethodSymbol, 1
+operator=,overload,OMR::ResolvedMethodSymbol, 1
+operator=,overload,TR::MethodSymbol, 3
+operator=,overload,TR::ResolvedMethodSymbol, 1
+~ResolvedMethodSymbol,override,OMR::ResolvedMethodSymbol
+~ResolvedMethodSymbol,override,TR::ResolvedMethodSymbol
+self,override,OMR::MethodSymbol
+self,override,OMR::ResolvedMethodSymbol
+getAutoSymRefs,overload,OMR::ResolvedMethodSymbol, 1
+getPendingPushSymRefs,overload,OMR::ResolvedMethodSymbol, 1
+isOSRRelatedNode,overload,OMR::ResolvedMethodSymbol, 1
+genInduceOSRCall,overload,OMR::ResolvedMethodSymbol, 1
+MethodSymbol,override,OMR::MethodSymbol
+MethodSymbol,override,TR::MethodSymbol
+MethodSymbol,overload,OMR::MethodSymbol, 2
+MethodSymbol,overload,TR::MethodSymbol, 5
+~MethodSymbol,override,OMR::MethodSymbol
+~MethodSymbol,override,TR::MethodSymbol
+~MethodSymbol,overload,TR::MethodSymbol, 1
+TR::StaticSymbol:
+StaticSymbol,override,OMR::StaticSymbol
+StaticSymbol,override,TR::StaticSymbol
+StaticSymbol,overload,OMR::StaticSymbol, 4
+StaticSymbol,overload,TR::StaticSymbol, 2
+operator=,override,OMR::StaticSymbol
+operator=,override,TR::StaticSymbol
+operator=,overload,OMR::StaticSymbol, 1
+operator=,overload,TR::StaticSymbol, 1
+~StaticSymbol,override,OMR::StaticSymbol
+~StaticSymbol,override,TR::StaticSymbol
+TR::Machine:
+Machine,override,OMR::Machine
+Machine,override,OMR::X86::Machine
+Machine,override,OMR::X86::AMD64::Machine
+Machine,override,TR::Machine
+Machine,overload,OMR::Machine, 3
+Machine,overload,OMR::X86::AMD64::Machine, 2
+Machine,overload,OMR::X86::Machine, 2
+operator=,override,OMR::Machine
+operator=,override,OMR::X86::Machine
+operator=,override,OMR::X86::AMD64::Machine
+operator=,override,TR::Machine
+operator=,overload,OMR::Machine, 1
+operator=,overload,OMR::X86::AMD64::Machine, 1
+operator=,overload,OMR::X86::Machine, 1
+operator=,overload,TR::Machine, 1
+~Machine,override,OMR::Machine
+~Machine,override,OMR::X86::Machine
+~Machine,override,OMR::X86::AMD64::Machine
+~Machine,override,TR::Machine
+coerceGPRegisterAssignment,overload,OMR::X86::Machine, 1
+fpMapToStackRelativeRegister,overload,OMR::X86::Machine, 1
+fpStackFXCH,overload,OMR::X86::Machine, 1
+operator new,overload,OMR::Machine, 5
+operator new[],overload,OMR::Machine, 4
+operator delete,overload,OMR::Machine, 3
+operator delete[],overload,OMR::Machine, 2
+getLastGlobalRegisterNumber,overload,OMR::Machine, 1
+TR::TreeEvaluator:
+bcmpEvaluator,overload,OMR::X86::TreeEvaluator, 1
+compareIntegersForOrder,overload,OMR::X86::TreeEvaluator, 1
+checkNonNegativePowerOfTwo,overload,OMR::TreeEvaluator, 1
+checkPositiveOrNegativePowerOfTwo,overload,OMR::TreeEvaluator, 1
+TR::CPU:
+CPU,override,OMR::CPU
+CPU,override,OMR::X86::CPU
+CPU,override,TR::CPU
+CPU,overload,OMR::CPU, 2
+CPU,overload,OMR::X86::CPU, 2
+CPU,overload,TR::CPU, 2
+~CPU,override,OMR::CPU
+~CPU,override,OMR::X86::CPU
+~CPU,override,TR::CPU
+operator=,override,OMR::CPU
+operator=,override,OMR::X86::CPU
+operator=,override,TR::CPU
+operator=,overload,OMR::CPU, 1
+operator=,overload,OMR::X86::CPU, 1
+operator=,overload,TR::CPU, 1
+TR::DebugEnv:
+DebugEnv,override,OMR::DebugEnv
+DebugEnv,override,OMR::X86::DebugEnv
+DebugEnv,override,TR::DebugEnv
+DebugEnv,overload,OMR::DebugEnv, 2
+DebugEnv,overload,OMR::X86::DebugEnv, 2
+DebugEnv,overload,TR::DebugEnv, 2
+~DebugEnv,override,OMR::DebugEnv
+~DebugEnv,override,OMR::X86::DebugEnv
+~DebugEnv,override,TR::DebugEnv
+operator=,override,OMR::DebugEnv
+operator=,override,OMR::X86::DebugEnv
+operator=,override,TR::DebugEnv
+operator=,overload,OMR::DebugEnv, 1
+operator=,overload,OMR::X86::DebugEnv, 1
+operator=,overload,TR::DebugEnv, 1
+TR::Instruction:
+Instruction,override,OMR::Instruction
+Instruction,override,OMR::X86::Instruction
+Instruction,override,TR::Instruction
+Instruction,overload,OMR::Instruction, 4
+Instruction,overload,OMR::X86::Instruction, 3
+Instruction,overload,TR::Instruction, 5
+operator=,override,OMR::Instruction
+operator=,override,OMR::X86::Instruction
+operator=,override,TR::Instruction
+operator=,overload,OMR::Instruction, 1
+operator=,overload,OMR::X86::Instruction, 1
+operator=,overload,TR::Instruction, 1
+~Instruction,override,OMR::Instruction
+~Instruction,override,OMR::X86::Instruction
+~Instruction,override,TR::Instruction
+getKind,override,OMR::Instruction
+getKind,override,OMR::X86::Instruction
+getOpCode,override,OMR::Instruction
+getOpCode,override,OMR::X86::Instruction
+getOpCodeValue,override,OMR::Instruction
+getOpCodeValue,override,OMR::X86::Instruction
+setOpCodeValue,override,OMR::Instruction
+setOpCodeValue,override,OMR::X86::Instruction
+isPatchBarrier,override,OMR::Instruction
+isPatchBarrier,override,OMR::X86::Instruction
+assignRegisters,override,OMR::Instruction
+assignRegisters,override,OMR::X86::Instruction
+refsRegister,override,OMR::Instruction
+refsRegister,override,OMR::X86::Instruction
+defsRegister,override,OMR::Instruction
+defsRegister,override,OMR::X86::Instruction
+usesRegister,override,OMR::Instruction
+usesRegister,override,OMR::X86::Instruction
+dependencyRefsRegister,override,OMR::Instruction
+dependencyRefsRegister,override,OMR::X86::Instruction
+generateBinaryEncoding,override,OMR::Instruction
+generateBinaryEncoding,override,OMR::X86::Instruction
+estimateBinaryLength,override,OMR::Instruction
+estimateBinaryLength,override,OMR::X86::Instruction
+operator new,overload,OMR::Instruction, 5
+operator new[],overload,OMR::Instruction, 4
+operator delete,overload,OMR::Instruction, 3
+operator delete[],overload,OMR::Instruction, 2
+TR::Snippet:
+Snippet,override,OMR::Snippet
+Snippet,override,OMR::X86::Snippet
+Snippet,override,TR::Snippet
+Snippet,overload,OMR::Snippet, 3
+Snippet,overload,OMR::X86::Snippet, 3
+Snippet,overload,TR::Snippet, 1
+operator=,override,OMR::Snippet
+operator=,override,OMR::X86::Snippet
+operator=,override,TR::Snippet
+operator=,overload,OMR::Snippet, 1
+operator=,overload,OMR::X86::Snippet, 1
+operator=,overload,TR::Snippet, 1
+~Snippet,override,OMR::Snippet
+~Snippet,override,OMR::X86::Snippet
+~Snippet,override,TR::Snippet
+operator new,overload,OMR::Snippet, 5
+operator new[],overload,OMR::Snippet, 4
+operator delete,overload,OMR::Snippet, 3
+operator delete[],overload,OMR::Snippet, 2
+TR::AliasBuilder:
+AliasBuilder,override,OMR::AliasBuilder
+AliasBuilder,override,TR::AliasBuilder
+AliasBuilder,overload,OMR::AliasBuilder, 2
+AliasBuilder,overload,TR::AliasBuilder, 2
+~AliasBuilder,override,OMR::AliasBuilder
+~AliasBuilder,override,TR::AliasBuilder
+operator=,override,OMR::AliasBuilder
+operator=,override,TR::AliasBuilder
+operator=,overload,OMR::AliasBuilder, 1
+operator=,overload,TR::AliasBuilder, 1
+operator new,overload,OMR::AliasBuilder, 5
+operator new[],overload,OMR::AliasBuilder, 4
+operator delete,overload,OMR::AliasBuilder, 3
+operator delete[],overload,OMR::AliasBuilder, 2
+gatherLocalUseInfo,overload,OMR::AliasBuilder, 2
+TR::ArithEnv:
+ArithEnv,override,OMR::ArithEnv
+ArithEnv,override,TR::ArithEnv
+ArithEnv,overload,OMR::ArithEnv, 2
+ArithEnv,overload,TR::ArithEnv, 2
+~ArithEnv,override,OMR::ArithEnv
+~ArithEnv,override,TR::ArithEnv
+operator=,override,OMR::ArithEnv
+operator=,override,TR::ArithEnv
+operator=,overload,OMR::ArithEnv, 1
+operator=,overload,TR::ArithEnv, 1
+TR::CFG:
+CFG,override,OMR::CFG
+CFG,override,TR::CFG
+CFG,overload,OMR::CFG, 2
+operator new,overload,OMR::CFG, 5
+operator new[],overload,OMR::CFG, 4
+operator delete,overload,OMR::CFG, 3
+operator delete[],overload,OMR::CFG, 2
+addEdge,overload,OMR::CFG, 1
+removeEdge,overload,OMR::CFG, 3
+TR::CFGEdge:
+jitPersistentAlloc,override,TR_Link
+jitPersistentAlloc,override,TR::CFGEdge
+jitPersistentFree,override,TR_Link
+jitPersistentFree,override,TR::CFGEdge
+operator new,override,TR_Link
+operator new,override,TR::CFGEdge
+operator new,overload,TR::CFGEdge, 5
+operator new,overload,TR_Link, 5
+operator new[],override,TR_Link
+operator new[],override,TR::CFGEdge
+operator new[],overload,TR::CFGEdge, 4
+operator new[],overload,TR_Link, 4
+operator delete,override,TR_Link
+operator delete,override,TR::CFGEdge
+operator delete,overload,TR::CFGEdge, 3
+operator delete,overload,TR_Link, 3
+operator delete[],override,TR_Link
+operator delete[],override,TR::CFGEdge
+operator delete[],overload,TR::CFGEdge, 2
+operator delete[],overload,TR_Link, 2
+CFGEdge,overload,TR::CFGEdge, 1
+TR::ClassEnv:
+ClassEnv,override,OMR::ClassEnv
+ClassEnv,override,TR::ClassEnv
+ClassEnv,overload,OMR::ClassEnv, 2
+ClassEnv,overload,TR::ClassEnv, 2
+~ClassEnv,override,OMR::ClassEnv
+~ClassEnv,override,TR::ClassEnv
+operator=,override,OMR::ClassEnv
+operator=,override,TR::ClassEnv
+operator=,overload,OMR::ClassEnv, 1
+operator=,overload,TR::ClassEnv, 1
+isStringClass,overload,OMR::ClassEnv, 1
+classOfObject,overload,OMR::ClassEnv, 1
+isString,overload,OMR::ClassEnv, 1
+classNameChars,overload,OMR::ClassEnv, 1
+TR::CodeGenPhase:
+CodeGenPhase,override,OMR::CodeGenPhase
+CodeGenPhase,override,TR::CodeGenPhase
+CodeGenPhase,overload,OMR::CodeGenPhase, 2
+CodeGenPhase,overload,TR::CodeGenPhase, 2
+~CodeGenPhase,override,OMR::CodeGenPhase
+~CodeGenPhase,override,TR::CodeGenPhase
+operator=,override,OMR::CodeGenPhase
+operator=,override,TR::CodeGenPhase
+operator=,overload,OMR::CodeGenPhase, 1
+operator=,overload,TR::CodeGenPhase, 1
+getName,overload,OMR::CodeGenPhase, 1
+TR::CodeGenerator:
+CodeGenerator,override,OMR::CodeGenerator
+CodeGenerator,override,TestCompiler::CodeGenerator
+CodeGenerator,override,TR::CodeGenerator
+CodeGenerator,override,OMR::X86::AMD64::CodeGenerator
+CodeGenerator,override,OMR::X86::CodeGenerator
+CodeGenerator,overload,OMR::CodeGenerator, 2
+CodeGenerator,overload,OMR::X86::AMD64::CodeGenerator, 2
+CodeGenerator,overload,OMR::X86::CodeGenerator, 2
+CodeGenerator,overload,TestCompiler::CodeGenerator, 5
+operator=,override,OMR::CodeGenerator
+operator=,override,TestCompiler::CodeGenerator
+operator=,override,TR::CodeGenerator
+operator=,override,OMR::X86::AMD64::CodeGenerator
+operator=,override,OMR::X86::CodeGenerator
+operator=,overload,OMR::CodeGenerator, 1
+operator=,overload,OMR::X86::AMD64::CodeGenerator, 1
+operator=,overload,OMR::X86::CodeGenerator, 1
+operator=,overload,TR::CodeGenerator, 1
+operator=,overload,TestCompiler::CodeGenerator, 3
+~CodeGenerator,override,OMR::CodeGenerator
+~CodeGenerator,override,TestCompiler::CodeGenerator
+~CodeGenerator,override,TR::CodeGenerator
+~CodeGenerator,override,OMR::X86::AMD64::CodeGenerator
+~CodeGenerator,override,OMR::X86::CodeGenerator
+~CodeGenerator,overload,TestCompiler::CodeGenerator, 1
+longClobberEvaluate,override,OMR::X86::CodeGenerator
+longClobberEvaluate,override,OMR::X86::AMD64::CodeGenerator
+getLinkageGlobalRegisterNumber,override,OMR::CodeGenerator
+getLinkageGlobalRegisterNumber,override,OMR::X86::AMD64::CodeGenerator
+getGlobalGPRsPreservedAcrossCalls,override,OMR::CodeGenerator
+getGlobalGPRsPreservedAcrossCalls,override,OMR::X86::AMD64::CodeGenerator
+getGlobalFPRsPreservedAcrossCalls,override,OMR::CodeGenerator
+getGlobalFPRsPreservedAcrossCalls,override,OMR::X86::AMD64::CodeGenerator
+getMaximumNumberOfGPRsAllowedAcrossEdge,override,OMR::CodeGenerator
+getMaximumNumberOfGPRsAllowedAcrossEdge,override,OMR::X86::AMD64::CodeGenerator
+getMaximumNumberOfGPRsAllowedAcrossEdge,overload,OMR::CodeGenerator, 1
+opCodeIsNoOpOnThisPlatform,override,OMR::CodeGenerator
+opCodeIsNoOpOnThisPlatform,override,OMR::X86::AMD64::CodeGenerator
+internalPointerSupportImplemented,override,OMR::X86::CodeGenerator
+internalPointerSupportImplemented,override,OMR::CodeGenerator
+internalPointerSupportImplemented,override,OMR::X86::AMD64::CodeGenerator
+allowVMThreadRematerialization,override,OMR::X86::CodeGenerator
+allowVMThreadRematerialization,override,OMR::X86::AMD64::CodeGenerator
+createLinkage,override,OMR::CodeGenerator
+createLinkage,override,OMR::X86::CodeGenerator
+beginInstructionSelection,override,OMR::CodeGenerator
+beginInstructionSelection,override,OMR::X86::CodeGenerator
+endInstructionSelection,override,OMR::CodeGenerator
+endInstructionSelection,override,OMR::X86::CodeGenerator
+doRegisterAssignment,override,OMR::CodeGenerator
+doRegisterAssignment,override,OMR::X86::CodeGenerator
+doBinaryEncoding,override,OMR::CodeGenerator
+doBinaryEncoding,override,OMR::X86::CodeGenerator
+hasComplexAddressingMode,override,OMR::CodeGenerator
+hasComplexAddressingMode,override,OMR::X86::CodeGenerator
+getSupportsBitOpCodes,override,OMR::CodeGenerator
+getSupportsBitOpCodes,override,OMR::X86::CodeGenerator
+getSupportsOpCodeForAutoSIMD,override,OMR::CodeGenerator
+getSupportsOpCodeForAutoSIMD,override,OMR::X86::CodeGenerator
+getSupportsEncodeUtf16LittleWithSurrogateTest,override,OMR::CodeGenerator
+getSupportsEncodeUtf16LittleWithSurrogateTest,override,OMR::X86::CodeGenerator
+getSupportsEncodeUtf16BigWithSurrogateTest,override,OMR::CodeGenerator
+getSupportsEncodeUtf16BigWithSurrogateTest,override,OMR::X86::CodeGenerator
+getSupportsIbyteswap,override,OMR::CodeGenerator
+getSupportsIbyteswap,override,OMR::X86::CodeGenerator
+supportsMergingGuards,override,OMR::CodeGenerator
+supportsMergingGuards,override,OMR::X86::CodeGenerator
+supportsAtomicAdd,override,OMR::CodeGenerator
+supportsAtomicAdd,override,OMR::X86::CodeGenerator
+hasTMEvaluator,override,OMR::CodeGenerator
+hasTMEvaluator,override,OMR::X86::CodeGenerator
+allowGlobalRegisterAcrossBranch,override,OMR::CodeGenerator
+allowGlobalRegisterAcrossBranch,override,OMR::X86::CodeGenerator
+buildRegisterMapForInstruction,override,OMR::CodeGenerator
+buildRegisterMapForInstruction,override,OMR::X86::CodeGenerator
+processInstruction,override,OMR::CodeGenerator
+processInstruction,override,OMR::X86::CodeGenerator
+isPreservedRegister,override,OMR::CodeGenerator
+isPreservedRegister,override,OMR::X86::CodeGenerator
+isReturnInstruction,override,OMR::CodeGenerator
+isReturnInstruction,override,OMR::X86::CodeGenerator
+isBranchInstruction,override,OMR::CodeGenerator
+isBranchInstruction,override,OMR::X86::CodeGenerator
+isLabelInstruction,override,OMR::CodeGenerator
+isLabelInstruction,override,OMR::X86::CodeGenerator
+isFenceInstruction,override,OMR::CodeGenerator
+isFenceInstruction,override,OMR::X86::CodeGenerator
+isAlignmentInstruction,override,OMR::CodeGenerator
+isAlignmentInstruction,override,OMR::X86::CodeGenerator
+splitEdge,override,OMR::CodeGenerator
+splitEdge,override,OMR::X86::CodeGenerator
+splitBlockEntry,override,OMR::CodeGenerator
+splitBlockEntry,override,OMR::X86::CodeGenerator
+computeRegisterSaveDescription,override,OMR::CodeGenerator
+computeRegisterSaveDescription,override,OMR::X86::CodeGenerator
+processIncomingParameterUsage,override,OMR::CodeGenerator
+processIncomingParameterUsage,override,OMR::X86::CodeGenerator
+updateSnippetMapWithRSD,override,OMR::CodeGenerator
+updateSnippetMapWithRSD,override,OMR::X86::CodeGenerator
+isTargetSnippetOrOutOfLine,override,OMR::CodeGenerator
+isTargetSnippetOrOutOfLine,override,OMR::X86::CodeGenerator
+enableAESInHardwareTransformations,override,OMR::CodeGenerator
+enableAESInHardwareTransformations,override,OMR::X86::CodeGenerator
+setEstimatedLocationsForDataSnippetLabels,override,OMR::CodeGenerator
+setEstimatedLocationsForDataSnippetLabels,override,OMR::X86::CodeGenerator
+emitDataSnippets,override,OMR::CodeGenerator
+emitDataSnippets,override,OMR::X86::CodeGenerator
+hasDataSnippets,override,OMR::CodeGenerator
+hasDataSnippets,override,OMR::X86::CodeGenerator
+canTransformUnsafeCopyToArrayCopy,override,OMR::CodeGenerator
+canTransformUnsafeCopyToArrayCopy,override,OMR::X86::CodeGenerator
+canNullChkBeImplicit,override,OMR::CodeGenerator
+canNullChkBeImplicit,override,OMR::X86::CodeGenerator
+canNullChkBeImplicit,overload,OMR::CodeGenerator, 1
+supportsSinglePrecisionSQRT,override,OMR::CodeGenerator
+supportsSinglePrecisionSQRT,override,OMR::X86::CodeGenerator
+supportsComplexAddressing,override,OMR::CodeGenerator
+supportsComplexAddressing,override,OMR::X86::CodeGenerator
+getSupportsNewObjectAlignment,override,OMR::CodeGenerator
+getSupportsNewObjectAlignment,override,OMR::X86::CodeGenerator
+getSupportsTenuredObjectAlignment,override,OMR::CodeGenerator
+getSupportsTenuredObjectAlignment,override,OMR::X86::CodeGenerator
+isObjectOfSizeWorthAligning,override,OMR::CodeGenerator
+isObjectOfSizeWorthAligning,override,OMR::X86::CodeGenerator
+getMaximumNumbersOfAssignableGPRs,override,OMR::CodeGenerator
+getMaximumNumbersOfAssignableGPRs,override,OMR::X86::CodeGenerator
+getMaximumNumbersOfAssignableFPRs,override,OMR::CodeGenerator
+getMaximumNumbersOfAssignableFPRs,override,OMR::X86::CodeGenerator
+getMaximumNumbersOfAssignableVRs,override,OMR::CodeGenerator
+getMaximumNumbersOfAssignableVRs,override,OMR::X86::CodeGenerator
+willBeEvaluatedAsCallByCodeGen,override,OMR::CodeGenerator
+willBeEvaluatedAsCallByCodeGen,override,OMR::X86::CodeGenerator
+getSizeOfCombinedBuffer,override,OMR::CodeGenerator
+getSizeOfCombinedBuffer,override,OMR::X86::CodeGenerator
+suppressInliningOfRecognizedMethod,override,OMR::CodeGenerator
+suppressInliningOfRecognizedMethod,override,OMR::X86::CodeGenerator
+supportsInliningOfIsInstance,override,OMR::CodeGenerator
+supportsInliningOfIsInstance,override,OMR::X86::CodeGenerator
+supportsPassThroughCopyToNewVirtualRegister,override,OMR::CodeGenerator
+supportsPassThroughCopyToNewVirtualRegister,override,OMR::X86::CodeGenerator
+doRematerialization,override,OMR::CodeGenerator
+doRematerialization,override,OMR::X86::CodeGenerator
+materializesHeapBase,override,OMR::CodeGenerator
+materializesHeapBase,override,OMR::X86::CodeGenerator
+canFoldLargeOffsetInAddressing,override,OMR::CodeGenerator
+canFoldLargeOffsetInAddressing,override,OMR::X86::CodeGenerator
+arrayInitMinimumNumberOfBytes,override,OMR::CodeGenerator
+arrayInitMinimumNumberOfBytes,override,OMR::X86::CodeGenerator
+getMaxPatchableInstructionLength,override,OMR::CodeGenerator
+getMaxPatchableInstructionLength,override,OMR::X86::CodeGenerator
+estimateBinaryLength,override,OMR::CodeGenerator
+estimateBinaryLength,override,OMR::X86::CodeGenerator
+apply32BitLoadLabelRelativeRelocation,override,OMR::CodeGenerator
+apply32BitLoadLabelRelativeRelocation,override,OMR::X86::CodeGenerator
+apply32BitLabelRelativeRelocation,override,OMR::CodeGenerator
+apply32BitLabelRelativeRelocation,override,OMR::X86::CodeGenerator
+isAddressScaleIndexSupported,override,OMR::CodeGenerator
+isAddressScaleIndexSupported,override,OMR::X86::CodeGenerator
+alignment,overload,OMR::X86::CodeGenerator, 1
+dumpDataSnippets,override,OMR::CodeGenerator
+dumpDataSnippets,override,OMR::X86::CodeGenerator
+removeUnavailableRegisters,override,OMR::CodeGenerator
+removeUnavailableRegisters,override,OMR::X86::CodeGenerator
+generateDebugCounterBump,override,OMR::CodeGenerator
+generateDebugCounterBump,override,OMR::X86::CodeGenerator
+generateDebugCounterBump,overload,OMR::CodeGenerator, 3
+generateDebugCounterBump,overload,OMR::X86::CodeGenerator, 3
+supportsDebugCounters,override,OMR::CodeGenerator
+supportsDebugCounters,override,OMR::X86::CodeGenerator
+nodeResultGPRCount,override,OMR::CodeGenerator
+nodeResultGPRCount,override,OMR::X86::CodeGenerator
+getGlobalRegisters,override,OMR::CodeGenerator
+getGlobalRegisters,override,OMR::X86::CodeGenerator
+simulateNodeEvaluation,override,OMR::CodeGenerator
+simulateNodeEvaluation,override,OMR::X86::CodeGenerator
+needToAvoidCommoningInGRA,override,OMR::CodeGenerator
+needToAvoidCommoningInGRA,override,OMR::X86::CodeGenerator
+codegenSupportsUnsignedIntegerDivide,override,OMR::CodeGenerator
+codegenSupportsUnsignedIntegerDivide,override,OMR::X86::CodeGenerator
+supportsDirectJNICallsForAOT,override,OMR::CodeGenerator
+supportsDirectJNICallsForAOT,override,OMR::X86::CodeGenerator
+arrayTranslateMinimumNumberOfElements,override,OMR::CodeGenerator
+arrayTranslateMinimumNumberOfElements,override,OMR::X86::CodeGenerator
+arrayTranslateAndTestMinimumNumberOfIterations,override,OMR::CodeGenerator
+arrayTranslateAndTestMinimumNumberOfIterations,override,OMR::X86::CodeGenerator
+operator new,overload,OMR::CodeGenerator, 5
+operator new[],overload,OMR::CodeGenerator, 4
+operator delete,overload,OMR::CodeGenerator, 3
+operator delete[],overload,OMR::CodeGenerator, 2
+identifyUnneededByteConvNodes,overload,OMR::CodeGenerator, 1
+generateDebugCounter,overload,OMR::CodeGenerator, 7
+getLinkage,overload,OMR::CodeGenerator, 1
+setLinkage,overload,OMR::CodeGenerator, 1
+addToOSRTable,overload,OMR::CodeGenerator, 1
+allocateCodeMemory,overload,OMR::CodeGenerator, 1
+considerTypeForGRA,overload,OMR::CodeGenerator, 2
+traceRegAssigned,overload,OMR::CodeGenerator, 1
+allocateSpill,overload,OMR::CodeGenerator, 1
+addAOTRelocation,overload,OMR::CodeGenerator, 1
+addProjectSpecializedRelocation,overload,OMR::CodeGenerator, 1
+apply16BitLabelRelativeRelocation,overload,OMR::CodeGenerator, 1
+estimateRegisterPressure,overload,OMR::CodeGenerator, 1
+isCandidateLoad,overload,OMR::CodeGenerator, 1
+simulatedNodeState,overload,OMR::CodeGenerator, 1
+wantToPatchClassPointer,overload,OMR::CodeGenerator, 1
+getSupportsConstantOffsetInAddressing,overload,OMR::CodeGenerator, 1
+TR::Compilation:
+Compilation,override,OMR::Compilation
+Compilation,override,TR::Compilation
+Compilation,overload,OMR::Compilation, 1
+~Compilation,override,OMR::Compilation
+~Compilation,override,TR::Compilation
+operator new,overload,OMR::Compilation, 5
+operator new[],overload,OMR::Compilation, 4
+operator delete,overload,OMR::Compilation, 3
+operator delete[],overload,OMR::Compilation, 2
+resetVisitCounts,overload,OMR::Compilation, 2
+getOwningMethodSymbol,overload,OMR::Compilation, 2
+incInlineDepth,overload,OMR::Compilation, 1
+dumpMethodTrees,overload,OMR::Compilation, 1
+getHotnessName,overload,OMR::Compilation, 1
+TR::CompilerEnv:
+CompilerEnv,override,OMR::CompilerEnv
+CompilerEnv,override,TR::CompilerEnv
+CompilerEnv,overload,OMR::CompilerEnv, 2
+CompilerEnv,overload,TR::CompilerEnv, 1
+operator=,override,OMR::CompilerEnv
+operator=,override,TR::CompilerEnv
+operator=,overload,OMR::CompilerEnv, 1
+TR::DataType:
+DataType,override,OMR::DataType
+DataType,override,TR::DataType
+DataType,overload,OMR::DataType, 3
+DataType,overload,TR::DataType, 3
+~DataType,override,OMR::DataType
+~DataType,override,TR::DataType
+operator=,overload,OMR::DataType, 1
+operator==,overload,OMR::DataType, 1
+operator!=,overload,OMR::DataType, 1
+operator<=,overload,OMR::DataType, 1
+operator<,overload,OMR::DataType, 1
+operator>=,overload,OMR::DataType, 1
+operator>,overload,OMR::DataType, 1
+TR::DebugCounter:
+operator new,overload,TR::DebugCounter, 5
+operator new[],overload,TR::DebugCounter, 4
+operator delete,overload,TR::DebugCounter, 3
+operator delete[],overload,TR::DebugCounter, 2
+prependDebugCounter,overload,TR::DebugCounter, 3
+prependDebugCounterBump,overload,TR::DebugCounter, 1
+getBumpCountSymRef,override,TR::DebugCounterBase
+getBumpCountSymRef,override,TR::DebugCounter
+getBumpCountAddress,override,TR::DebugCounterBase
+getBumpCountAddress,override,TR::DebugCounter
+accumulate,override,TR::DebugCounterBase
+accumulate,override,TR::DebugCounter
+accumulate,overload,TR::DebugCounter, 1
+operator=,override,TR::DebugCounterBase
+operator=,override,TR::DebugCounter
+operator=,overload,TR::DebugCounter, 1
+operator=,overload,TR::DebugCounterBase, 1
+DebugCounterBase,overload,TR::DebugCounterBase, 2
+TR::DebugCounterAggregation:
+operator new,overload,TR::DebugCounterAggregation, 5
+operator new[],overload,TR::DebugCounterAggregation, 4
+operator delete,overload,TR::DebugCounterAggregation, 3
+operator delete[],overload,TR::DebugCounterAggregation, 2
+getBumpCountAddress,override,TR::DebugCounterAggregation
+getBumpCountSymRef,override,TR::DebugCounterAggregation
+accumulate,override,TR::DebugCounterAggregation
+operator=,override,TR::DebugCounterAggregation
+operator=,overload,TR::DebugCounterAggregation, 1
+TR::Environment:
+Environment,override,OMR::Environment
+Environment,override,TR::Environment
+Environment,overload,OMR::Environment, 3
+Environment,overload,TR::Environment, 3
+~Environment,override,OMR::Environment
+~Environment,override,TR::Environment
+operator=,override,OMR::Environment
+operator=,override,TR::Environment
+operator=,overload,OMR::Environment, 1
+operator=,overload,TR::Environment, 1
+TR::GCRegisterMap:
+GCRegisterMap,override,OMR::GCRegisterMap
+GCRegisterMap,override,TR::GCRegisterMap
+GCRegisterMap,overload,OMR::GCRegisterMap, 2
+GCRegisterMap,overload,TR::GCRegisterMap, 2
+~GCRegisterMap,override,OMR::GCRegisterMap
+~GCRegisterMap,override,TR::GCRegisterMap
+operator new,overload,OMR::GCRegisterMap, 5
+operator new[],overload,OMR::GCRegisterMap, 4
+operator delete,overload,OMR::GCRegisterMap, 3
+operator delete[],overload,OMR::GCRegisterMap, 2
+TR::GCStackAtlas:
+GCStackAtlas,override,OMR::GCStackAtlas
+GCStackAtlas,override,TR::GCStackAtlas
+GCStackAtlas,overload,OMR::GCStackAtlas, 2
+operator new,overload,OMR::GCStackAtlas, 5
+operator new[],overload,OMR::GCStackAtlas, 4
+operator delete,overload,OMR::GCStackAtlas, 3
+operator delete[],overload,OMR::GCStackAtlas, 2
+TR::IL:
+IL,override,OMR::IL
+IL,override,TR::IL
+IL,overload,OMR::IL, 1
+IL,overload,TR::IL, 1
+~IL,override,OMR::IL
+~IL,override,TR::IL
+TR::ILOpCode:
+ILOpCode,override,OMR::ILOpCode
+ILOpCode,override,TR::ILOpCode
+ILOpCode,overload,OMR::ILOpCode, 3
+ILOpCode,overload,TR::ILOpCode, 3
+~ILOpCode,override,OMR::ILOpCode
+~ILOpCode,override,TR::ILOpCode
+getDataType,overload,OMR::ILOpCode, 1
+getType,overload,OMR::ILOpCode, 1
+getSize,overload,OMR::ILOpCode, 1
+getDirectCall,overload,OMR::ILOpCode, 1
+TR::KnownObjectTable:
+KnownObjectTable,override,OMR::KnownObjectTable
+KnownObjectTable,override,TR::KnownObjectTable
+KnownObjectTable,overload,OMR::KnownObjectTable, 2
+operator=,override,OMR::KnownObjectTable
+operator=,override,TR::KnownObjectTable
+operator=,overload,OMR::KnownObjectTable, 1
+operator=,overload,TR::KnownObjectTable, 1
+~KnownObjectTable,override,OMR::KnownObjectTable
+~KnownObjectTable,override,TR::KnownObjectTable
+TR::Monitor:
+Monitor,override,OMR::Monitor
+Monitor,override,TR::Monitor
+Monitor,overload,OMR::Monitor, 1
+Monitor,overload,TR::Monitor, 1
+operator=,override,OMR::Monitor
+operator=,override,TR::Monitor
+~Monitor,override,OMR::Monitor
+~Monitor,override,TR::Monitor
+destroy,overload,OMR::Monitor, 1
+TR::Node:
+Node,override,OMR::Node
+Node,override,TR::Node
+Node,overload,OMR::Node, 3
+Node,overload,TR::Node, 3
+~Node,override,OMR::Node
+~Node,override,TR::Node
+copy,overload,OMR::Node, 1
+create,overload,OMR::Node, 15
+createWithSymRef,overload,OMR::Node, 5
+recreateWithoutProperties,overload,OMR::Node, 16
+addChildrenAndSymRef,overload,OMR::Node, 1
+createArraycopy,overload,OMR::Node, 2
+createLoad,overload,OMR::Node, 1
+createStore,overload,OMR::Node, 3
+createRelative32BitFenceNode,overload,OMR::Node, 1
+createAddressNode,overload,OMR::Node, 1
+bconst,overload,OMR::Node, 1
+buconst,overload,OMR::Node, 1
+sconst,overload,OMR::Node, 1
+cconst,overload,OMR::Node, 1
+iconst,overload,OMR::Node, 1
+iuconst,overload,OMR::Node, 1
+lconst,overload,OMR::Node, 1
+luconst,overload,OMR::Node, 1
+aconst,overload,OMR::Node, 2
+containsAnyNode,overload,OMR::Node, 1
+TR::ObjectModel:
+ObjectModel,override,TestCompiler::ObjectModel
+ObjectModel,override,OMR::ObjectModel
+ObjectModel,override,TR::ObjectModel
+ObjectModel,overload,OMR::ObjectModel, 2
+ObjectModel,overload,TR::ObjectModel, 2
+ObjectModel,overload,TestCompiler::ObjectModel, 2
+operator=,override,TestCompiler::ObjectModel
+operator=,override,OMR::ObjectModel
+operator=,override,TR::ObjectModel
+operator=,overload,OMR::ObjectModel, 1
+operator=,overload,TR::ObjectModel, 1
+operator=,overload,TestCompiler::ObjectModel, 1
+~ObjectModel,override,TestCompiler::ObjectModel
+~ObjectModel,override,OMR::ObjectModel
+~ObjectModel,override,TR::ObjectModel
+sizeofReferenceField,override,OMR::ObjectModel
+sizeofReferenceField,override,TestCompiler::ObjectModel
+isDiscontiguousArray,overload,OMR::ObjectModel, 1
+TR::Optimizer:
+Optimizer,override,OMR::Optimizer
+Optimizer,override,TestCompiler::Optimizer
+Optimizer,override,TR::Optimizer
+Optimizer,overload,OMR::Optimizer, 2
+Optimizer,overload,TestCompiler::Optimizer, 2
+optimizationStrategy,override,OMR::Optimizer
+optimizationStrategy,override,TestCompiler::Optimizer
+operator new,overload,OMR::Optimizer, 5
+operator new[],overload,OMR::Optimizer, 4
+operator delete,overload,OMR::Optimizer, 3
+operator delete[],overload,OMR::Optimizer, 2
+switchToProfiling,overload,OMR::Optimizer, 1
+areNodesEquivalent,overload,OMR::Optimizer, 1
+TR::Options:
+Options,override,OMR::Options
+Options,override,TR::Options
+Options,overload,OMR::Options, 4
+Options,overload,TR::Options, 2
+self,overload,OMR::Options, 1
+operator new,overload,OMR::Options, 5
+operator new[],overload,OMR::Options, 4
+operator delete,overload,OMR::Options, 3
+operator delete[],overload,OMR::Options, 2
+findOptionSet,overload,OMR::Options, 2
+processOptions,overload,OMR::Options, 1
+isAnyVerboseOptionSet,overload,OMR::Options, 6
+processOptionSet,overload,OMR::Options, 2
+TR::PersistentInfo:
+PersistentInfo,override,OMR::PersistentInfo
+PersistentInfo,override,TR::PersistentInfo
+PersistentInfo,overload,OMR::PersistentInfo, 2
+PersistentInfo,overload,TR::PersistentInfo, 2
+~PersistentInfo,override,OMR::PersistentInfo
+~PersistentInfo,override,TR::PersistentInfo
+operator=,override,OMR::PersistentInfo
+operator=,override,TR::PersistentInfo
+operator=,overload,OMR::PersistentInfo, 1
+operator=,overload,TR::PersistentInfo, 1
+TR::Region::Instance:
+Destructable,overload,TR::Region::Destructable, 1
+TR::ResolvedMethod:
+ResolvedMethod,override,TestCompiler::ResolvedMethod
+ResolvedMethod,override,TR::ResolvedMethod
+ResolvedMethod,overload,TR::ResolvedMethod, 2
+ResolvedMethod,overload,TestCompiler::ResolvedMethod, 4
+operator=,override,TR_ResolvedMethod
+operator=,override,TestCompiler::ResolvedMethod
+operator=,override,TestCompiler::ResolvedMethodBase
+operator=,override,TR::ResolvedMethod
+operator=,overload,TR::ResolvedMethod, 1
+operator=,overload,TR_ResolvedMethod, 1
+operator=,overload,TestCompiler::ResolvedMethod, 1
+operator=,overload,TestCompiler::ResolvedMethodBase, 1
+~ResolvedMethod,override,TestCompiler::ResolvedMethod
+~ResolvedMethod,override,TR::ResolvedMethod
+convertToMethod,override,TR_ResolvedMethod
+convertToMethod,override,TestCompiler::ResolvedMethod
+signature,override,TR_ResolvedMethod
+signature,override,TestCompiler::ResolvedMethod
+localName,override,TR_ResolvedMethod
+localName,override,TestCompiler::ResolvedMethod
+localName,overload,TR_ResolvedMethod, 1
+classNameChars,override,TR_ResolvedMethod
+classNameChars,override,TestCompiler::ResolvedMethod
+nameChars,override,TR_ResolvedMethod
+nameChars,override,TestCompiler::ResolvedMethod
+signatureChars,override,TR_ResolvedMethod
+signatureChars,override,TestCompiler::ResolvedMethod
+signatureLength,override,TR_ResolvedMethod
+signatureLength,override,TestCompiler::ResolvedMethodBase
+signatureLength,override,TestCompiler::ResolvedMethod
+resolvedMethodAddress,override,TR_ResolvedMethod
+resolvedMethodAddress,override,TestCompiler::ResolvedMethod
+numberOfParameterSlots,override,TR_ResolvedMethod
+numberOfParameterSlots,override,TestCompiler::ResolvedMethod
+parmType,override,TR_ResolvedMethod
+parmType,override,TestCompiler::ResolvedMethod
+numberOfTemps,override,TR_ResolvedMethod
+numberOfTemps,override,TestCompiler::ResolvedMethod
+startAddressForJittedMethod,override,TR_ResolvedMethod
+startAddressForJittedMethod,override,TestCompiler::ResolvedMethod
+startAddressForInterpreterOfJittedMethod,override,TR_ResolvedMethod
+startAddressForInterpreterOfJittedMethod,override,TestCompiler::ResolvedMethod
+maxBytecodeIndex,override,TR_ResolvedMethod
+maxBytecodeIndex,override,TestCompiler::ResolvedMethod
+getPersistentIdentifier,override,TR_ResolvedMethod
+getPersistentIdentifier,override,TestCompiler::ResolvedMethod
+isInterpreted,override,TR_ResolvedMethod
+isInterpreted,override,TestCompiler::ResolvedMethod
+returnType,override,TR_ResolvedMethod
+returnType,override,TestCompiler::ResolvedMethod
+makeParameterList,override,TR_ResolvedMethod
+makeParameterList,override,TestCompiler::ResolvedMethod
+nameLength,override,TR_ResolvedMethod
+nameLength,override,TestCompiler::ResolvedMethodBase
+classNameLength,override,TR_ResolvedMethod
+classNameLength,override,TestCompiler::ResolvedMethodBase
+isConstructor,override,TR_ResolvedMethod
+isConstructor,override,TestCompiler::ResolvedMethodBase
+isNonEmptyObjectConstructor,override,TR_ResolvedMethod
+isNonEmptyObjectConstructor,override,TestCompiler::ResolvedMethodBase
+isStatic,override,TR_ResolvedMethod
+isStatic,override,TestCompiler::ResolvedMethodBase
+isAbstract,override,TR_ResolvedMethod
+isAbstract,override,TestCompiler::ResolvedMethodBase
+isCompilable,override,TR_ResolvedMethod
+isCompilable,override,TestCompiler::ResolvedMethodBase
+isNative,override,TR_ResolvedMethod
+isNative,override,TestCompiler::ResolvedMethodBase
+isSynchronized,override,TR_ResolvedMethod
+isSynchronized,override,TestCompiler::ResolvedMethodBase
+isPrivate,override,TR_ResolvedMethod
+isPrivate,override,TestCompiler::ResolvedMethodBase
+isProtected,override,TR_ResolvedMethod
+isProtected,override,TestCompiler::ResolvedMethodBase
+isPublic,override,TR_ResolvedMethod
+isPublic,override,TestCompiler::ResolvedMethodBase
+isFinal,override,TR_ResolvedMethod
+isFinal,override,TestCompiler::ResolvedMethodBase
+isStrictFP,override,TR_ResolvedMethod
+isStrictFP,override,TestCompiler::ResolvedMethodBase
+isSubjectToPhaseChange,override,TR_ResolvedMethod
+isSubjectToPhaseChange,override,TestCompiler::ResolvedMethodBase
+hasBackwardBranches,override,TR_ResolvedMethod
+hasBackwardBranches,override,TestCompiler::ResolvedMethodBase
+isNewInstanceImplThunk,override,TR_ResolvedMethod
+isNewInstanceImplThunk,override,TestCompiler::ResolvedMethodBase
+isJNINative,override,TR_ResolvedMethod
+isJNINative,override,TestCompiler::ResolvedMethodBase
+isJITInternalNative,override,TR_ResolvedMethod
+isJITInternalNative,override,TestCompiler::ResolvedMethodBase
+numberOfExceptionHandlers,override,TR_ResolvedMethod
+numberOfExceptionHandlers,override,TestCompiler::ResolvedMethodBase
+isSameMethod,override,TR_ResolvedMethod
+isSameMethod,override,TestCompiler::ResolvedMethodBase
+ResolvedMethodBase,overload,TestCompiler::ResolvedMethodBase, 2
+fieldName,overload,TR_ResolvedMethod, 1
+staticName,overload,TR_ResolvedMethod, 1
+getResolvedInterfaceMethod,overload,TR_ResolvedMethod, 1
+getResolvedVirtualMethod,overload,TR_ResolvedMethod, 1
+TR_ResolvedMethod,overload,TR_ResolvedMethod, 2
+TR::SnippetGCMap:
+SnippetGCMap,override,OMR::SnippetGCMap
+SnippetGCMap,override,TR::SnippetGCMap
+SnippetGCMap,overload,OMR::SnippetGCMap, 2
+SnippetGCMap,overload,TR::SnippetGCMap, 2
+operator=,override,OMR::SnippetGCMap
+operator=,override,TR::SnippetGCMap
+operator=,overload,OMR::SnippetGCMap, 1
+operator=,overload,TR::SnippetGCMap, 1
+~SnippetGCMap,override,OMR::SnippetGCMap
+~SnippetGCMap,override,TR::SnippetGCMap
+registerStackMap,overload,OMR::SnippetGCMap, 1
+TR::StackMemoryRegion:
+StackMemoryRegion,overload,TR::StackMemoryRegion, 1
+operator=,override,TR::Region
+operator=,override,TR::StackMemoryRegion
+Region,overload,TR::Region, 1
+TR::SymbolReference:
+SymbolReference,override,OMR::SymbolReference
+SymbolReference,override,TR::SymbolReference
+SymbolReference,overload,OMR::SymbolReference, 9
+SymbolReference,overload,TR::SymbolReference, 6
+operator=,override,OMR::SymbolReference
+operator=,override,TR::SymbolReference
+operator=,overload,OMR::SymbolReference, 1
+operator=,overload,TR::SymbolReference, 1
+~SymbolReference,override,OMR::SymbolReference
+~SymbolReference,override,TR::SymbolReference
+operator new,overload,OMR::SymbolReference, 5
+operator new[],overload,OMR::SymbolReference, 4
+operator delete,overload,OMR::SymbolReference, 3
+operator delete[],overload,OMR::SymbolReference, 2
+reallySharesSymbol,overload,OMR::SymbolReference, 1
+setAliasedTo,overload,OMR::SymbolReference, 1
+TR::SymbolReferenceTable:
+SymbolReferenceTable,override,OMR::SymbolReferenceTable
+SymbolReferenceTable,override,TR::SymbolReferenceTable
+SymbolReferenceTable,overload,OMR::SymbolReferenceTable, 2
+operator new,overload,OMR::SymbolReferenceTable, 5
+operator new[],overload,OMR::SymbolReferenceTable, 4
+operator delete,overload,OMR::SymbolReferenceTable, 3
+operator delete[],overload,OMR::SymbolReferenceTable, 2
+isNonHelper,overload,OMR::SymbolReferenceTable, 1
+element,overload,OMR::SymbolReferenceTable, 1
+getSymRef,overload,OMR::SymbolReferenceTable, 1
+createKnownStaticDataSymbolRef,overload,OMR::SymbolReferenceTable, 1
+findOrCreateSymRefWithKnownObject,overload,OMR::SymbolReferenceTable, 1
+findOrCreateArrayShadowSymbolRef,overload,OMR::SymbolReferenceTable, 1
+createRefinedArrayShadowSymbolRef,overload,OMR::SymbolReferenceTable, 1
+findAvailableAuto,overload,OMR::SymbolReferenceTable, 1
+TR::TreeTop:
+TreeTop,override,OMR::TreeTop
+TreeTop,override,TR::TreeTop
+TreeTop,overload,OMR::TreeTop, 3
+TreeTop,overload,TR::TreeTop, 2
+create,overload,OMR::TreeTop, 2
+removeDeadTrees,overload,OMR::TreeTop, 1
+TR::VMEnv:
+VMEnv,override,OMR::VMEnv
+VMEnv,override,TR::VMEnv
+VMEnv,overload,OMR::VMEnv, 2
+VMEnv,overload,TR::VMEnv, 2
+~VMEnv,override,OMR::VMEnv
+~VMEnv,override,TR::VMEnv
+operator=,override,OMR::VMEnv
+operator=,override,TR::VMEnv
+operator=,overload,OMR::VMEnv, 1
+operator=,overload,TR::VMEnv, 1
+hasResumableTrapHandler,overload,OMR::VMEnv, 1
+getUSecClock,overload,OMR::VMEnv, 2
+getHighResClock,overload,OMR::VMEnv, 1
+hasAccess,overload,OMR::VMEnv, 1
+acquireVMAccessIfNeeded,overload,OMR::VMEnv, 1
+tryToAcquireAccess,overload,OMR::VMEnv, 1
+releaseVMAccessIfNeeded,overload,OMR::VMEnv, 1
+releaseAccess,overload,OMR::VMEnv, 1
+TR::ParameterSymbol:
+ParameterSymbol,override,OMR::ParameterSymbol
+ParameterSymbol,override,TR::ParameterSymbol
+ParameterSymbol,overload,OMR::ParameterSymbol, 3
+ParameterSymbol,overload,TR::ParameterSymbol, 1
+operator=,override,TR::ParameterSymbol
+operator=,override,OMR::ParameterSymbol
+operator=,overload,OMR::ParameterSymbol, 1
+operator=,overload,TR::ParameterSymbol, 1
+~ParameterSymbol,override,OMR::ParameterSymbol
+~ParameterSymbol,override,TR::ParameterSymbol
+self,override,OMR::ParameterSymbol
+setThisTempForObjectCtor,override,OMR::Symbol
+setThisTempForObjectCtor,override,OMR::ResolvedMethodSymbol
+isStatic,override,OMR::Symbol
+isStatic,override,OMR::MethodSymbol
+TR::CFGNode:
+CFGNode,overload,TR::CFGNode, 2
+operator=,override,OMR::DataType
+operator=,override,TR::DataType
+operator=,overload,OMR::DataType, 3
+operator=,overload,TR::DataType, 1
+TR::IO:
+operator=,overload,OMR::Options, 1
+TR::Recompilation:
+Recompilation,override,OMR::Recompilation
+Recompilation,override,TR::Recompilation
+Recompilation,overload,OMR::Recompilation, 2
+operator=,override,OMR::Recompilation
+operator=,override,TR::Recompilation
+operator=,overload,OMR::Recompilation, 1
+operator=,overload,TR::Recompilation, 1
+~Recompilation,override,OMR::Recompilation
+~Recompilation,override,TR::Recompilation
+operator new,overload,OMR::Recompilation, 5
+operator new[],overload,OMR::Recompilation, 4
+operator delete,overload,OMR::Recompilation, 3
+operator delete[],overload,OMR::Recompilation, 2
+TR::BlockChecklist:
+BlockChecklist,overload,TR::BlockChecklist, 2
+add,overload,TR::BlockChecklist, 1
+remove,overload,TR::BlockChecklist, 1
+operator=,override,TR::Checklist
+operator=,override,TR::BlockChecklist
+Checklist,overload,TR::Checklist, 1
+TR::NodeChecklist:
+NodeChecklist,overload,TR::NodeChecklist, 2
+add,overload,TR::NodeChecklist, 1
+remove,overload,TR::NodeChecklist, 1
+operator=,override,TR::NodeChecklist
+TR::Optimization:
+Optimization,override,OMR::Optimization
+Optimization,override,TR::Optimization
+Optimization,overload,OMR::Optimization, 2
+operator=,override,TR_HasRandomGenerator
+operator=,override,OMR::Optimization
+operator=,override,TR::Optimization
+operator=,overload,OMR::Optimization, 1
+operator=,overload,TR::Optimization, 1
+operator=,overload,TR_HasRandomGenerator, 1
+~Optimization,override,OMR::Optimization
+~Optimization,override,TR::Optimization
+prepareToReplaceNode,overload,OMR::Optimization, 1
+randomInt,overload,TR_HasRandomGenerator, 2
+TR_HasRandomGenerator,overload,TR_HasRandomGenerator, 2
+TR::OptimizationManager:
+OptimizationManager,override,OMR::OptimizationManager
+OptimizationManager,override,TR::OptimizationManager
+OptimizationManager,overload,OMR::OptimizationManager, 2
+operator=,override,OMR::OptimizationManager
+operator=,override,TR::OptimizationManager
+operator=,overload,OMR::OptimizationManager, 1
+operator=,overload,TR::OptimizationManager, 1
+~OptimizationManager,override,OMR::OptimizationManager
+~OptimizationManager,override,TR::OptimizationManager
+TR::RegisterMappedSymbol:
+RegisterMappedSymbol,overload,OMR::RegisterMappedSymbol, 4
+RegisterMappedSymbol,overload,TR::RegisterMappedSymbol, 2
+operator=,overload,OMR::RegisterMappedSymbol, 1
+TR::AllBlockIterator:
+AllBlockIterator,overload,TR::AllBlockIterator, 2
+BlockIterator,overload,TR::BlockIterator, 2
+operator=,overload,TR::BlockIterator, 1
+TR::JavaILValidator:
+validateNode,override,TR::ILValidator
+validateNode,override,TR::JavaILValidator
+operator=,override,TR::ILValidator
+operator=,override,TR::JavaILValidator
+operator=,overload,TR::ILValidator, 1
+operator=,overload,TR::JavaILValidator, 1
+ILValidator,overload,TR::ILValidator, 2
+operator=,overload,TR::NodeChecklist, 1
+TR::PostorderNodeOccurrenceIterator:
+PostorderNodeOccurrenceIterator,overload,TR::PostorderNodeOccurrenceIterator, 2
+stepForward,override,TR::TreeTopIteratorImpl
+stepForward,override,TR::PostorderNodeOccurrenceIterator
+operator++,override,TR::TreeTopIteratorImpl
+operator++,override,TR::PostorderNodeOccurrenceIterator
+NodeOccurrenceIterator,overload,TR::NodeOccurrenceIterator, 2
+logCurrentLocation,override,TR::NodeIterator
+logCurrentLocation,override,TR::TreeTopIteratorImpl
+logCurrentLocation,override,TR::NodeOccurrenceIterator
+currentNode,override,TR::NodeIterator
+currentNode,override,TR::TreeTopIteratorImpl
+currentNode,override,TR::NodeOccurrenceIterator
+NodeIterator,overload,TR::NodeIterator, 3
+currentTree,override,TR::TreeTopIteratorImpl
+currentTree,override,TR::NodeIterator
+isAt,override,TR::TreeTopIteratorImpl
+isAt,override,TR::NodeIterator
+isAt,overload,TR::NodeIterator, 2
+isAt,overload,TR::TreeTopIteratorImpl, 2
+operator==,override,TR::TreeTopIteratorImpl
+operator==,override,TR::NodeIterator
+operator!=,override,TR::TreeTopIteratorImpl
+operator!=,override,TR::NodeIterator
+operator=,override,TR::TreeTopIteratorImpl
+operator=,override,TR::NodeIterator
+operator=,overload,TR::TreeTopIteratorImpl, 1
+TreeTopIteratorImpl,overload,TR::TreeTopIteratorImpl, 2
+TR::OptimizationData:
+OptimizationData,overload,TR::OptimizationData, 1
+operator=,overload,TR::OptimizationData, 1
+TR::OptimizationPolicy:
+OptimizationPolicy,overload,TR::OptimizationPolicy, 1
+operator=,overload,TR::OptimizationPolicy, 1
+TR::OptimizationUtil:
+OptimizationUtil,overload,TR::OptimizationUtil, 1
+operator=,overload,TR::OptimizationUtil, 1
+TR::PostorderNodeIterator:
+PostorderNodeIterator,overload,TR::PostorderNodeIterator, 3
+TR::PreorderNodeIterator:
+PreorderNodeIterator,overload,TR::PreorderNodeIterator, 3
+TR::PreorderNodeOccurrenceIterator:
+PreorderNodeOccurrenceIterator,overload,TR::PreorderNodeOccurrenceIterator, 2
+TR::ReversePostorderSnapshotBlockIterator:
+ReversePostorderSnapshotBlockIterator,overload,TR::ReversePostorderSnapshotBlockIterator, 3
+operator=,override,TR::BlockIterator
+operator=,override,TR::ReversePostorderSnapshotBlockIterator
+TR::TreeTopIterator:
+stepForward,override,TR::TreeTopIterator
+stepBackward,override,TR::TreeTopIteratorImpl
+stepBackward,override,TR::TreeTopIterator
+Monitor,overload,TR::Monitor, 2
+TR::MonitorTable:
+MonitorTable,override,OMR::MonitorTable
+MonitorTable,override,TR::MonitorTable
+MonitorTable,overload,OMR::MonitorTable, 2
+CFGEdge,overload,TR::CFGEdge, 3
+TR::VPArrayInfo:
+create,override,TR::VPConstraint
+create,override,TR::VPArrayInfo
+create,overload,TR::VPArrayInfo, 1
+asArrayInfo,override,TR::VPConstraint
+asArrayInfo,override,TR::VPArrayInfo
+merge1,override,TR::VPConstraint
+merge1,override,TR::VPArrayInfo
+intersect1,override,TR::VPConstraint
+intersect1,override,TR::VPArrayInfo
+getArrayInfo,override,TR::VPConstraint
+getArrayInfo,override,TR::VPArrayInfo
+print,override,TR::VPConstraint
+print,override,TR::VPArrayInfo
+print,overload,TR::VPConstraint, 2
+name,override,TR::VPConstraint
+name,override,TR::VPArrayInfo
+operator=,override,TR::VPConstraint
+operator=,override,TR::VPArrayInfo
+operator=,overload,TR::VPArrayInfo, 1
+operator=,overload,TR::VPConstraint, 1
+operator new,overload,TR::VPConstraint, 5
+operator new[],overload,TR::VPConstraint, 4
+operator delete,overload,TR::VPConstraint, 3
+operator delete[],overload,TR::VPConstraint, 2
+VPConstraint,overload,TR::VPConstraint, 2
+mustBeEqual,overload,TR::VPConstraint, 1
+mustBeNotEqual,overload,TR::VPConstraint, 1
+mustBeLessThan,overload,TR::VPConstraint, 1
+mustBeLessThanOrEqual,overload,TR::VPConstraint, 1
+TR::VPClass:
+create,override,TR::VPClass
+asClass,override,TR::VPConstraint
+asClass,override,TR::VPClass
+merge1,override,TR::VPClass
+intersect1,override,TR::VPClass
+mustBeEqual,override,TR::VPConstraint
+mustBeEqual,override,TR::VPClass
+mustBeNotEqual,override,TR::VPConstraint
+mustBeNotEqual,override,TR::VPClass
+isNullObject,override,TR::VPConstraint
+isNullObject,override,TR::VPClass
+isNonNullObject,override,TR::VPConstraint
+isNonNullObject,override,TR::VPClass
+isPreexistentObject,override,TR::VPConstraint
+isPreexistentObject,override,TR::VPClass
+getClass,override,TR::VPConstraint
+getClass,override,TR::VPClass
+isFixedClass,override,TR::VPConstraint
+isFixedClass,override,TR::VPClass
+isConstString,override,TR::VPConstraint
+isConstString,override,TR::VPClass
+getClassType,override,TR::VPConstraint
+getClassType,override,TR::VPClass
+getArrayInfo,override,TR::VPClass
+getClassPresence,override,TR::VPConstraint
+getClassPresence,override,TR::VPClass
+getPreexistence,override,TR::VPConstraint
+getPreexistence,override,TR::VPClass
+getObjectLocation,override,TR::VPConstraint
+getObjectLocation,override,TR::VPClass
+getConstString,override,TR::VPConstraint
+getConstString,override,TR::VPClass
+getKnownObject,override,TR::VPConstraint
+getKnownObject,override,TR::VPClass
+isStackObject,override,TR::VPConstraint
+isStackObject,override,TR::VPClass
+isHeapObject,override,TR::VPConstraint
+isHeapObject,override,TR::VPClass
+isClassObject,override,TR::VPConstraint
+isClassObject,override,TR::VPClass
+isJavaLangClassObject,override,TR::VPConstraint
+isJavaLangClassObject,override,TR::VPClass
+isJ9ClassObject,override,TR::VPConstraint
+isJ9ClassObject,override,TR::VPClass
+getClassSignature,override,TR::VPConstraint
+getClassSignature,override,TR::VPClass
+print,override,TR::VPClass
+name,override,TR::VPClass
+operator=,override,TR::VPClass
+operator=,overload,TR::VPClass, 1
+TR::VPNonNullObject:
+create,override,TR::VPNonNullObject
+asNonNullObject,override,TR::VPConstraint
+asNonNullObject,override,TR::VPNonNullObject
+intersect1,override,TR::VPNonNullObject
+mustBeNotEqual,override,TR::VPNonNullObject
+isNonNullObject,override,TR::VPNonNullObject
+print,override,TR::VPNonNullObject
+name,override,TR::VPNonNullObject
+operator=,override,TR::VPClassPresence
+operator=,override,TR::VPNonNullObject
+operator=,overload,TR::VPClassPresence, 1
+operator=,overload,TR::VPNonNullObject, 1
+asClassPresence,override,TR::VPConstraint
+asClassPresence,override,TR::VPClassPresence
+getClassPresence,override,TR::VPClassPresence
+TR::VPConstString:
+create,override,TR::VPConstString
+create,override,TR::VPFixedClass
+create,override,TR::VPResolvedClass
+create,override,TR::VPClassType
+create,overload,TR::VPClassType, 1
+create,overload,TR::VPResolvedClass, 1
+asConstString,override,TR::VPConstraint
+asConstString,override,TR::VPConstString
+getConstString,override,TR::VPConstString
+isConstString,override,TR::VPConstString
+merge1,override,TR::VPResolvedClass
+merge1,override,TR::VPFixedClass
+merge1,override,TR::VPConstString
+merge1,overload,TR::VPResolvedClass, 1
+intersect1,override,TR::VPResolvedClass
+intersect1,override,TR::VPFixedClass
+intersect1,override,TR::VPConstString
+intersect1,overload,TR::VPResolvedClass, 1
+mustBeEqual,override,TR::VPConstString
+mustBeNotEqual,override,TR::VPConstString
+hasMoreThanFixedClassInfo,override,TR::VPFixedClass
+hasMoreThanFixedClassInfo,override,TR::VPConstString
+print,override,TR::VPResolvedClass
+print,override,TR::VPFixedClass
+print,override,TR::VPConstString
+print,overload,TR::VPResolvedClass, 1
+name,override,TR::VPResolvedClass
+name,override,TR::VPFixedClass
+name,override,TR::VPConstString
+name,overload,TR::VPResolvedClass, 1
+operator=,override,TR::VPConstString
+operator=,override,TR::VPFixedClass
+operator=,override,TR::VPResolvedClass
+operator=,override,TR::VPClassType
+operator=,overload,TR::VPClassType, 1
+operator=,overload,TR::VPConstString, 1
+operator=,overload,TR::VPFixedClass, 1
+operator=,overload,TR::VPResolvedClass, 3
+VPFixedClass,overload,TR::VPFixedClass, 2
+asFixedClass,override,TR::VPConstraint
+asFixedClass,override,TR::VPFixedClass
+isFixedClass,override,TR::VPFixedClass
+getArrayClass,override,TR::VPClassType
+getArrayClass,override,TR::VPResolvedClass
+getArrayClass,override,TR::VPFixedClass
+getArrayClass,overload,TR::VPResolvedClass, 1
+isArray,override,TR::VPClassType
+isArray,override,TR::VPFixedClass
+VPResolvedClass,overload,TR::VPResolvedClass, 7
+asResolvedClass,override,TR::VPConstraint
+asResolvedClass,override,TR::VPResolvedClass
+asResolvedClass,overload,TR::VPResolvedClass, 1
+getClassSignature,override,TR::VPClassType
+getClassSignature,override,TR::VPResolvedClass
+getClassSignature,overload,TR::VPResolvedClass, 1
+getClass,override,TR::VPResolvedClass
+getClass,overload,TR::VPResolvedClass, 1
+isReferenceArray,override,TR::VPClassType
+isReferenceArray,override,TR::VPResolvedClass
+isReferenceArray,overload,TR::VPResolvedClass, 1
+isPrimitiveArray,override,TR::VPClassType
+isPrimitiveArray,override,TR::VPResolvedClass
+isPrimitiveArray,overload,TR::VPResolvedClass, 1
+isJavaLangObject,override,TR::VPClassType
+isJavaLangObject,override,TR::VPResolvedClass
+isJavaLangObject,overload,TR::VPResolvedClass, 1
+~VPResolvedClass,overload,TR::VPResolvedClass, 1
+VPClassType,overload,TR::VPClassType, 2
+asClassType,override,TR::VPConstraint
+asClassType,override,TR::VPClassType
+getClassType,override,TR::VPClassType
+isClassObject,override,TR::VPClassType
+isJavaLangClassObject,override,TR::VPClassType
+isJ9ClassObject,override,TR::VPClassType
+TR::VPEqual:
+asEqual,override,TR::VPConstraint
+asEqual,override,TR::VPEqual
+create,override,TR::VPEqual
+merge1,override,TR::VPEqual
+intersect1,override,TR::VPEqual
+mustBeEqual,override,TR::VPEqual
+mustBeNotEqual,override,TR::VPEqual
+mustBeLessThan,override,TR::VPConstraint
+mustBeLessThan,override,TR::VPEqual
+mustBeLessThanOrEqual,override,TR::VPConstraint
+mustBeLessThanOrEqual,override,TR::VPEqual
+mustBeGreaterThan,override,TR::VPConstraint
+mustBeGreaterThan,override,TR::VPEqual
+mustBeGreaterThanOrEqual,override,TR::VPConstraint
+mustBeGreaterThanOrEqual,override,TR::VPEqual
+propagateAbsoluteConstraint,override,TR::VPRelation
+propagateAbsoluteConstraint,override,TR::VPEqual
+propagateRelativeConstraint,override,TR::VPRelation
+propagateRelativeConstraint,override,TR::VPEqual
+getComplement,override,TR::VPRelation
+getComplement,override,TR::VPEqual
+print,override,TR::VPEqual
+print,overload,TR::VPEqual, 1
+name,override,TR::VPEqual
+operator=,override,TR::VPRelation
+operator=,override,TR::VPEqual
+operator=,overload,TR::VPEqual, 1
+operator=,overload,TR::VPRelation, 1
+VPRelation,overload,TR::VPRelation, 2
+asRelation,override,TR::VPConstraint
+asRelation,override,TR::VPRelation
+TR::VPGreaterThanOrEqual:
+propagateAbsoluteConstraint,override,TR::VPGreaterThanOrEqual
+propagateRelativeConstraint,override,TR::VPGreaterThanOrEqual
+getComplement,override,TR::VPGreaterThanOrEqual
+print,overload,TR::VPGreaterThanOrEqual, 1
+operator=,override,TR::VPGreaterThanOrEqual
+operator=,overload,TR::VPGreaterThanOrEqual, 1
+TR::VPIntConst:
+create,override,TR::VPIntConst
+asIntConst,override,TR::VPConstraint
+asIntConst,override,TR::VPIntConst
+getHigh,override,TR::VPIntConstraint
+getHigh,override,TR::VPIntConst
+mustBeEqual,override,TR::VPIntConst
+print,override,TR::VPIntConst
+name,override,TR::VPIntConst
+getPrecision,override,TR::VPConstraint
+getPrecision,override,TR::VPIntConstraint
+getPrecision,override,TR::VPIntConst
+operator=,override,TR::VPIntConstraint
+operator=,override,TR::VPIntConst
+operator=,overload,TR::VPIntConst, 1
+operator=,overload,TR::VPIntConstraint, 1
+VPIntConstraint,overload,TR::VPIntConstraint, 2
+asIntConstraint,override,TR::VPConstraint
+asIntConstraint,override,TR::VPIntConstraint
+getLowInt,override,TR::VPConstraint
+getLowInt,override,TR::VPIntConstraint
+getHighInt,override,TR::VPConstraint
+getHighInt,override,TR::VPIntConstraint
+merge1,override,TR::VPIntConstraint
+intersect1,override,TR::VPIntConstraint
+mustBeNotEqual,override,TR::VPIntConstraint
+mustBeLessThan,override,TR::VPIntConstraint
+mustBeLessThanOrEqual,override,TR::VPIntConstraint
+add,override,TR::VPConstraint
+add,override,TR::VPIntConstraint
+subtract,override,TR::VPConstraint
+subtract,override,TR::VPIntConstraint
+canOverflow,override,TR::VPConstraint
+canOverflow,override,TR::VPIntConstraint
+setCanOverflow,override,TR::VPConstraint
+setCanOverflow,override,TR::VPIntConstraint
+TR::VPIntRange:
+create,overload,TR::VPIntRange, 1
+getHigh,override,TR::VPIntRange
+getPrecision,override,TR::VPIntRange
+operator=,override,TR::VPIntRange
+operator=,overload,TR::VPIntRange, 1
+TR::VPKnownObject:
+create,override,TR::VPKnownObject
+create,overload,TR::VPKnownObject, 1
+merge1,override,TR::VPKnownObject
+intersect1,override,TR::VPKnownObject
+hasMoreThanFixedClassInfo,override,TR::VPKnownObject
+print,override,TR::VPKnownObject
+name,override,TR::VPKnownObject
+operator=,override,TR::VPKnownObject
+operator=,overload,TR::VPKnownObject, 1
+TR::VPLessThanOrEqual:
+propagateAbsoluteConstraint,override,TR::VPLessThanOrEqual
+propagateRelativeConstraint,override,TR::VPLessThanOrEqual
+getComplement,override,TR::VPLessThanOrEqual
+print,overload,TR::VPLessThanOrEqual, 1
+operator=,override,TR::VPLessThanOrEqual
+operator=,overload,TR::VPLessThanOrEqual, 1
+TR::VPLongConst:
+create,override,TR::VPLongConst
+asLongConst,override,TR::VPConstraint
+asLongConst,override,TR::VPLongConst
+getHigh,override,TR::VPLongConstraint
+getHigh,override,TR::VPLongConst
+mustBeEqual,override,TR::VPLongConst
+print,override,TR::VPLongConst
+name,override,TR::VPLongConst
+getPrecision,override,TR::VPLongConstraint
+getPrecision,override,TR::VPLongConst
+operator=,override,TR::VPLongConstraint
+operator=,override,TR::VPLongConst
+operator=,overload,TR::VPLongConst, 1
+operator=,overload,TR::VPLongConstraint, 1
+VPLongConstraint,overload,TR::VPLongConstraint, 2
+asLongConstraint,override,TR::VPConstraint
+asLongConstraint,override,TR::VPLongConstraint
+getLowLong,override,TR::VPConstraint
+getLowLong,override,TR::VPLongConstraint
+getHighLong,override,TR::VPConstraint
+getHighLong,override,TR::VPLongConstraint
+merge1,override,TR::VPLongConstraint
+intersect1,override,TR::VPLongConstraint
+mustBeNotEqual,override,TR::VPLongConstraint
+mustBeLessThan,override,TR::VPLongConstraint
+mustBeLessThanOrEqual,override,TR::VPLongConstraint
+add,override,TR::VPLongConstraint
+subtract,override,TR::VPLongConstraint
+canOverflow,override,TR::VPLongConstraint
+setCanOverflow,override,TR::VPLongConstraint
+TR::VPLongRange:
+getHigh,override,TR::VPLongRange
+getPrecision,override,TR::VPLongRange
+operator=,override,TR::VPLongRange
+operator=,overload,TR::VPLongRange, 1
+TR::VPMergedConstraints:
+create,override,TR::VPMergedConstraints
+create,overload,TR::VPMergedConstraints, 1
+asMergedConstraints,override,TR::VPConstraint
+asMergedConstraints,override,TR::VPMergedConstraints
+asMergedShortConstraints,override,TR::VPConstraint
+asMergedShortConstraints,override,TR::VPMergedConstraints
+asMergedIntConstraints,override,TR::VPConstraint
+asMergedIntConstraints,override,TR::VPMergedConstraints
+asMergedLongConstraints,override,TR::VPConstraint
+asMergedLongConstraints,override,TR::VPMergedConstraints
+merge1,override,TR::VPMergedConstraints
+intersect1,override,TR::VPMergedConstraints
+mustBeNotEqual,override,TR::VPMergedConstraints
+mustBeLessThan,override,TR::VPMergedConstraints
+mustBeLessThanOrEqual,override,TR::VPMergedConstraints
+getLowShort,override,TR::VPConstraint
+getLowShort,override,TR::VPMergedConstraints
+getHighShort,override,TR::VPConstraint
+getHighShort,override,TR::VPMergedConstraints
+getLowInt,override,TR::VPMergedConstraints
+getHighInt,override,TR::VPMergedConstraints
+getLowLong,override,TR::VPMergedConstraints
+getHighLong,override,TR::VPMergedConstraints
+getUnsignedLowShort,override,TR::VPConstraint
+getUnsignedLowShort,override,TR::VPMergedConstraints
+getUnsignedHighShort,override,TR::VPConstraint
+getUnsignedHighShort,override,TR::VPMergedConstraints
+getUnsignedLowInt,override,TR::VPConstraint
+getUnsignedLowInt,override,TR::VPMergedConstraints
+getUnsignedHighInt,override,TR::VPConstraint
+getUnsignedHighInt,override,TR::VPMergedConstraints
+getUnsignedLowLong,override,TR::VPConstraint
+getUnsignedLowLong,override,TR::VPMergedConstraints
+getUnsignedHighLong,override,TR::VPConstraint
+getUnsignedHighLong,override,TR::VPMergedConstraints
+print,override,TR::VPMergedConstraints
+name,override,TR::VPMergedConstraints
+operator=,override,TR::VPMergedConstraints
+operator=,overload,TR::VPMergedConstraints, 1
+TR::VPNotEqual:
+propagateAbsoluteConstraint,override,TR::VPNotEqual
+propagateRelativeConstraint,override,TR::VPNotEqual
+getComplement,override,TR::VPNotEqual
+print,overload,TR::VPNotEqual, 1
+operator=,override,TR::VPNotEqual
+operator=,overload,TR::VPNotEqual, 1
+TR::VPNullObject:
+operator=,override,TR::VPNullObject
+operator=,overload,TR::VPNullObject, 1
+TR::VPObjectLocation:
+create,override,TR::VPObjectLocation
+asObjectLocation,override,TR::VPConstraint
+asObjectLocation,override,TR::VPObjectLocation
+getObjectLocation,override,TR::VPObjectLocation
+intersect1,override,TR::VPObjectLocation
+merge1,override,TR::VPObjectLocation
+isStackObject,override,TR::VPObjectLocation
+isHeapObject,override,TR::VPObjectLocation
+isClassObject,override,TR::VPObjectLocation
+isJavaLangClassObject,override,TR::VPObjectLocation
+isJ9ClassObject,override,TR::VPObjectLocation
+print,override,TR::VPObjectLocation
+name,override,TR::VPObjectLocation
+operator=,override,TR::VPObjectLocation
+operator=,overload,TR::VPObjectLocation, 1
+TR::VPPreexistentObject:
+create,override,TR::VPPreexistentObject
+asPreexistentObject,override,TR::VPConstraint
+asPreexistentObject,override,TR::VPPreexistentObject
+intersect1,override,TR::VPPreexistentObject
+isPreexistentObject,override,TR::VPPreexistentObject
+getPreexistence,override,TR::VPPreexistentObject
+print,override,TR::VPPreexistentObject
+name,override,TR::VPPreexistentObject
+operator=,override,TR::VPPreexistentObject
+operator=,overload,TR::VPPreexistentObject, 1
+TR::VPShortConst:
+create,override,TR::VPShortConst
+asShortConst,override,TR::VPConstraint
+asShortConst,override,TR::VPShortConst
+getHigh,override,TR::VPShortConstraint
+getHigh,override,TR::VPShortConst
+mustBeEqual,override,TR::VPShortConst
+print,override,TR::VPShortConst
+name,override,TR::VPShortConst
+getPrecision,override,TR::VPShortConstraint
+getPrecision,override,TR::VPShortConst
+operator=,override,TR::VPShortConstraint
+operator=,override,TR::VPShortConst
+operator=,overload,TR::VPShortConst, 1
+operator=,overload,TR::VPShortConstraint, 1
+VPShortConstraint,overload,TR::VPShortConstraint, 2
+asShortConstraint,override,TR::VPConstraint
+asShortConstraint,override,TR::VPShortConstraint
+getLowShort,override,TR::VPShortConstraint
+getHighShort,override,TR::VPShortConstraint
+merge1,override,TR::VPShortConstraint
+intersect1,override,TR::VPShortConstraint
+mustBeNotEqual,override,TR::VPShortConstraint
+mustBeLessThan,override,TR::VPShortConstraint
+mustBeLessThanOrEqual,override,TR::VPShortConstraint
+add,override,TR::VPShortConstraint
+subtract,override,TR::VPShortConstraint
+canOverflow,override,TR::VPShortConstraint
+setCanOverflow,override,TR::VPShortConstraint
+TR::VPShortRange:
+create,overload,TR::VPShortRange, 1
+getHigh,override,TR::VPShortRange
+getPrecision,override,TR::VPShortRange
+operator=,override,TR::VPShortRange
+operator=,overload,TR::VPShortRange, 1
+TR::VPSync:
+create,override,TR::VPSync
+asVPSync,override,TR::VPConstraint
+asVPSync,override,TR::VPSync
+intersect1,override,TR::VPSync
+merge1,override,TR::VPSync
+print,override,TR::VPSync
+name,override,TR::VPSync
+operator=,override,TR::VPSync
+operator=,overload,TR::VPSync, 1
+TR::VPUnreachablePath:
+create,override,TR::VPUnreachablePath
+asUnreachablePath,override,TR::VPConstraint
+asUnreachablePath,override,TR::VPUnreachablePath
+print,override,TR::VPUnreachablePath
+name,override,TR::VPUnreachablePath
+operator=,override,TR::VPUnreachablePath
+operator=,overload,TR::VPUnreachablePath, 1
+TR::VPUnresolvedClass:
+create,override,TR::VPUnresolvedClass
+getClassSignature,override,TR::VPUnresolvedClass
+getArrayClass,override,TR::VPUnresolvedClass
+isReferenceArray,override,TR::VPUnresolvedClass
+isPrimitiveArray,override,TR::VPUnresolvedClass
+operator=,override,TR::VPUnresolvedClass
+operator=,overload,TR::VPUnresolvedClass, 1
+TR::CompileIlGenRequest:
+getIlGenerator,override,OMR::IlGenRequest
+getIlGenerator,override,TR::CompileIlGenRequest
+print,override,OMR::IlGenRequest
+print,override,TR::CompileIlGenRequest
+operator=,override,TR::IlGenRequest
+operator=,override,OMR::IlGenRequest
+operator=,override,TR::CompileIlGenRequest
+operator=,overload,OMR::IlGenRequest, 1
+operator=,overload,TR::CompileIlGenRequest, 1
+operator=,overload,TR::IlGenRequest, 1
+IlGenRequest,override,OMR::IlGenRequest
+IlGenRequest,override,TR::IlGenRequest
+IlGenRequest,overload,OMR::IlGenRequest, 2
+IlGenRequest,overload,TR::IlGenRequest, 2
+~IlGenRequest,override,OMR::IlGenRequest
+~IlGenRequest,override,TR::IlGenRequest
+ILOpCode,overload,TR::ILOpCode, 1
+TR::IlGeneratorMethodDetails:
+IlGeneratorMethodDetails,override,TestCompiler::IlGeneratorMethodDetails
+IlGeneratorMethodDetails,override,OMR::IlGeneratorMethodDetails
+IlGeneratorMethodDetails,override,TR::IlGeneratorMethodDetails
+IlGeneratorMethodDetails,overload,OMR::IlGeneratorMethodDetails, 1
+IlGeneratorMethodDetails,overload,TR::IlGeneratorMethodDetails, 2
+IlGeneratorMethodDetails,overload,TestCompiler::IlGeneratorMethodDetails, 4
+operator=,override,TestCompiler::IlGeneratorMethodDetails
+operator=,override,OMR::IlGeneratorMethodDetails
+operator=,override,TR::IlGeneratorMethodDetails
+operator=,overload,TR::IlGeneratorMethodDetails, 1
+operator=,overload,TestCompiler::IlGeneratorMethodDetails, 1
+~IlGeneratorMethodDetails,override,TestCompiler::IlGeneratorMethodDetails
+~IlGeneratorMethodDetails,override,OMR::IlGeneratorMethodDetails
+~IlGeneratorMethodDetails,override,TR::IlGeneratorMethodDetails
+sameAs,override,OMR::IlGeneratorMethodDetails
+sameAs,override,TestCompiler::IlGeneratorMethodDetails
+print,override,OMR::IlGeneratorMethodDetails
+print,override,TestCompiler::IlGeneratorMethodDetails
+self,overload,OMR::IlGeneratorMethodDetails, 1
+operator new,overload,OMR::IlGeneratorMethodDetails, 1
+TR::PartialInliningIlGenRequest:
+getIlGenerator,override,TR::InliningIlGenRequest
+getIlGenerator,override,TR::PartialInliningIlGenRequest
+print,override,TR::InliningIlGenRequest
+print,override,TR::PartialInliningIlGenRequest
+operator=,override,TR::InliningIlGenRequest
+operator=,override,TR::PartialInliningIlGenRequest
+operator=,overload,TR::InliningIlGenRequest, 1
+operator=,overload,TR::PartialInliningIlGenRequest, 1
+InliningIlGenRequest,overload,TR::InliningIlGenRequest, 2
+allowIlGenOptimizations,override,TR::IlGenRequest
+allowIlGenOptimizations,override,TR::InliningIlGenRequest
+Block,overload,TR::Block, 4
+TR::GlobalSet::DenseSet:
+operator new,overload,TR::GlobalSet::DenseSet, 5
+operator new[],overload,TR::GlobalSet::DenseSet, 4
+operator delete,overload,TR::GlobalSet::DenseSet, 3
+operator delete[],overload,TR::GlobalSet::DenseSet, 2
+DenseSet,overload,TR::GlobalSet::DenseSet, 1
+get,override,TR::GlobalSet::Set
+get,override,TR::GlobalSet::DenseSet
+set,override,TR::GlobalSet::Set
+set,override,TR::GlobalSet::DenseSet
+print,override,TR::GlobalSet::Set
+print,override,TR::GlobalSet::DenseSet
+operator=,override,TR::GlobalSet::Set
+operator=,override,TR::GlobalSet::DenseSet
+operator=,overload,TR::GlobalSet::DenseSet, 1
+operator=,overload,TR::GlobalSet::Set, 1
+Set,overload,TR::GlobalSet::Set, 2
+TR::GlobalSet::SparseSet:
+operator new,overload,TR::GlobalSet::SparseSet, 5
+operator new[],overload,TR::GlobalSet::SparseSet, 4
+operator delete,overload,TR::GlobalSet::SparseSet, 3
+operator delete[],overload,TR::GlobalSet::SparseSet, 2
+SparseSet,overload,TR::GlobalSet::SparseSet, 1
+get,override,TR::GlobalSet::SparseSet
+set,override,TR::GlobalSet::SparseSet
+print,override,TR::GlobalSet::SparseSet
+operator=,override,TR::GlobalSet::SparseSet
+operator=,overload,TR::GlobalSet::SparseSet, 1
+TR::TransformUtil:
+TransformUtil,override,OMR::TransformUtil
+TransformUtil,override,TR::TransformUtil
+TransformUtil,overload,OMR::TransformUtil, 2
+operator new,overload,OMR::TransformUtil, 5
+operator new[],overload,OMR::TransformUtil, 4
+operator delete,overload,OMR::TransformUtil, 3
+operator delete[],overload,OMR::TransformUtil, 2
+SymbolReference,overload,TR::SymbolReference, 8
+AutomaticSymbol,overload,TR::AutomaticSymbol, 5
+LabelSymbol,overload,TR::LabelSymbol, 4
+TR::MethodSymbol:
+MethodSymbol,overload,TR::MethodSymbol, 2
+operator=,overload,TR::MethodSymbol, 1
+ParameterSymbol,overload,TR::ParameterSymbol, 3
+getOffset,override,OMR::Symbol
+getOffset,override,OMR::RegisterMappedSymbol
+ResolvedMethodSymbol,overload,TR::ResolvedMethodSymbol, 2
+TR::Linkage:
+Linkage,override,OMR::X86::Linkage
+Linkage,override,OMR::Linkage
+Linkage,override,TR::Linkage
+Linkage,overload,OMR::Linkage, 2
+Linkage,overload,OMR::X86::Linkage, 2
+operator=,override,OMR::X86::Linkage
+operator=,override,OMR::Linkage
+operator=,override,TR::Linkage
+operator=,overload,OMR::Linkage, 1
+operator=,overload,OMR::X86::Linkage, 1
+operator=,overload,TR::Linkage, 1
+~Linkage,override,OMR::X86::Linkage
+~Linkage,override,OMR::Linkage
+~Linkage,override,TR::Linkage
+getRightToLeft,override,OMR::Linkage
+getRightToLeft,override,OMR::X86::Linkage
+mapStack,override,OMR::Linkage
+mapStack,override,OMR::X86::Linkage
+mapSingleAutomatic,override,OMR::Linkage
+mapSingleAutomatic,override,OMR::X86::Linkage
+mapSingleAutomatic,overload,OMR::X86::Linkage, 1
+loadArguments,overload,OMR::X86::Linkage, 1
+storeArguments,overload,OMR::X86::Linkage, 1
+numArgumentRegisters,override,OMR::Linkage
+numArgumentRegisters,override,OMR::X86::Linkage
+createPrologue,override,OMR::Linkage
+createPrologue,override,OMR::X86::Linkage
+createEpilogue,override,OMR::Linkage
+createEpilogue,override,OMR::X86::Linkage
+flushArguments,overload,OMR::X86::Linkage, 1
+setParameterLinkageRegisterIndex,override,OMR::Linkage
+setParameterLinkageRegisterIndex,override,OMR::X86::Linkage
+setParameterLinkageRegisterIndex,overload,OMR::Linkage, 1
+operator new,overload,OMR::Linkage, 5
+operator new[],overload,OMR::Linkage, 4
+operator delete,overload,OMR::Linkage, 3
+operator delete[],overload,OMR::Linkage, 2
+CFG,overload,TR::CFG, 2
+StaticSymbol,overload,TR::StaticSymbol, 4
+TR::RegisterPair:
+RegisterPair,override,OMR::RegisterPair
+RegisterPair,override,TR::RegisterPair
+RegisterPair,overload,OMR::RegisterPair, 4
+RegisterPair,overload,TR::RegisterPair, 2
+operator=,override,TR::Register
+operator=,override,OMR::RegisterPair
+operator=,override,TR::RegisterPair
+operator=,overload,OMR::RegisterPair, 1
+operator=,overload,TR::Register, 1
+operator=,overload,TR::RegisterPair, 1
+~RegisterPair,override,OMR::RegisterPair
+~RegisterPair,override,TR::RegisterPair
+Register,overload,TR::Register, 4
+BlockChecklist,overload,TR::BlockChecklist, 1
+CodeGenerator,overload,TR::CodeGenerator, 2
+IL,overload,OMR::IL, 2
+IL,overload,TR::IL, 2
+SymbolReferenceTable,overload,TR::SymbolReferenceTable, 2
+GlobalSingletonAllocator,overload,TR::GlobalSingletonAllocator, 2
+TreeTop,overload,TR::TreeTop, 4
+DebugCounter,overload,TR::DebugCounter, 2
+DebugCounterAggregation,overload,TR::DebugCounterAggregation, 2
+TR::DeadTreesElimination:
+DeadTreesElimination,overload,TR::DeadTreesElimination, 2
+perform,override,OMR::Optimization
+perform,override,TR::DeadTreesElimination
+performOnBlock,override,OMR::Optimization
+performOnBlock,override,TR::DeadTreesElimination
+prePerformOnBlocks,override,OMR::Optimization
+prePerformOnBlocks,override,TR::DeadTreesElimination
+operator=,override,TR::DeadTreesElimination
+operator=,overload,TR::DeadTreesElimination, 1
+operator=,overload,TR::Optimization, 3
+Optimization,overload,TR::Optimization, 5
+~Optimization,overload,TR::Optimization, 1
+PostorderNodeIterator,overload,TR::PostorderNodeIterator, 1
+PreorderNodeIterator,overload,TR::PreorderNodeIterator, 1
+ReversePostorderSnapshotBlockIterator,overload,TR::ReversePostorderSnapshotBlockIterator, 2
+TreeTopIterator,overload,TR::TreeTopIterator, 2
+operator=,override,OMR::ILOpCode
+operator=,override,TR::ILOpCode
+operator=,overload,OMR::ILOpCode, 1
+operator=,overload,TR::ILOpCode, 1
+IlGeneratorMethodDetails,overload,TR::IlGeneratorMethodDetails, 4
+VPIntRange,overload,TR::VPIntRange, 2
+VPLongRange,overload,TR::VPLongRange, 2
+TR::LocalCSE:
+LocalCSE,override,OMR::LocalCSE
+LocalCSE,override,TR::LocalCSE
+LocalCSE,overload,OMR::LocalCSE, 2
+LocalCSE,overload,TR::LocalCSE, 2
+operator=,override,TR::LocalCSE
+operator=,override,OMR::LocalCSE
+operator=,overload,OMR::LocalCSE, 1
+operator=,overload,OMR::Optimization, 3
+operator=,overload,TR::LocalCSE, 1
+~LocalCSE,override,OMR::LocalCSE
+~LocalCSE,override,TR::LocalCSE
+perform,override,OMR::LocalCSE
+perform,overload,OMR::Optimization, 1
+performOnBlock,override,OMR::LocalCSE
+performOnBlock,overload,OMR::Optimization, 1
+prePerformOnBlocks,override,OMR::LocalCSE
+prePerformOnBlocks,overload,OMR::Optimization, 1
+postPerformOnBlocks,override,OMR::Optimization
+postPerformOnBlocks,override,OMR::LocalCSE
+postPerformOnBlocks,overload,OMR::Optimization, 1
+killAvailableExpressionsUsingAliases,overload,OMR::LocalCSE, 1
+Optimization,overload,OMR::Optimization, 5
+Optimization,overload,TR::Optimization, 2
+~Optimization,overload,OMR::Optimization, 1
+self,overload,OMR::Optimization, 1
+shouldPerform,overload,OMR::Optimization, 1
+prePerform,overload,OMR::Optimization, 1
+postPerform,overload,OMR::Optimization, 1
+manager,overload,OMR::Optimization, 1
+comp,overload,OMR::Optimization, 1
+optimizer,overload,OMR::Optimization, 1
+cg,overload,OMR::Optimization, 1
+fe,overload,OMR::Optimization, 1
+getDebug,overload,OMR::Optimization, 1
+getSymRefTab,overload,OMR::Optimization, 1
+trMemory,overload,OMR::Optimization, 1
+trStackMemory,overload,OMR::Optimization, 1
+trHeapMemory,overload,OMR::Optimization, 1
+trPersistentMemory,overload,OMR::Optimization, 1
+allocator,overload,OMR::Optimization, 1
+id,overload,OMR::Optimization, 1
+name,overload,OMR::Optimization, 1
+optDetailString,overload,OMR::Optimization, 1
+trace,overload,OMR::Optimization, 1
+setTrace,overload,OMR::Optimization, 1
+getLastRun,overload,OMR::Optimization, 1
+requestOpt,overload,OMR::Optimization, 1
+requestDeadTreesCleanup,overload,OMR::Optimization, 1
+prepareToReplaceNode,overload,OMR::Optimization, 3
+nodeIsOrderDependent,overload,OMR::Optimization, 1
+anchorChildren,overload,OMR::Optimization, 1
+anchorAllChildren,overload,OMR::Optimization, 1
+generateAnchor,overload,OMR::Optimization, 1
+anchorNode,overload,OMR::Optimization, 1
+removeOrconvertIfToGoto,overload,OMR::Optimization, 1
+changeConditionalToUnconditional,overload,OMR::Optimization, 1
+prepareToStopUsingNode,overload,OMR::Optimization, 1
+replaceNodeWithChild,overload,OMR::Optimization, 1
+replaceNode,overload,OMR::Optimization, 1
+removeNode,overload,OMR::Optimization, 1
+TR::LocalDeadStoreElimination:
+LocalDeadStoreElimination,overload,TR::LocalDeadStoreElimination, 2
+perform,override,TR::LocalDeadStoreElimination
+performOnBlock,override,TR::LocalDeadStoreElimination
+prePerformOnBlocks,override,TR::LocalDeadStoreElimination
+postPerformOnBlocks,override,TR::LocalDeadStoreElimination
+self,override,OMR::Optimization
+self,override,TR::LocalDeadStoreElimination
+operator=,override,TR::LocalDeadStoreElimination
+operator=,overload,TR::LocalDeadStoreElimination, 1
+TR::Simplifier:
+Simplifier,override,OMR::Simplifier
+Simplifier,override,TR::Simplifier
+Simplifier,overload,OMR::Simplifier, 2
+operator=,override,OMR::Simplifier
+operator=,override,TR::Simplifier
+operator=,overload,OMR::Simplifier, 1
+operator=,overload,TR::Simplifier, 1
+~Simplifier,override,OMR::Simplifier
+~Simplifier,override,TR::Simplifier
+simplify,overload,OMR::Simplifier, 2
+NodeChecklist,overload,TR::NodeChecklist, 1
+OptimizationManager,overload,TR::OptimizationManager, 2
+TR::ArraycopyTransformation:
+ArraycopyTransformation,overload,TR::ArraycopyTransformation, 2
+createArrayNode,overload,TR::ArraycopyTransformation, 1
+operator=,override,TR::ArraycopyTransformation
+operator=,overload,TR::ArraycopyTransformation, 1
+TR::GlobalValuePropagation:
+GlobalValuePropagation,overload,TR::GlobalValuePropagation, 2
+operator=,override,OMR::ValuePropagation
+operator=,override,TR::ValuePropagation
+operator=,override,TR::GlobalValuePropagation
+operator=,overload,OMR::ValuePropagation, 1
+operator=,overload,TR::GlobalValuePropagation, 1
+operator=,overload,TR::ValuePropagation, 3
+ValuePropagation,override,OMR::ValuePropagation
+ValuePropagation,override,TR::ValuePropagation
+ValuePropagation,overload,OMR::ValuePropagation, 2
+ValuePropagation,overload,TR::ValuePropagation, 5
+~ValuePropagation,override,OMR::ValuePropagation
+~ValuePropagation,override,TR::ValuePropagation
+~ValuePropagation,overload,TR::ValuePropagation, 1
+findGlobalConstraint,overload,OMR::ValuePropagation, 1
+addGlobalConstraint,overload,OMR::ValuePropagation, 1
+isUnreachablePath,overload,OMR::ValuePropagation, 1
+setUnreachablePath,overload,OMR::ValuePropagation, 2
+removeConstraints,overload,OMR::ValuePropagation, 3
+TR::LocalValuePropagation:
+LocalValuePropagation,overload,TR::LocalValuePropagation, 2
+operator=,override,TR::LocalValuePropagation
+operator=,overload,TR::LocalValuePropagation, 1
+operator=,overload,TR::ValuePropagation, 1
+ValuePropagation,overload,TR::ValuePropagation, 2
+Optimizer,overload,TR::Optimizer, 2
+~Optimizer,override,OMR::Optimizer
+~Optimizer,override,TestCompiler::Optimizer
+TR::RegDepCopyRemoval:
+RegDepCopyRemoval,overload,TR::RegDepCopyRemoval, 2
+operator=,override,TR::RegDepCopyRemoval
+operator=,overload,TR::RegDepCopyRemoval, 1
+DenseSet,overload,TR::GlobalSet::DenseSet, 2
+SparseSet,overload,TR::GlobalSet::SparseSet, 2
+Simplifier,overload,TR::Simplifier, 2
+perform,override,TR::RegDepCopyRemoval
+VPArrayInfo,overload,TR::VPArrayInfo, 2
+VPClass,overload,TR::VPClass, 2
+VPEqual,overload,TR::VPEqual, 2
+VPGreaterThanOrEqual,overload,TR::VPGreaterThanOrEqual, 2
+VPIntConst,overload,TR::VPIntConst, 2
+VPLessThanOrEqual,overload,TR::VPLessThanOrEqual, 2
+VPLongConst,overload,TR::VPLongConst, 2
+VPMergedConstraints,overload,TR::VPMergedConstraints, 2
+VPNotEqual,overload,TR::VPNotEqual, 2
+VPObjectLocation,overload,TR::VPObjectLocation, 2
+VPPreexistentObject,overload,TR::VPPreexistentObject, 2
+VPShortConst,overload,TR::VPShortConst, 2
+VPShortRange,overload,TR::VPShortRange, 2
+VPSync,overload,TR::VPSync, 2
+VPUnresolvedClass,overload,TR::VPUnresolvedClass, 2
+perform,override,TR::ArraycopyTransformation
+VPNonNullObject,overload,TR::VPNonNullObject, 2
+VPClassPresence,overload,TR::VPClassPresence, 2
+VPNullObject,overload,TR::VPNullObject, 2
+VPUnreachablePath,overload,TR::VPUnreachablePath, 2
+TR::AheadOfTimeCompile:
+AheadOfTimeCompile,override,OMR::AheadOfTimeCompile
+AheadOfTimeCompile,override,TR::AheadOfTimeCompile
+AheadOfTimeCompile,overload,OMR::AheadOfTimeCompile, 2
+operator=,override,OMR::AheadOfTimeCompile
+operator=,override,TR::AheadOfTimeCompile
+operator=,overload,OMR::AheadOfTimeCompile, 1
+operator=,overload,TR::AheadOfTimeCompile, 1
+~AheadOfTimeCompile,override,OMR::AheadOfTimeCompile
+~AheadOfTimeCompile,override,TR::AheadOfTimeCompile
+operator new,overload,OMR::AheadOfTimeCompile, 5
+operator new[],overload,OMR::AheadOfTimeCompile, 4
+operator delete,overload,OMR::AheadOfTimeCompile, 3
+operator delete[],overload,OMR::AheadOfTimeCompile, 2
+TR::BeforeBinaryEncodingExternalRelocation:
+BeforeBinaryEncodingExternalRelocation,overload,TR::BeforeBinaryEncodingExternalRelocation, 2
+getUpdateLocation,override,TR::Relocation
+getUpdateLocation,override,TR::BeforeBinaryEncodingExternalRelocation
+operator=,override,TR::Relocation
+operator=,override,TR::ExternalRelocation
+operator=,override,TR::BeforeBinaryEncodingExternalRelocation
+operator=,overload,TR::BeforeBinaryEncodingExternalRelocation, 1
+operator=,overload,TR::ExternalRelocation, 1
+operator=,overload,TR::Relocation, 1
+ExternalRelocation,overload,TR::ExternalRelocation, 4
+trace,override,TR::Relocation
+trace,override,TR::ExternalRelocation
+addAOTRelocation,override,TR::Relocation
+addAOTRelocation,override,TR::ExternalRelocation
+apply,override,TR::Relocation
+apply,override,TR::ExternalRelocation
+operator new,overload,TR::Relocation, 5
+operator new[],overload,TR::Relocation, 4
+operator delete,overload,TR::Relocation, 3
+operator delete[],overload,TR::Relocation, 2
+Relocation,overload,TR::Relocation, 3
+TR::ExternalOrderedPair32BitRelocation:
+collectModifier,override,TR::ExternalRelocation
+collectModifier,override,TR::ExternalOrderedPair32BitRelocation
+getNarrowSize,override,TR::ExternalRelocation
+getNarrowSize,override,TR::ExternalOrderedPair32BitRelocation
+getWideSize,override,TR::ExternalRelocation
+getWideSize,override,TR::ExternalOrderedPair32BitRelocation
+apply,override,TR::ExternalOrderedPair32BitRelocation
+operator=,override,TR::ExternalOrderedPair32BitRelocation
+operator=,overload,TR::ExternalOrderedPair32BitRelocation, 1
+TR::InstructionAbsoluteRelocation:
+apply,override,TR::InstructionAbsoluteRelocation
+isAOTRelocation,override,TR::Relocation
+isAOTRelocation,override,TR::InstructionAbsoluteRelocation
+operator=,override,TR::InstructionAbsoluteRelocation
+operator=,overload,TR::InstructionAbsoluteRelocation, 1
+TR::IteratedExternalRelocation:
+IteratedExternalRelocation,overload,TR::IteratedExternalRelocation, 2
+TR::LabelAbsoluteRelocation:
+LabelAbsoluteRelocation,overload,TR::LabelAbsoluteRelocation, 1
+apply,override,TR::LabelAbsoluteRelocation
+operator=,override,TR::LabelRelocation
+operator=,override,TR::LabelAbsoluteRelocation
+operator=,overload,TR::LabelAbsoluteRelocation, 1
+operator=,overload,TR::LabelRelocation, 1
+LabelRelocation,overload,TR::LabelRelocation, 3
+isAOTRelocation,override,TR::LabelRelocation
+TR::LabelRelative12BitRelocation:
+LabelRelative12BitRelocation,overload,TR::LabelRelative12BitRelocation, 1
+operator=,override,TR::LabelRelative12BitRelocation
+operator=,overload,TR::LabelRelative12BitRelocation, 1
+TR::LabelRelative16BitRelocation:
+LabelRelative16BitRelocation,overload,TR::LabelRelative16BitRelocation, 2
+operator=,override,TR::LabelRelative16BitRelocation
+operator=,overload,TR::LabelRelative16BitRelocation, 1
+TR::LabelRelative24BitRelocation:
+LabelRelative24BitRelocation,overload,TR::LabelRelative24BitRelocation, 1
+operator=,override,TR::LabelRelative24BitRelocation
+operator=,overload,TR::LabelRelative24BitRelocation, 1
+TR::LabelRelative32BitRelocation:
+LabelRelative32BitRelocation,overload,TR::LabelRelative32BitRelocation, 1
+operator=,override,TR::LabelRelative32BitRelocation
+operator=,overload,TR::LabelRelative32BitRelocation, 1
+TR::LabelRelative8BitRelocation:
+LabelRelative8BitRelocation,overload,TR::LabelRelative8BitRelocation, 1
+operator=,override,TR::LabelRelative8BitRelocation
+operator=,overload,TR::LabelRelative8BitRelocation, 1
+TR::LabelTable32BitRelocation:
+LabelTable32BitRelocation,overload,TR::LabelTable32BitRelocation, 1
+operator=,override,TR::LabelTable32BitRelocation
+operator=,overload,TR::LabelTable32BitRelocation, 1
+TR::LoadLabelRelative16BitRelocation:
+LoadLabelRelative16BitRelocation,overload,TR::LoadLabelRelative16BitRelocation, 1
+isAOTRelocation,override,TR::LoadLabelRelative16BitRelocation
+apply,override,TR::LoadLabelRelative16BitRelocation
+operator=,override,TR::LoadLabelRelative16BitRelocation
+operator=,overload,TR::LoadLabelRelative16BitRelocation, 1
+TR::LoadLabelRelative32BitRelocation:
+LoadLabelRelative32BitRelocation,overload,TR::LoadLabelRelative32BitRelocation, 1
+isAOTRelocation,override,TR::LoadLabelRelative32BitRelocation
+apply,override,TR::LoadLabelRelative32BitRelocation
+operator=,override,TR::LoadLabelRelative32BitRelocation
+operator=,overload,TR::LoadLabelRelative32BitRelocation, 1
+TR::LoadLabelRelative64BitRelocation:
+LoadLabelRelative64BitRelocation,overload,TR::LoadLabelRelative64BitRelocation, 1
+operator=,override,TR::LoadLabelRelative64BitRelocation
+operator=,overload,TR::LoadLabelRelative64BitRelocation, 1
+GCStackAtlas,overload,TR::GCStackAtlas, 2
+TR::RegisterDependencyConditions:
+RegisterDependencyConditions,override,OMR::RegisterDependencyConditions
+RegisterDependencyConditions,override,OMR::X86::RegisterDependencyConditions
+RegisterDependencyConditions,override,TR::RegisterDependencyConditions
+RegisterDependencyConditions,overload,OMR::RegisterDependencyConditions, 2
+RegisterDependencyConditions,overload,OMR::X86::RegisterDependencyConditions, 4
+RegisterDependencyConditions,overload,TR::RegisterDependencyConditions, 2
+jitPersistentAlloc,override,OMR::RegisterDependencyConditions
+jitPersistentAlloc,override,OMR::X86::RegisterDependencyConditions
+jitPersistentFree,override,OMR::RegisterDependencyConditions
+jitPersistentFree,override,OMR::X86::RegisterDependencyConditions
+operator new,override,OMR::RegisterDependencyConditions
+operator new,override,OMR::X86::RegisterDependencyConditions
+operator new,overload,OMR::RegisterDependencyConditions, 5
+operator new,overload,OMR::X86::RegisterDependencyConditions, 5
+operator new[],override,OMR::RegisterDependencyConditions
+operator new[],override,OMR::X86::RegisterDependencyConditions
+operator new[],overload,OMR::RegisterDependencyConditions, 4
+operator new[],overload,OMR::X86::RegisterDependencyConditions, 4
+operator delete,override,OMR::RegisterDependencyConditions
+operator delete,override,OMR::X86::RegisterDependencyConditions
+operator delete,overload,OMR::RegisterDependencyConditions, 3
+operator delete,overload,OMR::X86::RegisterDependencyConditions, 3
+operator delete[],override,OMR::RegisterDependencyConditions
+operator delete[],override,OMR::X86::RegisterDependencyConditions
+operator delete[],overload,OMR::RegisterDependencyConditions, 2
+operator delete[],overload,OMR::X86::RegisterDependencyConditions, 2
+findPreCondition,overload,OMR::X86::RegisterDependencyConditions, 1
+findPostCondition,overload,OMR::X86::RegisterDependencyConditions, 1
+ExternalOrderedPair32BitRelocation,overload,TR::ExternalOrderedPair32BitRelocation, 2
+IteratedExternalRelocation,overload,TR::IteratedExternalRelocation, 4
+TR::UnresolvedDataSnippet:
+UnresolvedDataSnippet,override,OMR::UnresolvedDataSnippet
+UnresolvedDataSnippet,override,TR::UnresolvedDataSnippet
+UnresolvedDataSnippet,overload,OMR::UnresolvedDataSnippet, 2
+UnresolvedDataSnippet,overload,TR::UnresolvedDataSnippet, 2
+operator=,override,TR::UnresolvedDataSnippet
+operator=,override,OMR::UnresolvedDataSnippet
+operator=,overload,OMR::UnresolvedDataSnippet, 1
+operator=,overload,OMR::X86::Snippet, 3
+operator=,overload,TR::UnresolvedDataSnippet, 1
+~UnresolvedDataSnippet,override,OMR::UnresolvedDataSnippet
+~UnresolvedDataSnippet,override,TR::UnresolvedDataSnippet
+self,override,OMR::Snippet
+self,override,OMR::UnresolvedDataSnippet
+emitSnippetBody,override,OMR::Snippet
+emitSnippetBody,override,OMR::UnresolvedDataSnippet
+getLength,override,OMR::Snippet
+getLength,override,OMR::UnresolvedDataSnippet
+Snippet,overload,OMR::X86::Snippet, 7
+Snippet,overload,TR::Snippet, 3
+~Snippet,overload,OMR::X86::Snippet, 1
+getKind,overload,OMR::X86::Snippet, 1
+RegisterPair,overload,TR::RegisterPair, 4
+Machine,overload,TR::Machine, 2
+TR::MemoryReference:
+MemoryReference,override,OMR::X86::MemoryReference
+MemoryReference,override,OMR::X86::AMD64::MemoryReference
+MemoryReference,override,OMR::MemoryReference
+MemoryReference,override,TR::MemoryReference
+MemoryReference,overload,OMR::MemoryReference, 2
+MemoryReference,overload,OMR::X86::AMD64::MemoryReference, 13
+MemoryReference,overload,OMR::X86::MemoryReference, 13
+MemoryReference,overload,TR::MemoryReference, 11
+operator=,override,OMR::X86::MemoryReference
+operator=,override,OMR::X86::AMD64::MemoryReference
+operator=,override,OMR::MemoryReference
+operator=,override,TR::MemoryReference
+operator=,overload,OMR::MemoryReference, 1
+operator=,overload,OMR::X86::AMD64::MemoryReference, 1
+operator=,overload,OMR::X86::MemoryReference, 1
+operator=,overload,TR::MemoryReference, 1
+~MemoryReference,override,OMR::X86::MemoryReference
+~MemoryReference,override,OMR::X86::AMD64::MemoryReference
+~MemoryReference,override,OMR::MemoryReference
+~MemoryReference,override,TR::MemoryReference
+decNodeReferenceCounts,override,OMR::X86::MemoryReference
+decNodeReferenceCounts,override,OMR::X86::AMD64::MemoryReference
+useRegisters,override,OMR::X86::MemoryReference
+useRegisters,override,OMR::X86::AMD64::MemoryReference
+assignRegisters,override,OMR::X86::MemoryReference
+assignRegisters,override,OMR::X86::AMD64::MemoryReference
+estimateBinaryLength,override,OMR::X86::MemoryReference
+estimateBinaryLength,override,OMR::X86::AMD64::MemoryReference
+generateBinaryEncoding,override,OMR::X86::MemoryReference
+generateBinaryEncoding,override,OMR::X86::AMD64::MemoryReference
+getAddressRegister,override,OMR::X86::MemoryReference
+getAddressRegister,override,OMR::X86::AMD64::MemoryReference
+jitPersistentAlloc,override,OMR::MemoryReference
+jitPersistentAlloc,override,OMR::X86::MemoryReference
+jitPersistentAlloc,override,OMR::X86::AMD64::MemoryReference
+jitPersistentFree,override,OMR::MemoryReference
+jitPersistentFree,override,OMR::X86::MemoryReference
+jitPersistentFree,override,OMR::X86::AMD64::MemoryReference
+operator new,override,OMR::MemoryReference
+operator new,override,OMR::X86::MemoryReference
+operator new,override,OMR::X86::AMD64::MemoryReference
+operator new,overload,OMR::MemoryReference, 5
+operator new,overload,OMR::X86::AMD64::MemoryReference, 5
+operator new,overload,OMR::X86::MemoryReference, 5
+operator new[],override,OMR::MemoryReference
+operator new[],override,OMR::X86::MemoryReference
+operator new[],override,OMR::X86::AMD64::MemoryReference
+operator new[],overload,OMR::MemoryReference, 4
+operator new[],overload,OMR::X86::AMD64::MemoryReference, 4
+operator new[],overload,OMR::X86::MemoryReference, 4
+operator delete,override,OMR::MemoryReference
+operator delete,override,OMR::X86::MemoryReference
+operator delete,override,OMR::X86::AMD64::MemoryReference
+operator delete,overload,OMR::MemoryReference, 3
+operator delete,overload,OMR::X86::AMD64::MemoryReference, 3
+operator delete,overload,OMR::X86::MemoryReference, 3
+operator delete[],override,OMR::MemoryReference
+operator delete[],override,OMR::X86::MemoryReference
+operator delete[],override,OMR::X86::AMD64::MemoryReference
+operator delete[],overload,OMR::MemoryReference, 2
+operator delete[],overload,OMR::X86::AMD64::MemoryReference, 2
+operator delete[],overload,OMR::X86::MemoryReference, 2
+blockRegisters,override,OMR::X86::MemoryReference
+blockRegisters,override,OMR::X86::AMD64::MemoryReference
+unblockRegisters,override,OMR::X86::MemoryReference
+unblockRegisters,override,OMR::X86::AMD64::MemoryReference
+TR::IA32ConstantDataSnippet:
+getKind,override,TR::IA32DataSnippet
+getKind,override,TR::IA32ConstantDataSnippet
+operator=,override,TR::IA32DataSnippet
+operator=,override,TR::IA32ConstantDataSnippet
+operator=,overload,TR::IA32ConstantDataSnippet, 1
+operator=,overload,TR::IA32DataSnippet, 1
+TR::X86AlignmentInstruction:
+description,override,OMR::X86::Instruction
+description,override,TR::X86AlignmentInstruction
+getKind,override,TR::X86AlignmentInstruction
+X86AlignmentInstruction,overload,TR::X86AlignmentInstruction, 7
+estimateBinaryLength,override,TR::X86AlignmentInstruction
+generateBinaryEncoding,override,TR::X86AlignmentInstruction
+enlarge,override,OMR::X86::Instruction
+enlarge,override,TR::X86AlignmentInstruction
+operator=,override,TR::X86AlignmentInstruction
+operator=,overload,TR::X86AlignmentInstruction, 1
+TR::AMD64Imm64SymInstruction:
+AMD64Imm64SymInstruction,overload,TR::AMD64Imm64SymInstruction, 4
+description,override,TR::AMD64Imm64Instruction
+description,override,TR::AMD64Imm64SymInstruction
+getKind,override,TR::AMD64Imm64Instruction
+getKind,override,TR::AMD64Imm64SymInstruction
+generateOperand,override,TR::AMD64Imm64Instruction
+generateOperand,override,TR::AMD64Imm64SymInstruction
+estimateBinaryLength,override,TR::AMD64Imm64Instruction
+estimateBinaryLength,override,TR::AMD64Imm64SymInstruction
+addMetaDataForCodeAddress,override,TR::AMD64Imm64Instruction
+addMetaDataForCodeAddress,override,TR::AMD64Imm64SymInstruction
+operator=,override,TR::AMD64Imm64Instruction
+operator=,override,TR::AMD64Imm64SymInstruction
+operator=,overload,TR::AMD64Imm64Instruction, 1
+operator=,overload,TR::AMD64Imm64SymInstruction, 1
+AMD64Imm64Instruction,overload,TR::AMD64Imm64Instruction, 9
+TR::AMD64RegImm64SymInstruction:
+AMD64RegImm64SymInstruction,overload,TR::AMD64RegImm64SymInstruction, 1
+description,override,TR::X86RegInstruction
+description,override,TR::AMD64RegImm64Instruction
+description,override,TR::AMD64RegImm64SymInstruction
+getKind,override,TR::X86RegInstruction
+getKind,override,TR::AMD64RegImm64Instruction
+getKind,override,TR::AMD64RegImm64SymInstruction
+generateOperand,override,TR::X86RegInstruction
+generateOperand,override,TR::AMD64RegImm64Instruction
+generateOperand,override,TR::AMD64RegImm64SymInstruction
+addMetaDataForCodeAddress,override,TR::AMD64RegImm64Instruction
+addMetaDataForCodeAddress,override,TR::AMD64RegImm64SymInstruction
+operator=,override,TR::X86RegInstruction
+operator=,override,TR::AMD64RegImm64Instruction
+operator=,override,TR::AMD64RegImm64SymInstruction
+operator=,overload,TR::AMD64RegImm64Instruction, 1
+operator=,overload,TR::AMD64RegImm64SymInstruction, 1
+operator=,overload,TR::X86RegInstruction, 1
+AMD64RegImm64Instruction,overload,TR::AMD64RegImm64Instruction, 5
+estimateBinaryLength,override,TR::X86RegInstruction
+estimateBinaryLength,override,TR::AMD64RegImm64Instruction
+getBinaryLengthLowerBound,override,TR::X86RegInstruction
+getBinaryLengthLowerBound,override,TR::AMD64RegImm64Instruction
+X86RegInstruction,overload,TR::X86RegInstruction, 9
+TR::X86PatchableCodeAlignmentInstruction:
+X86PatchableCodeAlignmentInstruction,overload,TR::X86PatchableCodeAlignmentInstruction, 2
+description,override,TR::X86BoundaryAvoidanceInstruction
+description,override,TR::X86PatchableCodeAlignmentInstruction
+getKind,override,TR::X86BoundaryAvoidanceInstruction
+getKind,override,TR::X86PatchableCodeAlignmentInstruction
+betterPadLength,override,TR::X86BoundaryAvoidanceInstruction
+betterPadLength,override,TR::X86PatchableCodeAlignmentInstruction
+operator=,override,TR::X86BoundaryAvoidanceInstruction
+operator=,override,TR::X86PatchableCodeAlignmentInstruction
+operator=,overload,TR::X86BoundaryAvoidanceInstruction, 1
+operator=,overload,TR::X86PatchableCodeAlignmentInstruction, 1
+X86BoundaryAvoidanceInstruction,overload,TR::X86BoundaryAvoidanceInstruction, 4
+TR::X86CallMemInstruction:
+X86CallMemInstruction,overload,TR::X86CallMemInstruction, 2
+description,override,TR::X86MemInstruction
+description,override,TR::X86CallMemInstruction
+getKind,override,TR::X86MemInstruction
+getKind,override,TR::X86CallMemInstruction
+assignRegisters,override,TR::X86MemInstruction
+assignRegisters,override,TR::X86CallMemInstruction
+operator=,override,TR::X86MemInstruction
+operator=,override,TR::X86CallMemInstruction
+operator=,overload,TR::X86CallMemInstruction, 1
+operator=,overload,TR::X86MemInstruction, 1
+X86MemInstruction,overload,TR::X86MemInstruction, 9
+TR::X86FPArithmeticRegRegInstruction:
+X86FPArithmeticRegRegInstruction,overload,TR::X86FPArithmeticRegRegInstruction, 1
+description,override,TR::X86RegRegInstruction
+description,override,TR::X86FPRegRegInstruction
+description,override,TR::X86FPArithmeticRegRegInstruction
+getKind,override,TR::X86RegRegInstruction
+getKind,override,TR::X86FPRegRegInstruction
+getKind,override,TR::X86FPArithmeticRegRegInstruction
+assignRegisters,override,TR::X86RegRegInstruction
+assignRegisters,override,TR::X86FPRegRegInstruction
+assignRegisters,override,TR::X86RegInstruction
+assignRegisters,override,TR::X86FPArithmeticRegRegInstruction
+generateOperand,override,TR::X86RegRegInstruction
+generateOperand,override,TR::X86FPRegRegInstruction
+generateOperand,override,TR::X86FPArithmeticRegRegInstruction
+operator=,override,TR::X86RegRegInstruction
+operator=,override,TR::X86FPRegRegInstruction
+operator=,override,TR::X86FPArithmeticRegRegInstruction
+operator=,overload,TR::X86FPArithmeticRegRegInstruction, 1
+operator=,overload,TR::X86FPRegRegInstruction, 1
+operator=,overload,TR::X86RegRegInstruction, 1
+X86FPRegRegInstruction,overload,TR::X86FPRegRegInstruction, 4
+getNumOperandReferencedGPRegisters,override,TR::X86RegInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86RegRegInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86FPRegRegInstruction
+X86RegRegInstruction,overload,TR::X86RegRegInstruction, 9
+getIA32RegRegInstruction,override,TR::X86RegInstruction
+getIA32RegRegInstruction,override,TR::X86RegRegInstruction
+rexBits,override,TR::X86RegInstruction
+rexBits,override,TR::X86RegRegInstruction
+refsRegister,override,TR::X86RegInstruction
+refsRegister,override,TR::X86RegRegInstruction
+defsRegister,override,TR::X86RegInstruction
+defsRegister,override,TR::X86RegRegInstruction
+usesRegister,override,TR::X86RegInstruction
+usesRegister,override,TR::X86RegRegInstruction
+TR::X86FPCompareEvalInstruction:
+X86FPCompareEvalInstruction,overload,TR::X86FPCompareEvalInstruction, 1
+operator=,override,TR::X86FPCompareEvalInstruction
+operator=,overload,TR::X86FPCompareEvalInstruction, 1
+TR::X86FPCompareRegRegInstruction:
+X86FPCompareRegRegInstruction,overload,TR::X86FPCompareRegRegInstruction, 1
+description,override,TR::X86FPCompareRegRegInstruction
+getKind,override,TR::X86FPCompareRegRegInstruction
+assignRegisters,override,TR::X86FPCompareRegRegInstruction
+generateOperand,override,TR::X86FPCompareRegRegInstruction
+operator=,override,TR::X86FPCompareRegRegInstruction
+operator=,overload,TR::X86FPCompareRegRegInstruction, 1
+TR::X86FPMemRegInstruction:
+X86FPMemRegInstruction,overload,TR::X86FPMemRegInstruction, 1
+description,override,TR::X86MemRegInstruction
+description,override,TR::X86FPMemRegInstruction
+getKind,override,TR::X86MemRegInstruction
+getKind,override,TR::X86FPMemRegInstruction
+assignRegisters,override,TR::X86MemRegInstruction
+assignRegisters,override,TR::X86FPMemRegInstruction
+generateOperand,override,TR::X86MemRegInstruction
+generateOperand,override,TR::X86MemInstruction
+generateOperand,override,TR::X86FPMemRegInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86MemRegInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86MemInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86FPMemRegInstruction
+operator=,override,TR::X86MemRegInstruction
+operator=,override,TR::X86FPMemRegInstruction
+operator=,overload,TR::X86FPMemRegInstruction, 1
+operator=,overload,TR::X86MemRegInstruction, 1
+X86MemRegInstruction,overload,TR::X86MemRegInstruction, 9
+refsRegister,override,TR::X86MemInstruction
+refsRegister,override,TR::X86MemRegInstruction
+defsRegister,override,TR::X86MemInstruction
+defsRegister,override,TR::X86MemRegInstruction
+usesRegister,override,TR::X86MemInstruction
+usesRegister,override,TR::X86MemRegInstruction
+rexBits,override,TR::X86MemInstruction
+rexBits,override,TR::X86MemRegInstruction
+TR::X86FPRegInstruction:
+X86FPRegInstruction,overload,TR::X86FPRegInstruction, 1
+getKind,override,TR::X86FPRegInstruction
+assignRegisters,override,TR::X86FPRegInstruction
+generateOperand,override,TR::X86FPRegInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86FPRegInstruction
+operator=,override,TR::X86FPRegInstruction
+operator=,overload,TR::X86FPRegInstruction, 1
+TR::X86FPRegMemInstruction:
+X86FPRegMemInstruction,overload,TR::X86FPRegMemInstruction, 1
+description,override,TR::X86RegMemInstruction
+description,override,TR::X86FPRegMemInstruction
+getKind,override,TR::X86RegMemInstruction
+getKind,override,TR::X86FPRegMemInstruction
+assignRegisters,override,TR::X86RegMemInstruction
+assignRegisters,override,TR::X86FPRegMemInstruction
+generateOperand,override,TR::X86RegMemInstruction
+generateOperand,override,TR::X86FPRegMemInstruction
+getBinaryLengthLowerBound,override,TR::X86RegMemInstruction
+getBinaryLengthLowerBound,override,TR::X86FPRegMemInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86RegMemInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86FPRegMemInstruction
+operator=,override,TR::X86RegMemInstruction
+operator=,override,TR::X86FPRegMemInstruction
+operator=,overload,TR::X86FPRegMemInstruction, 1
+operator=,overload,TR::X86RegMemInstruction, 1
+X86RegMemInstruction,overload,TR::X86RegMemInstruction, 7
+getIA32RegMemInstruction,override,TR::X86RegInstruction
+getIA32RegMemInstruction,override,TR::X86RegMemInstruction
+estimateBinaryLength,override,TR::X86RegMemInstruction
+enlarge,override,TR::X86RegInstruction
+enlarge,override,TR::X86RegMemInstruction
+refsRegister,override,TR::X86RegMemInstruction
+usesRegister,override,TR::X86RegMemInstruction
+rexBits,override,TR::X86RegMemInstruction
+TR::X86FPRemainderRegRegInstruction:
+X86FPRemainderRegRegInstruction,overload,TR::X86FPRemainderRegRegInstruction, 2
+description,override,TR::X86FPST0ST1RegRegInstruction
+description,override,TR::X86FPRemainderRegRegInstruction
+getKind,override,TR::X86FPST0ST1RegRegInstruction
+getKind,override,TR::X86FPRemainderRegRegInstruction
+assignRegisters,override,TR::X86FPST0ST1RegRegInstruction
+assignRegisters,override,TR::X86FPRemainderRegRegInstruction
+operator=,override,TR::X86FPST0ST1RegRegInstruction
+operator=,override,TR::X86FPRemainderRegRegInstruction
+operator=,overload,TR::X86FPRemainderRegRegInstruction, 1
+operator=,overload,TR::X86FPST0ST1RegRegInstruction, 1
+X86FPST0ST1RegRegInstruction,overload,TR::X86FPST0ST1RegRegInstruction, 2
+generateOperand,override,TR::X86FPST0ST1RegRegInstruction
+TR::X86FPST0STiRegRegInstruction:
+X86FPST0STiRegRegInstruction,overload,TR::X86FPST0STiRegRegInstruction, 1
+description,override,TR::X86FPST0STiRegRegInstruction
+getKind,override,TR::X86FPST0STiRegRegInstruction
+assignRegisters,override,TR::X86FPST0STiRegRegInstruction
+generateOperand,override,TR::X86FPST0STiRegRegInstruction
+operator=,override,TR::X86FPST0STiRegRegInstruction
+operator=,overload,TR::X86FPST0STiRegRegInstruction, 1
+TR::X86FPSTiST0RegRegInstruction:
+X86FPSTiST0RegRegInstruction,overload,TR::X86FPSTiST0RegRegInstruction, 1
+description,override,TR::X86FPSTiST0RegRegInstruction
+getKind,override,TR::X86FPSTiST0RegRegInstruction
+assignRegisters,override,TR::X86FPSTiST0RegRegInstruction
+generateOperand,override,TR::X86FPSTiST0RegRegInstruction
+operator=,override,TR::X86FPSTiST0RegRegInstruction
+operator=,overload,TR::X86FPSTiST0RegRegInstruction, 1
+TR::X86FenceInstruction:
+X86FenceInstruction,overload,TR::X86FenceInstruction, 1
+operator=,override,TR::X86FenceInstruction
+operator=,overload,TR::X86FenceInstruction, 1
+TR::X86ImmSnippetInstruction:
+X86ImmSnippetInstruction,overload,TR::X86ImmSnippetInstruction, 1
+description,override,TR::X86ImmInstruction
+description,override,TR::X86ImmSnippetInstruction
+getKind,override,TR::X86ImmInstruction
+getKind,override,TR::X86ImmSnippetInstruction
+generateOperand,override,TR::X86ImmInstruction
+generateOperand,override,TR::X86ImmSnippetInstruction
+addMetaDataForCodeAddress,override,TR::X86ImmInstruction
+addMetaDataForCodeAddress,override,TR::X86ImmSnippetInstruction
+operator=,override,TR::X86ImmInstruction
+operator=,override,TR::X86ImmSnippetInstruction
+operator=,overload,TR::X86ImmInstruction, 1
+operator=,overload,TR::X86ImmSnippetInstruction, 1
+X86ImmInstruction,overload,TR::X86ImmInstruction, 8
+TR::X86ImmSymInstruction:
+X86ImmSymInstruction,overload,TR::X86ImmSymInstruction, 3
+description,override,TR::X86ImmSymInstruction
+getKind,override,TR::X86ImmSymInstruction
+addMetaDataForCodeAddress,override,TR::X86ImmSymInstruction
+generateOperand,override,TR::X86ImmSymInstruction
+estimateBinaryLength,override,TR::X86ImmInstruction
+estimateBinaryLength,override,TR::X86ImmSymInstruction
+operator=,override,TR::X86ImmSymInstruction
+operator=,overload,TR::X86ImmSymInstruction, 1
+TR::X86LabelInstruction:
+X86LabelInstruction,overload,TR::X86LabelInstruction, 5
+operator=,override,TR::X86LabelInstruction
+operator=,overload,TR::X86LabelInstruction, 1
+TR::X86MemImmSymInstruction:
+X86MemImmSymInstruction,overload,TR::X86MemImmSymInstruction, 1
+description,override,TR::X86MemImmInstruction
+description,override,TR::X86MemImmSymInstruction
+getKind,override,TR::X86MemImmInstruction
+getKind,override,TR::X86MemImmSymInstruction
+generateOperand,override,TR::X86MemImmInstruction
+generateOperand,override,TR::X86MemImmSymInstruction
+addMetaDataForCodeAddress,override,TR::X86MemImmInstruction
+addMetaDataForCodeAddress,override,TR::X86MemImmSymInstruction
+operator=,override,TR::X86MemImmInstruction
+operator=,override,TR::X86MemImmSymInstruction
+operator=,overload,TR::X86MemImmInstruction, 1
+operator=,overload,TR::X86MemImmSymInstruction, 1
+X86MemImmInstruction,overload,TR::X86MemImmInstruction, 3
+estimateBinaryLength,override,TR::X86MemInstruction
+estimateBinaryLength,override,TR::X86MemImmInstruction
+getBinaryLengthLowerBound,override,TR::X86MemInstruction
+getBinaryLengthLowerBound,override,TR::X86MemImmInstruction
+TR::X86MemRegImmInstruction:
+X86MemRegImmInstruction,overload,TR::X86MemRegImmInstruction, 1
+description,override,TR::X86MemRegImmInstruction
+getKind,override,TR::X86MemRegImmInstruction
+generateOperand,override,TR::X86MemRegImmInstruction
+operator=,override,TR::X86MemRegImmInstruction
+operator=,overload,TR::X86MemRegImmInstruction, 1
+TR::X86MemRegRegInstruction:
+X86MemRegRegInstruction,overload,TR::X86MemRegRegInstruction, 5
+description,override,TR::X86MemRegRegInstruction
+getKind,override,TR::X86MemRegRegInstruction
+assignRegisters,override,TR::X86MemRegRegInstruction
+refsRegister,override,TR::X86MemRegRegInstruction
+usesRegister,override,TR::X86MemRegRegInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86MemRegRegInstruction
+operator=,override,TR::X86MemRegRegInstruction
+operator=,overload,TR::X86MemRegRegInstruction, 1
+TR::X86MemTableInstruction:
+X86MemTableInstruction,overload,TR::X86MemTableInstruction, 1
+description,override,TR::X86MemTableInstruction
+getKind,override,TR::X86MemTableInstruction
+assignRegisters,override,TR::X86MemTableInstruction
+operator=,override,TR::X86MemTableInstruction
+operator=,overload,TR::X86MemTableInstruction, 1
+TR::X86PaddingSnippetInstruction:
+X86PaddingSnippetInstruction,overload,TR::X86PaddingSnippetInstruction, 3
+description,override,TR::X86PaddingInstruction
+description,override,TR::X86PaddingSnippetInstruction
+operator=,override,TR::X86PaddingInstruction
+operator=,override,TR::X86PaddingSnippetInstruction
+operator=,overload,TR::X86PaddingInstruction, 1
+operator=,overload,TR::X86PaddingSnippetInstruction, 1
+X86PaddingInstruction,overload,TR::X86PaddingInstruction, 5
+TR::X86RegImmSymInstruction:
+X86RegImmSymInstruction,overload,TR::X86RegImmSymInstruction, 1
+description,override,TR::X86RegImmInstruction
+description,override,TR::X86RegImmSymInstruction
+getKind,override,TR::X86RegImmInstruction
+getKind,override,TR::X86RegImmSymInstruction
+generateOperand,override,TR::X86RegImmInstruction
+generateOperand,override,TR::X86RegImmSymInstruction
+addMetaDataForCodeAddress,override,TR::X86RegImmInstruction
+addMetaDataForCodeAddress,override,TR::X86RegImmSymInstruction
+operator=,override,TR::X86RegImmInstruction
+operator=,override,TR::X86RegImmSymInstruction
+operator=,overload,TR::X86RegImmInstruction, 1
+operator=,overload,TR::X86RegImmSymInstruction, 1
+X86RegImmInstruction,overload,TR::X86RegImmInstruction, 5
+estimateBinaryLength,override,TR::X86RegImmInstruction
+getBinaryLengthLowerBound,override,TR::X86RegImmInstruction
+TR::X86RegMemImmInstruction:
+X86RegMemImmInstruction,overload,TR::X86RegMemImmInstruction, 1
+description,override,TR::X86RegMemImmInstruction
+getKind,override,TR::X86RegMemImmInstruction
+generateOperand,override,TR::X86RegMemImmInstruction
+estimateBinaryLength,override,TR::X86RegMemImmInstruction
+getBinaryLengthLowerBound,override,TR::X86RegMemImmInstruction
+operator=,override,TR::X86RegMemImmInstruction
+operator=,overload,TR::X86RegMemImmInstruction, 1
+TR::X86RegRegImmInstruction:
+X86RegRegImmInstruction,overload,TR::X86RegRegImmInstruction, 1
+description,override,TR::X86RegRegImmInstruction
+getKind,override,TR::X86RegRegImmInstruction
+generateOperand,override,TR::X86RegRegImmInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86RegRegImmInstruction
+operator=,override,TR::X86RegRegImmInstruction
+operator=,overload,TR::X86RegRegImmInstruction, 1
+TR::X86RegRegRegInstruction:
+X86RegRegRegInstruction,overload,TR::X86RegRegRegInstruction, 7
+description,override,TR::X86RegRegRegInstruction
+getKind,override,TR::X86RegRegRegInstruction
+assignRegisters,override,TR::X86RegRegRegInstruction
+refsRegister,override,TR::X86RegRegRegInstruction
+defsRegister,override,TR::X86RegRegRegInstruction
+usesRegister,override,TR::X86RegRegRegInstruction
+getNumOperandReferencedGPRegisters,override,TR::X86RegRegRegInstruction
+operator=,override,TR::X86RegRegRegInstruction
+operator=,overload,TR::X86RegRegRegInstruction, 1
+TR::X86RestoreVMThreadInstruction:
+operator=,override,TR::X86RestoreVMThreadInstruction
+operator=,overload,TR::X86RestoreVMThreadInstruction, 1
+TR::X86VFPCallCleanupInstruction:
+X86VFPCallCleanupInstruction,overload,TR::X86VFPCallCleanupInstruction, 1
+operator=,override,TR::X86VFPCallCleanupInstruction
+operator=,overload,TR::X86VFPCallCleanupInstruction, 1
+TR::X86VFPDedicateInstruction:
+X86VFPDedicateInstruction,overload,TR::X86VFPDedicateInstruction, 4
+description,override,TR::X86VFPDedicateInstruction
+getKind,override,TR::X86VFPDedicateInstruction
+assignRegisters,override,TR::X86VFPDedicateInstruction
+operator=,override,TR::X86VFPDedicateInstruction
+operator=,overload,TR::X86VFPDedicateInstruction, 1
+TR::X86VFPReleaseInstruction:
+X86VFPReleaseInstruction,overload,TR::X86VFPReleaseInstruction, 1
+operator=,override,TR::X86VFPReleaseInstruction
+operator=,overload,TR::X86VFPReleaseInstruction, 1
+TR::X86VFPRestoreInstruction:
+X86VFPRestoreInstruction,overload,TR::X86VFPRestoreInstruction, 1
+operator=,override,TR::X86VFPRestoreInstruction
+operator=,overload,TR::X86VFPRestoreInstruction, 1
+TR::X86VFPSaveInstruction:
+X86VFPSaveInstruction,overload,TR::X86VFPSaveInstruction, 2
+operator=,override,TR::X86VFPSaveInstruction
+operator=,overload,TR::X86VFPSaveInstruction, 1
+TR::RealRegister:
+RealRegister,override,OMR::X86::RealRegister
+RealRegister,override,OMR::X86::AMD64::RealRegister
+RealRegister,override,OMR::RealRegister
+RealRegister,override,TR::RealRegister
+RealRegister,overload,OMR::RealRegister, 3
+RealRegister,overload,OMR::X86::AMD64::RealRegister, 3
+RealRegister,overload,OMR::X86::RealRegister, 7
+operator=,override,OMR::X86::Register
+operator=,override,OMR::RealRegister
+operator=,override,OMR::Register
+operator=,override,OMR::X86::AMD64::RealRegister
+operator=,override,TR::RealRegister
+operator=,override,OMR::X86::RealRegister
+operator=,overload,OMR::RealRegister, 1
+operator=,overload,OMR::Register, 1
+operator=,overload,OMR::X86::AMD64::RealRegister, 1
+operator=,overload,OMR::X86::RealRegister, 3
+operator=,overload,OMR::X86::Register, 3
+operator=,overload,TR::RealRegister, 1
+~RealRegister,override,OMR::X86::RealRegister
+~RealRegister,override,OMR::X86::AMD64::RealRegister
+~RealRegister,override,OMR::RealRegister
+~RealRegister,override,TR::RealRegister
+~RealRegister,overload,OMR::X86::RealRegister, 1
+setRegisterNumber,override,OMR::RealRegister
+setRegisterNumber,override,OMR::X86::AMD64::RealRegister
+regMaskToRealRegister,override,OMR::RealRegister
+regMaskToRealRegister,override,OMR::X86::RealRegister
+regMaskToRealRegister,overload,OMR::X86::RealRegister, 1
+getAvailableRegistersMask,override,OMR::RealRegister
+getAvailableRegistersMask,override,OMR::X86::RealRegister
+getAvailableRegistersMask,overload,OMR::X86::RealRegister, 1
+getRealRegisterMask,override,OMR::RealRegister
+getRealRegisterMask,override,OMR::X86::RealRegister
+getRealRegisterMask,overload,OMR::X86::RealRegister, 1
+self,override,OMR::Register
+self,override,OMR::RealRegister
+setAssignedRegister,override,OMR::Register
+setAssignedRegister,override,OMR::RealRegister
+block,override,OMR::Register
+block,override,OMR::RealRegister
+unblock,override,OMR::Register
+unblock,override,OMR::RealRegister
+getRegister,override,OMR::Register
+getRegister,override,OMR::RealRegister
+getRealRegister,override,OMR::Register
+getRealRegister,override,OMR::RealRegister
+Register,override,OMR::X86::Register
+Register,override,OMR::Register
+Register,override,TR::Register
+Register,overload,OMR::Register, 4
+Register,overload,OMR::X86::Register, 9
+~Register,override,OMR::X86::Register
+~Register,override,OMR::Register
+~Register,override,TR::Register
+~Register,overload,OMR::X86::Register, 1
+getLiveRegisterInfo,overload,OMR::X86::Register, 1
+setLiveRegisterInfo,overload,OMR::X86::Register, 1
+getRematerializationInfo,overload,OMR::X86::Register, 1
+setRematerializationInfo,overload,OMR::X86::Register, 1
+getMemRef,overload,OMR::X86::Register, 1
+setMemRef,overload,OMR::X86::Register, 1
+getInterference,overload,OMR::X86::Register, 1
+setInterference,overload,OMR::X86::Register, 1
+needsPrecisionAdjustment,overload,OMR::X86::Register, 1
+setNeedsPrecisionAdjustment,overload,OMR::X86::Register, 1
+resetNeedsPrecisionAdjustment,overload,OMR::X86::Register, 1
+mayNeedPrecisionAdjustment,overload,OMR::X86::Register, 1
+setMayNeedPrecisionAdjustment,overload,OMR::X86::Register, 1
+resetMayNeedPrecisionAdjustment,overload,OMR::X86::Register, 1
+hasBetterSpillPlacement,overload,OMR::X86::Register, 1
+setHasBetterSpillPlacement,overload,OMR::X86::Register, 1
+isAssignedAsByteRegister,overload,OMR::X86::Register, 1
+setAssignedAsByteRegister,overload,OMR::X86::Register, 1
+isDiscardable,overload,OMR::X86::Register, 1
+setIsDiscardable,overload,OMR::X86::Register, 1
+resetIsDiscardable,overload,OMR::X86::Register, 1
+needsLazyClobbering,overload,OMR::X86::Register, 1
+setNeedsLazyClobbering,overload,OMR::X86::Register, 1
+areUpperBitsZero,overload,OMR::X86::Register, 1
+setUpperBitsAreZero,overload,OMR::X86::Register, 1
+isSpilledToSecondHalf,overload,OMR::X86::Register, 1
+setIsSpilledToSecondHalf,overload,OMR::X86::Register, 1
+operator new,overload,OMR::Register, 5
+operator new[],overload,OMR::Register, 4
+operator delete,overload,OMR::Register, 3
+operator delete[],overload,OMR::Register, 2
+TR::AMD64ABILinkage:
+AMD64ABILinkage,overload,TR::AMD64ABILinkage, 2
+mapIncomingParms,override,OMR::X86::Linkage
+mapIncomingParms,override,TR::X86SystemLinkage
+mapIncomingParms,override,TR::AMD64ABILinkage
+mapIncomingParms,overload,TR::X86SystemLinkage, 3
+operator=,override,TR::AMD64ABILinkage
+operator=,override,TR::AMD64SystemLinkage
+operator=,override,TR::X86SystemLinkage
+operator=,overload,TR::AMD64ABILinkage, 1
+operator=,overload,TR::AMD64SystemLinkage, 1
+operator=,overload,TR::X86SystemLinkage, 3
+setUpStackSizeForCallNode,override,TR::X86SystemLinkage
+setUpStackSizeForCallNode,override,TR::AMD64SystemLinkage
+setUpStackSizeForCallNode,overload,TR::X86SystemLinkage, 1
+AMD64SystemLinkage,overload,TR::AMD64SystemLinkage, 2
+layoutParm,override,TR::X86SystemLinkage
+layoutParm,override,TR::AMD64SystemLinkage
+layoutParm,overload,TR::AMD64SystemLinkage, 1
+layoutParm,overload,TR::X86SystemLinkage, 3
+getAlignment,override,TR::X86SystemLinkage
+getAlignment,override,TR::AMD64SystemLinkage
+getAlignment,overload,TR::X86SystemLinkage, 1
+buildArgs,override,TR::X86SystemLinkage
+buildArgs,override,TR::AMD64SystemLinkage
+buildArgs,overload,TR::X86SystemLinkage, 1
+buildIndirectDispatch,override,OMR::X86::Linkage
+buildIndirectDispatch,override,TR::X86SystemLinkage
+buildIndirectDispatch,override,TR::AMD64SystemLinkage
+buildIndirectDispatch,overload,TR::X86SystemLinkage, 1
+buildDirectDispatch,override,OMR::X86::Linkage
+buildDirectDispatch,override,TR::X86SystemLinkage
+buildDirectDispatch,override,TR::AMD64SystemLinkage
+buildDirectDispatch,overload,TR::X86SystemLinkage, 1
+buildVolatileAndReturnDependencies,override,TR::X86SystemLinkage
+buildVolatileAndReturnDependencies,override,TR::AMD64SystemLinkage
+buildVolatileAndReturnDependencies,overload,TR::X86SystemLinkage, 1
+X86SystemLinkage,overload,TR::X86SystemLinkage, 5
+copyParametersToHomeLocation,overload,TR::X86SystemLinkage, 1
+savePreservedRegisters,overload,TR::X86SystemLinkage, 1
+restorePreservedRegisters,overload,TR::X86SystemLinkage, 1
+createPrologue,override,TR::X86SystemLinkage
+createPrologue,overload,TR::X86SystemLinkage, 1
+createEpilogue,override,TR::X86SystemLinkage
+createEpilogue,overload,TR::X86SystemLinkage, 1
+computeMemoryArgSize,overload,TR::X86SystemLinkage, 1
+getParameterStartingPos,overload,TR::X86SystemLinkage, 1
+layoutTypeOnStack,overload,TR::X86SystemLinkage, 1
+getProperties,override,OMR::X86::Linkage
+getProperties,override,TR::X86SystemLinkage
+getProperties,overload,TR::X86SystemLinkage, 1
+copyLinkageInfoToParameterSymbols,override,OMR::X86::Linkage
+copyLinkageInfoToParameterSymbols,override,TR::X86SystemLinkage
+copyLinkageInfoToParameterSymbols,overload,TR::X86SystemLinkage, 1
+copyGlRegDepsToParameterSymbols,override,OMR::X86::Linkage
+copyGlRegDepsToParameterSymbols,override,TR::X86SystemLinkage
+copyGlRegDepsToParameterSymbols,overload,TR::X86SystemLinkage, 1
+~X86SystemLinkage,overload,TR::X86SystemLinkage, 1
+Linkage,overload,TR::Linkage, 2
+TR::AMD64Win64FastCallLinkage:
+AMD64Win64FastCallLinkage,overload,TR::AMD64Win64FastCallLinkage, 2
+operator=,override,TR::AMD64Win64FastCallLinkage
+operator=,overload,TR::AMD64Win64FastCallLinkage, 1
+TR::CodeCache:
+CodeCache,override,OMR::CodeCache
+CodeCache,override,TR::CodeCache
+CodeCache,overload,OMR::CodeCache, 2
+findTrampoline,overload,OMR::CodeCache, 1
+CodeCacheBase,overload,OMR::CodeCacheBase, 2
+TR::CodeCacheConfig:
+CodeCacheConfig,override,OMR::CodeCacheConfig
+CodeCacheConfig,override,TR::CodeCacheConfig
+CodeCacheConfig,overload,OMR::CodeCacheConfig, 2
+CodeCacheConfig,overload,TR::CodeCacheConfig, 2
+~CodeCacheConfig,override,OMR::CodeCacheConfig
+~CodeCacheConfig,override,TR::CodeCacheConfig
+TR::CodeCacheManager:
+CodeCacheManager,override,OMR::CodeCacheManager
+CodeCacheManager,override,TestCompiler::CodeCacheManager
+CodeCacheManager,override,TR::CodeCacheManager
+CodeCacheManager,overload,OMR::CodeCacheManager, 2
+CodeCacheManager,overload,TestCompiler::CodeCacheManager, 2
+~CodeCacheManager,override,OMR::CodeCacheManager
+~CodeCacheManager,override,TestCompiler::CodeCacheManager
+~CodeCacheManager,override,TR::CodeCacheManager
+self,override,OMR::CodeCacheManager
+self,override,TestCompiler::CodeCacheManager
+initialize,override,OMR::CodeCacheManager
+initialize,override,TestCompiler::CodeCacheManager
+getMemory,override,OMR::CodeCacheManager
+getMemory,override,TestCompiler::CodeCacheManager
+freeMemory,override,OMR::CodeCacheManager
+freeMemory,override,TestCompiler::CodeCacheManager
+TR::FrontEnd:
+FrontEnd,override,TestCompiler::FrontEnd
+FrontEnd,override,TR::FrontEnd
+FrontEnd,overload,TR::FrontEnd, 1
+FrontEnd,overload,TestCompiler::FrontEnd, 5
+operator=,override,TR::FrontEnd
+operator=,override,TestCompiler::FrontEnd
+operator=,override,TR_FrontEnd
+operator=,override,TR_Uncopyable
+operator=,override,TR::FECommon
+operator=,overload,TR::FECommon, 1
+operator=,overload,TR::FrontEnd, 1
+operator=,overload,TR_FrontEnd, 1
+operator=,overload,TestCompiler::FrontEnd, 3
+~FrontEnd,override,TestCompiler::FrontEnd
+~FrontEnd,override,TR::FrontEnd
+~FrontEnd,overload,TestCompiler::FrontEnd, 1
+instance,overload,TestCompiler::FrontEnd, 1
+reserveTrampolineIfNecessary,override,TR_FrontEnd
+reserveTrampolineIfNecessary,override,TestCompiler::FrontEnd
+reserveTrampolineIfNecessary,overload,TestCompiler::FrontEnd, 1
+methodTrampolineLookup,override,TR_FrontEnd
+methodTrampolineLookup,override,TestCompiler::FrontEnd
+methodTrampolineLookup,overload,TestCompiler::FrontEnd, 1
+getMethodStartPC,override,TR_FrontEnd
+getMethodStartPC,override,TestCompiler::FrontEnd
+getMethodStartPC,overload,TestCompiler::FrontEnd, 1
+createResolvedMethod,override,TR_FrontEnd
+createResolvedMethod,override,TestCompiler::FrontEnd
+createResolvedMethod,overload,TestCompiler::FrontEnd, 1
+encodeStackMap,overload,TestCompiler::FrontEnd, 1
+mapsAreIdentical,overload,TestCompiler::FrontEnd, 1
+createStackAtlas,overload,TestCompiler::FrontEnd, 1
+calculateSizeOfStackAtlas,overload,TestCompiler::FrontEnd, 1
+unreserveCodeCache,override,TR_FrontEnd
+unreserveCodeCache,override,TR::FEBase
+getDesignatedCodeCache,override,TR_FrontEnd
+getDesignatedCodeCache,override,TR::FEBase
+allocateCodeMemory,override,TR_FrontEnd
+allocateCodeMemory,override,TR::FEBase
+resizeCodeMemory,override,TR_FrontEnd
+resizeCodeMemory,override,TR::FEBase
+allocateRelocationData,override,TR_FrontEnd
+allocateRelocationData,override,TR::FEBase
+indexedTrampolineLookup,override,TR_FrontEnd
+indexedTrampolineLookup,override,TR::FEBase
+persistentMemory,override,TR::FECommon
+persistentMemory,override,TR::FEBase
+getPersistentInfo,override,TR_FrontEnd
+getPersistentInfo,override,TR::FEBase
+FECommon,overload,TR::FECommon, 2
+createDebug,override,TR_FrontEnd
+createDebug,override,TR::FECommon
+getClassFromSignature,override,TR_FrontEnd
+getClassFromSignature,override,TR::FECommon
+getClassFromSignature,overload,TR::FECommon, 1
+getClassFromSignature,overload,TR_FrontEnd, 1
+sampleSignature,override,TR_FrontEnd
+sampleSignature,override,TR::FECommon
+getOffsetOfIndexableSizeField,override,TR_FrontEnd
+getOffsetOfIndexableSizeField,override,TR::FECommon
+TR_FrontEnd,overload,TR_FrontEnd, 2
+getCodeCacheBase,overload,TR_FrontEnd, 1
+getCodeCacheTop,overload,TR_FrontEnd, 1
+TR_Uncopyable,overload,TR_Uncopyable, 1
+TR::IlBuilder:
+IlBuilder,override,OMR::IlBuilder
+IlBuilder,override,TestCompiler::IlBuilder
+IlBuilder,override,TR::IlBuilder
+IlBuilder,overload,OMR::IlBuilder, 2
+IlBuilder,overload,TR::IlBuilder, 2
+IlBuilder,overload,TestCompiler::IlBuilder, 9
+operator=,override,TR_IlGenerator
+operator=,override,OMR::IlInjector
+operator=,override,TestCompiler::IlInjector
+operator=,override,TR::IlBuilder
+operator=,override,TR::IlInjector
+operator=,override,TestCompiler::IlBuilder
+operator=,override,OMR::IlBuilder
+operator=,overload,OMR::IlInjector, 1
+operator=,overload,TR::IlBuilder, 1
+operator=,overload,TR::IlInjector, 1
+operator=,overload,TestCompiler::IlBuilder, 3
+operator=,overload,TestCompiler::IlInjector, 1
+~IlBuilder,override,OMR::IlBuilder
+~IlBuilder,override,TestCompiler::IlBuilder
+~IlBuilder,override,TR::IlBuilder
+~IlBuilder,overload,TestCompiler::IlBuilder, 1
+jitPersistentAlloc,override,OMR::IlInjector
+jitPersistentAlloc,override,TestCompiler::IlInjector
+jitPersistentAlloc,override,OMR::IlBuilder
+jitPersistentAlloc,override,TestCompiler::IlBuilder
+jitPersistentAlloc,overload,OMR::IlInjector, 1
+jitPersistentAlloc,overload,TestCompiler::IlBuilder, 1
+jitPersistentFree,override,OMR::IlInjector
+jitPersistentFree,override,TestCompiler::IlInjector
+jitPersistentFree,override,OMR::IlBuilder
+jitPersistentFree,override,TestCompiler::IlBuilder
+jitPersistentFree,overload,OMR::IlInjector, 1
+jitPersistentFree,overload,TestCompiler::IlBuilder, 1
+operator new,override,OMR::IlInjector
+operator new,override,TestCompiler::IlInjector
+operator new,override,OMR::IlBuilder
+operator new,override,TestCompiler::IlBuilder
+operator new,overload,OMR::IlBuilder, 5
+operator new,overload,OMR::IlInjector, 11
+operator new,overload,TestCompiler::IlBuilder, 11
+operator new,overload,TestCompiler::IlInjector, 5
+operator new[],override,OMR::IlInjector
+operator new[],override,TestCompiler::IlInjector
+operator new[],override,OMR::IlBuilder
+operator new[],override,TestCompiler::IlBuilder
+operator new[],overload,OMR::IlBuilder, 4
+operator new[],overload,OMR::IlInjector, 9
+operator new[],overload,TestCompiler::IlBuilder, 9
+operator new[],overload,TestCompiler::IlInjector, 4
+operator delete,override,OMR::IlInjector
+operator delete,override,TestCompiler::IlInjector
+operator delete,override,OMR::IlBuilder
+operator delete,override,TestCompiler::IlBuilder
+operator delete,overload,OMR::IlBuilder, 3
+operator delete,overload,OMR::IlInjector, 7
+operator delete,overload,TestCompiler::IlBuilder, 7
+operator delete,overload,TestCompiler::IlInjector, 3
+operator delete[],override,OMR::IlInjector
+operator delete[],override,TestCompiler::IlInjector
+operator delete[],override,OMR::IlBuilder
+operator delete[],override,TestCompiler::IlBuilder
+operator delete[],overload,OMR::IlBuilder, 2
+operator delete[],overload,OMR::IlInjector, 5
+operator delete[],overload,TestCompiler::IlBuilder, 5
+operator delete[],overload,TestCompiler::IlInjector, 2
+injectIL,override,OMR::IlInjector
+injectIL,override,OMR::IlBuilder
+injectIL,overload,OMR::IlInjector, 1
+isMethodBuilder,override,OMR::IlInjector
+isMethodBuilder,override,OMR::IlBuilder
+isMethodBuilder,overload,OMR::IlInjector, 1
+asMethodBuilder,override,OMR::IlInjector
+asMethodBuilder,override,OMR::IlBuilder
+asMethodBuilder,overload,OMR::IlInjector, 1
+Const,overload,OMR::IlBuilder, 6
+ShiftL,overload,OMR::IlBuilder, 1
+ShiftR,overload,OMR::IlBuilder, 1
+UnsignedShiftR,overload,OMR::IlBuilder, 1
+Call,overload,OMR::IlBuilder, 1
+ComputedCall,overload,OMR::IlBuilder, 1
+Goto,overload,OMR::IlBuilder, 1
+Return,overload,OMR::IlBuilder, 1
+IfCmpNotEqualZero,overload,OMR::IlBuilder, 1
+IfCmpNotEqual,overload,OMR::IlBuilder, 1
+IfCmpEqualZero,overload,OMR::IlBuilder, 1
+IfCmpEqual,overload,OMR::IlBuilder, 1
+IfCmpLessThan,overload,OMR::IlBuilder, 1
+IfCmpUnsignedLessThan,overload,OMR::IlBuilder, 1
+IfCmpLessOrEqual,overload,OMR::IlBuilder, 1
+IfCmpUnsignedLessOrEqual,overload,OMR::IlBuilder, 1
+IfCmpGreaterThan,overload,OMR::IlBuilder, 1
+IfCmpUnsignedGreaterThan,overload,OMR::IlBuilder, 1
+IfCmpGreaterOrEqual,overload,OMR::IlBuilder, 1
+IfCmpUnsignedGreaterOrEqual,overload,OMR::IlBuilder, 1
+Switch,overload,OMR::IlBuilder, 1
+newValue,overload,OMR::IlBuilder, 1
+zero,overload,OMR::IlBuilder, 1
+connectTrees,overload,OMR::IlBuilder, 1
+IlInjector,override,TestCompiler::IlInjector
+IlInjector,override,OMR::IlInjector
+IlInjector,override,TR::IlInjector
+IlInjector,overload,OMR::IlInjector, 5
+IlInjector,overload,TR::IlInjector, 5
+IlInjector,overload,TestCompiler::IlInjector, 5
+~IlInjector,override,TestCompiler::IlInjector
+~IlInjector,override,OMR::IlInjector
+~IlInjector,override,TR::IlInjector
+~IlInjector,overload,OMR::IlInjector, 1
+initialize,override,OMR::IlInjector
+initialize,override,TestCompiler::IlInjector
+initialize,overload,OMR::IlInjector, 1
+setMethodAndTest,overload,TestCompiler::IlInjector, 1
+initPrimitiveTypes,overload,OMR::IlInjector, 1
+genIL,override,TR_IlGenerator
+genIL,override,OMR::IlInjector
+genIL,overload,OMR::IlInjector, 1
+getCurrentBlock,override,TR_IlGenerator
+getCurrentBlock,override,OMR::IlInjector
+getCurrentBlock,overload,OMR::IlInjector, 1
+methodSymbol,override,TR_IlGenerator
+methodSymbol,override,OMR::IlInjector
+methodSymbol,overload,OMR::IlInjector, 1
+currentByteCodeIndex,override,TR_IlGenerator
+currentByteCodeIndex,override,OMR::IlInjector
+currentByteCodeIndex,overload,OMR::IlInjector, 1
+comp,overload,OMR::IlInjector, 1
+details,overload,OMR::IlInjector, 1
+fe,overload,OMR::IlInjector, 1
+symRefTab,overload,OMR::IlInjector, 1
+cfg,overload,OMR::IlInjector, 1
+typeDictionary,overload,OMR::IlInjector, 1
+blocks,overload,OMR::IlInjector, 1
+numBlocks,overload,OMR::IlInjector, 1
+generateToBlock,overload,OMR::IlInjector, 1
+allocateBlocks,overload,OMR::IlInjector, 1
+newBlock,overload,OMR::IlInjector, 1
+createBlocks,overload,OMR::IlInjector, 1
+parameter,overload,OMR::IlInjector, 1
+newTemp,overload,OMR::IlInjector, 1
+iconst,overload,OMR::IlInjector, 1
+lconst,overload,OMR::IlInjector, 1
+bconst,overload,OMR::IlInjector, 1
+sconst,overload,OMR::IlInjector, 1
+aconst,overload,OMR::IlInjector, 1
+dconst,overload,OMR::IlInjector, 1
+fconst,overload,OMR::IlInjector, 1
+staticAddress,overload,OMR::IlInjector, 1
+storeToTemp,overload,OMR::IlInjector, 1
+loadTemp,overload,OMR::IlInjector, 1
+i2l,overload,OMR::IlInjector, 1
+iu2l,overload,OMR::IlInjector, 1
+ifjump,overload,OMR::IlInjector, 3
+shiftLeftBy,overload,OMR::IlInjector, 1
+multiplyBy,overload,OMR::IlInjector, 1
+arrayLoad,overload,OMR::IlInjector, 1
+returnValue,overload,OMR::IlInjector, 1
+returnNoValue,overload,OMR::IlInjector, 1
+genTreeTop,overload,OMR::IlInjector, 1
+block,overload,OMR::IlInjector, 3
+gotoBlock,overload,OMR::IlInjector, 1
+branchToBlock,overload,OMR::IlInjector, 1
+generateFallThrough,overload,OMR::IlInjector, 1
+createWithoutSymRef,overload,OMR::IlInjector, 1
+validateTargetBlock,overload,OMR::IlInjector, 1
+TR::IlType:
+IlType,override,OMR::IlType
+IlType,override,TR::IlType
+IlType,overload,OMR::IlType, 2
+IlType,overload,TR::IlType, 2
+operator=,override,OMR::IlType
+operator=,override,TR::IlType
+operator=,overload,TR::IlType, 1
+~IlType,override,OMR::IlType
+~IlType,override,TR::IlType
+operator new,overload,OMR::IlType, 5
+operator new[],overload,OMR::IlType, 4
+operator delete,overload,OMR::IlType, 3
+operator delete[],overload,OMR::IlType, 2
+TR::IlValue:
+IlValue,override,OMR::IlValue
+IlValue,override,TR::IlValue
+IlValue,overload,OMR::IlValue, 2
+operator new,overload,OMR::IlValue, 5
+operator new[],overload,OMR::IlValue, 4
+operator delete,overload,OMR::IlValue, 3
+operator delete[],overload,OMR::IlValue, 2
+TR::TypeDictionary:
+TypeDictionary,override,OMR::TypeDictionary
+TypeDictionary,override,TR::TypeDictionary
+TypeDictionary,overload,OMR::TypeDictionary, 1
+TypeDictionary,overload,TR::TypeDictionary, 1
+operator=,override,OMR::TypeDictionary
+operator=,override,TR::TypeDictionary
+~TypeDictionary,override,OMR::TypeDictionary
+~TypeDictionary,override,TR::TypeDictionary
+operator new,overload,OMR::TypeDictionary, 5
+operator new[],overload,OMR::TypeDictionary, 4
+operator delete,overload,OMR::TypeDictionary, 3
+operator delete[],overload,OMR::TypeDictionary, 2
+DefineField,overload,OMR::TypeDictionary, 1
+CloseStruct,overload,OMR::TypeDictionary, 1
+PointerTo,overload,OMR::TypeDictionary, 2
+ResolvedMethod,overload,TR::ResolvedMethod, 4
+TypeDictionary,overload,TR::TypeDictionary, 2
+TR::AllIlVerifier:
+verify,override,TR::IlVerifier
+verify,override,TR::AllIlVerifier
+operator=,override,TR::IlVerifier
+operator=,override,TR::AllIlVerifier
+operator=,overload,TR::AllIlVerifier, 1
+operator=,overload,TR::IlVerifier, 1
+IlVerifier,overload,TR::IlVerifier, 2
+TR::IlInjector:
+IlInjector,overload,OMR::IlInjector, 2
+IlInjector,overload,TR::IlInjector, 3
+IlInjector,overload,TestCompiler::IlInjector, 11
+operator=,overload,TestCompiler::IlInjector, 3
+~IlInjector,overload,TestCompiler::IlInjector, 1
+jitPersistentAlloc,overload,TestCompiler::IlInjector, 1
+jitPersistentFree,overload,TestCompiler::IlInjector, 1
+operator new,overload,OMR::IlInjector, 5
+operator new,overload,TestCompiler::IlInjector, 11
+operator new[],overload,OMR::IlInjector, 4
+operator new[],overload,TestCompiler::IlInjector, 9
+operator delete,overload,OMR::IlInjector, 3
+operator delete,overload,TestCompiler::IlInjector, 7
+operator delete[],overload,OMR::IlInjector, 2
+operator delete[],overload,TestCompiler::IlInjector, 5
+initialize,overload,TestCompiler::IlInjector, 1
+test,overload,TestCompiler::IlInjector, 1
+resolvedMethod,overload,TestCompiler::IlInjector, 1
+callFunction,overload,TestCompiler::IlInjector, 1
+setMethodAndTest,overload,TestCompiler::IlInjector, 3
+ifjump,overload,OMR::IlInjector, 1
+block,overload,OMR::IlInjector, 1
+TR::NoCodegenVerifier:
+NoCodegenVerifier,overload,TR::NoCodegenVerifier, 2
+verify,override,TR::NoCodegenVerifier
+operator=,override,TR::NoCodegenVerifier
+operator=,overload,TR::NoCodegenVerifier, 1
+TR::MethodBuilder:
+MethodBuilder,override,OMR::MethodBuilder
+MethodBuilder,override,TestCompiler::MethodBuilder
+MethodBuilder,override,TR::MethodBuilder
+MethodBuilder,overload,OMR::MethodBuilder, 1
+MethodBuilder,overload,TR::MethodBuilder, 1
+MethodBuilder,overload,TestCompiler::MethodBuilder, 7
+operator=,override,TestCompiler::MethodBuilder
+operator=,override,OMR::MethodBuilder
+operator=,override,TR::MethodBuilder
+operator=,overload,TR::MethodBuilder, 1
+operator=,overload,TestCompiler::MethodBuilder, 3
+~MethodBuilder,override,OMR::MethodBuilder
+~MethodBuilder,override,TestCompiler::MethodBuilder
+~MethodBuilder,override,TR::MethodBuilder
+~MethodBuilder,overload,TestCompiler::MethodBuilder, 1
+jitPersistentAlloc,override,TestCompiler::MethodBuilder
+jitPersistentAlloc,override,OMR::MethodBuilder
+jitPersistentAlloc,overload,TestCompiler::MethodBuilder, 1
+jitPersistentFree,override,TestCompiler::MethodBuilder
+jitPersistentFree,override,OMR::MethodBuilder
+jitPersistentFree,overload,TestCompiler::MethodBuilder, 1
+operator new,override,TestCompiler::MethodBuilder
+operator new,override,OMR::MethodBuilder
+operator new,overload,OMR::MethodBuilder, 5
+operator new,overload,TestCompiler::MethodBuilder, 11
+operator new[],override,TestCompiler::MethodBuilder
+operator new[],override,OMR::MethodBuilder
+operator new[],overload,OMR::MethodBuilder, 4
+operator new[],overload,TestCompiler::MethodBuilder, 9
+operator delete,override,TestCompiler::MethodBuilder
+operator delete,override,OMR::MethodBuilder
+operator delete,overload,OMR::MethodBuilder, 3
+operator delete,overload,TestCompiler::MethodBuilder, 7
+operator delete[],override,TestCompiler::MethodBuilder
+operator delete[],override,OMR::MethodBuilder
+operator delete[],overload,OMR::MethodBuilder, 2
+operator delete[],overload,TestCompiler::MethodBuilder, 5
+setupForBuildIL,override,OMR::IlBuilder
+setupForBuildIL,override,OMR::MethodBuilder
+injectIL,override,OMR::MethodBuilder
+isMethodBuilder,override,OMR::MethodBuilder
+asMethodBuilder,override,OMR::MethodBuilder
+typeDictionary,override,OMR::IlInjector
+typeDictionary,override,OMR::MethodBuilder
+getSignature,overload,OMR::MethodBuilder, 1
+lookupSymbol,override,OMR::IlBuilder
+lookupSymbol,override,OMR::MethodBuilder
+defineSymbol,override,OMR::IlBuilder
+defineSymbol,override,OMR::MethodBuilder
+AppendBuilder,override,OMR::IlBuilder
+AppendBuilder,override,OMR::MethodBuilder
+AppendBuilder,overload,OMR::MethodBuilder, 1
+DefineLine,overload,OMR::MethodBuilder, 1
+DefineFunction,overload,OMR::MethodBuilder, 1
+countBlocks,override,OMR::IlBuilder
+countBlocks,override,OMR::MethodBuilder
+connectTrees,override,OMR::IlBuilder
+connectTrees,override,OMR::MethodBuilder
+IlBuilder,overload,TR::IlBuilder, 4
+TR::DefaultCompilationStrategy:
+operator new,overload,TR::DefaultCompilationStrategy, 1
+operator new[],overload,TR::DefaultCompilationStrategy, 1
+DefaultCompilationStrategy,overload,TR::DefaultCompilationStrategy, 2
+processEvent,override,TR::CompilationStrategy
+processEvent,override,TR::DefaultCompilationStrategy
+shutdown,override,TR::CompilationStrategy
+shutdown,override,TR::DefaultCompilationStrategy
+enableSwitchToProfiling,override,TR::CompilationStrategy
+enableSwitchToProfiling,override,TR::DefaultCompilationStrategy
+operator=,override,TR::CompilationStrategy
+operator=,override,TR::DefaultCompilationStrategy
+operator=,overload,TR::CompilationStrategy, 1
+operator=,overload,TR::DefaultCompilationStrategy, 1
+CompilationStrategy,overload,TR::CompilationStrategy, 2
+Compilation,overload,TR::Compilation, 1
+CompileIlGenRequest,overload,TR::CompileIlGenRequest, 2
+TR::BytecodeBuilder:
+BytecodeBuilder,override,OMR::BytecodeBuilder
+BytecodeBuilder,override,TR::BytecodeBuilder
+BytecodeBuilder,overload,OMR::BytecodeBuilder, 2
+initialize,override,TR::BytecodeBuilder
+operator=,override,TR::BytecodeBuilder
+operator=,override,OMR::BytecodeBuilder
+operator=,overload,OMR::BytecodeBuilder, 1
+operator=,overload,OMR::IlBuilder, 1
+operator=,overload,TR::BytecodeBuilder, 1
+operator=,overload,TestCompiler::IlBuilder, 1
+~BytecodeBuilder,override,OMR::BytecodeBuilder
+~BytecodeBuilder,override,TR::BytecodeBuilder
+operator new,overload,OMR::BytecodeBuilder, 5
+operator new[],overload,OMR::BytecodeBuilder, 4
+operator delete,overload,OMR::BytecodeBuilder, 3
+operator delete[],overload,OMR::BytecodeBuilder, 2
+isBytecodeBuilder,override,OMR::IlBuilder
+isBytecodeBuilder,override,OMR::BytecodeBuilder
+isBytecodeBuilder,overload,OMR::IlBuilder, 1
+currentByteCodeIndex,override,OMR::BytecodeBuilder
+countBlocks,override,OMR::BytecodeBuilder
+countBlocks,overload,OMR::IlBuilder, 1
+Goto,override,OMR::IlBuilder
+Goto,override,OMR::BytecodeBuilder
+Goto,overload,OMR::BytecodeBuilder, 1
+Goto,overload,OMR::IlBuilder, 3
+IfCmpEqual,override,OMR::IlBuilder
+IfCmpEqual,override,OMR::BytecodeBuilder
+IfCmpEqual,overload,OMR::BytecodeBuilder, 1
+IfCmpEqual,overload,OMR::IlBuilder, 3
+IfCmpEqualZero,override,OMR::IlBuilder
+IfCmpEqualZero,override,OMR::BytecodeBuilder
+IfCmpEqualZero,overload,OMR::BytecodeBuilder, 1
+IfCmpEqualZero,overload,OMR::IlBuilder, 3
+IfCmpNotEqual,override,OMR::IlBuilder
+IfCmpNotEqual,override,OMR::BytecodeBuilder
+IfCmpNotEqual,overload,OMR::BytecodeBuilder, 1
+IfCmpNotEqual,overload,OMR::IlBuilder, 3
+IfCmpNotEqualZero,override,OMR::IlBuilder
+IfCmpNotEqualZero,override,OMR::BytecodeBuilder
+IfCmpNotEqualZero,overload,OMR::BytecodeBuilder, 1
+IfCmpNotEqualZero,overload,OMR::IlBuilder, 3
+IfCmpLessThan,override,OMR::IlBuilder
+IfCmpLessThan,override,OMR::BytecodeBuilder
+IfCmpLessThan,overload,OMR::BytecodeBuilder, 1
+IfCmpLessThan,overload,OMR::IlBuilder, 3
+IfCmpUnsignedLessThan,override,OMR::IlBuilder
+IfCmpUnsignedLessThan,override,OMR::BytecodeBuilder
+IfCmpUnsignedLessThan,overload,OMR::BytecodeBuilder, 1
+IfCmpUnsignedLessThan,overload,OMR::IlBuilder, 3
+IfCmpLessOrEqual,override,OMR::IlBuilder
+IfCmpLessOrEqual,override,OMR::BytecodeBuilder
+IfCmpLessOrEqual,overload,OMR::BytecodeBuilder, 1
+IfCmpLessOrEqual,overload,OMR::IlBuilder, 3
+IfCmpUnsignedLessOrEqual,override,OMR::IlBuilder
+IfCmpUnsignedLessOrEqual,override,OMR::BytecodeBuilder
+IfCmpUnsignedLessOrEqual,overload,OMR::BytecodeBuilder, 1
+IfCmpUnsignedLessOrEqual,overload,OMR::IlBuilder, 3
+IfCmpGreaterThan,override,OMR::IlBuilder
+IfCmpGreaterThan,override,OMR::BytecodeBuilder
+IfCmpGreaterThan,overload,OMR::BytecodeBuilder, 1
+IfCmpGreaterThan,overload,OMR::IlBuilder, 3
+IfCmpUnsignedGreaterThan,override,OMR::IlBuilder
+IfCmpUnsignedGreaterThan,override,OMR::BytecodeBuilder
+IfCmpUnsignedGreaterThan,overload,OMR::BytecodeBuilder, 1
+IfCmpUnsignedGreaterThan,overload,OMR::IlBuilder, 3
+IfCmpGreaterOrEqual,override,OMR::IlBuilder
+IfCmpGreaterOrEqual,override,OMR::BytecodeBuilder
+IfCmpGreaterOrEqual,overload,OMR::BytecodeBuilder, 1
+IfCmpGreaterOrEqual,overload,OMR::IlBuilder, 3
+IfCmpUnsignedGreaterOrEqual,override,OMR::IlBuilder
+IfCmpUnsignedGreaterOrEqual,override,OMR::BytecodeBuilder
+IfCmpUnsignedGreaterOrEqual,overload,OMR::BytecodeBuilder, 1
+IfCmpUnsignedGreaterOrEqual,overload,OMR::IlBuilder, 3
+appendBlock,override,OMR::IlBuilder
+appendBlock,override,OMR::BytecodeBuilder
+appendBlock,overload,OMR::IlBuilder, 1
+connectTrees,override,OMR::BytecodeBuilder
+connectTrees,overload,OMR::IlBuilder, 3
+setHandlerInfo,override,OMR::IlBuilder
+setHandlerInfo,override,OMR::BytecodeBuilder
+setHandlerInfo,overload,OMR::IlBuilder, 1
+IlBuilder,overload,OMR::IlBuilder, 5
+IlBuilder,overload,TestCompiler::IlBuilder, 4
+~IlBuilder,overload,OMR::IlBuilder, 1
+blockEntry,overload,OMR::IlBuilder, 1
+builderEntry,overload,OMR::IlBuilder, 1
+initSequence,overload,OMR::IlBuilder, 1
+injectIL,overload,OMR::IlBuilder, 1
+setupForBuildIL,overload,OMR::IlBuilder, 1
+isMethodBuilder,overload,OMR::IlBuilder, 1
+asMethodBuilder,overload,OMR::IlBuilder, 1
+getName,overload,OMR::IlBuilder, 1
+print,overload,OMR::IlBuilder, 1
+printBlock,overload,OMR::IlBuilder, 1
+getFirstTree,overload,OMR::IlBuilder, 1
+getLastTree,overload,OMR::IlBuilder, 1
+getEntry,overload,OMR::IlBuilder, 1
+getExit,overload,OMR::IlBuilder, 1
+setDoesNotComeBack,overload,OMR::IlBuilder, 1
+setComesBack,overload,OMR::IlBuilder, 1
+comesBack,overload,OMR::IlBuilder, 1
+blocksHaveBeenCounted,overload,OMR::IlBuilder, 1
+createBuilderIfNeeded,overload,OMR::IlBuilder, 1
+OrphanBuilder,overload,OMR::IlBuilder, 1
+TraceEnabled_log,overload,OMR::IlBuilder, 1
+TraceIL_log,overload,OMR::IlBuilder, 1
+NewValue,overload,OMR::IlBuilder, 1
+NullAddress,overload,OMR::IlBuilder, 1
+ConstInt8,overload,OMR::IlBuilder, 1
+ConstInt16,overload,OMR::IlBuilder, 1
+ConstInt32,overload,OMR::IlBuilder, 1
+ConstInt64,overload,OMR::IlBuilder, 1
+ConstFloat,overload,OMR::IlBuilder, 1
+ConstDouble,overload,OMR::IlBuilder, 1
+ConstAddress,overload,OMR::IlBuilder, 1
+ConstString,overload,OMR::IlBuilder, 1
+ConstzeroValueForValue,overload,OMR::IlBuilder, 1
+Const,overload,OMR::IlBuilder, 13
+ConstInteger,overload,OMR::IlBuilder, 1
+Add,overload,OMR::IlBuilder, 1
+AddWithOverflow,overload,OMR::IlBuilder, 1
+AddWithUnsignedOverflow,overload,OMR::IlBuilder, 1
+Sub,overload,OMR::IlBuilder, 1
+SubWithOverflow,overload,OMR::IlBuilder, 1
+SubWithUnsignedOverflow,overload,OMR::IlBuilder, 1
+Mul,overload,OMR::IlBuilder, 1
+MulWithOverflow,overload,OMR::IlBuilder, 1
+Div,overload,OMR::IlBuilder, 1
+And,overload,OMR::IlBuilder, 1
+Or,overload,OMR::IlBuilder, 1
+Xor,overload,OMR::IlBuilder, 1
+ShiftL,overload,OMR::IlBuilder, 3
+ShiftR,overload,OMR::IlBuilder, 3
+UnsignedShiftR,overload,OMR::IlBuilder, 3
+NotEqualTo,overload,OMR::IlBuilder, 1
+EqualTo,overload,OMR::IlBuilder, 1
+LessThan,overload,OMR::IlBuilder, 1
+UnsignedLessThan,overload,OMR::IlBuilder, 1
+LessOrEqualTo,overload,OMR::IlBuilder, 1
+UnsignedLessOrEqualTo,overload,OMR::IlBuilder, 1
+GreaterThan,overload,OMR::IlBuilder, 1
+UnsignedGreaterThan,overload,OMR::IlBuilder, 1
+GreaterOrEqualTo,overload,OMR::IlBuilder, 1
+UnsignedGreaterOrEqualTo,overload,OMR::IlBuilder, 1
+ConvertTo,overload,OMR::IlBuilder, 1
+UnsignedConvertTo,overload,OMR::IlBuilder, 1
+CreateLocalArray,overload,OMR::IlBuilder, 1
+CreateLocalStruct,overload,OMR::IlBuilder, 1
+Load,overload,OMR::IlBuilder, 1
+Store,overload,OMR::IlBuilder, 1
+StoreOver,overload,OMR::IlBuilder, 1
+LoadAt,overload,OMR::IlBuilder, 1
+StoreAt,overload,OMR::IlBuilder, 1
+LoadIndirect,overload,OMR::IlBuilder, 1
+StoreIndirect,overload,OMR::IlBuilder, 1
+IndexAt,overload,OMR::IlBuilder, 1
+AtomicAddWithOffset,overload,OMR::IlBuilder, 1
+AtomicAdd,overload,OMR::IlBuilder, 1
+Transaction,overload,OMR::IlBuilder, 1
+TransactionAbort,overload,OMR::IlBuilder, 1
+StructFieldInstanceAddress,overload,OMR::IlBuilder, 1
+UnionFieldInstanceAddress,overload,OMR::IlBuilder, 1
+VectorLoad,overload,OMR::IlBuilder, 1
+VectorLoadAt,overload,OMR::IlBuilder, 1
+VectorStore,overload,OMR::IlBuilder, 1
+VectorStoreAt,overload,OMR::IlBuilder, 1
+AppendBuilder,overload,OMR::IlBuilder, 1
+Call,overload,OMR::IlBuilder, 3
+ComputedCall,overload,OMR::IlBuilder, 3
+genCall,overload,OMR::IlBuilder, 1
+Return,overload,OMR::IlBuilder, 3
+ForLoop,overload,OMR::IlBuilder, 1
+ForLoopUp,overload,OMR::IlBuilder, 1
+ForLoopDown,overload,OMR::IlBuilder, 1
+ForLoopWithBreak,overload,OMR::IlBuilder, 1
+ForLoopWithContinue,overload,OMR::IlBuilder, 1
+WhileDoLoop,overload,OMR::IlBuilder, 1
+WhileDoLoopWithBreak,overload,OMR::IlBuilder, 1
+WhileDoLoopWithContinue,overload,OMR::IlBuilder, 1
+DoWhileLoop,overload,OMR::IlBuilder, 1
+DoWhileLoopWithBreak,overload,OMR::IlBuilder, 1
+DoWhileLoopWithContinue,overload,OMR::IlBuilder, 1
+IfAnd,overload,OMR::IlBuilder, 1
+IfOr,overload,OMR::IlBuilder, 1
+IfThenElse,overload,OMR::IlBuilder, 1
+IfThen,overload,OMR::IlBuilder, 1
+Switch,overload,OMR::IlBuilder, 3
+buildIL,overload,OMR::IlBuilder, 1
+lookupSymbol,overload,OMR::IlBuilder, 1
+defineSymbol,overload,OMR::IlBuilder, 1
+newValue,overload,OMR::IlBuilder, 3
+defineValue,overload,OMR::IlBuilder, 1
+loadValue,overload,OMR::IlBuilder, 1
+storeNode,overload,OMR::IlBuilder, 1
+indirectStoreNode,overload,OMR::IlBuilder, 1
+indirectLoadNode,overload,OMR::IlBuilder, 1
+zero,overload,OMR::IlBuilder, 3
+zeroNodeForValue,overload,OMR::IlBuilder, 1
+zeroForValue,overload,OMR::IlBuilder, 1
+unaryOp,overload,OMR::IlBuilder, 1
+doVectorConversions,overload,OMR::IlBuilder, 1
+binaryOpFromNodes,overload,OMR::IlBuilder, 1
+binaryOpNodeFromNodes,overload,OMR::IlBuilder, 1
+binaryOpFromOpMap,overload,OMR::IlBuilder, 1
+binaryOpFromOpCode,overload,OMR::IlBuilder, 1
+compareOp,overload,OMR::IlBuilder, 1
+convertTo,overload,OMR::IlBuilder, 1
+ifCmpCondition,overload,OMR::IlBuilder, 1
+ifCmpNotEqualZero,overload,OMR::IlBuilder, 1
+ifCmpEqualZero,overload,OMR::IlBuilder, 1
+integerizeAddresses,overload,OMR::IlBuilder, 1
+appendGoto,overload,OMR::IlBuilder, 1
+appendNoFallThroughBlock,overload,OMR::IlBuilder, 1
+emptyBlock,overload,OMR::IlBuilder, 1
+pullInBuilderTrees,overload,OMR::IlBuilder, 1
+genOverflowCHKTreeTop,overload,OMR::IlBuilder, 1
+getOpCode,overload,OMR::IlBuilder, 1
+appendExceptionHandler,overload,OMR::IlBuilder, 1
+genOperationWithOverflowCHK,overload,OMR::IlBuilder, 1
+processCallArgs,overload,OMR::IlBuilder, 1
+IlValue,overload,TR::IlValue, 2
+TR_IlGenerator,overload,TR_IlGenerator, 1
+BytecodeBuilder,overload,TR::BytecodeBuilder, 2
+jitPersistentAlloc,override,OMR::BytecodeBuilder
+jitPersistentAlloc,overload,OMR::IlBuilder, 1
+jitPersistentFree,override,OMR::BytecodeBuilder
+jitPersistentFree,overload,OMR::IlBuilder, 1
+operator new,override,OMR::BytecodeBuilder
+operator new,overload,OMR::IlBuilder, 11
+operator new,overload,TestCompiler::IlBuilder, 5
+operator new[],override,OMR::BytecodeBuilder
+operator new[],overload,OMR::IlBuilder, 9
+operator new[],overload,TestCompiler::IlBuilder, 4
+operator delete,override,OMR::BytecodeBuilder
+operator delete,overload,OMR::IlBuilder, 7
+operator delete,overload,TestCompiler::IlBuilder, 3
+operator delete[],override,OMR::BytecodeBuilder
+operator delete[],overload,OMR::IlBuilder, 5
+operator delete[],overload,TestCompiler::IlBuilder, 2
+DataType,overload,TR::DataType, 1
+TR::CodeCacheMemorySegment:
+CodeCacheMemorySegment,override,OMR::CodeCacheMemorySegment
+CodeCacheMemorySegment,override,TR::CodeCacheMemorySegment
+CodeCacheMemorySegment,overload,OMR::CodeCacheMemorySegment, 4
+CodeCacheMemorySegment,overload,TR::CodeCacheMemorySegment, 2
+CodeCache,overload,TR::CodeCache, 2
+CodeCacheMemorySegment,overload,TR::CodeCacheMemorySegment, 4
+CompilerEnv,overload,TR::CompilerEnv, 2
+CodeCacheManager,overload,TR::CodeCacheManager, 2

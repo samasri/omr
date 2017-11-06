@@ -81,3 +81,17 @@ test7: $(SO)
 test8: $(SO)
 	@echo Executing Test 8...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test8.cpp > tests/test8.out
+
+include sources/common.mk
+
+#TODO: define $(HOST_ARCH) & $(TARGET_ARCH)
+LIST = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES) 
+
+targets = $(addprefix , $(LIST))
+writeCSV: $(targets)
+	python trim.py
+	mv csvTrimmed csv
+
+$(targets):
+	@echo "Compiling $@"
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $@ >> csv
