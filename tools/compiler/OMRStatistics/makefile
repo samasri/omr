@@ -32,17 +32,22 @@ PL = omr-statistics
 # Variables & rules to test the plugin on OMR files
 CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -add-plugin -Xclang $(PL)
 
-# Test my plugin on the CodeGenerator classes
-default: $(SO)
-	@echo Executing with the new plugin...
-	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $(SF) 
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@echo "Building my plugin..."
 	@$(GXX) `llvm-config-3.8 --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
 	@$(GXX) -shared `llvm-config-3.8 --ldflags` -o $(SO) $(O)
 	@rm $(O)
+
+clean: 
+	- rm $(SO)
+
+# Test my plugin on the CodeGenerator classes
+sample: $(SO)
+	@echo Executing with the new plugin...
+	@echo "-----------------------------------------"
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $(SF) 
+
 
 # Run test cases
 test: test1 test2 test3 test4 test5 test6 test7 test8
