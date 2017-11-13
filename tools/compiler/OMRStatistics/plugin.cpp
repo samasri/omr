@@ -321,7 +321,7 @@ void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloads, bo
 	
 	for(auto hierarchy : hierarchies) {
 		auto baseClassName = hierarchy->base->name;
-		if(baseClassName.find("TR::") == std::string::npos) continue;
+		//if(baseClassName.find("TR::") == std::string::npos) continue;
 		auto methodTrackers = *(hierarchy->methodTrackers);
 		if(methodTrackers.size() != 0) llvm::outs() << baseClassName << ":\n";
 		else continue;
