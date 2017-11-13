@@ -1,9 +1,9 @@
 # Path to OMR main directory
 OMR = ../../../
 # Path to clang bin (if using Ubuntu, use the clang that is provided by Ubuntu packages, rebuilding clang from source code and running it doesn't work for some reason)
-CXX = clang++
+CXX = clang++-3.8
 # Path to compiler that compiles the plugin
-GXX = g++
+GXX = clang++-3.8 #g++
 # All defines in one variable
 DEFINES = '-D__sync()=' '-D__lwsync()=' '-D__isync()=' -DBITVECTOR_BIT_NUMBERING_MSB -DUT_DIRECT_TRACE_REGISTRATION -DJITTEST -DTEST_PROJECT_SPECIFIC -DTR_HOST_X86 -DTR_HOST_64BIT -DBITVECTOR_64BIT -DLINUX -DTR_TARGET_X86 -DTR_TARGET_64BIT -DSUPPORTS_THREAD_LOCAL -D_LONG_LONG -DJ9HAMMER -DDEBUG
 # All includes in one variable
@@ -40,8 +40,8 @@ default: $(SO)
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@echo "Building my plugin..."
-	@$(GXX) `llvm-config --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
-	@$(GXX) -shared `llvm-config --ldflags` -o $(SO) $(O)
+	@$(GXX) `llvm-config-3.8 --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
+	@$(GXX) -shared `llvm-config-3.8 --ldflags` -o $(SO) $(O)
 	@rm $(O)
 
 # Run test cases
