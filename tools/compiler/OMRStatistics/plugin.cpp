@@ -35,26 +35,28 @@
 
 #include "plugin.hpp"
 	   
-void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecordDecl* inputClass, std::map<std::string, std::vector<std::string>> &map) {
+void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
 	
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
+		temp.push_back((*A)->getLocStart());
+		//llvm::outs() << (*A)->getNameAsString() << " --> " << (*A)->isVirtual() << "\n";
 		std::string functionName = (*A)->getNameAsString();
-		auto iterator = map.find(className);
-		if(iterator != map.end()) { //If the class was already encountered before
-			std::vector<std::string>* methods = &(iterator->second);
-			methods->push_back(functionName);
+		auto iterator = Class2Methods.find(className);
+		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
+			std::unordered_set<std::string>* methods = &(iterator->second);
+			methods->insert(functionName);
 		}
-		else {
-			std::vector<std::string> methods;
-			methods.push_back(functionName);
-			map.emplace(className, methods);
+		else { //If the class in new
+			std::unordered_set<std::string> methods;
+			methods.insert(functionName);
+			Class2Methods.emplace(className, methods);
 		}
 	}
 }
 
-void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDecl *decl, std::map<std::string, std::string> &map) {
+void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDecl *decl) {
 	//Initializing variables preparing for the iterations
 	const CXXRecordDecl * currentClass = decl;
 	CXXRecordDecl::base_class_const_iterator BI, BE;
@@ -68,13 +70,15 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 		
 		//Record parent-child relationship
 		if(currentClassName.compare(childClassName) != 0) {
-			auto iterator = map.find(childClassName);
-			auto end = map.end();
+			auto iterator = classHierarchy.find(childClassName);
+			auto end = classHierarchy.end();
 			
-			assert(iterator != end && (iterator->second.compare(currentClassName) != 0) && "Class has more than one unique parent");
+			// if class is already in Class2Methods and is mapped to a parent different than the current one then something is wrong
+			assert(iterator != end && (iterator->second.compare(currentClassName) != 0) && "Class has more than one unique parent"); 
 			
-			if(iterator == end) //map does not have the childClassName as a key
-				map.emplace(childClassName, currentClassName);
+			if(iterator == end) //classHierarchy does not have the current class, add it to classHierarchy
+				classHierarchy.emplace(childClassName, currentClassName);
+				
 			childClassName = currentClassName;
 		}
 		
@@ -87,10 +91,10 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 }
 
 bool OMRStatistics::ExtensibleClassCheckingVisitor::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
-	if(!decl || !decl->isClass() || !decl->hasDefinition()) return true;;
+	if(!decl || !decl->isClass() || !decl->hasDefinition()) return true;
 	
-	recordFunctions(decl, Class2Methods);
-	recordParents(decl, classHierarchy);
+	recordFunctions(decl);
+	recordParents(decl);
 	
 	return true;
 }
@@ -162,7 +166,7 @@ bool OMRStatistics::MethodTracker::operator==(const std::string other) {
 }
 
 //Search the top of each class hierarchy for the input class name
-OMRStatistics::HierarchySearchResult* OMRStatistics::OMRCheckingConsumer::isFoundInHierarchy(std::string child, std::string parent) {
+OMRStatistics::HierarchySearchResult* OMRStatistics::OMRCheckingConsumer::isFoundInHierarchies(std::string child, std::string parent) {
 	HierarchySearchResult* result = new HierarchySearchResult();
 	int counter = 0;
 			
@@ -234,7 +238,7 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		LinkedNode* newNode = new LinkedNode();
 		
 		//Search for the class in one of the recorded hierarchies so far
-		HierarchySearchResult* result = isFoundInHierarchy(currentClassName, currentParentName);
+		HierarchySearchResult* result = isFoundInHierarchies(currentClassName, currentParentName);
 		
 		//Case when returned node should be the new base node of a hierarchy
 		if(result->isFound) {
@@ -295,7 +299,6 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 		auto map = visitor.Class2Methods;
 		//Iterate through each hierarchy's classes
 		while(current) {
-			auto map = visitor.Class2Methods;
 			std::string className = current->name;
 			auto Class2MethodsIterator = map.find(className);
 			if(Class2MethodsIterator == map.end()) {
@@ -304,7 +307,7 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 				continue;
 			}
 			
-			std::vector<std::string> methods = Class2MethodsIterator->second;
+			std::unordered_set<std::string> methods = Class2MethodsIterator->second;
 			//Iterate through the methods and connect them to their classes via MethodTracker objects
 			for(std::string method : methods) {
 				auto tracker = searchForTracker(hierarchy, method); 
@@ -357,35 +360,33 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	fillHierarchies(extchkVisitor.classHierarchy);
 	collectMethodInfo(extchkVisitor);
 	
-	// //Reading config file
-	// std::string line;
-	// std::ifstream config("config");
-	// assert(config.is_open() && "config file not found");
-	// 
-	// //Read the boolean specifying if we print the hierarchy
-	// getline(config, line);
-	// if(line.compare("1") == 0) printHierarchy();
-	// 
-	// //Read the boolean specifying if we print overloads
-	// bool printOverloads = false;
-	// getline(config, line);
-	// if(line.compare("1") == 0) printOverloads = true;
-	// 
-	// //Read the boolean specifying if we print overloads
-	// bool printOverrides = false;
-	// getline(config, line);
-	// if(line.compare("1") == 0) printOverrides = true;
-	// 
-	// //Read the boolean specifying if we print the method info
-	// if(printOverloads || printOverrides) printMethodInfo(printOverloads, printOverrides);
-	// 
-	// config.close();
-
-	 if (getenv("OMR_STAT_PRINT_HIERARCHY") != NULL) {        
-		 printHierarchy();
-	 }
-	 printMethodInfo(getenv("OMR_STAT_PRINT_OVERLOADS") != NULL, true);
-	 
+	for(auto a : extchkVisitor.temp) {
+		llvm::outs() << a.printToString(Context.getSourceManager()) << "\n";
+	}
+	
+	//Reading config file
+	std::string line;
+	std::ifstream config("config");
+	assert(config.is_open() && "config file not found");
+	
+	//Read the boolean specifying if we print the hierarchy
+	getline(config, line);
+	if(line.compare("1") == 0) printHierarchy();
+	
+	//Read the boolean specifying if we print overloads
+	bool printOverloads = false;
+	getline(config, line);
+	if(line.compare("1") == 0) printOverloads = true;
+	
+	//Read the boolean specifying if we print overloads
+	bool printOverrides = false;
+	getline(config, line);
+	if(line.compare("1") == 0) printOverrides = true;
+	
+	//Read the boolean specifying if we print the method info
+	if(printOverloads || printOverrides) printMethodInfo(printOverloads, printOverrides);
+	
+	config.close();
 }
 
 std::unique_ptr<ASTConsumer> OMRStatistics::CheckingAction::CreateASTConsumer(CompilerInstance &CI, llvm::StringRef filename) {

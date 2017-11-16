@@ -17,16 +17,18 @@ namespace OMRStatistics {
 	class ExtensibleClassCheckingVisitor : public RecursiveASTVisitor<ExtensibleClassCheckingVisitor> {
 	
 	public:
+		//TempMap
+		std::vector<clang::SourceLocation> temp; //Cannot use set coz hash is not implemented
 		//Mapping between each class and all its methods
-		std::map<std::string, std::vector<std::string>> Class2Methods;
+		std::map<std::string, std::unordered_set<std::string>> Class2Methods;
 		//Parent-child relationship mapping (child --> parent)
 		std::map<std::string, std::string> classHierarchy;
 		
 		explicit ExtensibleClassCheckingVisitor(ASTContext *Context) { }
-		//Loop through the methods of the given class and input them in the given map
-		void recordFunctions(const CXXRecordDecl* inputClass, std::map<std::string, std::vector<std::string>> &map);
-		//Loop through all parents of the given class, recording their relationships in the given map
-		void recordParents(const CXXRecordDecl *decl, std::map<std::string, std::string> &map);
+		//Loop through the methods of the given class and input them in Class2Methods
+		void recordFunctions(const CXXRecordDecl* inputClass);
+		//Loop through all parents of the given class, recording their relationships in classHierarchy
+		void recordParents(const CXXRecordDecl *decl);
 		//Called by clang for every class declaration
 		bool VisitCXXRecordDecl(const CXXRecordDecl *decl);
 	};
@@ -76,7 +78,7 @@ namespace OMRStatistics {
 		bool operator==(const std::string other);
 	};
 	
-	//This struct is the resultant OMRCheckingConsumer::isFoundInHierarchy
+	//This struct is the resultant OMRCheckingConsumer::isFoundInHierarchies
 	struct HierarchySearchResult {
 		//If true, the target node should be the new base of the class hierarchy
 		bool changeBase;
@@ -95,18 +97,18 @@ namespace OMRStatistics {
 		
 		explicit OMRCheckingConsumer(llvm::StringRef filename) { }
 		//Search the tips (base and top) of each class hierarchy for the input class name
-		//TODO: This is not a very good architecture, the isFoundInHierarchy function is deciding where should the class be, so the naming should be changed to make this function more independant and less related to fillHierarchies
-		HierarchySearchResult* isFoundInHierarchy(std::string child, std::string parent);
+		//TODO: This is not a very good architecture, the isFoundInHierarchies function is deciding where should the class be, so the naming should be changed to make this function more independant and less related to fillHierarchies
+		HierarchySearchResult* isFoundInHierarchies(std::string child, std::string parent);
 		//Process the classHierarchy map from ExtensibleClassCheckingVisitor to fill the hierarchies map.
 		void fillHierarchies(std::map<std::string, std::string> &map);
-		//After finishing the hierarchy, some hierarchies will be broken into 2 sub-hierarchies since the algorithm in fillHierarchies couldn't handle all the corner cases, this method checks for two hierarchies that should be connected and connects them
+		//After finishing the hierarchy, some hierarchies will be broken into 2 sub-hierarchies since the algorithm in fillHierarchies couldn't handle all the corner cases, refineHierarchies method checks for two hierarchies that should be connected and connects them
 		void refineHierarchies();
 		//Search for the MethodTracker with the inputted function name in the inputted hierarchy
 		MethodTracker* searchForTracker(Hierarchy* hierarchy, std::string method);
 		//Iterates through the entries of Class2Methods in the ExtensibleClassCheckingVisitor and creates MethodTrackers out of them
 		void collectMethodInfo(ExtensibleClassCheckingVisitor &visitor);
 		
-		//Printining methods to check the results (and debugging sometimes)
+		//Printining methods to check the results
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
 		void printHierarchy();
 		//Iterates through the MethodTrackers in each Hierarchy and prints the information in an organized way
