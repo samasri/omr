@@ -295,7 +295,7 @@ OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTrack
 void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassCheckingVisitor &visitor) {
 	for(auto hierarchy : hierarchies) {
 		LinkedNode* current = hierarchy->base;
-		auto map = visitor.Class2Methods;
+		auto map = visitor.getClass2Methods();
 		//Iterate through each hierarchy's classes
 		while(current) {
 			std::string className = current->name;
@@ -356,7 +356,8 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	ExtensibleClassCheckingVisitor extchkVisitor(&Context);
 	extchkVisitor.TraverseDecl(Context.getTranslationUnitDecl());
 	
-	fillHierarchies(extchkVisitor.classHierarchy);
+	auto classHierarchy = extchkVisitor.getclassHierarchy();
+	fillHierarchies(classHierarchy);
 	collectMethodInfo(extchkVisitor);
 	
 	//Reading config file
