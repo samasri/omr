@@ -40,8 +40,7 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRec
 	
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
-		temp.push_back((*A)->getLocStart());
-		//llvm::outs() << (*A)->getNameAsString() << " --> " << (*A)->isVirtual() << "\n";
+		//llvm::outs() << (*A)->getQualifiedNameAsString() << "\n";
 		std::string functionName = (*A)->getNameAsString();
 		auto iterator = Class2Methods.find(className);
 		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
@@ -359,10 +358,6 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	
 	fillHierarchies(extchkVisitor.classHierarchy);
 	collectMethodInfo(extchkVisitor);
-	
-	for(auto a : extchkVisitor.temp) {
-		llvm::outs() << a.printToString(Context.getSourceManager()) << "\n";
-	}
 	
 	//Reading config file
 	std::string line;
