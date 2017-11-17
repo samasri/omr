@@ -17,8 +17,6 @@ namespace OMRStatistics {
 	class ExtensibleClassCheckingVisitor : public RecursiveASTVisitor<ExtensibleClassCheckingVisitor> {
 	
 	public:
-		//TempMap
-		std::vector<clang::SourceLocation> temp; //Cannot use set coz hash is not implemented
 		//Mapping between each class and all its methods
 		std::map<std::string, std::unordered_set<std::string>> Class2Methods;
 		//Parent-child relationship mapping (child --> parent)
