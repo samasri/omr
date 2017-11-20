@@ -34,13 +34,21 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "plugin.hpp"
+
+std::map<std::string, std::unordered_set<std::string>> OMRStatistics::ExtensibleClassCheckingVisitor::getClass2Methods() {return Class2Methods;}
+
+void OMRStatistics::ExtensibleClassCheckingVisitor::setClass2Methods(std::map<std::string, std::unordered_set<std::string>> Class2Methods) {this->Class2Methods = Class2Methods;}
+
+std::map<std::string, std::string> OMRStatistics::ExtensibleClassCheckingVisitor::getclassHierarchy() {return classHierarchy;}
+
+void OMRStatistics::ExtensibleClassCheckingVisitor::setclassHierarchy(std::map<std::string, std::string> classHierarchy) {this->classHierarchy = classHierarchy;}
 	   
 void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
 	
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
-		//llvm::outs() << (*A)->getQualifiedNameAsString() << "\n";
+		
 		std::string functionName = (*A)->getNameAsString();
 		auto iterator = Class2Methods.find(className);
 		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
@@ -359,30 +367,6 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	auto classHierarchy = extchkVisitor.getclassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(extchkVisitor);
-	
-	// //Reading config file
-	// std::string line;
-	// std::ifstream config("config");
-	// assert(config.is_open() && "config file not found");
-	// 
-	// //Read the boolean specifying if we print the hierarchy
-	// getline(config, line);
-	// if(line.compare("1") == 0) printHierarchy();
-	// 
-	// //Read the boolean specifying if we print overloads
-	// bool printOverloads = false;
-	// getline(config, line);
-	// if(line.compare("1") == 0) printOverloads = true;
-	// 
-	// //Read the boolean specifying if we print overloads
-	// bool printOverrides = false;
-	// getline(config, line);
-	// if(line.compare("1") == 0) printOverrides = true;
-	// 
-	// //Read the boolean specifying if we print the method info
-	// if(printOverloads || printOverrides) printMethodInfo(printOverloads, printOverrides);
-	// 
-	// config.close();
 
 	 if (getenv("OMR_STAT_PRINT_HIERARCHY") != NULL) {        
 		 printHierarchy();

@@ -23,10 +23,10 @@ namespace OMRStatistics {
 	
 	public:
 		//Getters and setters
-		std::map<std::string, std::unordered_set<std::string>> getClass2Methods() {return Class2Methods;}
-		void setClass2Methods(std::map<std::string, std::unordered_set<std::string>> Class2Methods) {this->Class2Methods = Class2Methods;}
-		std::map<std::string, std::string> getclassHierarchy() {return classHierarchy;}
-		void setclassHierarchy(std::map<std::string, std::string> classHierarchy) {this->classHierarchy = classHierarchy;}
+		std::map<std::string, std::unordered_set<std::string>> getClass2Methods();
+		void setClass2Methods(std::map<std::string, std::unordered_set<std::string>> Class2Methods);
+		std::map<std::string, std::string> getclassHierarchy();
+		void setclassHierarchy(std::map<std::string, std::string> classHierarchy);
 		
 		explicit ExtensibleClassCheckingVisitor(ASTContext *Context) { }
 		
