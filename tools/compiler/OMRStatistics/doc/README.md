@@ -6,8 +6,9 @@ This is a clang plugin that runs on the source code of the file provided in the 
 * Running `make test` will test the plugins on all the available test cases and makes sure all outputs are as expected
 
 # Assumptions
-* The plugin does not check for OMR_EXTENSIBLE tag when processing classes, hence all classes are being processed right now and added in the hierarchy list output
-* All source files for all plugins will be processed and added to the same output file
+* All classes are expected to be processed when the tool is triggered and added in the output (not only OMR_EXTENSIBLE files)
+* Source files for all features are expected to be processed and added to the same output file
+* 
 
 # Functionality of the plugin
 This plugin has 2 main functions:
@@ -54,7 +55,7 @@ Assuming we have the below class hierarchy, the plugin would create the below cs
 # General Design
 The tool works as follows:
 1. Visits every class declaration in the target source code (let us call the current class: _X_), and iterates through X's parents
-2. Every time it jumps from one class/parent to its parent, it records the relationship between these 2 classes in a binary map (let us call it _hierarchy_ map)
+2. Every time it jumps from one class/parent to its parent, it records the relationship between these 2 classes in a binary map (let us call it _hierarchy_ map). Since it passes to every class and process all its parents, the tool is expected to find classes that were already processed (when processing the parents of another class lower in the hierarchy); hence the tool would skip any already processed classes.
 3. When it finds no more parents, the tool goes back to X and records all its methods in another map (let us call it _function_ map)
 4. After visiting all classes in the source code, the processing of these 2 maps starts
 5. The tool iterates through all the records in the _hierarchy_ map processing each child/parent relationship to create `Hierarchy` structure. A `Hierarchy` is a data structure that represents a hierarchy of classes, keeping track of the top and base classes and other important information.
