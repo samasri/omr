@@ -7,8 +7,8 @@ This is a clang plugin that runs on the source code of the file provided in the 
 
 # Assumptions
 * All classes are expected to be processed when the tool is triggered and added in the output (not only OMR_EXTENSIBLE files)
-* Source files for all features are expected to be processed and added to the same output file
-* 
+* Source files for all combinations and architectures are expected to be processed and added to the same output file
+* There exist no class that has multiple parents
 
 # Functionality of the plugin
 This plugin has 2 main functions:
@@ -28,17 +28,17 @@ Prints out each method in each of the class hierarchies, which classes it is ove
 ## 2. Second functionality (printing method information)
 The output is in csv format. 
 
-* If a method is overloaded, a record will be shown including the class where it was overloaded and the number of times it was overloaded in that class. The output format for overloads is:
+* When an method overload is encountered, a record shows the class where the method is overloaded and the name of the overloading method. Hence, multiple overloads of a method will result in multiple records in the CSV file. The output record format for overloads is:
 ```
-<BaseNamespace>,<BaseClassname>,<MethodName>,<Type: overload>,<Namespace where overload happens>,<Classname where overload happens>,<Number of Times Overloaded>
+<BaseNamespace>,<BaseClassname>,<MethodSignature>,<Type: overload>,<Namespace where overload happens>,<Classname where overload happens>, <OverloadMethodSignature>
 ```
 
-* If a method was overriden, the output will contain multiple records, each representing an occurence of the method in the specified class (the _Number of Times Overloaded_ space will be kept void). The output format for overrides is:
+* In case of a method override, a record in the CSV file shows the name of the namespace and class where this method is overloaded. The output format for overrides is:
 ```
-<BaseNamespace>,<BaseClassname>,<MethodName>,<Type: override>,<OverridingNamespace>,<OverridingClassname>,<Callsite exists>
+<BaseNamespace>,<BaseClassname>,<methodSignature>,<Type: override>,<OverridingNamespace>,<OverridingClassname>
 ```
 # Triggerring Functionality
-By default, the tool prints the overrides in a CSV file. Passing _OMR_STAT_PRINT_OVERLOADS_ when running the tool allows the tool to print the overload information also (in the same CSV). In order to trigger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ should be passed.
+By default, the tool prints the overrides in a CSV file. Passing _OMR_STAT_PRINT_OVERLOADS_ in the command line options when running the tool allows the tool to print the overload information also (in the same CSV). In order to trigger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ should be passed.
 
 # Output Sample
 Assuming we have the below class hierarchy, the plugin would create the below csv file (it is converted into a table here for better visualization):
