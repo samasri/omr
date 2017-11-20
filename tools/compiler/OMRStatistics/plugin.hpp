@@ -22,19 +22,14 @@ namespace OMRStatistics {
 		std::map<std::string, std::string> classHierarchy;
 	
 	public:
-		std::map<std::string, std::unordered_set<std::string>> getClass2Methods() {
-			return Class2Methods;
-		}
-		void setClass2Methods(std::map<std::string, std::unordered_set<std::string>> Class2Methods) {
-			this->Class2Methods = Class2Methods;
-		}
-		std::map<std::string, std::string> getclassHierarchy() {
-			return classHierarchy;
-		}
-		void setclassHierarchy(std::map<std::string, std::string> classHierarchy) {
-			this->classHierarchy = classHierarchy;
-		}
+		//Getters and setters
+		std::map<std::string, std::unordered_set<std::string>> getClass2Methods() {return Class2Methods;}
+		void setClass2Methods(std::map<std::string, std::unordered_set<std::string>> Class2Methods) {this->Class2Methods = Class2Methods;}
+		std::map<std::string, std::string> getclassHierarchy() {return classHierarchy;}
+		void setclassHierarchy(std::map<std::string, std::string> classHierarchy) {this->classHierarchy = classHierarchy;}
+		
 		explicit ExtensibleClassCheckingVisitor(ASTContext *Context) { }
+		
 		//Loop through the methods of the given class and input them in Class2Methods
 		void recordFunctions(const CXXRecordDecl* inputClass);
 		//Loop through all parents of the given class, recording their relationships in classHierarchy
