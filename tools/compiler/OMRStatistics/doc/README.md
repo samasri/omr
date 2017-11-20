@@ -13,7 +13,6 @@ This is a clang plugin that runs on the source code of the file provided in the 
 This plugin has 2 main functions:
 ## 1. Print hierarchies
 Prints out all class hierarchies in this source file (and all its includes).
-### Output Format
 
 ### Known bug
 When a class has 2 children, one of the hierarchies in the plugin output is broken. This case is elaborated in one of the test cases.
@@ -37,8 +36,8 @@ The output is in csv format.
 ```
 <BaseNamespace>,<BaseClassname>,<MethodName>,<Type: override>,<OverridingNamespace>,<OverridingClassname>,<Callsite exists>
 ```
-# Trigerring Functionality
-By default, the tool prints the overrides in a CSV file. Passing _OMR_STAT_PRINT_OVERLOADS_ when running the tool allows the tool to print the overload information also (in the same CSV). In order to triger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ should be passed.
+# Triggerring Functionality
+By default, the tool prints the overrides in a CSV file. Passing _OMR_STAT_PRINT_OVERLOADS_ when running the tool allows the tool to print the overload information also (in the same CSV). In order to trigger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ should be passed.
 
 # Output Sample
 Assuming we have the below class hierarchy, the plugin would create the below csv file (it is converted into a table here for better visualization):
@@ -50,13 +49,13 @@ Assuming we have the below class hierarchy, the plugin would create the below cs
 | OMR | A | f() | override | OMR::Z | A | 1 |
 | OMR | A | f() | override | Ruby | A | 1 |
 | ~~OMR:Z~~ | ~~A~~ | ~~f()~~ | ~~override~~ | ~~Ruby~~ | ~~A~~ | ~~1~~ |
-| OMR::Z | A | g() | override | Ruby |
+| OMR::Z | A | g() | override | Ruby | A | 1 |
 
 # General Design
 The tool works as follows:
 1. Visits every class declaration in the target source code (let us call the current class: _X_), and iterates through X's parents
-2. Every time it jumps from one class/parent to a its parent, it records the relationship between these 2 classes in a binary map (let us call it _hierarchy_ map)
-3. When it finds no more parents, the tool goes back to X and record all its methods in another map (let us call it _function_ map)
+2. Every time it jumps from one class/parent to its parent, it records the relationship between these 2 classes in a binary map (let us call it _hierarchy_ map)
+3. When it finds no more parents, the tool goes back to X and records all its methods in another map (let us call it _function_ map)
 4. After visiting all classes in the source code, the processing of these 2 maps starts
 5. The tool iterates through all the records in the _hierarchy_ map processing each child/parent relationship to create `Hierarchy` structure. A `Hierarchy` is a data structure that represents a hierarchy of classes, keeping track of the top and base classes and other important information.
 6. After that, the tool iterates through the records in the _function_ map creating a `MethodTracker` class. A `MethodTracker` keeps track of the occurence information of a unique function across all classes in a hierarchy. Hence, each _Hierarchy_ structure contains an array of `MethodTracker`s, one for each unique method.
