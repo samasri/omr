@@ -8,7 +8,7 @@ This is a clang plugin that runs on the source code of the file provided in the 
 # Assumptions
 * All classes are expected to be processed when the tool is triggered and added in the output (not only OMR_EXTENSIBLE files)
 * Source files for all combinations and architectures are expected to be processed and added to the same output file
-* There exist no class that has multiple parents
+* There exists no class that has multiple parents
 
 # Functionality of the plugin
 This plugin has 2 main functions:
