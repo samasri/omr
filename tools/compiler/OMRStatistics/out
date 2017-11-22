@@ -1,0 +1,350 @@
+Executing with the new plugin...
+-----------------------------------------
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol
+OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register
+OMR::RegisterMappedSymbol --> TR::Symbol
+TR::RegisterPair --> OMR::RegisterPair --> TR::Register
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol
+TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
+OMR::X86::Register --> OMR::Register
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::BeforeBinaryEncodingExternalRelocation --> TR::ExternalRelocation --> TR::Relocation
+TR::BlockChecklist --> TR::Checklist
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::ExternalOrderedPair32BitRelocation --> TR::ExternalRelocation
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::InstructionAbsoluteRelocation --> TR::Relocation
+TR::IteratedExternalRelocation --> TR_Link
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::LabelAbsoluteRelocation --> TR::LabelRelocation --> TR::Relocation
+TR::LabelRelative12BitRelocation --> TR::LabelRelocation
+TR::LabelRelative16BitRelocation --> TR::LabelRelocation
+TR::LabelRelative24BitRelocation --> TR::LabelRelocation
+TR::LabelRelative32BitRelocation --> TR::LabelRelocation
+TR::LabelRelative8BitRelocation --> TR::LabelRelocation
+TR::LabelTable32BitRelocation --> TR::LabelRelocation
+TR::LoadLabelRelative16BitRelocation --> TR::Relocation
+TR::LoadLabelRelative32BitRelocation --> TR::Relocation
+TR::LoadLabelRelative64BitRelocation --> TR::LabelRelocation
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::NodeChecklist --> TR::Checklist
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VPArrayInfo --> TR::VPConstraint
+TR::VPClass --> TR::VPConstraint
+TR::VPNonNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPGreaterThanOrEqual --> TR::VPRelation
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPIntRange --> TR::VPIntConstraint
+TR::VPKnownObject --> TR::VPFixedClass
+TR::VPLessThanOrEqual --> TR::VPRelation
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPLongRange --> TR::VPLongConstraint
+TR::VPMergedConstraints --> TR::VPConstraint
+TR::VPNotEqual --> TR::VPRelation
+TR::VPNullObject --> TR::VPClassPresence
+TR::VPObjectLocation --> TR::VPConstraint
+TR::VPPreexistentObject --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPShortRange --> TR::VPShortConstraint
+TR::VPSync --> TR::VPConstraint
+TR::VPUnreachablePath --> TR::VPConstraint
+TR::VPUnresolvedClass --> TR::VPClassType
+TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis
+TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis
+TR_BackwardUnionSingleBitContainerAnalysis --> TR_BackwardUnionDFSetAnalysis
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_BlockStructure --> TR_Structure
+TR_ClassExtendCheck --> TR_Link
+TR_ClassLoadCheck --> TR_Link
+TR_Delayedness --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis
+TR_Earliestness --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis
+TR_FlowSensitiveEscapeAnalysis --> TR_IntersectionBitVectorAnalysis
+TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InductionVariable --> TR_Link
+TR_Isolatedness --> TR_BackwardIntersectionBitVectorAnalysis
+TR_Latestness --> TR_BackwardIntersectionBitVectorAnalysis
+TR_LiveOnAllPaths --> TR_BackwardIntersectionBitVectorAnalysis
+TR_LocalAnticipatability --> TR_LocalAnalysis
+TR_LocalTransparency --> TR_LocalAnalysis
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_ReachingBlocks --> TR_UnionBitVectorAnalysis
+TR_ReachingDefinitions --> TR_UnionBitVectorAnalysis
+TR_RegionStructure --> TR_Structure
+TR_RegisterAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis
+TR_RegisterAvailability --> TR_IntersectionBitVectorAnalysis
+TR_StackMemory --> TR_MemoryAllocationType
+TR_StructureSubGraphNode --> TR::CFGNode
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UnionSingleBitContainerAnalysis --> TR_UnionDFSetAnalysis
+TR_UseDefInfo --> TR::Allocatable
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+std::__ctype_abstract_base --> std::locale::facet
+std::__cxx11::collate_byname --> std::__cxx11::collate --> std::locale::facet
+std::__cxx11::numpunct_byname --> std::__cxx11::numpunct --> std::locale::facet
+std::allocator --> __gnu_cxx::new_allocator
+std::back_insert_iterator --> std::iterator
+std::bad_array_new_length --> std::bad_alloc --> std::exception
+std::bad_cast --> std::exception
+std::bad_exception --> std::exception
+std::bad_function_call --> std::exception
+std::bad_typeid --> std::exception
+std::basic_istream --> std::basic_ios --> std::ios_base
+std::basic_iostream --> std::basic_istream
+std::basic_ostream --> std::basic_ios
+std::ctype_byname --> std::ctype --> std::locale::facet
+std::domain_error --> std::logic_error --> std::exception
+std::front_insert_iterator --> std::iterator
+std::insert_iterator --> std::iterator
+std::invalid_argument --> std::logic_error
+std::ios_base::failure --> std::system_error --> std::runtime_error
+std::length_error --> std::logic_error
+std::num_get --> std::locale::facet
+std::num_put --> std::locale::facet
+std::ostream_iterator --> std::iterator
+std::ostreambuf_iterator --> std::iterator
+std::out_of_range --> std::logic_error
+std::overflow_error --> std::runtime_error --> std::exception
+std::range_error --> std::runtime_error
+std::underflow_error --> std::runtime_error
+CS2::ABitVector::iterator:
+CS2::TableOf::Cursor:
+CS2::Timer:
+TR::GlobalSingletonAllocator:
+TR::AutomaticSymbol:
+TR::Block:
+TR::LabelSymbol:
+TR::MethodSymbol:
+TR::ParameterSymbol:
+OMR::X86::RealRegister:
+OMR::RegisterMappedSymbol:
+TR::RegisterPair:
+TR::ResolvedMethodSymbol:
+TR::StaticSymbol:
+TestCompiler::CodeGenerator:
+TR::Machine:
+TR_X86FPStackRegister:
+TR::TreeEvaluator:
+TR::CPU:
+TR::DebugEnv:
+TR::Instruction:
+TR::Linkage:
+OMR::X86::Register:
+TR::Snippet:
+TR::AliasBuilder:
+TR::ArithEnv:
+TR::BeforeBinaryEncodingExternalRelocation:
+TR::BlockChecklist:
+TR::CFG:
+TR::CFGEdge:
+TR::ClassEnv:
+TR::CodeGenPhase:
+TR::CodeGenerator:
+TR::Compilation:
+TR::CompilerEnv:
+TR::DataType:
+TR::DebugCounter:
+TR::DebugCounterAggregation:
+TR::Environment:
+TR::ExternalOrderedPair32BitRelocation:
+TR::GCRegisterMap:
+TR::GCStackAtlas:
+TR::IL:
+TR::ILOpCode:
+TR::IO:
+TR::InstructionAbsoluteRelocation:
+TR::IteratedExternalRelocation:
+TR::KnownObjectTable:
+TR::LabelAbsoluteRelocation:
+TR::LabelRelative12BitRelocation:
+TR::LabelRelative16BitRelocation:
+TR::LabelRelative24BitRelocation:
+TR::LabelRelative32BitRelocation:
+TR::LabelRelative8BitRelocation:
+TR::LabelTable32BitRelocation:
+TR::LoadLabelRelative16BitRelocation:
+TR::LoadLabelRelative32BitRelocation:
+TR::LoadLabelRelative64BitRelocation:
+TR::Monitor:
+TR::Node:
+TR::NodeChecklist:
+TR::ObjectModel:
+TR::Optimizer:
+TR::Options:
+TR::PersistentInfo:
+TR::Region::Instance:
+TR_X86FPStackIterator:
+TR::ResolvedMethod:
+TR::SnippetGCMap:
+TR::StackMemoryRegion:
+TR::SymbolReference:
+TR::SymbolReferenceTable:
+TR::TreeTop:
+TR::VMEnv:
+TR::VPArrayInfo:
+TR::VPClass:
+TR::VPNonNullObject:
+TR::VPResolvedClass:
+TR::VPConstString:
+TR::VPEqual:
+TR::VPGreaterThanOrEqual:
+TR::VPIntConst:
+TR::VPIntRange:
+TR::VPKnownObject:
+TR::VPLessThanOrEqual:
+TR::VPLongConst:
+TR::VPLongRange:
+TR::VPMergedConstraints:
+TR::VPNotEqual:
+TR::VPNullObject:
+TR::VPObjectLocation:
+TR::VPPreexistentObject:
+TR::VPShortConst:
+TR::VPShortRange:
+TR::VPSync:
+TR::VPUnreachablePath:
+TR::VPUnresolvedClass:
+TR_BackwardIntersectionDFSetAnalysis:
+TR_GlobalAnticipatability:
+TR_Liveness:
+TR_BackwardUnionSingleBitContainerAnalysis:
+TR_BitContainerIterator:
+TR_BitVectorCursor:
+TR_BlockStructure:
+TR_ClassExtendCheck:
+TR_ClassLoadCheck:
+TR_Delayedness:
+TR_Earliestness:
+TR_FlowSensitiveEscapeAnalysis:
+TR_ForwardDFSetAnalysis:
+TR_FrontEnd:
+TR_HashTabDouble:
+TR_HashTabFloat:
+TR_HashTabInt:
+TR_HashTabLong:
+TR_HashTabString:
+TR_HeapMemory:
+TR_InductionVariable:
+TR_Isolatedness:
+TR_Latestness:
+TR_LiveOnAllPaths:
+TR_LocalAnticipatability:
+TR_LocalTransparency:
+TR_Memory:
+TR_NodeKillAliasSetInterface:
+TR_NodeUseAliasSetInterface:
+TR_PersistentMemory:
+TR_PostDominators:
+TR_PredecessorIterator:
+TR_ReachingBlocks:
+TR_ReachingDefinitions:
+TR_RegionStructure:
+TR_RegisterAnticipatability:
+TR_RegisterAvailability:
+TR_StackMemory:
+TR_StructureSubGraphNode:
+TR_SuccessorIterator:
+TR_UseDefAliasSetInterface:
+TR_SymRefIterator:
+TR_UnionSingleBitContainerAnalysis:
+TR_UseDefInfo:
+TR_UseOnlyAliasSetInterface:
+TR_X86OpCode::Estimator:
+TR_X86OpCode::Writer:
+TR_X86ScratchRegisterManager:
+TestCompiler::Method:
+std::__ctype_abstract_base:
+std::__cxx11::collate_byname:
+std::__cxx11::numpunct_byname:
+std::allocator:
+std::back_insert_iterator:
+std::bad_array_new_length:
+std::bad_cast:
+std::bad_exception:
+std::bad_function_call:
+std::bad_typeid:
+std::basic_istream:
+std::basic_iostream:
+std::basic_ostream:
+std::ctype_byname:
+std::domain_error:
+std::front_insert_iterator:
+std::insert_iterator:
+std::invalid_argument:
+std::ios_base::failure:
+std::length_error:
+std::num_get:
+std::num_put:
+std::ostream_iterator:
+std::ostreambuf_iterator:
+std::out_of_range:
+std::overflow_error:
+std::range_error:
+std::underflow_error:

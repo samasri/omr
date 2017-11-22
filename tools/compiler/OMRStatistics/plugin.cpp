@@ -181,7 +181,7 @@ OMRStatistics::HierarchySearchResult* OMRStatistics::OMRCheckingConsumer::isFoun
 	HierarchySearchResult* result = new HierarchySearchResult();
 	int counter = 0;
 			
-	for(Hierarchy* hierarchy : hierarchies) {
+	/*for(Hierarchy* hierarchy : hierarchies) {
 		//Search if the parent is the same as one of the base nodes of one of the class hierarchies, this means the base of that hierarchy should be changed
 		if(hierarchy->base->name.compare(parent) == 0) {
 			result->changeBase = 1;
@@ -198,13 +198,19 @@ OMRStatistics::HierarchySearchResult* OMRStatistics::OMRCheckingConsumer::isFoun
 			return result;
 		}
 		counter++;
-	}
+	}*/
 	
-	result->isFound = false;
+	
+	//Temp
+	result->changeTop=1;
+	result->nodeAddress = new LinkedNode();
+	result->isFound = true;
+	
+	//result->isFound = false;
 	return result;
 }
 
-void OMRStatistics::OMRCheckingConsumer::refineHierarchies() {
+/*void OMRStatistics::OMRCheckingConsumer::refineHierarchies() {
 	//Record all bases and tops at that point
 	std::unordered_set<std::string>
 		*bases = new std::unordered_set<std::string>(), 
@@ -240,6 +246,10 @@ void OMRStatistics::OMRCheckingConsumer::refineHierarchies() {
 		}
 		
 	}
+}*/
+
+void OMRStatistics::OMRCheckingConsumer::modifyBase(LinkedNode* oldBase, LinkedNode* newBase) {
+	
 }
 
 void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std::string> &map) {
@@ -247,39 +257,41 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		std::string currentClassName = current.first;
 		std::string currentParentName = current.second;
 		LinkedNode* newNode = new LinkedNode();
+		llvm::outs() << "Parsing: " << currentClassName << "-->" << currentParentName << "\n";
+		auto result1 = class2Address.find(currentClassName);
+		auto result2 = class2Address.find(currentParentName);
+		auto end = class2Address.end();
 		
-		//Search for the class in one of the recorded hierarchies so far
-		HierarchySearchResult* result = isFoundInHierarchies(currentClassName, currentParentName);
-		
-		//Case when returned node should be the new base node of a hierarchy
-		if(result->isFound) {
-			Hierarchy* hierarchyToModify = hierarchies.at(result->index);
-			if(result->changeBase) {
-				newNode->name = currentClassName;
-				newNode->parent = hierarchyToModify->base;
-				hierarchyToModify->base = newNode;
-			}
-			//Case when returned node should be the parent
-			if(result->changeTop) {
-				newNode->name = currentParentName;
-				hierarchyToModify->top->parent = newNode;
-				hierarchyToModify->top = newNode;
-			} 
-			delete result;
+		//Case when the child node is found in the hierarchy
+		if(result1 != end) {
+			LinkedNode* resultNode = result2->second;
+			newNode->name = currentClassName;
+			newNode->parent = resultNode;
+			class2Address.emplace(newNode->name, resultNode);
+			modifyBase(resultNode, newNode);
 		}
-		//Case where the node was not found in any class hierarchy
-		else {
+		
+		//Case when the parent node is found in the hierarchy
+		if(result2 != end) {
+			LinkedNode* resultNode = result1->second;
+			newNode->name = currentParentName;
+			resultNode->parent = newNode;
+			class2Address.emplace(newNode->name, resultNode);
+		}
+		
+		//Case where the nodes was not found in any class hierarchy
+		if(result1 == end && result2 == end) {
 			Hierarchy* newHierarchy = new Hierarchy();
 			LinkedNode* newChildNode = new LinkedNode();
 			newChildNode->name = currentClassName;
 			newNode->name = currentParentName;
 			newChildNode->parent = newNode;
 			newHierarchy->base = newChildNode;
-			newHierarchy->top = newNode;
 			hierarchies.push_back(newHierarchy);
+			class2Address.emplace(newNode->name, newNode);
+			class2Address.emplace(newChildNode->name, newChildNode);
 		}
 	}
-	refineHierarchies();
 }
 
 void OMRStatistics::OMRCheckingConsumer::printHierarchy() {
@@ -369,10 +381,11 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(extchkVisitor);
 
-	 if (conf.hierarchy) {        
+	 if (/*conf.hierarchy*/true) {        
 		 printHierarchy();
 	 }
-	 printMethodInfo(conf.overloading, true);
+	 printMethodInfo(conf.overloading, false);
+	 
 }
 
 std::unique_ptr<ASTConsumer> OMRStatistics::CheckingAction::CreateASTConsumer(CompilerInstance &CI, llvm::StringRef filename) {

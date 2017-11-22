@@ -92,7 +92,7 @@ namespace OMRStatistics {
 		//If the search was successfull (1) or not (0)
 		bool isFound;
 		//Index of the hierarchy in the hierarchies vector that needs to be changed
-		int index;
+		LinkedNode* nodeAddress;
 	};
 	
 	struct Config {
@@ -103,18 +103,22 @@ namespace OMRStatistics {
 	class OMRCheckingConsumer : public ASTConsumer {
 	private:
 		Config conf;
-	public:
 		//An array of linked nodes forming the class hierarchy. Every record in this array represents a class hierarchy in OMR
 		std::vector<Hierarchy*> hierarchies;
+		std::map<std::string, LinkedNode*> class2Address;
+	public:
 		
 		explicit OMRCheckingConsumer(llvm::StringRef filename, Config conf);
 		//Search the tips (base and top) of each class hierarchy for the input class name
-		//TODO: This is not a very good architecture, the isFoundInHierarchies function is deciding where should the class be, so the naming should be changed to make this function more independant and less related to fillHierarchies
 		HierarchySearchResult* isFoundInHierarchies(std::string child, std::string parent);
+		//Searches all hierarchies for the one with the given base, and changes it to the new given base
+		void modifyBase(LinkedNode* oldBase, LinkedNode* newBase);
 		//Process the classHierarchy map from ExtensibleClassCheckingVisitor to fill the hierarchies map.
 		void fillHierarchies(std::map<std::string, std::string> &map);
+		
 		//After finishing the hierarchy, some hierarchies will be broken into 2 sub-hierarchies since the algorithm in fillHierarchies couldn't handle all the corner cases, refineHierarchies method checks for two hierarchies that should be connected and connects them
-		void refineHierarchies();
+		//void refineHierarchies();
+		
 		//Search for the MethodTracker with the inputted function name in the inputted hierarchy
 		MethodTracker* searchForTracker(Hierarchy* hierarchy, std::string method);
 		//Iterates through the entries of Class2Methods in the ExtensibleClassCheckingVisitor and creates MethodTrackers out of them
