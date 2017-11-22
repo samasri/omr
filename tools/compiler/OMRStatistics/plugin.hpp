@@ -95,12 +95,19 @@ namespace OMRStatistics {
 		int index;
 	};
 	
+	struct Config {
+		bool hierarchy = false;
+		bool overloading = false;
+	};
+	
 	class OMRCheckingConsumer : public ASTConsumer {
+	private:
+		Config conf;
 	public:
 		//An array of linked nodes forming the class hierarchy. Every record in this array represents a class hierarchy in OMR
 		std::vector<Hierarchy*> hierarchies;
 		
-		explicit OMRCheckingConsumer(llvm::StringRef filename) { }
+		explicit OMRCheckingConsumer(llvm::StringRef filename, Config conf);
 		//Search the tips (base and top) of each class hierarchy for the input class name
 		//TODO: This is not a very good architecture, the isFoundInHierarchies function is deciding where should the class be, so the naming should be changed to make this function more independant and less related to fillHierarchies
 		HierarchySearchResult* isFoundInHierarchies(std::string child, std::string parent);
@@ -125,6 +132,8 @@ namespace OMRStatistics {
 	};
 	
 	class CheckingAction : public PluginASTAction {
+	private:
+		Config conf;
 	protected:
 		std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI, llvm::StringRef filename);
 		//Required function -- pure virtual in parent

@@ -172,6 +172,10 @@ bool OMRStatistics::MethodTracker::operator==(const std::string other) {
 	return (methodName.compare(other) == 0);
 }
 
+OMRStatistics::OMRCheckingConsumer::OMRCheckingConsumer(llvm::StringRef filename, Config conf) {
+	this->conf = conf;
+}
+
 //Search the top of each class hierarchy for the input class name
 OMRStatistics::HierarchySearchResult* OMRStatistics::OMRCheckingConsumer::isFoundInHierarchies(std::string child, std::string parent) {
 	HierarchySearchResult* result = new HierarchySearchResult();
@@ -339,9 +343,6 @@ void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloads, bo
 		for(auto tracker : methodTrackers) {
 			std::string method = tracker.methodName;
 			int nbOfOverrides = tracker.classesOverriden->size();
-			/*if((nbOfOverrides > 1 && printOverrides) || (tracker.isOverloaded && printOverloads))
-				llvm::outs() << "\tMethod name: " << method << "\n";
-			else continue;*/
 			if(nbOfOverrides > 1 && printOverrides) //Print override record in CSV format (MethodName, Override, className)
 				for(std::string className : *(tracker.classesOverriden)) llvm::outs() << className << ",override," << method<< "\n";
 			if(tracker.isOverloaded && printOverloads) //Print overload record in CSV format (MethodName, Overload, className, nbOfTimesOverloaded)
@@ -367,37 +368,22 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	auto classHierarchy = extchkVisitor.getclassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(extchkVisitor);
-	
-	//Reading config file
-	std::string line;
-	std::ifstream config("config");
-	assert(config.is_open() && "config file not found");
-	
-	//Read the boolean specifying if we print the hierarchy
-	getline(config, line);
-	if(line.compare("1") == 0) printHierarchy();
-	
-	//Read the boolean specifying if we print overloads
-	bool printOverloads = false;
-	getline(config, line);
-	if(line.compare("1") == 0) printOverloads = true;
-	
-	//Read the boolean specifying if we print overloads
-	bool printOverrides = false;
-	getline(config, line);
-	if(line.compare("1") == 0) printOverrides = true;
-	
-	//Read the boolean specifying if we print the method info
-	if(printOverloads || printOverrides) printMethodInfo(printOverloads, printOverrides);
-	
-	config.close();
+
+	 if (conf.hierarchy) {        
+		 printHierarchy();
+	 }
+	 printMethodInfo(conf.overloading, true);
 }
 
 std::unique_ptr<ASTConsumer> OMRStatistics::CheckingAction::CreateASTConsumer(CompilerInstance &CI, llvm::StringRef filename) {
-	return std::unique_ptr<ASTConsumer>(new OMRCheckingConsumer(filename));
+	return std::unique_ptr<ASTConsumer>(new OMRCheckingConsumer(filename, conf));
 }
 
 bool OMRStatistics::CheckingAction::ParseArgs(const CompilerInstance &CI, const std::vector<std::string>& args) {
+	for(std::string arg : args) {
+		if(arg.compare("OMR_STAT_PRINT_HIERARCHY") == 0) conf.hierarchy = 1;
+		if(arg.compare("OMR_STAT_PRINT_OVERLOADS") == 0) conf.overloading = 1;
+	}
 	return true;
 }
 #undef trace

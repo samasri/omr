@@ -30,7 +30,7 @@ O = plugin.o
 # Plugin name (in the source code)
 PL = omr-statistics
 # Variables & rules to test the plugin on OMR files
-CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -add-plugin -Xclang $(PL)
+CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_HIERARCHY -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_OVERLOADS -Xclang -add-plugin -Xclang $(PL)
 
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
