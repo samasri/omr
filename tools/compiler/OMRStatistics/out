@@ -1,24 +1,31 @@
+Building my plugin...
 Executing with the new plugin...
 -----------------------------------------
+---3I am processing OMR::AutomaticSymbol --> TR::RegisterMappedSymbol
+---2I am processing OMR::ParameterSymbol --> TR::RegisterMappedSymbol
+---2I am processing OMR::RegisterMappedSymbol --> TR::Symbol
+---2I am processing TR::AutomaticSymbol --> OMR::AutomaticSymbol
+---2I am processing TR::ParameterSymbol --> OMR::ParameterSymbol
+---0I am processing TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol
 CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
 CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
 CS2::Timer --> CS2::BSDTimer
-CS2::stat_allocator --> TRPersistentMemoryAllocator
-OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
-OMR::Block --> TR::CFGNode --> TR_Link1
-OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
-OMR::RealRegister --> TR::Register --> TR::Register --> OMR::X86::Register --> OMR::Register
-OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
 OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
-OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
-OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> TR::Register --> OMR::X86::Register --> OMR::Register
-OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
-OMR::X86::CPU --> OMR::CPU
-OMR::X86::DebugEnv --> OMR::DebugEnv
-OMR::X86::Instruction --> OMR::Instruction
-OMR::X86::Linkage --> OMR::Linkage
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
 OMR::X86::Register --> OMR::Register
-OMR::X86::Snippet --> OMR::Snippet
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
 TR::AliasBuilder --> OMR::AliasBuilder
 TR::ArithEnv --> OMR::ArithEnv
 TR::BeforeBinaryEncodingExternalRelocation --> TR::ExternalRelocation --> TR::Relocation
@@ -27,7 +34,7 @@ TR::CFG --> OMR::CFG
 TR::CFGEdge --> TR_Link --> TR_Link0
 TR::ClassEnv --> OMR::ClassEnv
 TR::CodeGenPhase --> OMR::CodeGenPhase
-TR::CodeGenerator --> TestCompiler::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
 TR::Compilation --> OMR::Compilation
 TR::CompilerEnv --> OMR::CompilerEnv
 TR::DataType --> OMR::DataType
@@ -40,7 +47,7 @@ TR::ILOpCode --> OMR::ILOpCode
 TR::IO --> OMR::IO
 TR::InstructionAbsoluteRelocation --> TR::Relocation
 TR::KnownObjectTable --> OMR::KnownObjectTable
-TR::LabelAbsoluteRelocation --> TR::LabelRelocation --> TR::LabelRelocation --> TR::Relocation
+TR::LabelAbsoluteRelocation --> TR::LabelRelocation --> TR::Relocation
 TR::Monitor --> OMR::Monitor
 TR::Node --> OMR::Node
 TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
@@ -48,7 +55,7 @@ TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
 TR::Options --> OMR::Options
 TR::PersistentInfo --> OMR::PersistentInfo
 TR::Region::Instance --> TR::Region::Destructable
-TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
 TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase
 TR::SnippetGCMap --> OMR::SnippetGCMap
 TR::StackMemoryRegion --> TR::Region
@@ -58,13 +65,13 @@ TR::TreeTop --> OMR::TreeTop
 TR::VMEnv --> OMR::VMEnv
 TR::VPArrayInfo --> TR::VPConstraint
 TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass
-TR::VPEqual --> TR::VPRelation --> TR::VPRelation --> TR::VPConstraint
-TR::VPIntConst --> TR::VPIntConstraint --> TR::VPIntConstraint --> TR::VPConstraint
-TR::VPLongConst --> TR::VPLongConstraint --> TR::VPLongConstraint --> TR::VPConstraint
-TR::VPShortConst --> TR::VPShortConstraint --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
 TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
-TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
-TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
 TR_BitContainerIterator --> TR_BitVectorIterator
 TR_BlockStructure --> TR_Structure
 TR_DataFlowAnalysis --> TR::Allocatable
@@ -75,7 +82,7 @@ TR_HashTabDouble --> TR_HashTab
 TR_HeapMemory --> TR_MemoryAllocationType
 TR_LocalAnticipatability --> TR_LocalAnalysis
 TR_Memory --> TR_MemoryBase
-TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
 TR_PostDominators --> TR_Dominators
 TR_PredecessorIterator --> TR_CFGIterator
 TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
@@ -85,49 +92,31 @@ TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
 std::__ctype_abstract_base --> std::locale::facet
 std::allocator --> __gnu_cxx::new_allocator
 std::back_insert_iterator --> std::iterator
-std::bad_alloc --> std::exception
-std::basic_ios --> std::ios_base
-std::basic_iostream --> std::basic_istream --> std::basic_istream --> std::basic_ios --> std::ios_base
-std::domain_error --> std::logic_error --> std::logic_error --> std::exception
-std::ios_base::failure --> std::system_error --> std::system_error --> std::runtime_error --> std::runtime_error --> std::exception
-std::overflow_error --> std::runtime_error --> std::runtime_error --> std::exception
+std::bad_array_new_length --> std::bad_alloc --> std::exception
+std::basic_ostream --> std::basic_ios --> std::ios_base
+std::basic_iostream --> std::basic_istream --> std::basic_ios --> std::ios_base
+std::domain_error --> std::logic_error --> std::exception
+std::ios_base::failure --> std::system_error --> std::runtime_error --> std::exception
+std::overflow_error --> std::runtime_error --> std::exception
 CS2::ABitVector::iterator:
 CS2::TableOf::Cursor:
 CS2::Timer:
-CS2::stat_allocator:
-OMR::AutomaticSymbol:
-TR::RegisterMappedSymbol,overload,operator=, 1
-TR::RegisterMappedSymbol,overload,~RegisterMappedSymbol, 1
-TR::RegisterMappedSymbol,overload,RegisterMappedSymbol, 1
-OMR::Block:
-OMR::LabelSymbol:
+TR::GlobalSingletonAllocator:
+TR::AutomaticSymbol:
+TR::Block:
+TR::LabelSymbol:
 OMR::RealRegister:
-TR::Register,overload,operator=, 1
-TR::Register,overload,~Register, 1
-TR::Register,overload,Register, 1
-OMR::ResolvedMethodSymbol:
-TR::MethodSymbol,overload,operator=, 1
-TR::MethodSymbol,overload,~MethodSymbol, 1
-TR::MethodSymbol,overload,MethodSymbol, 1
+TR::ResolvedMethodSymbol:
 OMR::X86::AMD64::CodeGenerator:
-OMR::X86::AMD64::Machine:
-OMR::X86::AMD64::RealRegister:
-OMR::X86::RealRegister,overload,~RealRegister, 1
-OMR::X86::RealRegister,overload,RealRegister, 1
-OMR::X86::RealRegister,overload,operator=, 1
-TR::Register,overload,operator=, 1
-OMR::X86::RealRegister,overload,regMaskToRealRegister, 1
-OMR::X86::RealRegister,overload,getAvailableRegistersMask, 1
-OMR::X86::RealRegister,overload,getRealRegisterMask, 1
-TR::Register,overload,~Register, 1
-TR::Register,overload,Register, 1
-OMR::X86::AMD64::TreeEvaluator:
-OMR::X86::CPU:
-OMR::X86::DebugEnv:
-OMR::X86::Instruction:
-OMR::X86::Linkage:
+TR::Machine:
+TR_X86FPStackRegister:
+TR::TreeEvaluator:
+TR::CPU:
+TR::DebugEnv:
+TR::Instruction:
+TR::Linkage:
 OMR::X86::Register:
-OMR::X86::Snippet:
+TR::Snippet:
 TR::AliasBuilder:
 TR::ArithEnv:
 TR::BeforeBinaryEncodingExternalRelocation:
@@ -137,9 +126,6 @@ TR::CFGEdge:
 TR::ClassEnv:
 TR::CodeGenPhase:
 TR::CodeGenerator:
-TestCompiler::CodeGenerator,overload,~CodeGenerator, 1
-TestCompiler::CodeGenerator,overload,operator=, 1
-TestCompiler::CodeGenerator,overload,CodeGenerator, 1
 TR::Compilation:
 TR::CompilerEnv:
 TR::DataType:
@@ -153,12 +139,6 @@ TR::IO:
 TR::InstructionAbsoluteRelocation:
 TR::KnownObjectTable:
 TR::LabelAbsoluteRelocation:
-TR::LabelRelocation,overload,operator=, 1
-TR::LabelRelocation,overload,~LabelRelocation, 1
-TR::LabelRelocation,overload,LabelRelocation, 1
-TR::LabelRelocation,overload,setLabel, 1
-TR::LabelRelocation,overload,getLabel, 1
-TR::LabelRelocation,overload,isAOTRelocation, 1
 TR::Monitor:
 TR::Node:
 TR::ObjectModel:
@@ -166,7 +146,7 @@ TR::Optimizer:
 TR::Options:
 TR::PersistentInfo:
 TR::Region::Instance:
-TR::RegisterIterator:
+TR_X86FPStackIterator:
 TR::ResolvedMethod:
 TR::SnippetGCMap:
 TR::StackMemoryRegion:
@@ -177,97 +157,12 @@ TR::VMEnv:
 TR::VPArrayInfo:
 TR::VPConstString:
 TR::VPEqual:
-TR::VPRelation,overload,getComplement, 1
-TR::VPRelation,overload,propagateRelativeConstraint, 1
-TR::VPRelation,overload,operator=, 1
-TR::VPRelation,overload,propagateAbsoluteConstraint, 1
-TR::VPRelation,overload,~VPRelation, 1
-TR::VPRelation,overload,VPRelation, 1
-TR::VPRelation,overload,asRelation, 1
-TR::VPRelation,overload,increment, 1
 TR::VPIntConst:
-TR::VPIntConstraint,overload,getHigh, 1
-TR::VPIntConstraint,overload,getPrecision, 1
-TR::VPIntConstraint,overload,operator=, 1
-TR::VPIntConstraint,overload,~VPIntConstraint, 1
-TR::VPIntConstraint,overload,subtract, 1
-TR::VPIntConstraint,overload,setCanOverflow, 1
-TR::VPIntConstraint,overload,add, 1
-TR::VPIntConstraint,overload,mustBeLessThanOrEqual, 1
-TR::VPIntConstraint,overload,canOverflow, 1
-TR::VPIntConstraint,overload,mustBeLessThan, 1
-TR::VPIntConstraint,overload,getLow, 1
-TR::VPIntConstraint,overload,asIntConstraint, 1
-TR::VPIntConstraint,overload,VPIntConstraint, 1
-TR::VPIntConstraint,overload,getRange, 1
-TR::VPIntConstraint,overload,intersect1, 1
-TR::VPIntConstraint,overload,getInt, 1
-TR::VPIntConstraint,overload,getLowInt, 1
-TR::VPIntConstraint,overload,mustBeNotEqual, 1
-TR::VPIntConstraint,overload,merge1, 1
-TR::VPIntConstraint,overload,getHighInt, 1
 TR::VPLongConst:
-TR::VPLongConstraint,overload,getHigh, 1
-TR::VPLongConstraint,overload,getPrecision, 1
-TR::VPLongConstraint,overload,operator=, 1
-TR::VPLongConstraint,overload,setCanOverflow, 1
-TR::VPLongConstraint,overload,add, 1
-TR::VPLongConstraint,overload,mustBeLessThanOrEqual, 1
-TR::VPLongConstraint,overload,subtract, 1
-TR::VPLongConstraint,overload,getLong, 1
-TR::VPLongConstraint,overload,~VPLongConstraint, 1
-TR::VPLongConstraint,overload,getUnsignedLong, 1
-TR::VPLongConstraint,overload,getLow, 1
-TR::VPLongConstraint,overload,asLongConstraint, 1
-TR::VPLongConstraint,overload,VPLongConstraint, 1
-TR::VPLongConstraint,overload,getRange, 1
-TR::VPLongConstraint,overload,intersect1, 1
-TR::VPLongConstraint,overload,getLowLong, 1
-TR::VPLongConstraint,overload,canOverflow, 1
-TR::VPLongConstraint,overload,mustBeLessThan, 1
-TR::VPLongConstraint,overload,getHighLong, 1
-TR::VPLongConstraint,overload,mustBeNotEqual, 1
-TR::VPLongConstraint,overload,merge1, 1
 TR::VPShortConst:
-TR::VPShortConstraint,overload,getHigh, 1
-TR::VPShortConstraint,overload,getPrecision, 1
-TR::VPShortConstraint,overload,operator=, 1
-TR::VPShortConstraint,overload,subtract, 1
-TR::VPShortConstraint,overload,setCanOverflow, 1
-TR::VPShortConstraint,overload,add, 1
-TR::VPShortConstraint,overload,~VPShortConstraint, 1
-TR::VPShortConstraint,overload,mustBeLessThanOrEqual, 1
-TR::VPShortConstraint,overload,canOverflow, 1
-TR::VPShortConstraint,overload,mustBeLessThan, 1
-TR::VPShortConstraint,overload,getLow, 1
-TR::VPShortConstraint,overload,getRange, 1
-TR::VPShortConstraint,overload,intersect1, 1
-TR::VPShortConstraint,overload,asShortConstraint, 1
-TR::VPShortConstraint,overload,getShort, 1
-TR::VPShortConstraint,overload,getHighShort, 1
-TR::VPShortConstraint,overload,getLowShort, 1
-TR::VPShortConstraint,overload,mustBeNotEqual, 1
-TR::VPShortConstraint,overload,VPShortConstraint, 1
-TR::VPShortConstraint,overload,merge1, 1
 TR_BackwardDFSetAnalysis:
-TR_BackwardIntersectionBitVectorAnalysis:
-TR_BackwardIntersectionDFSetAnalysis,overload,inverseInitializeInfo, 1
-TR_BackwardIntersectionDFSetAnalysis,overload,initializeInfo, 1
-TR_BackwardIntersectionDFSetAnalysis,overload,initializeOutSetInfo, 1
-TR_BackwardIntersectionDFSetAnalysis,overload,TR_BackwardIntersectionDFSetAnalysis<type-parameter-0-0 *>, 1
-TR_BackwardIntersectionDFSetAnalysis,overload,getKind, 1
-TR_BackwardIntersectionDFSetAnalysis,overload,initializeCurrentGenKillSetInfo, 1
-TR_BackwardIntersectionDFSetAnalysis,overload,compose, 1
-TR_BackwardIntersectionDFSetAnalysis,overload,inverseCompose, 1
-TR_BackwardUnionBitVectorAnalysis:
-TR_BackwardUnionDFSetAnalysis,overload,inverseInitializeInfo, 1
-TR_BackwardUnionDFSetAnalysis,overload,initializeInfo, 1
-TR_BackwardUnionDFSetAnalysis,overload,initializeOutSetInfo, 1
-TR_BackwardUnionDFSetAnalysis,overload,TR_BackwardUnionDFSetAnalysis<type-parameter-0-0 *>, 1
-TR_BackwardUnionDFSetAnalysis,overload,getKind, 1
-TR_BackwardUnionDFSetAnalysis,overload,initializeCurrentGenKillSetInfo, 1
-TR_BackwardUnionDFSetAnalysis,overload,compose, 1
-TR_BackwardUnionDFSetAnalysis,overload,inverseCompose, 1
+TR_GlobalAnticipatability:
+TR_Liveness:
 TR_BitContainerIterator:
 TR_BlockStructure:
 TR_DataFlowAnalysis:
@@ -278,7 +173,7 @@ TR_HashTabDouble:
 TR_HeapMemory:
 TR_LocalAnticipatability:
 TR_Memory:
-TR_NodeAliasSetInterface:
+TR_NodeKillAliasSetInterface:
 TR_PostDominators:
 TR_PredecessorIterator:
 TR_X86OpCode::Estimator:
@@ -288,44 +183,9 @@ TestCompiler::ResolvedMethodBase:
 std::__ctype_abstract_base:
 std::allocator:
 std::back_insert_iterator:
-std::bad_alloc:
-std::basic_ios:
+std::bad_array_new_length:
+std::basic_ostream:
 std::basic_iostream:
-std::basic_istream,overload,operator=, 1
-std::basic_istream,overload,swap, 1
-std::basic_istream,overload,basic_istream, 1
-std::basic_istream,overload,seekg, 1
-std::basic_istream,overload,tellg, 1
-std::basic_istream,overload,~basic_istream, 1
-std::basic_istream,overload,unget, 1
-std::basic_istream,overload,~basic_istream<_CharT, _Traits>, 1
-std::basic_istream,overload,gcount, 1
-std::basic_istream,overload,operator>>, 1
-std::basic_istream,overload,basic_istream<_CharT, _Traits>, 1
-std::basic_istream,overload,putback, 1
-std::basic_istream,overload,get, 1
-std::basic_istream,overload,ignore, 1
-std::basic_istream,overload,peek, 1
-std::basic_istream,overload,getline, 1
-std::basic_istream,overload,read, 1
-std::basic_istream,overload,sync, 1
-std::basic_istream,overload,readsome, 1
 std::domain_error:
-std::logic_error,overload,operator=, 1
-std::logic_error,overload,~logic_error, 1
-std::logic_error,overload,what, 1
-std::logic_error,overload,logic_error, 1
 std::ios_base::failure:
-std::runtime_error,overload,operator=, 1
-std::system_error,overload,operator=, 1
-std::runtime_error,overload,what, 1
-std::system_error,overload,code, 1
-std::system_error,overload,~system_error, 1
-std::system_error,overload,system_error, 1
-std::runtime_error,overload,~runtime_error, 1
-std::runtime_error,overload,runtime_error, 1
 std::overflow_error:
-std::runtime_error,overload,operator=, 1
-std::runtime_error,overload,what, 1
-std::runtime_error,overload,~runtime_error, 1
-std::runtime_error,overload,runtime_error, 1
