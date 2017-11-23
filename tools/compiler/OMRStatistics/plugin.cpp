@@ -176,80 +176,10 @@ OMRStatistics::OMRCheckingConsumer::OMRCheckingConsumer(llvm::StringRef filename
 	this->conf = conf;
 }
 
-//Search the top of each class hierarchy for the input class name
-OMRStatistics::HierarchySearchResult* OMRStatistics::OMRCheckingConsumer::isFoundInHierarchies(std::string child, std::string parent) {
-	HierarchySearchResult* result = new HierarchySearchResult();
-	int counter = 0;
-			
-	/*for(Hierarchy* hierarchy : hierarchies) {
-		//Search if the parent is the same as one of the base nodes of one of the class hierarchies, this means the base of that hierarchy should be changed
-		if(hierarchy->base->name.compare(parent) == 0) {
-			result->changeBase = 1;
-			result->isFound = 1;
-			result->index = counter;
-			return result;
-		}
-		
-		//Search if child is the same as top node in the class hierarchy, this means the node should be added on top of that hierarchy
-		else if(hierarchy->top->name.compare(child) == 0) {
-			result->changeTop = 1;
-			result->isFound = 1;
-			result->index = counter;
-			return result;
-		}
-		counter++;
-	}*/
-	
-	
-	//Temp
-	result->changeTop=1;
-	result->nodeAddress = new LinkedNode();
-	result->isFound = true;
-	
-	//result->isFound = false;
-	return result;
-}
-
-/*void OMRStatistics::OMRCheckingConsumer::refineHierarchies() {
-	//Record all bases and tops at that point
-	std::unordered_set<std::string>
-		*bases = new std::unordered_set<std::string>(), 
-		*tops = new std::unordered_set<std::string>();
-	for(auto hierarchy : hierarchies) {
-		bases->emplace(hierarchy->base->name);
-		tops->emplace(hierarchy->top->name);
-	}
-	
-	//Merge any broken hierarchies
-	for(auto hierarchyItr = hierarchies.begin(), end = hierarchies.end(); hierarchyItr != end; hierarchyItr++) {
-		Hierarchy* hierarchy = *hierarchyItr;
-		std::string base = hierarchy->base->name;
-		std::string top = hierarchy->top->name;
-		
-		//If we find it in the bases vector, then this top is a base for another hierarchy
-		if(bases->find(top) != bases->end()) { 
-			//Find that hierarchy
-			for(auto hierarchy2Itr = hierarchies.begin(); hierarchy2Itr != end; hierarchy2Itr++) {
-				Hierarchy* hierarchy2 = *hierarchy2Itr;
-				//Merge it with the other hierarchy
-				if(hierarchy2->base->name.compare(top) == 0) {
-					hierarchy->top->parent = hierarchy2->base;
-					hierarchy->top = hierarchy2->top;
-					hierarchies.erase(hierarchy2Itr);
-					bases->erase(hierarchy2->base->name);
-					//Set hierarchy2 pointers to null so that we do not delete the actual LinkedNodes when deleting the object
-					hierarchy2->top = nullptr;
-					hierarchy2->base = nullptr;
-					delete hierarchy2;
-				}
-			}
-		}
-		
-	}
-}*/
-
 void OMRStatistics::OMRCheckingConsumer::modifyBase(LinkedNode* oldBase, LinkedNode* newBase) {
-	
+	for (auto hierarchy : hierarchies) 
+		if(hierarchy->base == oldBase) 
+			hierarchy->base = newBase;
 }
 
 void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std::string> &map) {
@@ -257,29 +187,26 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		std::string currentClassName = current.first;
 		std::string currentParentName = current.second;
 		LinkedNode* newNode = new LinkedNode();
-		llvm::outs() << "Parsing: " << currentClassName << "-->" << currentParentName << "\n";
 		auto result1 = class2Address.find(currentClassName);
 		auto result2 = class2Address.find(currentParentName);
 		auto end = class2Address.end();
 		
-		//Case when the child node is found in the hierarchy
-		if(result1 != end) {
-			LinkedNode* resultNode = result2->second;
-			newNode->name = currentClassName;
-			newNode->parent = resultNode;
-			class2Address.emplace(newNode->name, resultNode);
-			modifyBase(resultNode, newNode);
-		}
-		
-		//Case when the parent node is found in the hierarchy
-		if(result2 != end) {
-			LinkedNode* resultNode = result1->second;
+		if(result1 != end) { // If child node is found in hierarchy list
+			LinkedNode* child = result1->second;
 			newNode->name = currentParentName;
-			resultNode->parent = newNode;
-			class2Address.emplace(newNode->name, resultNode);
+			child->parent = newNode;
+			class2Address.emplace(child->name, child);
+			modifyBase(child, newNode);
 		}
 		
-		//Case where the nodes was not found in any class hierarchy
+		if(result2 != end) { // If parent node is found in hierarchy list
+			LinkedNode* parent = result2->second;
+			newNode->name = currentClassName;
+			newNode->parent = parent;
+			class2Address.emplace(newNode->name, newNode);
+		}
+		
+		//If both nodes not found in hierarchy list
 		if(result1 == end && result2 == end) {
 			Hierarchy* newHierarchy = new Hierarchy();
 			LinkedNode* newChildNode = new LinkedNode();
