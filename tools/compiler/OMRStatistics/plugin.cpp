@@ -190,24 +190,32 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		auto result1 = class2Address.find(currentClassName);
 		auto result2 = class2Address.find(currentParentName);
 		auto end = class2Address.end();
+		auto npos = std::string::npos;
 		
-		if(result1 != end) { // If child node is found in hierarchy list
+		if(result1 != end && result2 != end) { // If both child and parent nodes are found in hierarchy list
+			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---0I am processing " << currentClassName << " --> " << currentParentName << "\n";
+			result1->second->parent = result2->second; // Make sure the connection is recorded in the hierarchy list
+		}
+		else if(result1 != end) { // If child node is found in hierarchy list
+			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---1I am processing " << currentClassName << " --> " << currentParentName << "\n";
 			LinkedNode* child = result1->second;
 			newNode->name = currentParentName;
 			child->parent = newNode;
 			class2Address.emplace(child->name, child);
-			modifyBase(child, newNode);
 		}
 		
-		if(result2 != end) { // If parent node is found in hierarchy list
+		else if(result2 != end) { // If parent node is found in hierarchy list
+			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---2I am processing " << currentClassName << " --> " << currentParentName << "\n";
 			LinkedNode* parent = result2->second;
 			newNode->name = currentClassName;
 			newNode->parent = parent;
 			class2Address.emplace(newNode->name, newNode);
+			modifyBase(parent, newNode);
 		}
 		
 		//If both nodes not found in hierarchy list
-		if(result1 == end && result2 == end) {
+		else /*if(result1 == end && result2 == end)*/ {
+			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---3I am processing " << currentClassName << " --> " << currentParentName << "\n";
 			Hierarchy* newHierarchy = new Hierarchy();
 			LinkedNode* newChildNode = new LinkedNode();
 			newChildNode->name = currentClassName;
