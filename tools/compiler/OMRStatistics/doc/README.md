@@ -28,20 +28,22 @@ Prints out each method in each of the class hierarchies, which classes it is ove
 ## 2. Second functionality (printing method information)
 The output is in csv format. 
 
-* When an method overload is encountered, a record shows the class where the method is overloaded and the name of the overloading method. Hence, multiple overloads of a method will result in multiple records in the CSV file. The output record format for overloads is:
+* When a method overload is encountered, a record shows the class where the method is overloaded and the name of the overloading method. Hence, multiple overloads of a method will result in multiple records in the CSV file. The output record format for overloads is:
 ```
 <BaseNamespace>,<BaseClassname>,<MethodSignature>,<Type: overload>,<Namespace where overload happens>,<Classname where overload happens>, <OverloadMethodSignature>
 ```
 
-* In case of a method override, a record in the CSV file shows the name of the namespace and class where this method is overloaded. The output format for overrides is:
+* In case of a method override, a record in the CSV file shows the name of the namespace and class where this method is overriden. The output format for overrides is:
 ```
 <BaseNamespace>,<BaseClassname>,<methodSignature>,<Type: override>,<OverridingNamespace>,<OverridingClassname>
 ```
 # Triggerring Functionality
-By default, the tool prints the overrides in a CSV file. Passing _OMR_STAT_PRINT_OVERLOADS_ in the command line options when running the tool allows the tool to print the overload information also (in the same CSV). In order to trigger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ should be passed.
+By default, the tool prints the overrides in a CSV file. Passing _OMR_STAT_PRINT_OVERLOADS_ in the command line options when running the tool allows the tool to print the overload information also (in the same CSV). 
+
+In order to trigger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ should be passed.
 
 # Output Sample
-Assuming we have the below class hierarchy, the plugin would create the below csv file (it is converted into a table here for better visualization):
+Assuming we have the below class hierarchy, the plugin would create the below csv file (which is converted into a table here for better visualization):
 
 ![Class Hierarchy](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/resources/ExampleUML.png)
 
@@ -49,12 +51,11 @@ Assuming we have the below class hierarchy, the plugin would create the below cs
 | --- | --- | --- | --- | --- | --- |
 | OMR | A | f() | override | OMR::Z | A |
 | OMR | A | f() | override | Ruby | A |
-| ~~OMR:Z~~ | ~~A~~ | ~~f()~~ | ~~override~~ | ~~Ruby~~ | ~~A~~ |
 | OMR::Z | A | g() | override | Ruby | A |
 
 # General Design
 The tool works as follows:
-1. Visits every class declaration in the target source code (let us call the current class: _X_), and iterates through X's parents
+1. Visits every class declaration in the target source code (let us call the current class _X_), and iterates through X's parents
 2. Every time it jumps from one class/parent to its parent, it records the relationship between these 2 classes in a binary map (let us call it _hierarchy_ map). Since it passes to every class and process all its parents, the tool is expected to find classes that were already processed (when processing the parents of another class lower in the hierarchy); hence the tool would skip any already processed classes.
 3. When it finds no more parents, the tool goes back to X and records all its methods in another map (let us call it _function_ map)
 4. After visiting all classes in the source code, the processing of these 2 maps starts
