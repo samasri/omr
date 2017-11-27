@@ -1,12 +1,17 @@
 Building my plugin...
 Executing with the new plugin...
 -----------------------------------------
----3I am processing OMR::AutomaticSymbol --> TR::RegisterMappedSymbol
----2I am processing OMR::ParameterSymbol --> TR::RegisterMappedSymbol
----2I am processing OMR::RegisterMappedSymbol --> TR::Symbol
----2I am processing TR::AutomaticSymbol --> OMR::AutomaticSymbol
----2I am processing TR::ParameterSymbol --> OMR::ParameterSymbol
----0I am processing TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol
+There is no hierarchy with that base: 0x6d4e700
+There is no hierarchy with that base: 0x6d48ea0
+There is no hierarchy with that base: 0x6d49300
+There is no hierarchy with that base: 0x6d53450
+There is no hierarchy with that base: 0x6d53450
+There is no hierarchy with that base: 0x6d53450
+There is no hierarchy with that base: 0x6d53450
+There is no hierarchy with that base: 0x6d55340
+There is no hierarchy with that base: 0x6d5ac00
+There is no hierarchy with that base: 0x6d5ac00
+There is no hierarchy with that base: 0x6d5ca70
 CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
 CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
 CS2::Timer --> CS2::BSDTimer
@@ -14,9 +19,7 @@ TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAlloc
 TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
 TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
 TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
-OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
 TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
-OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
 TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
 TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
 TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
@@ -24,7 +27,6 @@ TR::CPU --> OMR::X86::CPU --> OMR::CPU
 TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
 TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
-OMR::X86::Register --> OMR::Register
 TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
 TR::AliasBuilder --> OMR::AliasBuilder
 TR::ArithEnv --> OMR::ArithEnv
@@ -69,7 +71,6 @@ TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
 TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
 TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
 TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
-TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
 TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
 TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
 TR_BitContainerIterator --> TR_BitVectorIterator
@@ -93,7 +94,6 @@ std::__ctype_abstract_base --> std::locale::facet
 std::allocator --> __gnu_cxx::new_allocator
 std::back_insert_iterator --> std::iterator
 std::bad_array_new_length --> std::bad_alloc --> std::exception
-std::basic_ostream --> std::basic_ios --> std::ios_base
 std::basic_iostream --> std::basic_istream --> std::basic_ios --> std::ios_base
 std::domain_error --> std::logic_error --> std::exception
 std::ios_base::failure --> std::system_error --> std::runtime_error --> std::exception
@@ -105,9 +105,7 @@ TR::GlobalSingletonAllocator:
 TR::AutomaticSymbol:
 TR::Block:
 TR::LabelSymbol:
-OMR::RealRegister:
 TR::ResolvedMethodSymbol:
-OMR::X86::AMD64::CodeGenerator:
 TR::Machine:
 TR_X86FPStackRegister:
 TR::TreeEvaluator:
@@ -115,7 +113,6 @@ TR::CPU:
 TR::DebugEnv:
 TR::Instruction:
 TR::Linkage:
-OMR::X86::Register:
 TR::Snippet:
 TR::AliasBuilder:
 TR::ArithEnv:
@@ -160,7 +157,6 @@ TR::VPEqual:
 TR::VPIntConst:
 TR::VPLongConst:
 TR::VPShortConst:
-TR_BackwardDFSetAnalysis:
 TR_GlobalAnticipatability:
 TR_Liveness:
 TR_BitContainerIterator:
@@ -184,7 +180,6 @@ std::__ctype_abstract_base:
 std::allocator:
 std::back_insert_iterator:
 std::bad_array_new_length:
-std::basic_ostream:
 std::basic_iostream:
 std::domain_error:
 std::ios_base::failure:

@@ -55,8 +55,6 @@ namespace OMRStatistics {
 		//Stores the names of each methodTracker in the hierarchy for faster searching
 		std::unordered_set<std::string>* methodNames = new std::unordered_set<std::string>; 
 		
-		~Hierarchy();
-		
 		//overriding operators for faster comparisons
 		bool operator==(const Hierarchy& other);
 		bool operator==(const std::string other);
@@ -111,6 +109,8 @@ namespace OMRStatistics {
 		explicit OMRCheckingConsumer(llvm::StringRef filename, Config conf);
 		//Searches all hierarchies for the one with the given base, and changes it to the new given base
 		void modifyBase(LinkedNode* oldBase, LinkedNode* newBase);
+		// Deletes the hierarchy that has the given base
+		void deleteHierarchy(LinkedNode* base);
 		//Process the classHierarchy map from ExtensibleClassCheckingVisitor to fill the hierarchies map.
 		void fillHierarchies(std::map<std::string, std::string> &map);
 		//Search for the MethodTracker with the inputted function name in the inputted hierarchy

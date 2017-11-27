@@ -34,6 +34,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "plugin.hpp"
+#include <sstream>
 
 std::map<std::string, std::unordered_set<std::string>> OMRStatistics::ExtensibleClassCheckingVisitor::getClass2Methods() {return Class2Methods;}
 
@@ -106,12 +107,6 @@ bool OMRStatistics::ExtensibleClassCheckingVisitor::VisitCXXRecordDecl(const CXX
 	return true;
 }
 
-OMRStatistics::Hierarchy::~Hierarchy() {
-	//Delete the base and top to prevent memory leaks
-	delete base;
-	delete top;
-}
-
 bool OMRStatistics::Hierarchy::operator==(const Hierarchy& other) {
 	return (base->name.compare(other.base->name) == 0);
 }
@@ -182,6 +177,24 @@ void OMRStatistics::OMRCheckingConsumer::modifyBase(LinkedNode* oldBase, LinkedN
 			hierarchy->base = newBase;
 }
 
+void OMRStatistics::OMRCheckingConsumer::deleteHierarchy(LinkedNode* base) {
+	
+	// Search for hierarchy to delete
+	auto itr = hierarchies.begin();
+	auto end = hierarchies.end();
+	
+	while (itr != end) {
+		auto hierarchy = *itr;
+		if(hierarchy->base == base) {
+			hierarchies.erase(itr);
+			delete hierarchy;
+			return;
+		}
+		itr++;
+	}
+	llvm::outs() << "There is no hierarchy with that base: " << base << "\n";
+}
+
 void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std::string> &map) {
 	for(auto current : map) {
 		std::string currentClassName = current.first;
@@ -190,14 +203,14 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		auto result1 = class2Address.find(currentClassName);
 		auto result2 = class2Address.find(currentParentName);
 		auto end = class2Address.end();
-		auto npos = std::string::npos;
 		
 		if(result1 != end && result2 != end) { // If both child and parent nodes are found in hierarchy list
-			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---0I am processing " << currentClassName << " --> " << currentParentName << "\n";
-			result1->second->parent = result2->second; // Make sure the connection is recorded in the hierarchy list
+			result1->second->parent = result2->second;
+			//TODO: Check if result2->second is the base of a hierarchy, then deleteHierarchy
+			deleteHierarchy(result2->second);
 		}
 		else if(result1 != end) { // If child node is found in hierarchy list
-			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---1I am processing " << currentClassName << " --> " << currentParentName << "\n";
+			
 			LinkedNode* child = result1->second;
 			newNode->name = currentParentName;
 			child->parent = newNode;
@@ -205,7 +218,7 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		}
 		
 		else if(result2 != end) { // If parent node is found in hierarchy list
-			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---2I am processing " << currentClassName << " --> " << currentParentName << "\n";
+			
 			LinkedNode* parent = result2->second;
 			newNode->name = currentClassName;
 			newNode->parent = parent;
@@ -215,7 +228,7 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		
 		//If both nodes not found in hierarchy list
 		else /*if(result1 == end && result2 == end)*/ {
-			if(currentClassName.find("ParameterSymbol") != npos || currentParentName.find("ParameterSymbol") != npos || currentClassName.find("RegisterMappedSymbol") != npos || currentParentName.find("RegisterMappedSymbol") != npos|| currentClassName.find("AutomaticSymbol") != npos || currentParentName.find("AutomaticSymbol") != npos) llvm::outs() << "---3I am processing " << currentClassName << " --> " << currentParentName << "\n";
+			
 			Hierarchy* newHierarchy = new Hierarchy();
 			LinkedNode* newChildNode = new LinkedNode();
 			newChildNode->name = currentClassName;
@@ -234,9 +247,11 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchy() {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
 		while(iterator->parent) {
+			//std::stringstream ss; ss << iterator;
 			singleHierarchy += iterator->name + " --> ";
 			iterator = iterator->parent;
 		}
+		//std::stringstream ss; ss << iterator;
 		singleHierarchy += iterator->name;
 		llvm::outs() << singleHierarchy << "\n";
 	}
