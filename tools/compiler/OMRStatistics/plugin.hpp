@@ -108,8 +108,8 @@ namespace OMRStatistics {
 		
 		explicit OMRCheckingConsumer(llvm::StringRef filename, Config conf);
 		//Searches all hierarchies for the one with the given base, and changes it to the new given base
-		void modifyBase(LinkedNode* oldBase, LinkedNode* newBase);
-		// Deletes the hierarchy that has the given base
+		Hierarchy* modifyBase(LinkedNode* oldBase, LinkedNode* newBase);
+		// Deletes the hierarchy that has the given base (if found)
 		void deleteHierarchy(LinkedNode* base);
 		//Process the classHierarchy map from ExtensibleClassCheckingVisitor to fill the hierarchies map.
 		void fillHierarchies(std::map<std::string, std::string> &map);
@@ -119,8 +119,10 @@ namespace OMRStatistics {
 		void collectMethodInfo(ExtensibleClassCheckingVisitor &visitor);
 		
 		//Printining methods to check the results
+		//Given the base, print the whole hierarchy
+		void printHierarchy(Hierarchy* base);
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
-		void printHierarchy();
+		void printHierarchies();
 		//Iterates through the MethodTrackers in each Hierarchy and prints the information in an organized way
 		void printMethodInfo(bool printOverloads, bool printOverrides);
 		//Prints Class2Methods in ExtensibleClassCheckingVisitor

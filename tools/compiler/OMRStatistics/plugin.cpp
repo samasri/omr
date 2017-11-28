@@ -171,10 +171,13 @@ OMRStatistics::OMRCheckingConsumer::OMRCheckingConsumer(llvm::StringRef filename
 	this->conf = conf;
 }
 
-void OMRStatistics::OMRCheckingConsumer::modifyBase(LinkedNode* oldBase, LinkedNode* newBase) {
+OMRStatistics::Hierarchy* OMRStatistics::OMRCheckingConsumer::modifyBase(LinkedNode* oldBase, LinkedNode* newBase) {
 	for (auto hierarchy : hierarchies) 
-		if(hierarchy->base == oldBase) 
+		if(hierarchy->base == oldBase) {
 			hierarchy->base = newBase;
+			return hierarchy;
+		}
+	return nullptr;
 }
 
 void OMRStatistics::OMRCheckingConsumer::deleteHierarchy(LinkedNode* base) {
@@ -192,7 +195,6 @@ void OMRStatistics::OMRCheckingConsumer::deleteHierarchy(LinkedNode* base) {
 		}
 		itr++;
 	}
-	llvm::outs() << "There is no hierarchy with that base: " << base << "\n";
 }
 
 void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std::string> &map) {
@@ -206,11 +208,9 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		
 		if(result1 != end && result2 != end) { // If both child and parent nodes are found in hierarchy list
 			result1->second->parent = result2->second;
-			//TODO: Check if result2->second is the base of a hierarchy, then deleteHierarchy
 			deleteHierarchy(result2->second);
 		}
 		else if(result1 != end) { // If child node is found in hierarchy list
-			
 			LinkedNode* child = result1->second;
 			newNode->name = currentParentName;
 			child->parent = newNode;
@@ -218,17 +218,20 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 		}
 		
 		else if(result2 != end) { // If parent node is found in hierarchy list
-			
 			LinkedNode* parent = result2->second;
 			newNode->name = currentClassName;
 			newNode->parent = parent;
 			class2Address.emplace(newNode->name, newNode);
-			modifyBase(parent, newNode);
+			auto hierarchy = modifyBase(parent, newNode);
+			if(!hierarchy) { // No hierarchy with base as parent is found
+				Hierarchy* newHierarchy = new Hierarchy();
+				newHierarchy->base = newNode;
+				hierarchies.push_back(newHierarchy);
+			}
 		}
 		
 		//If both nodes not found in hierarchy list
 		else /*if(result1 == end && result2 == end)*/ {
-			
 			Hierarchy* newHierarchy = new Hierarchy();
 			LinkedNode* newChildNode = new LinkedNode();
 			newChildNode->name = currentClassName;
@@ -242,7 +245,21 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 	}
 }
 
-void OMRStatistics::OMRCheckingConsumer::printHierarchy() {
+void OMRStatistics::OMRCheckingConsumer::printHierarchy(Hierarchy* hierarchy) {
+	llvm::outs() << "Printing Hierarchy: ";
+	if(!hierarchy) {
+		llvm::outs() << "<empty>\n";
+		return;
+	}
+	auto current = hierarchy->base;
+	while(current->parent) {
+		llvm::outs() << current->name << " -->";
+		current = current->parent;
+	}
+	llvm::outs() << current->name << "\n";
+}
+
+void OMRStatistics::OMRCheckingConsumer::printHierarchies() {
 	for(Hierarchy* current : hierarchies) {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
@@ -332,7 +349,7 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	collectMethodInfo(extchkVisitor);
 
 	 if (/*conf.hierarchy*/true) {        
-		 printHierarchy();
+		 printHierarchies();
 	 }
 	 printMethodInfo(conf.overloading, false);
 	 
