@@ -214,7 +214,7 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 			LinkedNode* child = result1->second;
 			newNode->name = currentParentName;
 			child->parent = newNode;
-			class2Address.emplace(child->name, child);
+			class2Address.emplace(newNode->name, newNode);
 		}
 		
 		else if(result2 != end) { // If parent node is found in hierarchy list
@@ -299,7 +299,9 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 			
 			std::unordered_set<std::string> methods = Class2MethodsIterator->second;
 			//Iterate through the methods and connect them to their classes via MethodTracker objects
+			
 			for(std::string method : methods) {
+				
 				auto tracker = searchForTracker(hierarchy, method); 
 				//If we found the methodTracker then add the class to it, or else create a new one
 				if(tracker) tracker->addOccurence(className);
@@ -311,7 +313,6 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 }
 
 void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloads, bool printOverrides) {
-	
 	for(auto hierarchy : hierarchies) {
 		auto baseClassName = hierarchy->base->name;
 		//if(baseClassName.find("TR::") == std::string::npos) continue;
@@ -361,8 +362,10 @@ std::unique_ptr<ASTConsumer> OMRStatistics::CheckingAction::CreateASTConsumer(Co
 
 bool OMRStatistics::CheckingAction::ParseArgs(const CompilerInstance &CI, const std::vector<std::string>& args) {
 	for(std::string arg : args) {
-		if(arg.compare("OMR_STAT_PRINT_HIERARCHY") == 0) conf.hierarchy = 1;
-		if(arg.compare("OMR_STAT_PRINT_OVERLOADS") == 0) conf.overloading = 1;
+		if(arg.compare("OMR_STAT_PRINT_HIERARCHY") == 0 || getenv("OMR_STAT_PRINT_HIERARCHY") != NULL) {
+			conf.hierarchy = 1;
+		}
+		if(arg.compare("OMR_STAT_PRINT_OVERLOADS") == 0 || getenv("OMR_STAT_PRINT_OVERLOADS") != NULL) conf.overloading = 1;
 	}
 	return true;
 }
