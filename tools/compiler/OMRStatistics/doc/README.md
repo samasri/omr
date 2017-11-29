@@ -1,6 +1,13 @@
 # Overview
 This is a clang plugin that runs on the source code of the file provided in the makefile and collects information about it.
 
+This plugin has 2 main functions:
+## 1. Print hierarchies
+Prints out all class hierarchies in this source file (and all its includes).
+
+## 2. Print Method Information
+Prints out each method in each of the class hierarchies, which classes it is overriden in, and how many times it is overloaded in each class.
+
 # How to build and run
 * Running `make sample` will build the plugin and run it on _OMRCodeGenerator.cpp_ (in _omr/compiler/codegen_)
 * Running `make test` will test the plugins on all the available test cases and makes sure all outputs are as expected
@@ -10,16 +17,6 @@ This is a clang plugin that runs on the source code of the file provided in the 
 * Source files for all combinations and architectures are expected to be processed and added to the same output file
 * There exists no class that has multiple parents
 
-# Functionality of the plugin
-This plugin has 2 main functions:
-## 1. Print hierarchies
-Prints out all class hierarchies in this source file (and all its includes).
-
-### Known bug
-When a class has 2 children, one of the hierarchies in the plugin output is broken. This case is elaborated in one of the test cases.
-
-## 2. Print Method Information
-Prints out each method in each of the class hierarchies, which classes it is overriden in, and how many times it is overloaded in each class.
 
 # Output Format
 ## 1. First functionality (printing hierarchies)
@@ -59,7 +56,7 @@ The tool works as follows:
 2. Every time it jumps from one class/parent to its parent, it records the relationship between these 2 classes in a binary map (let us call it _hierarchy_ map). Since it passes to every class and process all its parents, the tool is expected to find classes that were already processed (when processing the parents of another class lower in the hierarchy); hence the tool would skip any already processed classes.
 3. When it finds no more parents, the tool goes back to X and records all its methods in another map (let us call it _function_ map)
 4. After visiting all classes in the source code, the processing of these 2 maps starts
-5. The tool iterates through all the records in the _hierarchy_ map processing each child/parent relationship to create `Hierarchy` structure. A `Hierarchy` is a data structure that represents a hierarchy of classes, keeping track of the top and base classes and other important information.
+5. The tool iterates through all the records in the _hierarchy_ map processing each child/parent relationship to create `Hierarchy` structures. A `Hierarchy` is a data structure that represents a hierarchy of classes, keeping track of the base class and other important information.
 6. After that, the tool iterates through the records in the _function_ map creating a `MethodTracker` class. A `MethodTracker` keeps track of the occurence information of a unique function across all classes in a hierarchy. Hence, each _Hierarchy_ structure contains an array of `MethodTracker`s, one for each unique method.
 
 # Testing
@@ -70,5 +67,11 @@ This plugin has 5 test cases till now:
 * Test 4: Testing the override functionality when printing method information by having a function that is overriden in 2 non-consecutive classes (having some classes in between) in a hierarchy
 * Test 5: Testing the overload functionality when printing method information
 * Test 6: Testing the override and overload functionalities together
-* Test 7: This should fail, this case elaborates the previously described bug
+* Test 7: Testing the plugins functionality when having 2 hierarchies that share some nodes (ie: different bases but they merge at some point)
 * Test 8: Representing the case where we have an overriden method that is also overloaded in the parent class. At the moment, OMRStatistics does not differentiate between functions with the same name but different signatures which ends up failing the test. This test projects the aim to update OMRStatistics to make it aware of methods and the need to find a good way to define a method (when a method is overriden, the signature is ignored whereas when the function is overriden the function is considered).
+
+
+# Future steps
+* Run OMRStatistics over bruteclang to collect results from all architectures
+* Process ouput CSV file to create visualizations
+* Package OMRStatistics as a command-line tool
