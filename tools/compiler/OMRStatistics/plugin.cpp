@@ -36,9 +36,9 @@
 #include "plugin.hpp"
 #include <sstream>
 
-std::map<std::string, std::unordered_set<std::string>> OMRStatistics::ExtensibleClassCheckingVisitor::getClass2Methods() {return Class2Methods;}
+std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::ExtensibleClassCheckingVisitor::getClass2Methods() {return Class2Methods;}
 
-void OMRStatistics::ExtensibleClassCheckingVisitor::setClass2Methods(std::map<std::string, std::unordered_set<std::string>> Class2Methods) {this->Class2Methods = Class2Methods;}
+void OMRStatistics::ExtensibleClassCheckingVisitor::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods) {this->Class2Methods = Class2Methods;}
 
 std::map<std::string, std::string> OMRStatistics::ExtensibleClassCheckingVisitor::getclassHierarchy() {return classHierarchy;}
 
@@ -46,18 +46,17 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::setclassHierarchy(std::map<s
 	   
 void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
-	
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
 		
-		std::string functionName = (*A)->getNameAsString();
+		std::string* functionName = new std::string((*A)->getNameAsString());
 		auto iterator = Class2Methods.find(className);
 		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
-			std::unordered_set<std::string>* methods = &(iterator->second);
+			std::unordered_set<std::string*>* methods = &(iterator->second);
 			methods->insert(functionName);
 		}
 		else { //If the class in new
-			std::unordered_set<std::string> methods;
+			std::unordered_set<std::string*> methods;
 			methods.insert(functionName);
 			Class2Methods.emplace(className, methods);
 		}
@@ -264,11 +263,9 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchies() {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
 		while(iterator->parent) {
-			//std::stringstream ss; ss << iterator;
 			singleHierarchy += iterator->name + " --> ";
 			iterator = iterator->parent;
 		}
-		//std::stringstream ss; ss << iterator;
 		singleHierarchy += iterator->name;
 		llvm::outs() << singleHierarchy << "\n";
 	}
@@ -287,21 +284,24 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 	for(auto hierarchy : hierarchies) {
 		LinkedNode* current = hierarchy->base;
 		auto map = visitor.getClass2Methods();
+		
+		auto set = map.find("TR::A")->second;
+		
 		//Iterate through each hierarchy's classes
 		while(current) {
 			std::string className = current->name;
 			auto Class2MethodsIterator = map.find(className);
+			
 			if(Class2MethodsIterator == map.end()) {
 				//This case is when the class is in the hierarchy but not recorded in Class2Methods maps, this is usually because the class has no functions
 				current = current->parent;
 				continue;
 			}
 			
-			std::unordered_set<std::string> methods = Class2MethodsIterator->second;
 			//Iterate through the methods and connect them to their classes via MethodTracker objects
-			
-			for(std::string method : methods) {
-				
+			std::unordered_set<std::string*> methods = Class2MethodsIterator->second;
+			for(std::string* methodPtr : methods) {
+				std::string method = *methodPtr;
 				auto tracker = searchForTracker(hierarchy, method); 
 				//If we found the methodTracker then add the class to it, or else create a new one
 				if(tracker) tracker->addOccurence(className);
@@ -323,8 +323,10 @@ void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloads, bo
 		for(auto tracker : methodTrackers) {
 			std::string method = tracker.methodName;
 			int nbOfOverrides = tracker.classesOverriden->size();
-			if(nbOfOverrides > 1 && printOverrides) //Print override record in CSV format (MethodName, Override, className)
+			if(nbOfOverrides > 1 && printOverrides) {
 				for(std::string className : *(tracker.classesOverriden)) llvm::outs() << className << ",override," << method<< "\n";
+			}
+			
 			if(tracker.isOverloaded && printOverloads) //Print overload record in CSV format (MethodName, Overload, className, nbOfTimesOverloaded)
 				for(auto pair : *(tracker.class2NbOfTimesOverloaded)) if(pair.second > 0) llvm::outs() << pair.first << ",overload," << method << ", " << pair.second << "\n";
 		}
@@ -348,11 +350,11 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	auto classHierarchy = extchkVisitor.getclassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(extchkVisitor);
-
+	
 	 if (/*conf.hierarchy*/true) {        
 		 printHierarchies();
 	 }
-	 printMethodInfo(conf.overloading, false);
+	 printMethodInfo(conf.overloading, true);
 	 
 }
 
