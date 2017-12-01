@@ -17,14 +17,14 @@ namespace OMRStatistics {
 	class ExtensibleClassCheckingVisitor : public RecursiveASTVisitor<ExtensibleClassCheckingVisitor> {
 	private:
 		//Mapping between each class and all its methods
-		std::map<std::string, std::unordered_set<std::string>> Class2Methods;
+		std::map<std::string, std::unordered_set<std::string*>> Class2Methods;
 		//Parent-child relationship mapping (child --> parent)
 		std::map<std::string, std::string> classHierarchy;
 	
 	public:
 		//Getters and setters
-		std::map<std::string, std::unordered_set<std::string>> getClass2Methods();
-		void setClass2Methods(std::map<std::string, std::unordered_set<std::string>> Class2Methods);
+		std::map<std::string, std::unordered_set<std::string*>> getClass2Methods();
+		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods);
 		std::map<std::string, std::string> getclassHierarchy();
 		void setclassHierarchy(std::map<std::string, std::string> classHierarchy);
 		

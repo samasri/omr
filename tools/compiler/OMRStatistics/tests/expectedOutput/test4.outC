@@ -1,4 +1,4 @@
 TR::C --> TR::B --> TR::A
 TR::C:
-a,override,TR::A
-a,override,TR::C
+TR::A,override,a
+TR::C,override,a
