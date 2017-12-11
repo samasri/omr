@@ -1,0 +1,53 @@
+struct OverloadRecord {
+	std::string methodName;
+	std::string baseNamespace;
+	std::string baseClass;
+	std::string baseFunctionSignature;
+	std::string overloadingNamespace;
+	std::string overloadingClass;
+	std::string overloadingFunctionSignature;
+}
+struct OverrideRecord {
+	std::string methodSignature;
+	std::string baseClass;
+	std::string overridingClass;
+}
+struct Hierarchy { //Additions to the structure
+	unordered_set visitedFunctionNames;
+	unordered_set visitedFunctionSignatures;
+	vector<Occurence> firstOccurences;
+	std::vector<OverloadingRecord> overloads;
+	std::vector<OverrideRecord> overrides;
+	addRecord(methodSignature);
+}
+addRecord(std::string methodSignature, std::string className) {
+	methodName = get method name from signature
+	if(found in visitedFunctionSignatures) { //This is an override
+		//Get the record of the previous occurence
+		if(methodSignature found in firstOccurences) { //First occurence of this signature
+			record = get record from firstOccurences
+			remove record from firstOccurences
+		}
+		else record = find last occurence of this signature in overrides
+		base = get baseClass from record
+		if(className == base) same function has been visited before //Weird, exception?
+		add newRecord to override
+	}
+	else if(found in visitedNames) {//This is an overload
+		add methodSignature to visitedFunctionSignatures
+		if(methodName found in firstOccurences) {
+			record = get record from firstOccurences
+			remove record from firstOccurences
+		}
+		else record = search for last occurence of method in visitedFunctionSignatures
+		baseClass = get baseClass from record
+		baseNamespace = get baseNamespace from record
+		add newRecord to overrides
+	}
+	else {//This is a new occurence of the method
+		Add methodSignature in visitedFunctionSignatures
+		Add methodName in visitedFunctionNames
+		Add methodName and methodSignature in firstOccurences
+	}
+	
+}
