@@ -70,27 +70,6 @@ This plugin has 5 test cases till now:
 * Test 7: Testing the plugins functionality when having 2 hierarchies that share some nodes (ie: different bases but they merge at some point)
 * Test 8: Representing the case where we have an overriden method that is also overloaded in the parent class. At the moment, OMRStatistics does not differentiate between functions with the same name but different signatures which ends up failing the test. This test projects the aim to update OMRStatistics to make it aware of methods and the need to find a good way to define a method (when a method is overriden, the signature is ignored whereas when the function is overriden the function is considered).
 
-# Algorithm to make hierarchy vector (input: child->parent records)
-Search for child and parent in the address map
-1. If child is found:
-			Create new node
-			Link the new node to the found child (child->newNode)
-			Add newNode to the address map
-2. If parent is found:
-* Create new node
-* Link the new node to the found parent (newNode->parent)
-* Do a search on all Hierarchies and change the base of the right Hierarchy to the new one (which we just added)
-* Add child to the address map
-3. If neither child nor parent are found:
-* Create 2 new nodes (the child and the parent)
-* Link them together
-* Add them to the address map
-* Add them to a new hierarchy
-* Add the new hierarchy to the hierarchy list
-4. If both child and parent are found:
-* Link child to parent
-* Check if parent was a base of a hierarchy, delete that hierarchy
-
 # Future steps
 * Run OMRStatistics over bruteclang to collect results from all architectures
 * Process ouput CSV file to create visualizations
