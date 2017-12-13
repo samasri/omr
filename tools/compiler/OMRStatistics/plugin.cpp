@@ -49,7 +49,17 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRec
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
 		
+		//Get function name with parameters
 		std::string* functionName = new std::string((*A)->getNameAsString());
+		ArrayRef<clang::ParmVarDecl*> functions = A->parameters();
+		if(functions.size() == 0) *functionName += "()";
+		else {
+			*functionName += "(";
+			for(clang::ParmVarDecl* function : functions) *functionName += function->getNameAsString() + ",";
+			functionName->replace(functionName->end()-1, functionName->end(), "");
+			*functionName += ")";
+		}
+		
 		auto iterator = Class2Methods.find(className);
 		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
 			std::unordered_set<std::string*>* methods = &(iterator->second);
@@ -140,7 +150,6 @@ OMRStatistics::MethodTracker::MethodTracker(Hierarchy* hierarchy, std::string me
 
 void OMRStatistics::MethodTracker::addOccurence(std::string className) {
 	nbOfOccurences++;
-	
 	//Search classesOverriden for the current class where the method occurred
 	auto itr = class2NbOfTimesOverloaded->find(className);
 	auto end = class2NbOfTimesOverloaded->end();
@@ -285,8 +294,6 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 		LinkedNode* current = hierarchy->base;
 		auto map = visitor.getClass2Methods();
 		
-		auto set = map.find("TR::A")->second;
-		
 		//Iterate through each hierarchy's classes
 		while(current) {
 			std::string className = current->name;
@@ -309,6 +316,9 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 			}
 			current = current->parent;
 		}
+		
+		//llvm::outs() << "For this hierarchy, the method trackers are the following:\n";
+		//for(auto tracker : *(hierarchy->methodTrackers)) llvm::outs() << tracker.methodName << " --> " << tracker.isOverloaded << "\n";
 	}
 }
 
