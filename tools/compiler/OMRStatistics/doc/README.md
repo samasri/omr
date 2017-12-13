@@ -47,7 +47,7 @@ Assuming we have the below class hierarchy, the plugin would create the below cs
 | Base Namespace| Base Classname | Method Signature | Type | Overriding Namespace | Overriding Classname |
 | --- | --- | --- | --- | --- | --- |
 | OMR | A | f() | override | OMR::Z | A |
-| OMR | A | f() | override | Ruby | A |
+| OMR::Z | A | f() | override | Ruby | A |
 | OMR::Z | A | g() | override | Ruby | A |
 
 # General Design
