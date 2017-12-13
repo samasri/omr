@@ -317,8 +317,8 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 			current = current->parent;
 		}
 		
-		//llvm::outs() << "For this hierarchy, the method trackers are the following:\n";
-		//for(auto tracker : *(hierarchy->methodTrackers)) llvm::outs() << tracker.methodName << " --> " << tracker.isOverloaded << "\n";
+		/*llvm::outs() << "For this hierarchy, the method trackers are the following:\n";
+		for(auto tracker : *(hierarchy->methodTrackers)) llvm::outs() << tracker.methodName << " --> " << tracker.isOverloaded << "\n";*/
 	}
 }
 
@@ -364,7 +364,7 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	 if (/*conf.hierarchy*/true) {        
 		 printHierarchies();
 	 }
-	 printMethodInfo(conf.overloading, true);
+	 //printMethodInfo(conf.overloading, true);
 	 
 }
 
