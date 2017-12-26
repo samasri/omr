@@ -4,10 +4,10 @@ For overrides:
 
 Number | BaseNamespace | BaseClassName | Signature | OverridingNamespace | OverridingClassName |
 | --- | --- | --- | --- | --- | --- |
-| 1 | override | Ruby | A | f() | OMR | A |
-| 2 | override | Ruby | A | h() | OMR | A |
-| 3 | override | TR | A | h(int) | OMR | A |
-| 4 | override | TR | A | h() | Ruby | A |
+| 1 | OMR | A | f() | Ruby | A |
+| 2 | OMR | A | h() | Ruby | A |
+| 3 | OMR | A | h(int) | TR | A |
+| 4 | Ruby | A | h() | TR | A |
 
 For overloads:
 
