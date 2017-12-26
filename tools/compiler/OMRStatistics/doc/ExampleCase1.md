@@ -13,7 +13,7 @@ Number | BaseNamespace | BaseClassName | Signature | OverridingNamespace | Overr
 
 For overloads:
 
-Number | FunctionName | FunctionSignature | Type | BaseNamespace | BaseClassName |
+Number | FunctionName | FunctionSignature | Type | Namespace | ClassName |
 | --- | --- | --- | --- | --- | --- |
 | 1 | f | f() | firstOccurence | OMR | A |
 | 2 | h | h(int) | firstOccurence | OMR | A |
