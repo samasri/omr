@@ -2,14 +2,14 @@
 
 For overrides:
 
-Number | BaseNamespace | BaseClassName | BaseSignature | OverridenNamespace | OverridenClassName | Overriding Signature |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | TR | A | f() | Ruby | A | f() |
-| 2 | Ruby | A | f() | OMR | A | f() |
-| 3 | Ruby | A | h() | OMR | A | h() |
-| 4 | Ruby | A | h(int) | OMR | A | h(int) |
-| 5 | TR | A | h() | Ruby | A | h() |
-| 6 | TR | A | h(int) | Ruby | A | h(int) |
+Number | BaseNamespace | BaseClassName | BaseSignature | OverridenNamespace | OverridenClassName |
+| --- | --- | --- | --- | --- | --- |
+| 1 | TR | A | f() | Ruby | A |
+| 2 | Ruby | A | f() | OMR | A |
+| 3 | Ruby | A | h() | OMR | A |
+| 4 | Ruby | A | h(int) | OMR | A |
+| 5 | TR | A | h() | Ruby | A |
+| 6 | TR | A | h(int) | Ruby | A |
 
 For overloads:
 
