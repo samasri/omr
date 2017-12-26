@@ -1,6 +1,7 @@
 ![Class Hierarchy](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/resources/Case2.png)
 
 For overrides:
+
 Number | BaseNamespace | BaseClassName | BaseSignature | OverridenNamespace | OverridenClassName | Overriding Signature |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | override | TR | A | f() | Ruby | A | f() |
@@ -10,6 +11,7 @@ Number | BaseNamespace | BaseClassName | BaseSignature | OverridenNamespace | Ov
 | 5 | override | TR | A | h(int) | Ruby | A | h(int) |
 
 For overloads:
+
 Number | FunctionName | FunctionSignature | Type | BaseNamespace | BaseClassName |
 | --- | --- | --- | --- | --- | --- |
 | 1 | f | f() | firstOccurence | OMR | A |
