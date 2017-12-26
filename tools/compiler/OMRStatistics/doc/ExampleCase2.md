@@ -15,5 +15,5 @@ For overloads:
 Number | FunctionName | FunctionSignature | Type | BaseNamespace | BaseClassName |
 | --- | --- | --- | --- | --- | --- |
 | 1 | f | f() | firstOccurence | OMR | A |
-| 2 | h | h() | Overload | OMR | A |
-| 3 | h | h(int) | firstOccurence | Ruby | A |
+| 2 | h | h() | firstOccurence | OMR | A |
+| 3 | h | h(int) | Overload | Ruby | A |
