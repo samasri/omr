@@ -3,7 +3,7 @@
 For overrides:
 
 Number | BaseNamespace | BaseClassName | BaseSignature | OverridenNamespace | OverridenClassName | Overriding Signature |
-| --- | --- | --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- | --- |
 | 1 | override | TR | A | f() | Ruby | A | f() |
 | 2 | override | Ruby | A | f() | OMR | A | f() |
 | 3 | override | Ruby | A | h() | OMR | A | h() |
