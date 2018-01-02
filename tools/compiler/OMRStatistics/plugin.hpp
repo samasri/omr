@@ -8,7 +8,6 @@
 #include <iostream>
 #include <unordered_set>
 
-
 using namespace llvm;
 using namespace clang;
 
@@ -51,9 +50,9 @@ namespace OMRStatistics {
 		LinkedNode* top = new LinkedNode(); //Top (most parent) class of hierarchy
 		std::string name; //Base name, to identify the class
 		//Maps every method to the array of hierarchy classes where it occurred
-		std::vector<MethodTracker>* methodTrackers = new std::vector<MethodTracker>(); //TODO: Evaluate, what is better, to store it as an array of objects or array of pointers to the objects?
+		std::map<std::string, std::vector<MethodTracker>*> methodName2MethodTracker;
 		//Stores the names of each methodTracker in the hierarchy for faster searching
-		std::unordered_set<std::string>* methodNames = new std::unordered_set<std::string>; 
+		//std::unordered_set<std::string>* methodNames = new std::unordered_set<std::string>; 
 		
 		//overriding operators for faster comparisons
 		bool operator==(const Hierarchy& other);
@@ -66,13 +65,13 @@ namespace OMRStatistics {
 	class MethodTracker {
 	public:
 		std::string methodName;
-		int nbOfOccurences; //Tracks the number of occurences for this method in the hierarchy
-		std::unordered_set<std::string>* classesOverriden; //Tracks the classes where this method was overriden
-		std::map<std::string, int>* class2NbOfTimesOverloaded; //Records how many times is this function overloaded in each class (class --> # of overloads in that class)
-		Hierarchy* myHierarchy; //Hierarchy were this method is occurring
-		bool isOverloaded; //If the method is overloaded at any point during any class in that hierarchy
+		std::string methodSignature;
+		int nbOfOccurences; //Tracks how many times this function was overriden
+		std::unordered_set<std::string>* classesOverriden; //Tracks the classes where this method was overridden
+		bool firstOccurence; //Specifies if this is the first occurrence of this function name or not (for overload)
+		std::string baseClassName; //The first occurrence of this signature, this value includes namespace
 		
-		MethodTracker(Hierarchy* hierarchy, std::string methodName, std::string className);
+		MethodTracker(std::string className, std::string methodSignature, bool firstOccurence);
 		//Add an occurence for this method
 		void addOccurence(std::string className);
 		
@@ -113,18 +112,23 @@ namespace OMRStatistics {
 		void deleteHierarchy(LinkedNode* base);
 		//Process the classHierarchy map from ExtensibleClassCheckingVisitor to fill the hierarchies map.
 		void fillHierarchies(std::map<std::string, std::string> &map);
+		//Get method name from its signature
+		static std::string getName(std::string methodSignature);
 		//Search for the MethodTracker with the inputted function name in the inputted hierarchy
-		MethodTracker* searchForTracker(Hierarchy* hierarchy, std::string method);
+		MethodTracker* searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName);
 		//Iterates through the entries of Class2Methods in the ExtensibleClassCheckingVisitor and creates MethodTrackers out of them
 		void collectMethodInfo(ExtensibleClassCheckingVisitor &visitor);
 		
-		//Printining methods to check the results
+		//Printing methods to check the results
 		//Given the base, print the whole hierarchy
 		void printHierarchy(Hierarchy* base);
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
 		void printHierarchies();
-		//Iterates through the MethodTrackers in each Hierarchy and prints the information in an organized way
+		//Printing the method information
+		std::vector<std::string>* seperateClassNameSpace(std::string input);
 		void printMethodInfo(bool printOverloads, bool printOverrides);
+		void printOverloads();
+		void printOverrides();
 		//Prints Class2Methods in ExtensibleClassCheckingVisitor
 		void printClass2Method(std::map<std::string, std::vector<std::string>> &map);
 		
