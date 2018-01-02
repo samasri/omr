@@ -340,6 +340,14 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 	}
 }
 
+bool OMRStatistics::OMRCheckingConsumer::shouldIgnore(std::string nameSpace) {
+	if(nameSpace.compare("std") == 0) return true;
+	if(nameSpace.compare("TR_X86OpCode") == 0) return true;
+	if(nameSpace.compare("__gnu_cxx") == 0) return true;
+	if(nameSpace.compare("CS2") == 0) return true;
+	return false;
+}
+
 std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameSpace(std::string input) {
 	std::string nameSpace = "";
 	std::string className = "";
@@ -348,12 +356,6 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 		nameSpace = input.substr(0, pos);
 		int classNameSize = input.length() - pos - 2;
 		className = input.substr(pos+2, classNameSize);
-		
-		//Ignore untargeted cases
-		if(nameSpace.compare("std") == 0) return nullptr;
-		if(nameSpace.compare("TR_X86OpCode") == 0) return nullptr;
-		if(nameSpace.compare("__gnu_cxx") == 0) return nullptr;
-		if(nameSpace.compare("CS2") == 0) return nullptr;
 	}
 	if(input.find("TR_") != std::string::npos) {
 		nameSpace = "TR";
@@ -376,6 +378,7 @@ void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloadsB, b
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverloads() {
+	llvm::outs() << "Printing overloads:\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers
@@ -384,25 +387,24 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads() {
 		auto itr = b;
 		while(itr != e) {
 			auto hierarchyTrackers = itr->second;
-			bool somethingWasPrinted = false;
 			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
-				if(tuple) {
-					somethingWasPrinted = true;
+				if(!shouldIgnore(tuple->at(0))) {
 					llvm::outs() << tracker.methodName << ",";
 					llvm::outs() << tracker.methodSignature << ",";
 					llvm::outs() << tracker.firstOccurence << ",";
-					llvm::outs() << tuple->at(0) << ",";
-					llvm::outs() << tuple->at(1) << "\n";
+					llvm::outs() << tuple->at(0) << ","; //namespace
+					llvm::outs() << tuple->at(1) << "\n";//className
 				}
 			}
-			if(somethingWasPrinted) llvm::outs() << "-------------------------------------\n";
 			itr++;
 		}
 	}
+	llvm::outs() << "----------------------------------\n";
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverrides() {
+	llvm::outs() << "Printing overrides:\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers
@@ -410,21 +412,26 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides() {
 		auto e = trackerMap.end();
 		auto itr = b;
 		while(itr != e) {
-			llvm::outs() << itr->first << ":\n";
 			auto hierarchyTrackers = itr->second;
 			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::string baseClassName = tracker.baseClassName;
 				for(std::string className : *tracker.classesOverriden) {
-					llvm::outs() << className << ", ";
-					llvm::outs() << tracker.methodSignature << ", ";
-					llvm::outs() << baseClassName << "\n";
+					std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(tracker.baseClassName);
+					std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
+					if(!shouldIgnore(baseClassNameTuple->at(0)) && !shouldIgnore(classNameTuple->at(0))) {
+						llvm::outs() << classNameTuple->at(0) << ","; //namespace
+						llvm::outs() << classNameTuple->at(1) << ",";//className
+						llvm::outs() << tracker.methodSignature << ", ";
+						llvm::outs() << baseClassNameTuple->at(0) << ","; //namespace
+						llvm::outs() << baseClassNameTuple->at(1) << "\n";//className
+					}
 					baseClassName = className;
 				}
 			}
-			llvm::outs() << "--------------------\n";
 			itr++;
 		}
 	}
+	llvm::outs() << "----------------------------------\n";
 }
 
 void OMRStatistics::OMRCheckingConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
@@ -448,7 +455,7 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	 if (/*conf.hierarchy*/true) {        
 		 //printHierarchies();
 	 }
-	 printMethodInfo(true, false);
+	 printMethodInfo(true, true);
 	 
 }
 

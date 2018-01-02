@@ -125,6 +125,7 @@ namespace OMRStatistics {
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
 		void printHierarchies();
 		//Printing the method information
+		bool shouldIgnore(std::string nameSpace); //Judges whether we should ignore this namespace (if its not related to the project, like std classes)
 		std::vector<std::string>* seperateClassNameSpace(std::string input);
 		void printMethodInfo(bool printOverloads, bool printOverrides);
 		void printOverloads();
