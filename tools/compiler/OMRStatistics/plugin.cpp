@@ -132,47 +132,28 @@ bool OMRStatistics::Hierarchy::operator!=(const std::string other) {
 	return !(*this == other);
 }
 
-//Tracks the occurences of each method, what classes, when overriden, and when overloaded
-OMRStatistics::MethodTracker::MethodTracker(Hierarchy* hierarchy, std::string methodName, std::string className) {
-	//Instantiations
-	this->methodName = methodName;
+//Tracks the occurrences of each method, what classes, when overridden, and when overloaded
+OMRStatistics::MethodTracker::MethodTracker(std::string className, std::string methodSignature, bool firstOccurence) {
+	methodName = OMRCheckingConsumer::getName(methodSignature);
+	this->methodSignature = methodSignature;
+	nbOfOccurences = 1;
 	classesOverriden = new std::unordered_set<std::string>();
-	class2NbOfTimesOverloaded = new std::map<std::string, int>();		nbOfOccurences = 1;
-	myHierarchy = hierarchy;
-	isOverloaded = 0;
-	
-	addOccurence(className);
-	
-	//Recording that we have a tracker for that function in the corresponding hierarchy
-	myHierarchy->methodNames->emplace(methodName);
-	myHierarchy->methodTrackers->push_back(*this);
+	this->firstOccurence = firstOccurence;
+	baseClassName = className;
 }
 
 void OMRStatistics::MethodTracker::addOccurence(std::string className) {
 	nbOfOccurences++;
-	//Search classesOverriden for the current class where the method occurred
-	auto itr = class2NbOfTimesOverloaded->find(className);
-	auto end = class2NbOfTimesOverloaded->end();
-	int nbOfOverloads = itr->second;
-	//If method already appeared in this class, then this is an overload
-	if(itr != end) {
-		itr->second = nbOfOverloads + 1;
-		isOverloaded = 1;
-	}
-	else {
-		//This is the first occurrence for this method in this class
-		classesOverriden->insert(className);
-		class2NbOfTimesOverloaded->emplace(className, 0);
-	}
+	classesOverriden->emplace(className);
 }
 
 
 bool OMRStatistics::MethodTracker::operator==(const MethodTracker& other) {
-	return (methodName.compare(other.methodName) == 0);
+	return (methodSignature.compare(other.methodSignature) == 0);
 }
 
 bool OMRStatistics::MethodTracker::operator==(const std::string other) {
-	return (methodName.compare(other) == 0);
+	return (methodSignature.compare(other) == 0);
 }
 
 OMRStatistics::OMRCheckingConsumer::OMRCheckingConsumer(llvm::StringRef filename, Config conf) {
@@ -280,19 +261,42 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchies() {
 	}
 }
 
-OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method) {
-	auto trackers = hierarchy->methodTrackers;
-	auto b = trackers->begin();
-	auto e = trackers->end();
-	auto itr = std::find(b, e, method);
-	if (itr != e) return trackers->data() + (itr-b); //Change the iterator to the actual pointer to the target MethodTracker
+OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName) {
+	std::string methodName = getName(method);
+	//Search for method trackers with same name
+	auto trackers = hierarchy->methodName2MethodTracker;
+	auto e1 = trackers.end();
+	auto itr1 = trackers.find(methodName);
+	if (itr1 != e1) {
+		*sameName = true;
+		//Search for the method tracker with the same signature
+		std::vector<MethodTracker>* trackersMatchingName = itr1->second;
+		auto b2 = trackersMatchingName->begin();
+		auto e2 = trackersMatchingName->end();
+		auto itr2 = std::find(b2, e2, method);
+		if (itr2 != e2) {
+			MethodTracker* t = trackersMatchingName->data() + (itr2-b2); //Change the iterator to the actual pointer to the target MethodTracker
+			
+			return t; 
+		}
+	}
+	
 	return nullptr;
 }
 
+std::string OMRStatistics::OMRCheckingConsumer::getName(std::string methodSignature) {
+	//Get method name from signature
+	std::size_t pos = methodSignature.find("(");
+	assert(pos != std::string::npos && "method name is invalid");
+	return methodSignature.substr(0, pos);
+}
+
 void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassCheckingVisitor &visitor) {
+	auto map = visitor.getClass2Methods();
 	for(auto hierarchy : hierarchies) {
 		LinkedNode* current = hierarchy->base;
-		auto map = visitor.getClass2Methods();
+		
+		//TODO: iterate hierarchy from top to base
 		
 		//Iterate through each hierarchy's classes
 		while(current) {
@@ -309,36 +313,116 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 			std::unordered_set<std::string*> methods = Class2MethodsIterator->second;
 			for(std::string* methodPtr : methods) {
 				std::string method = *methodPtr;
-				auto tracker = searchForTracker(hierarchy, method); 
+				bool sameName = false;
+				auto tracker = searchForTracker(hierarchy, method, &sameName);
 				//If we found the methodTracker then add the class to it, or else create a new one
 				if(tracker) tracker->addOccurence(className);
-				else new MethodTracker(hierarchy, method, className);
+				else {
+					std::string methodName = getName(method);
+					bool isFirstOccurence = true;
+					std::vector<MethodTracker>* trackers;
+					if(sameName) { //MethodTrackers with same name were found, this is an overload
+						isFirstOccurence = false;
+						trackers = hierarchy->methodName2MethodTracker.find(methodName)->second;
+					}
+					else { //This is a completely new method
+						trackers = new std::vector<MethodTracker>();
+						hierarchy->methodName2MethodTracker.emplace(methodName, trackers);
+					}
+					MethodTracker newTracker(className, method, isFirstOccurence);
+					trackers->emplace_back(newTracker);
+				}
 			}
+			
+			//Jump to parent class
 			current = current->parent;
 		}
-		
-		/*llvm::outs() << "For this hierarchy, the method trackers are the following:\n";
-		for(auto tracker : *(hierarchy->methodTrackers)) llvm::outs() << tracker.methodName << " --> " << tracker.isOverloaded << "\n";*/
 	}
 }
 
-void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloads, bool printOverrides) {
-	for(auto hierarchy : hierarchies) {
-		auto baseClassName = hierarchy->base->name;
-		//if(baseClassName.find("TR::") == std::string::npos) continue;
-		auto methodTrackers = *(hierarchy->methodTrackers);
-		if(methodTrackers.size() != 0) llvm::outs() << baseClassName << ":\n";
-		else continue;
+std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameSpace(std::string input) {
+	std::string nameSpace = "";
+	std::string className = "";
+	if(input.find("::") != std::string::npos) {
+		size_t pos = input.find("::");
+		nameSpace = input.substr(0, pos);
+		int classNameSize = input.length() - pos - 2;
+		className = input.substr(pos+2, classNameSize);
+		
+		//Ignore untargeted cases
+		if(nameSpace.compare("std") == 0) return nullptr;
+		if(nameSpace.compare("TR_X86OpCode") == 0) return nullptr;
+		if(nameSpace.compare("__gnu_cxx") == 0) return nullptr;
+		if(nameSpace.compare("CS2") == 0) return nullptr;
+	}
+	if(input.find("TR_") != std::string::npos) {
+		nameSpace = "TR";
+		int classNameSize = input.length() - 3;
+		className = input.substr(3, classNameSize);
+	}
+	if(input.find("TRPersistentMemoryAllocator") != std::string::npos) {
+		nameSpace = "TR";
+		className = "PersistentMemoryAllocator";
+	}
+	std::vector<std::string>* tuple = new std::vector<std::string>();
+	tuple->push_back(nameSpace);
+	tuple->push_back(className);
+	return tuple;
+}
 
-		for(auto tracker : methodTrackers) {
-			std::string method = tracker.methodName;
-			int nbOfOverrides = tracker.classesOverriden->size();
-			if(nbOfOverrides > 1 && printOverrides) {
-				for(std::string className : *(tracker.classesOverriden)) llvm::outs() << className << ",override," << method<< "\n";
+void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloadsB, bool printOverridesB) {
+	if(printOverloadsB) printOverloads();
+	if(printOverridesB) printOverrides();
+}
+
+void OMRStatistics::OMRCheckingConsumer::printOverloads() {
+	for(auto hierarchy : hierarchies) {
+		auto trackerMap = hierarchy->methodName2MethodTracker;
+		//Iterate map to go through all trackers
+		auto b = trackerMap.begin();
+		auto e = trackerMap.end();
+		auto itr = b;
+		while(itr != e) {
+			auto hierarchyTrackers = itr->second;
+			bool somethingWasPrinted = false;
+			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
+				std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
+				if(tuple) {
+					somethingWasPrinted = true;
+					llvm::outs() << tracker.methodName << ",";
+					llvm::outs() << tracker.methodSignature << ",";
+					llvm::outs() << tracker.firstOccurence << ",";
+					llvm::outs() << tuple->at(0) << ",";
+					llvm::outs() << tuple->at(1) << "\n";
+				}
 			}
-			
-			if(tracker.isOverloaded && printOverloads) //Print overload record in CSV format (MethodName, Overload, className, nbOfTimesOverloaded)
-				for(auto pair : *(tracker.class2NbOfTimesOverloaded)) if(pair.second > 0) llvm::outs() << pair.first << ",overload," << method << ", " << pair.second << "\n";
+			if(somethingWasPrinted) llvm::outs() << "-------------------------------------\n";
+			itr++;
+		}
+	}
+}
+
+void OMRStatistics::OMRCheckingConsumer::printOverrides() {
+	for(auto hierarchy : hierarchies) {
+		auto trackerMap = hierarchy->methodName2MethodTracker;
+		//Iterate map to go through all trackers
+		auto b = trackerMap.begin();
+		auto e = trackerMap.end();
+		auto itr = b;
+		while(itr != e) {
+			llvm::outs() << itr->first << ":\n";
+			auto hierarchyTrackers = itr->second;
+			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
+				std::string baseClassName = tracker.baseClassName;
+				for(std::string className : *tracker.classesOverriden) {
+					llvm::outs() << className << ", ";
+					llvm::outs() << tracker.methodSignature << ", ";
+					llvm::outs() << baseClassName << "\n";
+					baseClassName = className;
+				}
+			}
+			llvm::outs() << "--------------------\n";
+			itr++;
 		}
 	}
 }
@@ -362,9 +446,9 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	collectMethodInfo(extchkVisitor);
 	
 	 if (/*conf.hierarchy*/true) {        
-		 printHierarchies();
+		 //printHierarchies();
 	 }
-	 //printMethodInfo(conf.overloading, true);
+	 printMethodInfo(true, false);
 	 
 }
 
