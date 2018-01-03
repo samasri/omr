@@ -49,25 +49,25 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRec
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
 		
-		//Get function name with parameters
-		std::string* functionName = new std::string((*A)->getNameAsString());
+		//Get function name with parameter types (AKA: recreate function signature)
+		std::string* function = new std::string((*A)->getNameAsString());
 		ArrayRef<clang::ParmVarDecl*> functions = A->parameters();
-		if(functions.size() == 0) *functionName += "()";
+		if(functions.size() == 0) *function += "()";
 		else {
-			*functionName += "(";
-			for(clang::ParmVarDecl* function : functions) *functionName += function->getNameAsString() + ",";
-			functionName->replace(functionName->end()-1, functionName->end(), "");
-			*functionName += ")";
+			*function += "(";
+			for(clang::ParmVarDecl* param : functions) *function += param->getOriginalType().getAsString() + ",";
+			function->replace(function->end()-1, function->end(), "");
+			*function += ")";
 		}
 		
 		auto iterator = Class2Methods.find(className);
 		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
 			std::unordered_set<std::string*>* methods = &(iterator->second);
-			methods->insert(functionName);
+			methods->insert(function);
 		}
 		else { //If the class in new
 			std::unordered_set<std::string*> methods;
-			methods.insert(functionName);
+			methods.insert(function);
 			Class2Methods.emplace(className, methods);
 		}
 	}
@@ -249,6 +249,7 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchy(Hierarchy* hierarchy) {
 }
 
 void OMRStatistics::OMRCheckingConsumer::printHierarchies() {
+	llvm::outs() << "Printing Hierarchies:\n";
 	for(Hierarchy* current : hierarchies) {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
@@ -259,6 +260,7 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchies() {
 		singleHierarchy += iterator->name;
 		llvm::outs() << singleHierarchy << "\n";
 	}
+	llvm::outs() << "----------------------------------\n";
 }
 
 OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName) {
@@ -453,9 +455,9 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	collectMethodInfo(extchkVisitor);
 	
 	 if (/*conf.hierarchy*/true) {        
-		 //printHierarchies();
+		 printHierarchies();
 	 }
-	 printMethodInfo(true, true);
+	 printMethodInfo(/*conf.overloading*/true, true);
 	 
 }
 
