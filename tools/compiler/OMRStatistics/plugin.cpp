@@ -248,8 +248,9 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchy(Hierarchy* hierarchy) {
 	llvm::outs() << current->name << "\n";
 }
 
-void OMRStatistics::OMRCheckingConsumer::printHierarchies() {
-	llvm::outs() << "Printing Hierarchies:\n";
+void OMRStatistics::OMRCheckingConsumer::printHierarchies(std::ofstream* out) {
+	
+	(*out) << "Printing Hierarchies:\n";
 	for(Hierarchy* current : hierarchies) {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
@@ -258,9 +259,9 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchies() {
 			iterator = iterator->parent;
 		}
 		singleHierarchy += iterator->name;
-		llvm::outs() << singleHierarchy << "\n";
+		(*out) << singleHierarchy << "\n";
 	}
-	llvm::outs() << "----------------------------------\n";
+	(*out) << "----------------------------------\n";
 }
 
 OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName) {
@@ -374,13 +375,8 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 	return tuple;
 }
 
-void OMRStatistics::OMRCheckingConsumer::printMethodInfo(bool printOverloadsB, bool printOverridesB) {
-	if(printOverloadsB) printOverloads();
-	if(printOverridesB) printOverrides();
-}
-
-void OMRStatistics::OMRCheckingConsumer::printOverloads() {
-	llvm::outs() << "Printing overloads:\n";
+void OMRStatistics::OMRCheckingConsumer::printOverloads(std::ofstream* out) {
+	(*out) << "Printing overloads:\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers
@@ -392,21 +388,21 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads() {
 			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
 				if(!shouldIgnore(tuple->at(0))) {
-					llvm::outs() << tracker.methodName << ",";
-					llvm::outs() << tracker.methodSignature << ",";
-					llvm::outs() << tracker.firstOccurence << ",";
-					llvm::outs() << tuple->at(0) << ","; //namespace
-					llvm::outs() << tuple->at(1) << "\n";//className
+					(*out) << tracker.methodName << ",";
+					(*out) << tracker.methodSignature << ",";
+					(*out) << tracker.firstOccurence << ",";
+					(*out) << tuple->at(0) << ","; //namespace
+					(*out) << tuple->at(1) << "\n";//className
 				}
 			}
 			itr++;
 		}
 	}
-	llvm::outs() << "----------------------------------\n";
+	(*out) << "----------------------------------\n";
 }
 
-void OMRStatistics::OMRCheckingConsumer::printOverrides() {
-	llvm::outs() << "Printing overrides:\n";
+void OMRStatistics::OMRCheckingConsumer::printOverrides(std::ofstream* out) {
+	(*out) << "Printing overrides:\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers
@@ -421,11 +417,11 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides() {
 					std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(tracker.baseClassName);
 					std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
 					if(!shouldIgnore(baseClassNameTuple->at(0)) && !shouldIgnore(classNameTuple->at(0))) {
-						llvm::outs() << classNameTuple->at(0) << ","; //namespace
-						llvm::outs() << classNameTuple->at(1) << ",";//className
-						llvm::outs() << tracker.methodSignature << ", ";
-						llvm::outs() << baseClassNameTuple->at(0) << ","; //namespace
-						llvm::outs() << baseClassNameTuple->at(1) << "\n";//className
+						(*out) << classNameTuple->at(0) << ","; //namespace
+						(*out) << classNameTuple->at(1) << ",";//className
+						(*out) << tracker.methodSignature << ", ";
+						(*out) << baseClassNameTuple->at(0) << ","; //namespace
+						(*out) << baseClassNameTuple->at(1) << "\n";//className
 					}
 					baseClassName = className;
 				}
@@ -433,7 +429,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides() {
 			itr++;
 		}
 	}
-	llvm::outs() << "----------------------------------\n";
+	(*out) << "----------------------------------\n";
 }
 
 void OMRStatistics::OMRCheckingConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
@@ -454,10 +450,18 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(extchkVisitor);
 	
-	 if (/*conf.hierarchy*/true) {        
-		 printHierarchies();
-	 }
-	 printMethodInfo(/*conf.overloading*/true, true);
+	//Open files to output (if file does not exist, create file in given directory)
+	std::ofstream* hierarchyOutput = new std::ofstream();
+	hierarchyOutput->open(conf.outputDir + ".hierarchy", std::ofstream::out | std::ofstream::app);
+	std::ofstream* overloadOutput = new std::ofstream();
+	overloadOutput->open(conf.outputDir + ".overloads", std::ofstream::out | std::ofstream::app);
+	std::ofstream* overrideOutput = new std::ofstream();
+	overrideOutput->open(conf.outputDir + ".overrides", std::ofstream::out | std::ofstream::app);
+	
+	
+	/*if(conf.hierarchy)*/ printHierarchies(hierarchyOutput);
+	/*if(conf.overloading)*/ printOverloads(overloadOutput);
+	printOverrides(overrideOutput);
 	 
 }
 
@@ -465,12 +469,23 @@ std::unique_ptr<ASTConsumer> OMRStatistics::CheckingAction::CreateASTConsumer(Co
 	return std::unique_ptr<ASTConsumer>(new OMRCheckingConsumer(filename, conf));
 }
 
+int OMRStatistics::CheckingAction::findLastCharIn(std::string input, char key) {
+	int pos = -1;
+	int i = 0;
+	for(char c : input) {
+		if(c == key) pos = i;
+		i++;
+	}
+	return pos;
+}
+
 bool OMRStatistics::CheckingAction::ParseArgs(const CompilerInstance &CI, const std::vector<std::string>& args) {
 	for(std::string arg : args) {
 		if(arg.compare("OMR_STAT_PRINT_HIERARCHY") == 0 || getenv("OMR_STAT_PRINT_HIERARCHY") != NULL) {
 			conf.hierarchy = 1;
 		}
-		if(arg.compare("OMR_STAT_PRINT_OVERLOADS") == 0 || getenv("OMR_STAT_PRINT_OVERLOADS") != NULL) conf.overloading = 1;
+		else if(arg.compare("OMR_STAT_PRINT_OVERLOADS") == 0 || getenv("OMR_STAT_PRINT_OVERLOADS") != NULL) conf.overloading = 1;
+		else conf.outputDir = arg;
 	}
 	return true;
 }

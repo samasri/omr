@@ -30,7 +30,7 @@ O = plugin.o
 # Plugin name (in the source code)
 PL = omr-statistics
 # Variables & rules to test the plugin on OMR files
-CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_HIERARCHY -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_OVERLOADS -Xclang -add-plugin -Xclang $(PL)
+CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_HIERARCHY -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_OVERLOADS -Xclang -plugin-arg-$(PL) -Xclang "./tests/output2" -Xclang -add-plugin -Xclang $(PL)
 
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
@@ -86,36 +86,11 @@ test7: $(SO)
 test8: $(SO)
 	@echo Executing Test 8...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test8.cpp > tests/test8.out
-	
-test9: $(SO)
-	@echo Executing Test 9...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test9.cpp > tests/test9.out
-	
-test10: $(SO)
-	@echo Executing Test 10...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test10.cpp > tests/test10.out
 
 include sources/common.mk
 
-# Get OMR source file list to be processed
-HOST_ARCH = x;
-TARGET_ARCH = amd64;
-LIST = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES)
-
-PATH_TO_FILE = /home/se-team/Desktop/omr/tools/compiler/OMRStatistics/output
-OMRSourceFiles:
-ifneq ("$(wildcard /home/se-team/Desktop/omr/tools/compiler/OMRStatistics/output)","") 
-	@rm output
-endif
-	@for file in $(LIST); do \
-		echo Executing $$file...; \
-		$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $$file >> output; \
-	done
-	@python trimHierarchy.py
-	@rm output
-	@mv outputTrimmed output
-	
-	
+#TODO: define $(HOST_ARCH) & $(TARGET_ARCH)
+LIST = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES) 
 
 targets = $(addprefix , $(LIST))
 writeCSV: $(targets)
