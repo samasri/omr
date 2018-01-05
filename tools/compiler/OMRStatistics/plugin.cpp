@@ -376,7 +376,7 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverloads(std::ofstream* out) {
-	(*out) << "Printing overloads:\n";
+	(*out) << "FunctionName, FunctionSignature, IsFirstOccurence, Namespace, ClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers
@@ -402,7 +402,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(std::ofstream* out) {
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverrides(std::ofstream* out) {
-	(*out) << "Printing overrides:\n";
+	(*out) << "BaseNamespace, BaseClassName, FunctionSignature, OverridingNamespace, OverridingClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers
