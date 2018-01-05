@@ -16,6 +16,7 @@ Prints out each method in each of the class hierarchies, which classes it is ove
 * All classes are expected to be processed when the tool is triggered and added in the output (not only OMR_EXTENSIBLE files)
 * Source files for all combinations and architectures are expected to be processed and added to the same output file
 * There exists no class that has multiple parents
+* `std` and `__gnu_cxx` namespaces are out of the scope of the tool.
 
 
 # Output Format
@@ -35,9 +36,13 @@ The output is in csv format.
 <BaseNamespace>,<BaseClassname>,<methodSignature>,<Type: override>,<OverridingNamespace>,<OverridingClassname>
 ```
 # Triggerring Functionality
-By default, the tool prints the overrides in a CSV file. Passing _OMR_STAT_PRINT_OVERLOADS_ in the command line options when running the tool allows the tool to print the overload information also (in the same CSV). 
+By default, the tool prints the overrides on the default output stream in a CSV format. 
+
+Passing _OMR_STAT_PRINT_OVERLOADS_ in the command line options when running the tool allows the tool to print the overload information also. 
 
 In order to trigger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ should be passed.
+
+In order to print the information in 3 separate CSV files, one for each functionality, the path for the filename should be passed in the command line options. For example passing _./output_ to the tool triggers the tool to create 3 files: _./output.hierarchy_, _./output.overrides_, _./output.overloads_
 
 # Output Sample
 Assuming we have the below class hierarchy, the plugin would create the below csv file (which is converted into a table here for better visualization):
