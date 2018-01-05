@@ -30,7 +30,7 @@ O = plugin.o
 # Plugin name (in the source code)
 PL = omr-statistics
 # Variables & rules to test the plugin on OMR files
-CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_HIERARCHY -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_OVERLOADS -Xclang -plugin-arg-$(PL) -Xclang "./tests/output2" -Xclang -add-plugin -Xclang $(PL)
+CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_HIERARCHY -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_OVERLOADS -Xclang -add-plugin -Xclang $(PL)
 
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
@@ -56,36 +56,36 @@ test: test1 test2 test3 test4 test5 test6 test7 test8
 
 test1: $(SO)
 	@echo Executing Test 1...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test1.cpp > tests/test1.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test1" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test1.cpp
 
 
 test2: $(SO)
 	@echo Executing Test 2...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test2.cpp > tests/test2.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test2" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test2.cpp
 
 test3: $(SO)
 	@echo Executing Test 3...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test3.cpp > tests/test3.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test3" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test3.cpp
 
 test4: $(SO)
 	@echo Executing Test 4...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test4.cpp > tests/test4.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test4" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test4.cpp
 
 test5: $(SO)
 	@echo Executing Test 5...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test5.cpp > tests/test5.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test5" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test5.cpp
 
 test6: $(SO)
 	@echo Executing Test 6...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test6.cpp > tests/test6.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test6" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test6.cpp
 
 test7: $(SO)
 	@echo Executing Test 7...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test7.cpp > tests/test7.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test7" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test7.cpp
 
 test8: $(SO)
 	@echo Executing Test 8...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test8.cpp > tests/test8.out
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test8 $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test8.cpp
 
 include sources/common.mk
 
