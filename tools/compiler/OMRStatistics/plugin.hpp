@@ -95,7 +95,7 @@ namespace OMRStatistics {
 	struct Config {
 		bool hierarchy = false;
 		bool overloading = false;
-		std::string outputDir = "./output";
+		std::string outputDir = "-1";
 	};
 	
 	class OMRCheckingConsumer : public ASTConsumer {
@@ -124,12 +124,12 @@ namespace OMRStatistics {
 		//Given the base, print the whole hierarchy
 		void printHierarchy(Hierarchy* base);
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
-		void printHierarchies(std::ofstream* out);
+		void printHierarchies(llvm::raw_ostream* out);
 		//Printing the method information
 		bool shouldIgnore(std::string nameSpace); //Judges whether we should ignore this namespace (if its not related to the project, like std classes)
 		std::vector<std::string>* seperateClassNameSpace(std::string input);
-		void printOverloads(std::ofstream* out);
-		void printOverrides(std::ofstream* out);
+		void printOverloads(llvm::raw_ostream* out);
+		void printOverrides(llvm::raw_ostream* out);
 		//Prints Class2Methods in ExtensibleClassCheckingVisitor
 		void printClass2Method(std::map<std::string, std::vector<std::string>> &map);
 		
