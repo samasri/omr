@@ -344,9 +344,7 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 
 bool OMRStatistics::OMRCheckingConsumer::shouldIgnore(std::string nameSpace) {
 	if(nameSpace.compare("std") == 0) return true;
-	if(nameSpace.compare("TR_X86OpCode") == 0) return true;
 	if(nameSpace.compare("__gnu_cxx") == 0) return true;
-	if(nameSpace.compare("CS2") == 0) return true;
 	return false;
 }
 
