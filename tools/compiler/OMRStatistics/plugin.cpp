@@ -248,9 +248,8 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchy(Hierarchy* hierarchy) {
 	llvm::outs() << current->name << "\n";
 }
 
-void OMRStatistics::OMRCheckingConsumer::printHierarchies(std::ofstream* out) {
-	
-	(*out) << "Printing Hierarchies:\n";
+void OMRStatistics::OMRCheckingConsumer::printHierarchies(llvm::raw_ostream* out) {
+	 (*out) << "Printing Hierarchies:\n";
 	for(Hierarchy* current : hierarchies) {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
@@ -375,7 +374,7 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 	return tuple;
 }
 
-void OMRStatistics::OMRCheckingConsumer::printOverloads(std::ofstream* out) {
+void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) {
 	(*out) << "FunctionName, FunctionSignature, IsFirstOccurence, Namespace, ClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
@@ -401,7 +400,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(std::ofstream* out) {
 	(*out) << "----------------------------------\n";
 }
 
-void OMRStatistics::OMRCheckingConsumer::printOverrides(std::ofstream* out) {
+void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) {
 	(*out) << "BaseNamespace, BaseClassName, FunctionSignature, OverridingNamespace, OverridingClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
@@ -450,13 +449,30 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(extchkVisitor);
 	
-	//Open files to output (if file does not exist, create file in given directory)
-	std::ofstream* hierarchyOutput = new std::ofstream();
-	hierarchyOutput->open(conf.outputDir + ".hierarchy", std::ofstream::out | std::ofstream::app);
-	std::ofstream* overloadOutput = new std::ofstream();
-	overloadOutput->open(conf.outputDir + ".overloads", std::ofstream::out | std::ofstream::app);
-	std::ofstream* overrideOutput = new std::ofstream();
-	overrideOutput->open(conf.outputDir + ".overrides", std::ofstream::out | std::ofstream::app);
+	llvm::raw_ostream* hierarchyOutput = nullptr;
+	llvm::raw_ostream* overloadOutput = nullptr;
+	llvm::raw_ostream* overrideOutput = nullptr;
+	bool useLLVMOuts = true;
+	
+	if(conf.outputDir.compare("-1") != 0) {
+		useLLVMOuts = false;
+		//Open files to output (if file does not exist, create file in given directory)
+		std::error_code EC;
+		
+		hierarchyOutput = new llvm::raw_fd_ostream(conf.outputDir + ".hierarchy", EC, llvm::sys::fs::F_Append);
+		assert(!EC);
+		
+		overloadOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overloads", EC, llvm::sys::fs::F_Append);
+		assert(!EC);
+		
+		overrideOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overrides", EC, llvm::sys::fs::F_Append);
+		assert(!EC);
+	}
+	else {
+		hierarchyOutput = &(llvm::outs());
+		overloadOutput = &(llvm::outs());
+		overrideOutput = &(llvm::outs());
+	}
 	
 	
 	/*if(conf.hierarchy)*/ printHierarchies(hierarchyOutput);
