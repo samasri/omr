@@ -50,42 +50,64 @@ sample: $(SO)
 
 
 # Run test cases
-test: test1 test2 test3 test4 test5 test6 test7 test8
-	 @python tests/python.py
-	 @rm tests/*.out
+test: testHierarchy1 testHierarchy2 testHierarchy3 testHierarchy4 testOverride1 testOverride2 testOverload1 testOverload2 testOverrideOverloadMix testOverrideOverloadMix-DifferentNamespaces testControversialCase1 testControversialCase2 testControversialCase3
+	 @python tests/diff.py
+	 @rm tests/*.hierarchy
+	 @rm tests/*.overrides
+	 @rm tests/*.overloads
 
-test1: $(SO)
-	@echo Executing Test 1...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test1" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test1.cpp
+testHierarchy1: $(SO)
+	@echo Executing Hierarchy Test 1...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy1" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Hierarchy1.cpp
 
 
-test2: $(SO)
-	@echo Executing Test 2...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test2" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test2.cpp
+testHierarchy2: $(SO)
+	@echo Executing Hierarchy Test 2...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy2" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Hierarchy2.cpp
 
-test3: $(SO)
-	@echo Executing Test 3...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test3" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test3.cpp
+testHierarchy3: $(SO)
+	@echo Executing Hierarchy Test 3...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy3" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Hierarchy3.cpp
+	
+testHierarchy4: $(SO)
+	@echo Executing Hierarchy Test 4...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy4" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Hierarchy4.cpp
 
-test4: $(SO)
-	@echo Executing Test 4...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test4" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test4.cpp
+testOverride1: $(SO)
+	@echo Executing Override Test 1...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Override1" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Override1.cpp
 
-test5: $(SO)
-	@echo Executing Test 5...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test5" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test5.cpp
+testOverride2: $(SO)
+	@echo Executing Override Test 2...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Override2" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Override2.cpp
 
-test6: $(SO)
-	@echo Executing Test 6...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test6" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test6.cpp
+testOverload1: $(SO)
+	@echo Executing Overload Test 1...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Overload1" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Overload1.cpp
 
-test7: $(SO)
-	@echo Executing Test 7...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test7" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test7.cpp
+testOverload2: $(SO)
+	@echo Executing Overload Test 2...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Overload2" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Overload2.cpp
 
-test8: $(SO)
-	@echo Executing Test 8...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/test8 $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/test8.cpp
+testOverrideOverloadMix: $(SO)
+	@echo Executing OverrideOverloadMix Test...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/OverrideOverloadMix" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/OverrideOverloadMix.cpp
+	
+testOverrideOverloadMix-DifferentNamespaces: $(SO)
+	@echo Executing OverrideOverloadMix Test...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/OverrideOverloadMix-DifferentNamespaces" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/OverrideOverloadMix-DifferentNamespaces.cpp
+	
+testControversialCase1: $(SO)
+	@echo Executing Controversial Test Case 1...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/ControversialCase1" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/ControversialCase1.cpp
+	
+testControversialCase2: $(SO)
+	@echo Executing Controversial Test Case 2...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/ControversialCase2" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/ControversialCase2.cpp
+	
+testControversialCase3: $(SO)
+	@echo Executing Controversial Test Case 3...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/ControversialCase3" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/ControversialCase3.cpp
 
 include sources/common.mk
 
