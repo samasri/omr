@@ -249,7 +249,6 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchy(Hierarchy* hierarchy) {
 }
 
 void OMRStatistics::OMRCheckingConsumer::printHierarchies(llvm::raw_ostream* out) {
-	 (*out) << "Printing Hierarchies:\n";
 	for(Hierarchy* current : hierarchies) {
 		std::string singleHierarchy = "";
 		LinkedNode* iterator = current->base;
@@ -260,7 +259,6 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchies(llvm::raw_ostream* out
 		singleHierarchy += iterator->name;
 		(*out) << singleHierarchy << "\n";
 	}
-	(*out) << "----------------------------------\n";
 }
 
 OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName) {
@@ -395,7 +393,6 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) 
 			itr++;
 		}
 	}
-	(*out) << "----------------------------------\n";
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) {
@@ -426,7 +423,6 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) 
 			itr++;
 		}
 	}
-	(*out) << "----------------------------------\n";
 }
 
 void OMRStatistics::OMRCheckingConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
@@ -476,6 +472,16 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	/*if(conf.hierarchy)*/ printHierarchies(hierarchyOutput);
 	/*if(conf.overloading)*/ printOverloads(overloadOutput);
 	printOverrides(overrideOutput);
+	
+	//Flush all outputs to their respective files
+	hierarchyOutput->flush();
+	overloadOutput->flush();
+	overrideOutput->flush();
+	
+	//Free memory
+	delete hierarchyOutput;
+	delete overloadOutput;
+	delete overrideOutput;
 	 
 }
 

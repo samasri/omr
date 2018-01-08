@@ -46,7 +46,7 @@ clean:
 sample: $(SO)
 	@echo Executing with the new plugin...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $(SF) 
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/out" $(DEFINES) $(PLUGIN_INCLUDES) -c $(SF) 
 
 
 # Run test cases
