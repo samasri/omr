@@ -296,10 +296,22 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 	for(auto hierarchy : hierarchies) {
 		LinkedNode* current = hierarchy->base;
 		
-		//TODO: iterate hierarchy from top to base
+		//iterate hierarchy from top to base
+		std::vector<LinkedNode*> hierarchyArray;
+		while(current) {
+			hierarchyArray.push_back(current);
+			current = current->parent;
+		}
+		for(unsigned long i = 0, j = hierarchyArray.size() - 1; i < hierarchyArray.size()/2; i++) {
+			LinkedNode* temp1 = hierarchyArray.at(i);
+			LinkedNode* temp2 = hierarchyArray.at(j);
+			hierarchyArray.at(i) = temp2;
+			hierarchyArray.at(j) = temp1;
+			j--;
+		}
 		
 		//Iterate through each hierarchy's classes
-		while(current) {
+		for(LinkedNode*current : hierarchyArray) {
 			std::string className = current->name;
 			auto Class2MethodsIterator = map.find(className);
 			
