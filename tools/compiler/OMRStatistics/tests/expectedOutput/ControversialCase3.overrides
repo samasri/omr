@@ -1,0 +1,5 @@
+BaseNamespace, BaseClassName, FunctionSignature, OverridingNamespace, OverridingClassName
+OMR,A,f(),Ruby,A
+OMR,A,h(),Ruby,A
+Ruby,A,h(),TR,A
+OMR,A,h(int),TR,A

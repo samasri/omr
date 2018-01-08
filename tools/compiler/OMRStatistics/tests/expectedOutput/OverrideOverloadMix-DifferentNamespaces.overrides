@@ -1,0 +1,3 @@
+BaseNamespace, BaseClassName, FunctionSignature, OverridingNamespace, OverridingClassName
+noName,A,a(int),TR,B
+noName,A,a(),TR,B
