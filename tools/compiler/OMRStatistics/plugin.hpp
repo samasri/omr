@@ -67,7 +67,7 @@ namespace OMRStatistics {
 		std::string methodName;
 		std::string methodSignature;
 		int nbOfOccurences; //Tracks how many times this function was overriden
-		std::unordered_set<std::string>* classesOverriden; //Tracks the classes where this method was overridden
+		std::vector<std::string>* classesOverriden; //Tracks the classes where this method was overridden
 		bool firstOccurence; //Specifies if this is the first occurrence of this function name or not (for overload)
 		std::string baseClassName; //The first occurrence of this signature, this value includes namespace
 		
