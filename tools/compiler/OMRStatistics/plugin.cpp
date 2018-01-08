@@ -137,14 +137,14 @@ OMRStatistics::MethodTracker::MethodTracker(std::string className, std::string m
 	methodName = OMRCheckingConsumer::getName(methodSignature);
 	this->methodSignature = methodSignature;
 	nbOfOccurences = 1;
-	classesOverriden = new std::unordered_set<std::string>();
+	classesOverriden = new std::vector<std::string>();
 	this->firstOccurence = firstOccurence;
 	baseClassName = className;
 }
 
 void OMRStatistics::MethodTracker::addOccurence(std::string className) {
 	nbOfOccurences++;
-	classesOverriden->emplace(className);
+	classesOverriden->push_back(className);
 }
 
 
@@ -297,21 +297,21 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 		LinkedNode* current = hierarchy->base;
 		
 		//iterate hierarchy from top to base
-		std::vector<LinkedNode*> hierarchyArray;
+		std::vector<LinkedNode*> classArray;
 		while(current) {
-			hierarchyArray.push_back(current);
+			classArray.push_back(current);
 			current = current->parent;
 		}
-		for(unsigned long i = 0, j = hierarchyArray.size() - 1; i < hierarchyArray.size()/2; i++) {
-			LinkedNode* temp1 = hierarchyArray.at(i);
-			LinkedNode* temp2 = hierarchyArray.at(j);
-			hierarchyArray.at(i) = temp2;
-			hierarchyArray.at(j) = temp1;
+		for(unsigned long i = 0, j = classArray.size() - 1; i < classArray.size()/2; i++) {
+			LinkedNode* temp1 = classArray.at(i);
+			LinkedNode* temp2 = classArray.at(j);
+			classArray.at(i) = temp2;
+			classArray.at(j) = temp1;
 			j--;
 		}
 		
 		//Iterate through each hierarchy's classes
-		for(LinkedNode*current : hierarchyArray) {
+		for(LinkedNode* current : classArray) {
 			std::string className = current->name;
 			auto Class2MethodsIterator = map.find(className);
 			
@@ -420,14 +420,14 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) 
 			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::string baseClassName = tracker.baseClassName;
 				for(std::string className : *tracker.classesOverriden) {
-					std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(tracker.baseClassName);
+					std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(baseClassName);
 					std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
 					if(!shouldIgnore(baseClassNameTuple->at(0)) && !shouldIgnore(classNameTuple->at(0))) {
-						(*out) << classNameTuple->at(0) << ","; //namespace
-						(*out) << classNameTuple->at(1) << ",";//className
-						(*out) << tracker.methodSignature << ", ";
 						(*out) << baseClassNameTuple->at(0) << ","; //namespace
-						(*out) << baseClassNameTuple->at(1) << "\n";//className
+						(*out) << baseClassNameTuple->at(1) << ",";//className
+						(*out) << tracker.methodSignature << ",";
+						(*out) << classNameTuple->at(0) << ","; //namespace
+						(*out) << classNameTuple->at(1) << "\n";//className
 					}
 					baseClassName = className;
 				}
@@ -478,6 +478,7 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 		hierarchyOutput = &(llvm::outs());
 		overloadOutput = &(llvm::outs());
 		overrideOutput = &(llvm::outs());
+		llvm::outs() << "Passing here\n";
 	}
 	
 	
@@ -491,9 +492,11 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	overrideOutput->flush();
 	
 	//Free memory
-	delete hierarchyOutput;
-	delete overloadOutput;
-	delete overrideOutput;
+	if(conf.outputDir.compare("-1") != 0) {
+		delete hierarchyOutput;
+		delete overloadOutput;
+		delete overrideOutput;
+	}
 	 
 }
 
