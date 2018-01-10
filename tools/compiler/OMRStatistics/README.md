@@ -1,1 +1,1 @@
-This is a clang plugin that runs on the source code of the file provided in the makefile and collects information about it.
+This is a clang plugin that runs on the source code of the file provided in the makefile and collects information about it. More information is found in the _doc_ folder inside the repository.
