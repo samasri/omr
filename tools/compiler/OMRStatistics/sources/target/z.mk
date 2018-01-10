@@ -17,7 +17,7 @@
 ################################################################################
 
 
-JIT_PRODUCT_BACKEND_SOURCES+=\
+JIT_PRODUCT_BACKEND_SOURCES_Z+=\
     "$(JIT_OMR_DIRTY_DIR)/z/codegen/BinaryAnalyser.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/z/codegen/BinaryCommutativeAnalyser.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/z/codegen/BinaryEvaluator.cpp" \
@@ -53,7 +53,7 @@ JIT_PRODUCT_BACKEND_SOURCES+=\
     "$(JIT_OMR_DIRTY_DIR)/z/codegen/OMRCodeGenPhase.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/z/codegen/OMRCodeGenerator.cpp"
 
-JIT_PRODUCT_SOURCE_FILES+=\
+JIT_PRODUCT_SOURCE_FILES_Z+=\
     $(JIT_PRODUCT_DIR)/z/codegen/TestCodeGenerator.cpp" \
     $(JIT_PRODUCT_DIR)/z/codegen/Evaluator.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/z/env/OMRDebugEnv.cpp"

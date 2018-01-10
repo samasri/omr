@@ -17,7 +17,7 @@
 ################################################################################
 
 
-JIT_PRODUCT_BACKEND_SOURCES+=\
+JIT_PRODUCT_BACKEND_SOURCES_P+=\
     "$(JIT_OMR__OMR_DIRTY_DIR)/p/codegen/BinaryEvaluator.cpp" \
     "$(JIT_OMR__OMR_DIRTY_DIR)/p/codegen/ControlFlowEvaluator.cpp" \
     "$(JIT_OMR__OMR_DIRTY_DIR)/p/codegen/FPTreeEvaluator.cpp" \
@@ -47,6 +47,6 @@ JIT_PRODUCT_BACKEND_SOURCES+=\
     "$(JIT_OMR__OMR_DIRTY_DIR)/p/codegen/OMRRegisterIterator.cpp" \
     "$(JIT_OMR__OMR_DIRTY_DIR)/p/env/OMRCPU.cpp"
 
-JIT_PRODUCT_SOURCE_FILES+=\
+JIT_PRODUCT_SOURCE_FILES_P+=\
     "$(JIT_OMR__PRODUCT_DIR)/p/codegen/Evaluator.cpp" \
     "$(JIT_OMR__OMR_DIRTY_DIR)/p/env/OMRDebugEnv.cpp"

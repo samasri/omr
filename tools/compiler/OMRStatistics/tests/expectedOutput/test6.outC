@@ -1,6 +1,0 @@
-TR::A --> TR::B --> TR::C --> TR::D
-TR::A:
-a,override,TR::D
-a,override,TR::C
-a,override,TR::B
-a,overload,TR::B, 1

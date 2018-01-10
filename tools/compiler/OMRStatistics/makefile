@@ -6,19 +6,51 @@ CXX = clang++-3.8
 GXX = clang++-3.8 #g++
 # All defines in one variable
 DEFINES = '-D__sync()=' '-D__lwsync()=' '-D__isync()=' -DBITVECTOR_BIT_NUMBERING_MSB -DUT_DIRECT_TRACE_REGISTRATION -DJITTEST -DTEST_PROJECT_SPECIFIC -DTR_HOST_X86 -DTR_HOST_64BIT -DBITVECTOR_64BIT -DLINUX -DTR_TARGET_X86 -DTR_TARGET_64BIT -DSUPPORTS_THREAD_LOCAL -D_LONG_LONG -DJ9HAMMER -DDEBUG
+
+DEFINES_TEMP = '-D__sync()=' '-D__lwsync()=' '-D__isync()=' \
+-DBITVECTOR_BIT_NUMBERING_MSB \
+-DUT_DIRECT_TRACE_REGISTRATION \
+-DJITTEST \
+-DTEST_PROJECT_SPECIFIC \
+-DTR_HOST_X86 \
+-DTR_HOST_64BIT \
+-DBITVECTOR_64BIT \
+-DLINUX \
+-DTR_TARGET_X86 \
+-DTR_TARGET_32BIT \
+-DSUPPORTS_THREAD_LOCAL \
+-D_LONG_LONG \
+-DJ9HAMMER \
+-DDEBUG
+
 # All includes in one variable
 COMPILATION_INCLUDES = -I/home/se-team/Desktop/llvm-clang/3.8-llvm/tools/clang/include/ -I/home/se-team/Desktop/llvm-clang/3.8-build/tools/clang/include/
 PLUGIN_INCLUDES = -I $(OMR)/include_core \
 -I $(OMR)/fvtest/compilertest/x/amd64 \
 -I $(OMR)/fvtest/compilertest/x \
 -I $(OMR)/fvtest/compilertest \
--I $(OMR)/fvtest -I $(OMR)/compiler/x/amd64 \
+-I $(OMR)/fvtest \
+-I $(OMR)/compiler/x/amd64 \
 -I $(OMR)/compiler/x \
 -I $(OMR)/compiler \
 -I $(OMR)/ \
 -I $(OMR)/third_party/gtest-1.7.0 \
 -I $(OMR)/third_party/gtest-1.7.0/include \
 -I $(OMR)/compiler/
+
+PLUGIN_INCLUDES_TEMP = -I $(OMR)/include_core \
+-I $(OMR)/fvtest/compilertest/x/i386 \
+-I $(OMR)/fvtest/compilertest/x \
+-I $(OMR)/fvtest/compilertest \
+-I $(OMR)/fvtest \
+-I $(OMR)/compiler/x/i386 \
+-I $(OMR)/compiler/x \
+-I $(OMR)/compiler \
+-I $(OMR) \
+-I $(OMR) \
+-I $(OMR)/third_party/gtest-1.8.0 \
+-I $(OMR)/third_party/gtest-1.8.0/include
+
 # Path to source file whom AST will be parsed by the plugin
 SF = $(OMR)/compiler/codegen/OMRCodeGenerator.cpp
 # Path to shared object file. NOTE: when adding this to plugin always remember to put ./ before the path. Failing to do so will give you a 'shared object not found' error which will drive you crazy!!
@@ -44,10 +76,14 @@ clean:
 
 # Test my plugin on the CodeGenerator classes
 sample: $(SO)
-	@echo Executing with the new plugin...
+	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/out" $(DEFINES) $(PLUGIN_INCLUDES) -c $(SF) 
 
+sample2: $(SO)
+	@echo Executing with OMRStatistics...
+	@echo "-----------------------------------------"
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./codegen" $(DEFINES) $(PLUGIN_INCLUDES) -c $(OMR)/compiler/x/i386/codegen/OMRCodeGenerator.cpp
 
 # Run test cases
 test: testHierarchy1 testHierarchy2 testHierarchy3 testHierarchy4 testOverride1 testOverride2 testOverload1 testOverload2 testOverrideOverloadMix testOverrideOverloadMix-DifferentNamespaces testControversialCase1 testControversialCase2 testControversialCase3
@@ -109,16 +145,28 @@ testControversialCase3: $(SO)
 	@echo Executing Controversial Test Case 3...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/ControversialCase3" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/ControversialCase3.cpp
 
-include sources/common.mk
+#Running on all archs
+include sources/common_amd64.mk
+include sources/common_i386.mk
+include sources/common_p.mk
+include sources/common_z.mk
+include sources/common_arm.mk
 
-#TODO: define $(HOST_ARCH) & $(TARGET_ARCH)
-LIST = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES) 
+LIST_AMD64 = $(JIT_PRODUCT_BACKEND_SOURCES_AMD64) $(JIT_PRODUCT_SOURCE_FILES_AMD64) 
+LIST_I386 = $(JIT_PRODUCT_BACKEND_SOURCES_I386) $(JIT_PRODUCT_SOURCE_FILES_I386) 
+LIST_P = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_P) 
+LIST_Z = $(JIT_PRODUCT_BACKEND_SOURCES_Z) $(JIT_PRODUCT_SOURCE_FILES_Z) 
+LIST_ARM = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_ARM) 
 
-targets = $(addprefix , $(LIST))
-writeCSV: $(targets)
-	python trim.py
-	mv csvTrimmed csv
+targets_amd64 = $(addprefix , $(LIST_AMD64))
+targets_i386 = $(addprefix , $(LIST_I386))
+targets_p = $(addprefix , $(LIST_P))
+targets_z = $(addprefix , $(LIST_Z))
+targets_arm = $(addprefix , $(LIST_ARM))
 
-$(targets):
+writeCSV: $(targets_i386)
+	@echo "Done"
+
+$(targets_i386):
 	@echo "Compiling $@"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $@ >> csv
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/i386"  $(DEFINES_TEMP) $(PLUGIN_INCLUDES_TEMP) -c $@

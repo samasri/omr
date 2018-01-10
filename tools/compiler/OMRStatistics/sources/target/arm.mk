@@ -17,7 +17,7 @@
 ################################################################################
 
 
-JIT_PRODUCT_BACKEND_SOURCES+=\
+JIT_PRODUCT_BACKEND_SOURCES_ARM+=\
     "$(JIT_OMR_DIRTY_DIR)/arm/codegen/ARMBinaryEncoding.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/arm/codegen/OMRCodeGenerator.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/arm/codegen/ARMDebug.cpp" \
@@ -47,4 +47,4 @@ JIT_PRODUCT_BACKEND_SOURCES+=\
     "$(JIT_OMR_DIRTY_DIR)/arm/codegen/OMRRegisterIterator.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/arm/env/OMRCompilerEnv.cpp"
 
-JIT_PRODUCT_SOURCE_FILES+=
+JIT_PRODUCT_SOURCE_FILES_ARM+=

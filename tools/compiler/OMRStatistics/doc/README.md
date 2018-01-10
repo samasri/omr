@@ -65,19 +65,13 @@ The tool works as follows:
 6. After that, the tool iterates through the records in the _function_ map creating a `MethodTracker` class. A `MethodTracker` keeps track of the occurence information of a unique function across all classes in a hierarchy. Hence, each _Hierarchy_ structure contains an array of `MethodTracker`s, one for each unique method.
 
 # Testing
-This plugin has 5 test cases till now:
-* Test 1: Testing the hierarchy functionality by having 2 classes where one extends the other
-* Test 2: Testing the hierarchy functionality by having 4 classes that extend each other
-* Test 3: Testing the override functionality when printing method information by having a function that is overriden in 2 consecutive classes in a hierarchy
-* Test 4: Testing the override functionality when printing method information by having a function that is overriden in 2 non-consecutive classes (having some classes in between) in a hierarchy
-* Test 5: Testing the overload functionality when printing method information
-* Test 6: Testing the override and overload functionalities together
-* Test 7: Testing the plugins functionality when having 2 hierarchies that share some nodes (ie: different bases but they merge at some point)
-* Test 8: Representing the case where we have an overriden method that is also overloaded in the parent class. At the moment, OMRStatistics does not differentiate between functions with the same name but different signatures which ends up failing the test. This test projects the aim to update OMRStatistics to make it aware of methods and the need to find a good way to define a method (when a method is overriden, the signature is ignored whereas when the function is overriden the function is considered).
+This tool has 13 test cases so far (more to be added as development progresses). The test inputs and expected outputs are found in the _test_ directory under the main OMRStatistics directory.
+
+To run all tests and identify the failed ones, run `make test` in the main OMRStatistics directory.
 
 # Future steps
 * Run OMRStatistics over bruteclang to collect results from all architectures
-* Process ouput CSV file to create visualizations
+* Process output CSV file to create visualizations
 * Package OMRStatistics as a command-line tool
 * Change the algorithm that records polymorphism from source code to support classes with multiple parents
 * Consider using Doxygen as our documentation tool

@@ -17,5 +17,5 @@
 ################################################################################
 
 
-JIT_PRODUCT_SOURCE_FILES+=\
+JIT_PRODUCT_SOURCE_FILES_AMD64+=\
     "$(JIT_PRODUCT_DIR)/x/runtime/AsmUtil64.asm"

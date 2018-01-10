@@ -17,10 +17,10 @@
 ################################################################################
 
 
-JIT_PRODUCT_BACKEND_SOURCES+=\
+JIT_PRODUCT_BACKEND_SOURCES_I386+=\
     "$(JIT_OMR_DIRTY_DIR)/x/i386/codegen/OMRCodeGenerator.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/x/i386/codegen/OMRMachine.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/x/i386/codegen/OMRRealRegister.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/x/i386/codegen/IA32SystemLinkage.cpp"
 
-JIT_PRODUCT_SOURCE_FILES+=
+JIT_PRODUCT_SOURCE_FILES_I386+=
