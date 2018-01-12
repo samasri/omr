@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+	<title>Overloads</title>
+	<meta charset="utf-8"/>
+	<link href="style.css" rel="stylesheet">
+	<script type="text/javascript" src="script.js"></script>
+</head>
+<body>
+    <div id='content'>
+		<div class="function">
+			<p class="functionName">CodeGenerator</p>
+			<ul class="signatures">
+				<li class="firstOccurence">CodeGenerator() --> OMR::CodeGenerator</li>
+				<li>CodeGenerator(class OMR::CodeGenerator &&) --> OMR::CodeGenerator</li>
+				<li>CodeGenerator(const class OMR::CodeGenerator &) --> OMR::CodeGenerator</li>
+				<li>CodeGenerator(class OMR::X86::CodeGenerator &&) --> OMR::X86::CodeGenerator</li>
+				<li>CodeGenerator(const class OMR::X86::CodeGenerator &) --> OMR::X86::CodeGenerator</li>
+				<li>CodeGenerator(class OMR::X86::AMD64::CodeGenerator &&) --> OMR::X86::AMD64::CodeGenerator</li>
+				<li>CodeGenerator(const class OMR::X86::AMD64::CodeGenerator &) --> OMR::X86::AMD64::CodeGenerator</li>
+				<li>CodeGenerator(const class TestCompiler::CodeGenerator &) --> TestCompiler::CodeGenerator</li>
+				<li>CodeGenerator(class TestCompiler::CodeGenerator &&) --> TestCompiler::CodeGenerator</li>
+			</ul>
+		</div>
+		<div class="function">
+			<p class="functionName">GlobalSingletonAllocator</p>
+			<ul class="signatures">
+				<li class="firstOccurence">GlobalSingletonAllocator(const GlobalBaseAllocator &) --> TR::GlobalSingletonAllocator</li>
+				<li>GlobalSingletonAllocator(class TR::GlobalSingletonAllocator &&) --> TR::GlobalSingletonAllocator</li>
+			</ul>
+		</div>
+		<div class="function">
+			<p class="functionName">AutomaticSymbol</p>
+			<ul class="signatures">
+				<li class="firstOccurence">AutomaticSymbol() --> OMR::AutomaticSymbol </li>
+				<li>AutomaticSymbol(const class OMR::AutomaticSymbol &) --> OMR::AutomaticSymbol</li>
+				<li>AutomaticSymbol(TR::DataType,uint32_t,const char *) --> OMR::AutomaticSymbol</li>
+				<li>AutomaticSymbol(TR::DataType) --> OMR::AutomaticSymbol</li>
+				<li>AutomaticSymbol(class OMR::AutomaticSymbol &&) --> OMR::AutomaticSymbol</li>
+				<li>AutomaticSymbol(TR::DataType,uint32_t) --> OMR::AutomaticSymbol</li>
+				<li>AutomaticSymbol(int32_t) --> TR::AutomaticSymbol</li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>
