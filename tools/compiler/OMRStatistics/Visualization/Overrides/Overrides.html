@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+	<title>Overloads</title>
+	<meta charset="utf-8"/>
+	<link href="style.css" rel="stylesheet">
+	<script type="text/javascript" src="script.js"></script>
+</head>
+<body>
+    <div id='content'>
+		<div class="function">
+			<p class="parent">OMR::Register::Register(enum TR_RegisterKinds,uint16_t)</p>
+			<ul class="overriding">
+				<li>OMR::X86::Register
+					<ul>
+						<li>
+							TR::Register
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+		<div class="function">
+			<p class="parent">OMR::Register::Register(enum TR_RegisterKinds)</p>
+			<ul class="overriding">
+				<li>
+					OMR::X86::Register
+					<ul>
+						<li>
+							TR::Register
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+		<div class="function">
+			<p class="parent">OMR::Register::Register(uint32_t)</p>
+			<ul class="overriding">
+				<li>
+					OMR::X86::Register
+					<ul>
+						<li>
+							TR::Register
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+		<div class="function">
+			<p class="parent">OMR::OMR::CodeGenerator()</p>
+			<ul class="overriding">
+				<li>
+					OMR::X86::CodeGenerator
+					<ul>
+						<li>
+							OMR::X86::AMD64::CodeGenerator
+							<ul>
+								TestCompiler::CodeGenerator
+								<ul>
+									TR::CodeGenerator
+								</ul>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>
