@@ -257,6 +257,7 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchies(llvm::raw_ostream* out
 			iterator = iterator->parent;
 		}
 		singleHierarchy += iterator->name;
+		if(shouldIgnoreClassName(singleHierarchy)) continue;
 		(*out) << singleHierarchy << "\n";
 	}
 }
@@ -352,9 +353,15 @@ void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassChecki
 	}
 }
 
-bool OMRStatistics::OMRCheckingConsumer::shouldIgnore(std::string nameSpace) {
+bool OMRStatistics::OMRCheckingConsumer::shouldIgnoreNamespace(std::string nameSpace) {
 	if(nameSpace.compare("std") == 0) return true;
 	if(nameSpace.compare("__gnu_cxx") == 0) return true;
+	return false;
+}
+
+bool OMRStatistics::OMRCheckingConsumer::shouldIgnoreClassName(std::string nameSpace) {
+	if(nameSpace.find("std::") != std::string::npos) return true;
+	if(nameSpace.find("__gnu_cxx::") != std::string::npos) return true;
 	return false;
 }
 
@@ -394,7 +401,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) 
 			auto hierarchyTrackers = itr->second;
 			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
-				if(!shouldIgnore(tuple->at(0))) {
+				if(!shouldIgnoreNamespace(tuple->at(0))) {
 					(*out) << tracker.methodName << ",";
 					(*out) << tracker.methodSignature << ",";
 					(*out) << tracker.firstOccurence << ",";
@@ -422,7 +429,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) 
 				for(std::string className : *tracker.classesOverriden) {
 					std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(baseClassName);
 					std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
-					if(!shouldIgnore(baseClassNameTuple->at(0)) && !shouldIgnore(classNameTuple->at(0))) {
+					if(!shouldIgnoreNamespace(baseClassNameTuple->at(0)) || !shouldIgnoreNamespace(classNameTuple->at(0))) {
 						(*out) << baseClassNameTuple->at(0) << ","; //namespace
 						(*out) << baseClassNameTuple->at(1) << ",";//className
 						(*out) << tracker.methodSignature << ",";

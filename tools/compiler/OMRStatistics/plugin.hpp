@@ -125,8 +125,13 @@ namespace OMRStatistics {
 		void printHierarchy(Hierarchy* base);
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
 		void printHierarchies(llvm::raw_ostream* out);
+		
 		//Printing the method information
-		bool shouldIgnore(std::string nameSpace); //Judges whether we should ignore this namespace (if its not related to the project, like std classes)
+		
+		//Judges whether we should ignore this namespace (if its not related to the project, like std classes)
+		bool shouldIgnoreNamespace(std::string nameSpace);
+		bool shouldIgnoreClassName(std::string nameSpace);
+		
 		std::vector<std::string>* seperateClassNameSpace(std::string input);
 		void printOverloads(llvm::raw_ostream* out);
 		void printOverrides(llvm::raw_ostream* out);
