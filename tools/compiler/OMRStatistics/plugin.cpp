@@ -374,15 +374,16 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 		int classNameSize = input.length() - pos - 2;
 		className = input.substr(pos+2, classNameSize);
 	}
-	if(input.find("TR_") != std::string::npos) {
+	else if(input.find("TR_") != std::string::npos) {
 		nameSpace = "TR";
 		int classNameSize = input.length() - 3;
 		className = input.substr(3, classNameSize);
 	}
-	if(input.find("TRPersistentMemoryAllocator") != std::string::npos) {
+	else if(input.find("TRPersistentMemoryAllocator") != std::string::npos) {
 		nameSpace = "TR";
 		className = "PersistentMemoryAllocator";
 	}
+	else className = input;
 	std::vector<std::string>* tuple = new std::vector<std::string>();
 	tuple->push_back(nameSpace);
 	tuple->push_back(className);

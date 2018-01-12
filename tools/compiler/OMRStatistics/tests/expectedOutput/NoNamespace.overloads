@@ -1,0 +1,5 @@
+FunctionName, FunctionSignature, IsFirstOccurence, Namespace, ClassName
+a,a(int),1,TR,A
+a,a(),0,TR,A
+b,b(int),1,,B
+b,b(),0,,B
