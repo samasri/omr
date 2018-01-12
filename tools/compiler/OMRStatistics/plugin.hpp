@@ -75,7 +75,7 @@ namespace OMRStatistics {
 		//Add an occurence for this method
 		void addOccurence(std::string className);
 		
-		//Overloading operators for faster comparisons
+		//Overriding operators for faster comparisons
 		bool operator==(const MethodTracker& other);
 		bool operator==(const std::string other);
 	};

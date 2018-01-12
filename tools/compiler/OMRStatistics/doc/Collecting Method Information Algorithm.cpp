@@ -1,4 +1,4 @@
-struct Hierarchy { //Additions to the structure
+struct Hierarchy { //Additions to the Hierarchy structure
 	std::hash_map<std::string, MethodTracker> methodName2MethodTracker;
 }
 class MethodTracker {

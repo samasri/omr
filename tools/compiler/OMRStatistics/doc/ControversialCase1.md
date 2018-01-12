@@ -15,6 +15,5 @@ For overloads:
 
 Number | FunctionName | FunctionSignature | Type | Namespace | ClassName |
 | --- | --- | --- | --- | --- | --- |
-| 1 | f | f() | firstOccurence | OMR | A |
 | 2 | h | h(int) | firstOccurence | OMR | A |
 | 3 | h | h() | Overload | OMR | A |

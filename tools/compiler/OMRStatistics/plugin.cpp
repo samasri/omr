@@ -399,8 +399,12 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) 
 		auto e = trackerMap.end();
 		auto itr = b;
 		while(itr != e) {
-			auto hierarchyTrackers = itr->second;
-			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
+			auto hierarchyTrackers = *(itr->second);
+			if(hierarchyTrackers.size() < 2) {
+				itr++;
+				continue;
+			}
+			for(auto tracker : hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
 				if(!shouldIgnoreNamespace(tuple->at(0))) {
 					(*out) << tracker.methodName << ",";
