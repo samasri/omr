@@ -28,14 +28,14 @@ The output is in csv format.
 
 * When a method overload is encountered, a record shows the class where the method is overloaded and the name of the overloading method. Hence, multiple overloads of a method will result in multiple records in the CSV file. The output record format for overloads is:
 ```
-<BaseNamespace>,<BaseClassname>,<MethodSignature>,<Type: overload>,<Namespace where overload happens>,<Classname where overload happens>, <OverloadMethodSignature>
+<BaseNamespace>,<BaseClassname>,<MethodSignature>,<Namespace where overload happens>,<Classname where overload happens>
 ```
 
 * In case of a method override, a record in the CSV file shows the name of the namespace and class where this method is overriden. The output format for overrides is:
 ```
-<BaseNamespace>,<BaseClassname>,<methodSignature>,<Type: override>,<OverridingNamespace>,<OverridingClassname>
+<FunctionName>,<MethodSignature>,<isFirstOccurence>, <Namespace where occurrence happens>,<Class name where occurrence happens>
 ```
-# Triggerring Functionality
+# Triggering Functionality
 By default, the tool prints the overrides on the default output stream in a CSV format. 
 
 Passing _OMR_STAT_PRINT_OVERLOADS_ in the command line options when running the tool allows the tool to print the overload information also. 
@@ -45,15 +45,7 @@ In order to trigger the hierarchy functionality of, _OMR_STAT_PRINT_HIERARCHY_ s
 In order to print the information in 3 separate CSV files, one for each functionality, the path for the filename should be passed in the command line options. For example passing _./output_ to the tool triggers the tool to create 3 files: _./output.hierarchy_, _./output.overrides_, _./output.overloads_
 
 # Output Sample
-Assuming we have the below class hierarchy, the plugin would create the below csv file (which is converted into a table here for better visualization):
-
-![Class Hierarchy](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/resources/ExampleUML.png)
-
-| Base Namespace| Base Classname | Method Signature | Type | Overriding Namespace | Overriding Classname |
-| --- | --- | --- | --- | --- | --- |
-| OMR | A | f() | override | OMR::Z | A |
-| OMR::Z | A | f() | override | Ruby | A |
-| OMR::Z | A | g() | override | Ruby | A |
+Please refer to the 3 controversial cases ([ControversialCase1.md](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/ControversialCase1.md) [ControversialCase2.md](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/ControversialCase2.md), and [ControversialCase3.md](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/ControversialCase3.md)) for more detailed outputs.
 
 # General Design
 The tool works as follows:
@@ -62,7 +54,9 @@ The tool works as follows:
 3. When it finds no more parents, the tool goes back to X and records all its methods in another map (let us call it _function_ map)
 4. After visiting all classes in the source code, the processing of these 2 maps starts
 5. The tool iterates through all the records in the _hierarchy_ map processing each child/parent relationship to create `Hierarchy` structures. A `Hierarchy` is a data structure that represents a hierarchy of classes, keeping track of the base class and other important information.
-6. After that, the tool iterates through the records in the _function_ map creating a `MethodTracker` class. A `MethodTracker` keeps track of the occurence information of a unique function across all classes in a hierarchy. Hence, each _Hierarchy_ structure contains an array of `MethodTracker`s, one for each unique method.
+6. After that, the tool iterates through the records in the _function_ map creating a `MethodTracker` class. A `MethodTracker` keeps track of the occurrence information of a unique function across all classes in a hierarchy. Hence, each _Hierarchy_ structure contains an array of `MethodTracker`s, one for each unique method.
+
+PS: More detailed algorithms for each functionality are found in the 2 files: [Collecting Method Information Algorithm.cpp](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/Collecting%20Method%20Information%20Algorithm.cpp) and [Creating Hierarchies Algorithm.md](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/Creating%20Hierarchies%20Algorithm.md)
 
 # Testing
 This tool has 13 test cases so far (more to be added as development progresses). The test inputs and expected outputs are found in the _test_ directory under the main OMRStatistics directory.

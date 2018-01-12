@@ -1,4 +1,4 @@
-#Output
+# Output
 This directory contains the output of the tool when run on all source files in amd64 and i386.
 
 The tool creates 3 files:
