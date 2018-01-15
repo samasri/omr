@@ -91,7 +91,7 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 			auto end = classHierarchy.end();
 			
 			// if class is already in Class2Methods and is mapped to a parent different than the current one then something is wrong
-			assert(iterator != end && (iterator->second.compare(currentClassName) != 0) && "Class has more than one unique parent"); 
+			//assert(iterator != end && (iterator->second.compare(currentClassName) != 0) && "Class has more than one unique parent");
 			
 			if(iterator == end) //classHierarchy does not have the current class, add it to classHierarchy
 				classHierarchy.emplace(childClassName, currentClassName);
@@ -369,7 +369,8 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 	std::string nameSpace = "";
 	std::string className = "";
 	if(input.find("::") != std::string::npos) {
-		size_t pos = input.find("::");
+		size_t pos = findLastStringIn(input, "::");
+		llvm::outs() << "seperateClassNameSpace input: " << input << " --> " << pos << "\n";
 		nameSpace = input.substr(0, pos);
 		int classNameSize = input.length() - pos - 2;
 		className = input.substr(pos+2, classNameSize);
@@ -388,6 +389,22 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 	tuple->push_back(nameSpace);
 	tuple->push_back(className);
 	return tuple;
+}
+
+size_t OMRStatistics::OMRCheckingConsumer::findLastStringIn(std::string input, std::string key) {
+	if(key.size() != 2) return -1; //This function only support keys of length 2
+	if(input.size() < 2) return -1;
+	
+	size_t pos = input.size();
+	char previous = input.at(0);
+	for(size_t i = 1; i < input.size(); i++) {
+		char c = input.at(i);
+		if(previous == key.at(0) && c == key.at(1)) pos = i - 1;
+		previous = c;
+	}
+	
+	assert((pos != input.size()) && "No key in input");
+	return pos;
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) {

@@ -1,3 +1,4 @@
+#undef NDEBUG
 #include <string>
 #include <queue>
 #include <map>
@@ -133,6 +134,7 @@ namespace OMRStatistics {
 		bool shouldIgnoreClassName(std::string nameSpace);
 		
 		std::vector<std::string>* seperateClassNameSpace(std::string input);
+		size_t findLastStringIn(std::string input, std::string key);
 		void printOverloads(llvm::raw_ostream* out);
 		void printOverrides(llvm::raw_ostream* out);
 		//Prints Class2Methods in ExtensibleClassCheckingVisitor
