@@ -48,14 +48,21 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRec
 	std::string className = inputClass->getQualifiedNameAsString();
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
+		auto srcLoc = A->getLocation();
+		std::string srcLocStr = srcLoc.printToString(inputClass->getASTContext().getSourceManager());
 		
 		//Get function name with parameter types (AKA: recreate function signature)
 		std::string* function = new std::string((*A)->getNameAsString());
+		//llvm::outs() << *function << ":\n";
+		//llvm::outs() << "\tLocation: " << srcLocStr << "\n";
 		ArrayRef<clang::ParmVarDecl*> functions = A->parameters();
 		if(functions.size() == 0) *function += "()";
 		else {
 			*function += "(";
-			for(clang::ParmVarDecl* param : functions) *function += param->getOriginalType().getAsString() + ",";
+			for(clang::ParmVarDecl* param : functions) {
+				*function += param->getOriginalType().getAsString() + ",";
+				//llvm::outs() << "\t" << param->getOriginalType().getAsString() << "\n";
+			}
 			function->replace(function->end()-1, function->end(), "");
 			*function += ")";
 		}
@@ -82,8 +89,10 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 	
 	//Looping through parents
 	while(1) {
+		//Get class name and ignore untargeted classes
 		if(!currentClass) break;
 		currentClassName = currentClass->getQualifiedNameAsString();
+		if(OMRCheckingConsumer::shouldIgnoreClassName(currentClassName)) break;
 		
 		//Record parent-child relationship
 		if(currentClassName.compare(childClassName) != 0) {
@@ -91,7 +100,12 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 			auto end = classHierarchy.end();
 			
 			// if class is already in Class2Methods and is mapped to a parent different than the current one then something is wrong
-			//assert(iterator != end && (iterator->second.compare(currentClassName) != 0) && "Class has more than one unique parent");
+			if(iterator != end && (iterator->second.compare(currentClassName) != 0)) {
+				//Class has more than one unique parent")
+				/*llvm::outs() << "Found child with 2 parents\n";
+				llvm::outs() << "\t" << childClassName << " --> " << currentClassName << "\n";
+				llvm::outs() << "\t" << childClassName << " --> " << iterator->second << "\n";*/
+			}
 			
 			if(iterator == end) //classHierarchy does not have the current class, add it to classHierarchy
 				classHierarchy.emplace(childClassName, currentClassName);
@@ -102,6 +116,20 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 		//Go to parent class
 		BI = currentClass->bases_begin();
 		BE = currentClass->bases_end();
+		CXXRecordDecl::base_class_const_iterator BC = currentClass->bases_begin();
+		std::string toPrint = "";
+		toPrint += "Class Name: " + currentClassName + "\n";
+		int counter = 0;
+		while(BC != BE) {
+			auto parentClassName = BC->getType()->getAsCXXRecordDecl();
+			if(parentClassName) {
+				counter++;
+				toPrint += "\t" + currentClassName + "\n";
+				toPrint += "\tCounter: " + std::to_string(counter) + "\n";
+			}
+			if(counter > 1) llvm::outs() << toPrint << "\n";
+			BC++;
+		}
 		if(BI != BE) currentClass = BI->getType()->getAsCXXRecordDecl();
 		else break;
 	}
@@ -370,7 +398,6 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 	std::string className = "";
 	if(input.find("::") != std::string::npos) {
 		size_t pos = findLastStringIn(input, "::");
-		llvm::outs() << "seperateClassNameSpace input: " << input << " --> " << pos << "\n";
 		nameSpace = input.substr(0, pos);
 		int classNameSize = input.length() - pos - 2;
 		className = input.substr(pos+2, classNameSize);
@@ -477,6 +504,7 @@ void OMRStatistics::OMRCheckingConsumer::printClass2Method(std::map<std::string,
 }
 
 void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Context) {
+	
 	ExtensibleClassCheckingVisitor extchkVisitor(&Context);
 	extchkVisitor.TraverseDecl(Context.getTranslationUnitDecl());
 	
