@@ -32,6 +32,8 @@ namespace OMRStatistics {
 		
 		//Loop through the methods of the given class and input them in Class2Methods
 		void recordFunctions(const CXXRecordDecl* inputClass);
+		//Given a child and parent class names, it adds them to the classHierarchy map
+		recordParents(std::string childClassName, std::string parentClassName)
 		//Loop through all parents of the given class, recording their relationships in classHierarchy
 		void recordParents(const CXXRecordDecl *decl);
 		//Called by clang for every class declaration

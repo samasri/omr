@@ -116,20 +116,25 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 		//Go to parent class
 		BI = currentClass->bases_begin();
 		BE = currentClass->bases_end();
-		CXXRecordDecl::base_class_const_iterator BC = currentClass->bases_begin();
+		/*CXXRecordDecl::base_class_const_iterator BC = currentClass->bases_begin();
 		std::string toPrint = "";
 		toPrint += "Class Name: " + currentClassName + "\n";
 		int counter = 0;
 		while(BC != BE) {
-			auto parentClassName = BC->getType()->getAsCXXRecordDecl();
-			if(parentClassName) {
+			auto parentClassDecl = BC->getType()->getAsCXXRecordDecl();
+			if(parentClassDecl) {
 				counter++;
 				toPrint += "\t" + currentClassName + "\n";
-				toPrint += "\tCounter: " + std::to_string(counter) + "\n";
 			}
-			if(counter > 1) llvm::outs() << toPrint << "\n";
+			else {
+				llvm::outs() << "Current class: " << currentClassName << "\n";
+				const ClassTemplateDecl* temp = BC->getType()->getAs<ClassTemplateDecl>();
+				llvm::outs() << "\tType of parent: " << temp << "\n";
+			}
 			BC++;
-		}
+		}*/
+		/*if(counter > 1)
+			llvm::outs() << toPrint << "\n";*/
 		if(BI != BE) currentClass = BI->getType()->getAsCXXRecordDecl();
 		else break;
 	}
