@@ -80,6 +80,24 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRec
 	}
 }
 
+bool OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(std::string childClassName, std::string parentClassName) {
+	if(parentClassName.compare(childClassName) != 0) {
+		auto iterator = classHierarchy.find(childClassName);
+		auto end = classHierarchy.end();
+		
+		// if class is already in Class2Methods and is mapped to a parent different than the current one then something is wrong
+		if(iterator != end && (iterator->second.compare(parentClassName) != 0)) {
+			
+		}
+		
+		if(iterator == end) //classHierarchy does not have the current class, add it to classHierarchy
+			classHierarchy.emplace(childClassName, parentClassName);
+			
+		return true;
+	}
+	return false;
+}
+
 void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDecl *decl) {
 	//Initializing variables preparing for the iterations
 	const CXXRecordDecl * currentClass = decl;
@@ -95,23 +113,8 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 		if(OMRCheckingConsumer::shouldIgnoreClassName(currentClassName)) break;
 		
 		//Record parent-child relationship
-		if(currentClassName.compare(childClassName) != 0) {
-			auto iterator = classHierarchy.find(childClassName);
-			auto end = classHierarchy.end();
-			
-			// if class is already in Class2Methods and is mapped to a parent different than the current one then something is wrong
-			if(iterator != end && (iterator->second.compare(currentClassName) != 0)) {
-				//Class has more than one unique parent")
-				/*llvm::outs() << "Found child with 2 parents\n";
-				llvm::outs() << "\t" << childClassName << " --> " << currentClassName << "\n";
-				llvm::outs() << "\t" << childClassName << " --> " << iterator->second << "\n";*/
-			}
-			
-			if(iterator == end) //classHierarchy does not have the current class, add it to classHierarchy
-				classHierarchy.emplace(childClassName, currentClassName);
-				
-			childClassName = currentClassName;
-		}
+		bool succeeded = recordParents(childClassName, currentClassName);
+		if(succeeded) childClassName = currentClassName;
 		
 		//Go to parent class
 		BI = currentClass->bases_begin();
