@@ -95,13 +95,14 @@ bool OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(std::string ch
 			
 		return true;
 	}
+	
 	return false;
 }
 
 void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDecl *decl) {
 	//Initializing variables preparing for the iterations
 	const CXXRecordDecl * currentClass = decl;
-	CXXRecordDecl::base_class_const_iterator BI, BE;
+	CXXRecordDecl::base_class_const_iterator BI, BE, BC;
 	std::string currentClassName = currentClass->getQualifiedNameAsString();
 	std::string childClassName = currentClass->getQualifiedNameAsString();
 	
@@ -119,25 +120,13 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 		//Go to parent class
 		BI = currentClass->bases_begin();
 		BE = currentClass->bases_end();
-		/*CXXRecordDecl::base_class_const_iterator BC = currentClass->bases_begin();
-		std::string toPrint = "";
-		toPrint += "Class Name: " + currentClassName + "\n";
-		int counter = 0;
-		while(BC != BE) {
-			auto parentClassDecl = BC->getType()->getAsCXXRecordDecl();
-			if(parentClassDecl) {
-				counter++;
-				toPrint += "\t" + currentClassName + "\n";
-			}
-			else {
-				llvm::outs() << "Current class: " << currentClassName << "\n";
-				const ClassTemplateDecl* temp = BC->getType()->getAs<ClassTemplateDecl>();
-				llvm::outs() << "\tType of parent: " << temp << "\n";
-			}
+		BC = currentClass->bases_begin();
+		while(BC != BE) { //iterate through all parents
+			auto parentClassType = BC->getType();
+			std::string parentClassName = parentClassType.getAsString();
+			llvm::outs() << currentClassName << " --> " << parentClassName << "\n";
 			BC++;
-		}*/
-		/*if(counter > 1)
-			llvm::outs() << toPrint << "\n";*/
+		}
 		if(BI != BE) currentClass = BI->getType()->getAsCXXRecordDecl();
 		else break;
 	}
