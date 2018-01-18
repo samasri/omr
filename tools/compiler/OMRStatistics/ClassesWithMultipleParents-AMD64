@@ -1,0 +1,12 @@
+TestCompiler::ResolvedMethod --> class TestCompiler::ResolvedMethodBase
+TestCompiler::ResolvedMethod --> class TestCompiler::Method
+OMR::Optimization --> class TR_HasRandomGenerator
+OMR::Optimization --> TR::Allocatable<TR::Optimization, TR::Allocator>
+OMR_InlinerPolicy --> TR::OptimizationPolicy
+OMR_InlinerPolicy --> class OMR_InlinerHelper
+OMR_InlinerUtil --> TR::OptimizationUtil
+OMR_InlinerUtil --> class OMR_InlinerHelper
+testing::TestWithParam --> class testing::Test
+testing::TestWithParam --> WithParamInterface<T>
+TestCompiler::OptTestDriver --> class TestCompiler::TestDriver
+TestCompiler::OptTestDriver --> ::testing::Test
