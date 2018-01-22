@@ -153,6 +153,10 @@ TR::RegisterPair --> OMR::RegisterPair --> TR::Register --> OMR::X86::Register -
 TR_HashValueNumberInfo --> TR_ValueNumberInfo --> TR::Allocatable
 OMR::SystemSegmentProvider --> TR::SegmentAllocator --> TR::SegmentProvider
 TR_LinuxCallStackIterator --> TR_CallStackIterator
+__cxxabiv1::__pointer_to_member_type_info --> __cxxabiv1::__pbase_type_info
+__cxxabiv1::__pointer_type_info --> __cxxabiv1::__pbase_type_info
+__cxxabiv1::__si_class_type_info --> __cxxabiv1::__class_type_info
+__cxxabiv1::__vmi_class_type_info --> __cxxabiv1::__class_type_info
 TR_AsyncCheckInsertion --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
 TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
 TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
@@ -453,3 +457,3437 @@ OMR::StructType --> TR::IlType --> OMR::IlType
 OMR::UnionType --> TR::IlType --> OMR::IlType
 TR::CodeCacheMemorySegment --> OMR::CodeCacheMemorySegment
 
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::DataType --> OMR::DataType
+TR::ILOpCode --> OMR::ILOpCode
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::TreeTop --> OMR::TreeTop
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::BlockChecklist --> TR::Checklist
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::NodeChecklist --> TR::Checklist
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::AllBlockIterator --> TR::BlockIterator
+TR::ArithEnv --> OMR::ArithEnv
+TR::BlockChecklist --> TR::Checklist
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::NodeChecklist --> TR::Checklist
+TR::PostorderNodeOccurrenceIterator --> TR::NodeOccurrenceIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::OptimizationData --> TR::Allocatable
+TR::OptimizationPolicy --> TR::Allocatable
+TR::OptimizationUtil --> TR::Allocatable
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::PostorderNodeIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
+TR::PreorderNodeIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
+TR::PreorderNodeOccurrenceIterator --> TR::NodeOccurrenceIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::ReversePostorderSnapshotBlockIterator --> TR::BlockIterator
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::TreeTopIterator --> TR::TreeTopIteratorImpl
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InterferenceGraph --> TR_IGBase
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::Environment --> OMR::Environment
+TR::Monitor --> OMR::Monitor
+TR::MonitorTable --> OMR::MonitorTable
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR::MonitorTable --> OMR::MonitorTable
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+RandomExercizer --> TR_HasRandomGenerator
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_AnythingPattern --> TR_Pattern
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ChildPattern --> TR_Pattern
+TR_CommutativePattern --> TR_ChildrenPattern --> TR_Pattern
+TR_ChoicePattern --> TR_Pattern
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_IConstPattern --> TR_OpCodePattern --> TR_Pattern
+TR_LConstPattern --> TR_OpCodePattern --> TR_Pattern
+TR_Memory --> TR_MemoryBase
+TR_NoRegisterPattern --> TR_Pattern
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UnifyPattern --> TR_Pattern
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::VPArrayInfo --> TR::VPConstraint
+TR::VPClass --> TR::VPConstraint
+TR::VPNonNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPGreaterThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPIntRange --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPKnownObject --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPLessThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPLongRange --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPMergedConstraints --> TR::VPConstraint
+TR::VPNotEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPObjectLocation --> TR::VPConstraint
+TR::VPPreexistentObject --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPShortRange --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPSync --> TR::VPConstraint
+TR::VPUnreachablePath --> TR::VPConstraint
+TR::VPUnresolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_BlockStructure --> TR_Structure
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InductionVariable --> TR_Link --> TR_Link0
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_RegionStructure --> TR_Structure
+TR_StackMemory --> TR_MemoryAllocationType
+TR_StructureSubGraphNode --> TR::CFGNode --> TR_Link1
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CompileIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::Environment --> OMR::Environment
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::IlGeneratorMethodDetails --> TestCompiler::IlGeneratorMethodDetails --> OMR::IlGeneratorMethodDetails
+TR::PartialInliningIlGenRequest --> TR::InliningIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR_Inliner --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+OMR_InlinerPolicy --> TR::OptimizationPolicy --> TR::Allocatable
+OMR_InlinerUtil --> TR::OptimizationUtil --> TR::Allocatable
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::GlobalSet::DenseSet --> TR::GlobalSet::Set
+TR::GlobalSet::SparseSet --> TR::GlobalSet::Set
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::OptimizationData --> TR::Allocatable
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TransformUtil --> OMR::TransformUtil
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::VPArrayInfo --> TR::VPConstraint
+TR::VPClass --> TR::VPConstraint
+TR::VPNonNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPGreaterThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPIntRange --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPKnownObject --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPLessThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPLongRange --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPMergedConstraints --> TR::VPConstraint
+TR::VPNotEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPObjectLocation --> TR::VPConstraint
+TR::VPPreexistentObject --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPShortRange --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPSync --> TR::VPConstraint
+TR::VPUnreachablePath --> TR::VPConstraint
+TR::VPUnresolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_BlockStructure --> TR_Structure
+TR_DirectCallSite --> TR_CallSite --> TR_Link --> TR_Link0
+TR_CallStack --> TR_Link --> TR_Link0
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_InlineCall --> TR_DumbInliner --> TR_InlinerBase --> TR_HasRandomGenerator
+TR_FrontEnd --> TR_Uncopyable
+TR_FunctionPointerCallSite --> TR_IndirectCallSite --> TR_CallSite --> TR_Link --> TR_Link0
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InductionVariable --> TR_Link --> TR_Link0
+TR_InlinerTracer --> TR_LogTracer
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_RegionStructure --> TR_Structure
+TR_RegisterCandidate --> TR_Link --> TR_Link0
+TR_StackMemory --> TR_MemoryAllocationType
+TR_StructureSubGraphNode --> TR::CFGNode --> TR_Link1
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_TrivialInliner --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InterferenceGraph --> TR_IGBase
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::DataType --> OMR::DataType
+TR::ILOpCode --> OMR::ILOpCode
+TR::Node --> OMR::Node
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::DataType --> OMR::DataType
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompileIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::PartialInliningIlGenRequest --> TR::InliningIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::DataType --> OMR::DataType
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR_LoadExtensions --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::RegisterPair --> OMR::RegisterPair --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::BlockChecklist --> TR::Checklist
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::NodeChecklist --> TR::Checklist
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::OptimizationData --> TR::Allocatable
+TR::OptimizationPolicy --> TR::Allocatable
+TR::OptimizationUtil --> TR::Allocatable
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HashValueNumberInfo --> TR_ValueNumberInfo --> TR::Allocatable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+TR::DataType --> OMR::DataType
+TR::IL --> OMR::IL
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompileIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::GlobalSet::DenseSet --> TR::GlobalSet::Set
+TR::GlobalSet::SparseSet --> TR::GlobalSet::Set
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::IlGeneratorMethodDetails --> TestCompiler::IlGeneratorMethodDetails --> OMR::IlGeneratorMethodDetails
+TR::PartialInliningIlGenRequest --> TR::InliningIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TransformUtil --> OMR::TransformUtil
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::VPArrayInfo --> TR::VPConstraint
+TR::VPClass --> TR::VPConstraint
+TR::VPNonNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPGreaterThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPIntRange --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPKnownObject --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPLessThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPLongRange --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPMergedConstraints --> TR::VPConstraint
+TR::VPNotEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPObjectLocation --> TR::VPConstraint
+TR::VPPreexistentObject --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPShortRange --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPSync --> TR::VPConstraint
+TR::VPUnreachablePath --> TR::VPConstraint
+TR::VPUnresolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_BlockStructure --> TR_Structure
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InductionVariable --> TR_Link --> TR_Link0
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_RegionStructure --> TR_Structure
+TR_RegisterCandidate --> TR_Link --> TR_Link0
+TR_StackMemory --> TR_MemoryAllocationType
+TR_StructureSubGraphNode --> TR::CFGNode --> TR_Link1
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::Environment --> OMR::Environment
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::Environment --> OMR::Environment
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::Environment --> OMR::Environment
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::Environment --> OMR::Environment
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+OMR::SystemSegmentProvider --> TR::SegmentAllocator --> TR::SegmentProvider
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::StackMemoryRegion --> TR::Region
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR::PersistentInfo --> OMR::PersistentInfo
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::MonitorTable --> OMR::MonitorTable
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+TR::DataType --> OMR::DataType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::Environment --> OMR::Environment
+TR::ILOpCode --> OMR::ILOpCode
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_LinuxCallStackIterator --> TR_CallStackIterator
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+__cxxabiv1::__pointer_to_member_type_info --> __cxxabiv1::__pbase_type_info
+__cxxabiv1::__pointer_type_info --> __cxxabiv1::__pbase_type_info
+__cxxabiv1::__si_class_type_info --> __cxxabiv1::__class_type_info
+__cxxabiv1::__vmi_class_type_info --> __cxxabiv1::__class_type_info
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::RegisterPair --> OMR::RegisterPair --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::VPArrayInfo --> TR::VPConstraint
+TR::VPClass --> TR::VPConstraint
+TR::VPNonNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPGreaterThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPIntRange --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPKnownObject --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPLessThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPLongRange --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPMergedConstraints --> TR::VPConstraint
+TR::VPNotEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPObjectLocation --> TR::VPConstraint
+TR::VPPreexistentObject --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPShortRange --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPSync --> TR::VPConstraint
+TR::VPUnreachablePath --> TR::VPConstraint
+TR::VPUnresolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_BlockStructure --> TR_Structure
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InductionVariable --> TR_Link --> TR_Link0
+TR_LinuxCallStackIterator --> TR_CallStackIterator
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_RegionStructure --> TR_Structure
+TR_StackMemory --> TR_MemoryAllocationType
+TR_StructureSubGraphNode --> TR::CFGNode --> TR_Link1
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::Environment --> OMR::Environment
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::OptimizationData --> TR::Allocatable
+TR::OptimizationPolicy --> TR::Allocatable
+TR::OptimizationUtil --> TR::Allocatable
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::OptimizationData --> TR::Allocatable
+TR::OptimizationPolicy --> TR::Allocatable
+TR::OptimizationUtil --> TR::Allocatable
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::CFGNode --> TR_Link1
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_StackMemory --> TR_MemoryAllocationType
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::TreeEvaluator --> OMR::X86::AMD64::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::AMD64::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::GCRegisterMap --> OMR::GCRegisterMap
+TR::GCStackAtlas --> OMR::GCStackAtlas
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::VPArrayInfo --> TR::VPConstraint
+TR::VPClass --> TR::VPConstraint
+TR::VPNonNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPGreaterThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPIntRange --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPKnownObject --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPLessThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPLongRange --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPMergedConstraints --> TR::VPConstraint
+TR::VPNotEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPObjectLocation --> TR::VPConstraint
+TR::VPPreexistentObject --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPShortRange --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPSync --> TR::VPConstraint
+TR::VPUnreachablePath --> TR::VPConstraint
+TR::VPUnresolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_BlockStructure --> TR_Structure
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HashValueNumberInfo --> TR_ValueNumberInfo --> TR::Allocatable
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InductionVariable --> TR_Link --> TR_Link0
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PostDominators --> TR_Dominators
+TR_PredecessorIterator --> TR_CFGIterator
+TR_RegionStructure --> TR_Structure
+TR_StackMemory --> TR_MemoryAllocationType
+TR_StructureSubGraphNode --> TR::CFGNode --> TR_Link1
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR_AsyncCheckInsertion --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::IO --> OMR::IO
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::OptimizationData --> TR::Allocatable
+TR::OptimizationPolicy --> TR::Allocatable
+TR::OptimizationUtil --> TR::Allocatable
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Recompilation --> OMR::Recompilation
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::StackMemoryRegion --> TR::Region
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_Memory --> TR_MemoryBase
+TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_StackMemory --> TR_MemoryAllocationType
+TR_SuccessorIterator --> TR_CFGIterator
+TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
+CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
+CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
+CS2::Timer --> CS2::BSDTimer
+TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
+TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
+TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
+TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
+TR::Machine --> OMR::X86::AMD64::Machine --> OMR::X86::Machine --> OMR::Machine
+TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::AMD64::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+TR::CPU --> OMR::X86::CPU --> OMR::CPU
+TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
+TR::AliasBuilder --> OMR::AliasBuilder
+TR::ArithEnv --> OMR::ArithEnv
+TR::CFG --> OMR::CFG
+TR::CFGEdge --> TR_Link --> TR_Link0
+TR::ClassEnv --> OMR::ClassEnv
+TR::CodeGenPhase --> OMR::CodeGenPhase
+TR::Compilation --> OMR::Compilation
+TR::CompilerEnv --> OMR::CompilerEnv
+TR::DataType --> OMR::DataType
+TR::DebugCounter --> TR::DebugCounterBase
+TR::DebugCounterAggregation --> TR::DebugCounterBase
+TR::Environment --> OMR::Environment
+TR::IL --> OMR::IL
+TR::ILOpCode --> OMR::ILOpCode
+TR::KnownObjectTable --> OMR::KnownObjectTable
+TR::Monitor --> OMR::Monitor
+TR::Node --> OMR::Node
+TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
+TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+TR::Options --> OMR::Options
+TR::PersistentInfo --> OMR::PersistentInfo
+TR::Region::Instance --> TR::Region::Destructable
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::SnippetGCMap --> OMR::SnippetGCMap
+TR::SymbolReference --> OMR::SymbolReference
+TR::SymbolReferenceTable --> OMR::SymbolReferenceTable
+TR::TreeTop --> OMR::TreeTop
+TR::VMEnv --> OMR::VMEnv
+TR::VMMethodEnv --> OMR::VMMethodEnv
+TR::VPArrayInfo --> TR::VPConstraint
+TR::VPClass --> TR::VPConstraint
+TR::VPNonNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPConstString --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPGreaterThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPIntConst --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPIntRange --> TR::VPIntConstraint --> TR::VPConstraint
+TR::VPKnownObject --> TR::VPFixedClass --> TR::VPResolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR::VPLessThanOrEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPLongConst --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPLongRange --> TR::VPLongConstraint --> TR::VPConstraint
+TR::VPMergedConstraints --> TR::VPConstraint
+TR::VPNotEqual --> TR::VPRelation --> TR::VPConstraint
+TR::VPNullObject --> TR::VPClassPresence --> TR::VPConstraint
+TR::VPObjectLocation --> TR::VPConstraint
+TR::VPPreexistentObject --> TR::VPConstraint
+TR::VPShortConst --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPShortRange --> TR::VPShortConstraint --> TR::VPConstraint
+TR::VPSync --> TR::VPConstraint
+TR::VPUnreachablePath --> TR::VPConstraint
+TR::VPUnresolvedClass --> TR::VPClassType --> TR::VPConstraint
+TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_BackwardUnionSingleBitContainerAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_BitContainerIterator --> TR_BitVectorIterator
+TR_BitVectorCursor --> TR_BitVectorIterator
+TR_BlockStructure --> TR_Structure
+TR_ClassExtendCheck --> TR_Link --> TR_Link0
+TR_ClassLoadCheck --> TR_Link --> TR_Link0
+TR_Delayedness --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_Earliestness --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_FlowSensitiveEscapeAnalysis --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_FrontEnd --> TR_Uncopyable
+TR_HashTabDouble --> TR_HashTab
+TR_HashTabFloat --> TR_HashTab
+TR_HashTabInt --> TR_HashTab
+TR_HashTabLong --> TR_HashTab
+TR_HashTabString --> TR_HashTab
+TR_HeapMemory --> TR_MemoryAllocationType
+TR_InductionVariable --> TR_Link --> TR_Link0
+TR_Isolatedness --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_Latestness --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_LiveOnAllPaths --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_LocalAnticipatability --> TR_LocalAnalysis
+TR_LocalTransparency --> TR_LocalAnalysis
+TR_Memory --> TR_MemoryBase
+TR_PersistentMemory --> TR_MemoryBase
+TR_PredecessorIterator --> TR_CFGIterator
+TR_ReachingBlocks --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_ReachingDefinitions --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_RegionStructure --> TR_Structure
+TR_RegisterAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_RegisterAvailability --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_StackMemory --> TR_MemoryAllocationType
+TR_StructureSubGraphNode --> TR::CFGNode --> TR_Link1
+TR_SuccessorIterator --> TR_CFGIterator
+TR_SymRefIterator --> TR_BitVectorIterator
+TR_UnionSingleBitContainerAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+TR_UseDefInfo --> TR::Allocatable
+TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
+TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
+TestCompiler::Method --> TR_Method
