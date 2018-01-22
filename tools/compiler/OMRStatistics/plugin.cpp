@@ -436,7 +436,7 @@ size_t OMRStatistics::OMRCheckingConsumer::findLastStringIn(std::string input, s
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) {
-	(*out) << "FunctionName, FunctionSignature, IsFirstOccurence, Namespace, ClassName\n";
+	(*out) << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers
@@ -465,7 +465,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) 
 }
 
 void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) {
-	(*out) << "BaseNamespace, BaseClassName, FunctionSignature, OverridingNamespace, OverridingClassName\n";
+	(*out) << "BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTracker;
 		//Iterate map to go through all trackers

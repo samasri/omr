@@ -1,5 +1,5 @@
-f = open('i386.overloads','r')
-r = open('i386.overloads.trimmed', 'w')
+f = open('amd64.hierarchy','r')
+r = open('amd64.hierarchy.trimmed', 'w')
 S = set()
 list = []
 while True:
