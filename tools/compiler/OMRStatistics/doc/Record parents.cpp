@@ -19,3 +19,4 @@ recordParents(classDecl) {
 		if(parentDecl) recordParents(parentDecl)
 	}
 }
+
