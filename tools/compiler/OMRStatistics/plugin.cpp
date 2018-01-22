@@ -452,10 +452,10 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) 
 			for(auto tracker : hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
 				if(!shouldIgnoreNamespace(tuple->at(0))) {
-					(*out) << tracker.methodName << ",,";
-					(*out) << tracker.methodSignature << ",,";
-					(*out) << tracker.firstOccurence << ",,";
-					(*out) << tuple->at(0) << ",,"; //namespace
+					(*out) << tracker.methodName << ";";
+					(*out) << tracker.methodSignature << ";";
+					(*out) << tracker.firstOccurence << ";";
+					(*out) << tuple->at(0) << ";"; //namespace
 					(*out) << tuple->at(1) << "\n";//className
 				}
 			}
