@@ -10,9 +10,16 @@
 
 .functionName {
 	margin: 0;
+}
+
+.multiple {
 	color: blue;
 	text-decoration: underline;
 	cursor: pointer;
+}
+
+li {
+	color: red
 }
 
 .signatures {

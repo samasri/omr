@@ -121,12 +121,16 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecor
 		BI = currentClass->bases_begin();
 		BE = currentClass->bases_end();
 		BC = currentClass->bases_begin();
+		int counter = 0;
+		std::string result = "";
 		while(BC != BE) { //iterate through all parents
+			counter++;
 			auto parentClassType = BC->getType();
 			std::string parentClassName = parentClassType.getAsString();
-			llvm::outs() << currentClassName << " --> " << parentClassName << "\n";
+			result += currentClassName + " --> " + parentClassName + "\n";
 			BC++;
 		}
+		//if(counter > 1) llvm::outs() << result << "\n";
 		if(BI != BE) currentClass = BI->getType()->getAsCXXRecordDecl();
 		else break;
 	}
@@ -448,10 +452,10 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) 
 			for(auto tracker : hierarchyTrackers) { //The code in this block will be accessed by every tracker
 				std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
 				if(!shouldIgnoreNamespace(tuple->at(0))) {
-					(*out) << tracker.methodName << ",";
-					(*out) << tracker.methodSignature << ",";
-					(*out) << tracker.firstOccurence << ",";
-					(*out) << tuple->at(0) << ","; //namespace
+					(*out) << tracker.methodName << ",,";
+					(*out) << tracker.methodSignature << ",,";
+					(*out) << tracker.firstOccurence << ",,";
+					(*out) << tuple->at(0) << ",,"; //namespace
 					(*out) << tuple->at(1) << "\n";//className
 				}
 			}
