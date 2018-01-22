@@ -480,10 +480,10 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) 
 					std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(baseClassName);
 					std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
 					if(!shouldIgnoreNamespace(baseClassNameTuple->at(0)) || !shouldIgnoreNamespace(classNameTuple->at(0))) {
-						(*out) << baseClassNameTuple->at(0) << ","; //namespace
-						(*out) << baseClassNameTuple->at(1) << ",";//className
-						(*out) << tracker.methodSignature << ",";
-						(*out) << classNameTuple->at(0) << ","; //namespace
+						(*out) << baseClassNameTuple->at(0) << ";"; //namespace
+						(*out) << baseClassNameTuple->at(1) << ";";//className
+						(*out) << tracker.methodSignature << ";";
+						(*out) << classNameTuple->at(0) << ";"; //namespace
 						(*out) << classNameTuple->at(1) << "\n";//className
 					}
 					baseClassName = className;
