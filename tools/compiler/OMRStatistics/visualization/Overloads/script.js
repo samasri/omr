@@ -10,7 +10,7 @@ function hideDisplay(result) {
 window.onload = start;
 function start() {
 	var functionNames = document.getElementsByClassName("functionName");
-	var sigsDivs = document.getElementsByClassName("signatures");
+	var sigsDivs = document.getElementsByClassName("overriding");
 	
 	//Map each signature Div to its corresponding signatures Div
 	for(var i = 0; i < functionNames.length; i++) {
