@@ -81,26 +81,26 @@ function CSVToArray( strData, strDelimiter ){
 	return( arrData );
 } //Source: https://stackoverflow.com/questions/1293147/javascript-code-to-parse-csv-data
 
-function iterateChildren(node, list) {
+var list;
+function iterateChildren(node) {
 	var children = node.childNodes;
 	for(var i = 0; i < children.length; i++) {
 		list.push(children[i])
 	}
 	for(var i = 0; i < children.length; i++) {
-		list = iterateChildren(children[i], list)
+		iterateChildren(children[i], list)
 	}
-	return list;
 }
 
+
+
 function getParagraphWithHTML(node, className) {
-	if(node.innerHTML == className) {
-		return node;
-	}
-	var children = node.childNodes;
-	for(var i = 0; i < children.length; i++) {
-		return getParagraphWithHTML(children[i], className);
-	}
-	return -1;
+	list = [];
+	iterateChildren(node);
+	var result = -1;
+	for(var i = 0; i < list.length; i++)
+		if(list[i].tagName == "P" && list[i].innerHTML == className) result = list[i];
+	return result;
 }
 
 function processCSV(csv) {
@@ -142,13 +142,11 @@ function processCSV(csv) {
 		}
 		
 		else { //When signature has more than one record
-			if(signature == "CodeGenerator()") alert(baseClassName + " -- " + overridingClassName);
 			var div = functionSig2id[signature];
 			
 			//iterate through children to find the baseClassName
 			var child = div.childNodes[1];
 			var rightP = getParagraphWithHTML(child, baseClassName);
-			if(signature == "CodeGenerator()") alert(rightP);
 			if(rightP != -1) { //Case the we have a nested override
 				var parentLI = rightP.parentNode;
 				parentLI.className = "container";
@@ -185,7 +183,7 @@ function makeUIpretty() {
 function handleRequest() {
 	if(this.readyState === 4) {
 		processCSV(this.responseText);
-		//makeUIpretty();
+		makeUIpretty();
 	}
 }
 
