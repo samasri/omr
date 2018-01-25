@@ -93,8 +93,14 @@ function iterateChildren(node) {
 }
 
 
-
+var debug = false;
 function getParagraphWithHTML(node, className) {
+	if(debug) {
+		var str = "" + node + ": ";
+		for(var i = 0; i < node.childNodes.length; i++) str += node.childNodes[i] + ",";
+		str +="\nSearching for: " + className;
+		alert(str);
+	}
 	list = [];
 	iterateChildren(node);
 	var result = -1;
@@ -117,52 +123,71 @@ function processCSV(csv) {
 		var counter = 0;
 		
 		if(!functionSig2id[signature]) {
-			var div = document.createElement("DIV");
-			div.className = "function";
-			content.appendChild(div);
+			var li1 = document.createElement("LI");
+			li1.className = "container";
+			content.appendChild(li1);
 			
 			var p = document.createElement("P");
-			p.className = "parent";
-			div.appendChild(p);
+			li1.appendChild(p);
 			p.innerHTML = baseClassName + "::" + signature;
 			
 			var ul = document.createElement("UL");
 			ul.className = "overriding";
-			div.appendChild(ul);
+			li1.appendChild(ul);
 			
-			var li = document.createElement("LI");
-			li.className = "container";
-			ul.appendChild(li);
+			var li2 = document.createElement("LI");
+			ul.appendChild(li2);
 			
 			p = document.createElement("P");
 			p.innerHTML = overridingClassName;
-			li.appendChild(p);
+			li2.appendChild(p);
 			
-			functionSig2id[signature] = div;
+			functionSig2id[signature] = li1;
 		}
 		
 		else { //When signature has more than one record
-			var div = functionSig2id[signature];
+			var li = functionSig2id[signature];
 			
 			//iterate through children to find the baseClassName
-			var child = div.childNodes[1];
+			var child = li.childNodes[1];
 			var rightP = getParagraphWithHTML(child, baseClassName);
 			if(rightP != -1) { //Case the we have a nested override
 				var parentLI = rightP.parentNode;
 				parentLI.className = "container";
 				
-				var ul = document.createElement("UL");
-				parentLI.appendChild(ul);
-				
-				var li = document.createElement("LI");
-				ul.appendChild(li);
-				
-				var p = document.createElement("P");
-				p.innerHTML = overridingClassName;
-				li.appendChild(p);
+				if(parentLI.childNodes.length == 1) {
+					var ul = document.createElement("UL");
+					parentLI.appendChild(ul);
+					
+					var li2 = document.createElement("LI");
+					ul.appendChild(li2);
+					
+					var p = document.createElement("P");
+					p.innerHTML = overridingClassName;
+					li2.appendChild(p);
+				}
+				else {
+					var ul = parentLI.childNodes[1];
+					
+					var li2 = document.createElement("LI");
+					ul.appendChild(li2);
+					
+					var p = document.createElement("P");
+					p.innerHTML = overridingClassName;
+					li2.appendChild(p);
+				}
 			}
 			else {
 				//alert("Not found: " + signature + " -- " + baseClassName + " -- " + overridingClassName);
+				
+				var ul = li.childNodes[1];
+				
+				var li2 = document.createElement("LI");
+				ul.appendChild(li2);
+				
+				var p = document.createElement("P");
+				p.innerHTML = overridingClassName;
+				li2.appendChild(p);
 			}
 		}
 	}
@@ -183,7 +208,7 @@ function makeUIpretty() {
 function handleRequest() {
 	if(this.readyState === 4) {
 		processCSV(this.responseText);
-		makeUIpretty();
+		//makeUIpretty();
 	}
 }
 
