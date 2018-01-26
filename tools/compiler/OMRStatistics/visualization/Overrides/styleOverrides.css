@@ -3,23 +3,6 @@
 	width: 1024px;
 }
 
-.function {
-	margin-top: 8px;
-}
-
-.parent {
-	margin: 0;
-	color: blue;
-	text-decoration: underline;
-	cursor: pointer;
-}
-
-.overriding {
-	padding-top: 0;
-	margin: 0;
-	display: none;
-}
-
 ul, li { list-style: none; margin: 0; padding: 0; }
 ul { padding-left: 1em; }
 li { padding-left: 1em;
@@ -44,4 +27,9 @@ li ul {
 ul li:last-child ul {
   border-left: 1px solid white;
   margin-left: -17px;
+}
+
+.functionP {
+	color: blue;
+	text-decoration: underline;
 }
