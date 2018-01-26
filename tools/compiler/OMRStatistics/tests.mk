@@ -1,9 +1,10 @@
 #Includes all test cases targets
-test: testHierarchy1 testHierarchy2 testHierarchy3 testHierarchy4 testOverride1 testOverride2 testOverload1 testOverload2 testOverrideOverloadMix testOverrideOverloadMix-DifferentNamespaces testControversialCase1 testControversialCase2 testControversialCase3 testNoNamespace
-	 @python tests/diff.py
-	 @rm tests/*.hierarchy
-	 @rm tests/*.overrides
-	 @rm tests/*.overloads
+test: testHierarchy1 testHierarchy2 testHierarchy3 testHierarchy4 testOverride1 testOverride2 testOverload1 testOverload2 testOverrideOverloadMix testOverrideOverloadMix-DifferentNamespaces testControversialCase1 testControversialCase2 testControversialCase3 testNoNamespace 
+	#writeCSV
+	@python tests/tests.py output/amd64.overrides
+	@rm tests/*.hierarchy
+	@rm tests/*.overrides
+	@rm tests/*.overloads
 
 testHierarchy1: $(SO)
 	@echo Executing Hierarchy Test 1...

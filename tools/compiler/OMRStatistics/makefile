@@ -80,9 +80,17 @@ targets_p = $(addprefix , $(LIST_P))
 targets_z = $(addprefix , $(LIST_Z))
 targets_arm = $(addprefix , $(LIST_ARM))
 
-writeCSV: $(targets_amd64)
+writeCSV: $(SO)
+	make output/lastCreated
+
+output/lastCreated: $(SO)
+	rm -f output/amd64.*
+	make executeAllClasses
+	touch output/lastCreated
 	@echo "Done"
+
+executeAllClasses: $(SO) $(targets_amd64)
 
 $(targets_amd64):
 	@echo "Compiling $@"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "tests/amd64"  $(DEFINES) $(PLUGIN_INCLUDES) -c $@
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/amd64"  $(DEFINES) $(PLUGIN_INCLUDES) -c $@
