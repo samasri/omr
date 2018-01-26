@@ -93,14 +93,7 @@ function iterateChildren(node) {
 }
 
 
-var debug = false;
 function getParagraphWithHTML(node, className) {
-	if(debug) {
-		var str = "" + node + ": ";
-		for(var i = 0; i < node.childNodes.length; i++) str += node.childNodes[i] + ",";
-		str +="\nSearching for: " + className;
-		alert(str);
-	}
 	list = [];
 	iterateChildren(node);
 	var result = -1;
@@ -109,12 +102,37 @@ function getParagraphWithHTML(node, className) {
 	return result;
 }
 
+function addNewFunction(content, signature, baseClassName, overridingClassName) {
+	var li = document.createElement("LI");
+	li.className = "container function";
+	content.appendChild(li);
+	
+	var p = document.createElement("P");
+	p.className = "functionP";
+	li.appendChild(p);
+	p.innerHTML = baseClassName + "::" + signature;
+	
+	var ul = document.createElement("UL");
+	ul.className = "overriding";
+	ul.style.display = "none";
+	li.appendChild(ul);
+	
+	var subLI = document.createElement("LI");
+	ul.appendChild(subLI);
+	
+	p = document.createElement("P");
+	p.innerHTML = overridingClassName;
+	subLI.appendChild(p);
+	
+	return li
+}
+
 function processCSV(csv) {
 	var array = CSVToArray(csv, ";");
 	var content = document.getElementById('content');
 	var string = "";
 	var functionSig2id = {};
-	var functionSigs2id = {}
+	var functionSigs2FirstOccurrence = {}
 	for(var i = 0; i < array.length; i++) {
 		var row = array[i];
 		var baseClassName = row[0] + "::" + row[1];
@@ -123,26 +141,10 @@ function processCSV(csv) {
 		var counter = 0;
 		
 		if(!functionSig2id[signature]) {
-			var li1 = document.createElement("LI");
-			li1.className = "container";
-			content.appendChild(li1);
+			var li = addNewFunction(content, signature, baseClassName, overridingClassName);
 			
-			var p = document.createElement("P");
-			li1.appendChild(p);
-			p.innerHTML = baseClassName + "::" + signature;
-			
-			var ul = document.createElement("UL");
-			ul.className = "overriding";
-			li1.appendChild(ul);
-			
-			var li2 = document.createElement("LI");
-			ul.appendChild(li2);
-			
-			p = document.createElement("P");
-			p.innerHTML = overridingClassName;
-			li2.appendChild(p);
-			
-			functionSig2id[signature] = li1;
+			functionSig2id[signature] = li;
+			functionSigs2FirstOccurrence[signature] = baseClassName;
 		}
 		
 		else { //When signature has more than one record
@@ -158,29 +160,9 @@ function processCSV(csv) {
 				if(parentLI.childNodes.length == 1) {
 					var ul = document.createElement("UL");
 					parentLI.appendChild(ul);
-					
-					var li2 = document.createElement("LI");
-					ul.appendChild(li2);
-					
-					var p = document.createElement("P");
-					p.innerHTML = overridingClassName;
-					li2.appendChild(p);
 				}
-				else {
-					var ul = parentLI.childNodes[1];
-					
-					var li2 = document.createElement("LI");
-					ul.appendChild(li2);
-					
-					var p = document.createElement("P");
-					p.innerHTML = overridingClassName;
-					li2.appendChild(p);
-				}
-			}
-			else {
-				//alert("Not found: " + signature + " -- " + baseClassName + " -- " + overridingClassName);
 				
-				var ul = li.childNodes[1];
+				else var ul = parentLI.childNodes[1];
 				
 				var li2 = document.createElement("LI");
 				ul.appendChild(li2);
@@ -189,15 +171,34 @@ function processCSV(csv) {
 				p.innerHTML = overridingClassName;
 				li2.appendChild(p);
 			}
+			else { 
+				var firstOccurrence = functionSigs2FirstOccurrence[signature];
+				if(firstOccurrence == baseClassName) { //Case when overload is in same hierarchy, but not nested under an already existing override
+					
+					var ul = li.childNodes[1];
+					
+					var li2 = document.createElement("LI");
+					ul.appendChild(li2);
+					
+					var p = document.createElement("P");
+					p.innerHTML = overridingClassName;
+					li2.appendChild(p);
+				}
+				else { //Case when the function appears in a different hierarchy (we need a new list)
+					var li = addNewFunction(content, signature, baseClassName, overridingClassName);
+					functionSig2id[signature] = li;
+					functionSigs2FirstOccurrence[signature] = baseClassName;
+				}
+			}
 		}
 	}
 }
 
 function hideDisplay() {
 	var ul = this.childNodes[1];
-	if(ul.style.display == "") ul.style.display = 'block';
-	else if(ul.style.display == "none") ul.style.display = 'block';
-	else if(ul.style.display == "block") ul.style.display = 'none';
+	if(ul.style.display == "none") ul.style.display = 'block';
+	else/*if (ul.style.display == "block")*/
+		ul.style.display = 'none';
 }
 
 function makeUIpretty() {
@@ -208,7 +209,7 @@ function makeUIpretty() {
 function handleRequest() {
 	if(this.readyState === 4) {
 		processCSV(this.responseText);
-		//makeUIpretty();
+		makeUIpretty();
 	}
 }
 
