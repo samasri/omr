@@ -1,1 +1,1 @@
-BaseNamespace, BaseClassName, FunctionSignature, OverridingNamespace, OverridingClassName
+BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName
