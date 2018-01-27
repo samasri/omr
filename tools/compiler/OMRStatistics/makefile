@@ -81,12 +81,12 @@ targets_z = $(addprefix , $(LIST_Z))
 targets_arm = $(addprefix , $(LIST_ARM))
 
 writeCSV: $(SO)
-	make output/lastCreated
+	@make output/lastCreated
 
 output/lastCreated: $(SO)
-	rm -f output/amd64.*
-	make executeAllClasses
-	touch output/lastCreated
+	@rm -f output/amd64.*
+	@make executeAllClasses
+	@touch output/lastCreated
 	@echo "Done"
 
 executeAllClasses: $(SO) $(targets_amd64)

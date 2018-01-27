@@ -1,3 +1,3 @@
-FunctionName, FunctionSignature, IsFirstOccurence, Namespace, ClassName
-a,a(int),1,TR,A
-a,a(),0,TR,A
+FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName
+a;a(int);1;TR;A
+a;a();0;TR;A
