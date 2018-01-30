@@ -16,17 +16,23 @@ namespace OMRStatistics {
 	
 	class ExtensibleClassCheckingVisitor : public RecursiveASTVisitor<ExtensibleClassCheckingVisitor> {
 	private:
+		//Debug map
+		std::map<std::string, std::string>* debug = new std::map<std::string, std::string>();
+		std::string tabs = "";
 		//Mapping between each class and all its methods
 		std::map<std::string, std::unordered_set<std::string*>> Class2Methods;
-		//Parent-child relationship mapping (child --> parent)
-		std::map<std::string, std::string> classHierarchy;
+		//Parent-child relationship mapping (child --> parents)
+		std::map<std::string, std::vector<std::string>*> classHierarchy;
 	
 	public:
+		std::map<std::string, std::string>* getDebug() {
+			return debug;
+		}
 		//Getters and setters
 		std::map<std::string, std::unordered_set<std::string*>> getClass2Methods();
 		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods);
-		std::map<std::string, std::string> getclassHierarchy();
-		void setclassHierarchy(std::map<std::string, std::string> classHierarchy);
+		std::map<std::string, std::vector<std::string>*> getclassHierarchy();
+		void setclassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy);
 		
 		explicit ExtensibleClassCheckingVisitor(ASTContext *Context) { }
 		
@@ -44,7 +50,7 @@ namespace OMRStatistics {
 	
 	//Represents a class in a class hierarchy
 	struct LinkedNode {
-		LinkedNode* parent = nullptr; //Pointer to the parent class
+		std::vector<LinkedNode*>* parents = nullptr; //Pointer to the parent class
 		std::string name; //Name of the class
 	};
 	
@@ -53,7 +59,7 @@ namespace OMRStatistics {
 		LinkedNode* top = new LinkedNode(); //Top (most parent) class of hierarchy
 		std::string name; //Base name, to identify the class
 		//Maps every method to the array of hierarchy classes where it occurred
-		std::map<std::string, std::vector<MethodTracker>*> methodName2MethodTracker;
+		std::vector<std::map<std::string, std::vector<MethodTracker>*>> methodName2MethodTrackerVec;
 		//Stores the names of each methodTracker in the hierarchy for faster searching
 		//std::unordered_set<std::string>* methodNames = new std::unordered_set<std::string>; 
 		
@@ -122,10 +128,10 @@ namespace OMRStatistics {
 		MethodTracker* searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName);
 		//Iterates through the entries of Class2Methods in the ExtensibleClassCheckingVisitor and creates MethodTrackers out of them
 		void collectMethodInfo(ExtensibleClassCheckingVisitor &visitor);
+		//Converts the hierarchy to an array of nodes, starting from the top to the base
+		std::vector<std::vector<LinkedNode>>* getTopToBaseAsArray(OMRStatistics::Hierarchy* hierarchy);
 		
 		//Printing methods to check the results
-		//Given the base, print the whole hierarchy
-		void printHierarchy(Hierarchy* base);
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
 		void printHierarchies(llvm::raw_ostream* out);
 		
