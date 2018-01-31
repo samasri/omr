@@ -16,18 +16,12 @@ namespace OMRStatistics {
 	
 	class ExtensibleClassCheckingVisitor : public RecursiveASTVisitor<ExtensibleClassCheckingVisitor> {
 	private:
-		//Debug map
-		std::map<std::string, std::string>* debug = new std::map<std::string, std::string>();
-		std::string tabs = "";
 		//Mapping between each class and all its methods
 		std::map<std::string, std::unordered_set<std::string*>> Class2Methods;
 		//Parent-child relationship mapping (child --> parents)
 		std::map<std::string, std::vector<std::string>*> classHierarchy;
 	
 	public:
-		std::map<std::string, std::string>* getDebug() {
-			return debug;
-		}
 		//Getters and setters
 		std::map<std::string, std::unordered_set<std::string*>> getClass2Methods();
 		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods);
@@ -52,11 +46,12 @@ namespace OMRStatistics {
 	struct LinkedNode {
 		std::vector<LinkedNode*>* parents = nullptr; //Pointer to the parent class
 		std::string name; //Name of the class
+		
+		LinkedNode(std::string name);
 	};
 	
 	struct Hierarchy {
-		LinkedNode* base = new LinkedNode(); //Base class of hierarchy
-		LinkedNode* top = new LinkedNode(); //Top (most parent) class of hierarchy
+		LinkedNode* base; //Base class of hierarchy
 		std::string name; //Base name, to identify the class
 		//Maps every method to the array of hierarchy classes where it occurred
 		std::vector<std::map<std::string, std::vector<MethodTracker>*>> methodName2MethodTrackerVec;
@@ -120,8 +115,10 @@ namespace OMRStatistics {
 		Hierarchy* modifyBase(LinkedNode* oldBase, LinkedNode* newBase);
 		// Deletes the hierarchy that has the given base (if found)
 		void deleteHierarchy(LinkedNode* base);
+		//Checks if the given class name is a base of any hierarchies
+		bool isBase(std::string className);
 		//Process the classHierarchy map from ExtensibleClassCheckingVisitor to fill the hierarchies map.
-		void fillHierarchies(std::map<std::string, std::string> &map);
+		void fillHierarchies(std::map<std::string, std::vector<std::string>*> &map);
 		//Get method name from its signature
 		static std::string getName(std::string methodSignature);
 		//Search for the MethodTracker with the inputted function name in the inputted hierarchy
@@ -133,7 +130,8 @@ namespace OMRStatistics {
 		
 		//Printing methods to check the results
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
-		void printHierarchies(llvm::raw_ostream* out);
+		void printHierarchy(std::string, LinkedNode*, std::string, llvm::raw_ostream*);
+		void printHierarchies(llvm::raw_ostream*);
 		
 		//Printing the method information
 		
