@@ -36,7 +36,7 @@ fillHierarchies(classHierarchyMap) {
 				if(!subParents) createNewVector();
 				subParents.push_back(parent);
 				if(parent is base of Hierarchy) modifyBase(parent, newNode);
-				else { //parent has one or more child
+				else { //parent has one or more children
 					newHierarchy = createNewHierarchy();
 					newHierarchy.base = newNode
 					hierarchies.push_back(hierarchy)
