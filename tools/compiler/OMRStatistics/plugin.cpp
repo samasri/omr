@@ -36,15 +36,15 @@
 #include "plugin.hpp"
 #include <sstream>
 
-std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::ExtensibleClassCheckingVisitor::getClass2Methods() {return Class2Methods;}
+std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::HMRecorder::getClass2Methods() {return Class2Methods;}
 
-void OMRStatistics::ExtensibleClassCheckingVisitor::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods) {this->Class2Methods = Class2Methods;}
+void OMRStatistics::HMRecorder::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods) {this->Class2Methods = Class2Methods;}
 
-std::map<std::string, std::vector<std::string>*> OMRStatistics::ExtensibleClassCheckingVisitor::getclassHierarchy() {return classHierarchy;}
+std::map<std::string, std::vector<std::string>*> OMRStatistics::HMRecorder::getclassHierarchy() {return classHierarchy;}
 
-void OMRStatistics::ExtensibleClassCheckingVisitor::setclassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {this->classHierarchy = classHierarchy;}
+void OMRStatistics::HMRecorder::setclassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {this->classHierarchy = classHierarchy;}
 	   
-void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRecordDecl* inputClass) {
+void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
@@ -77,7 +77,7 @@ void OMRStatistics::ExtensibleClassCheckingVisitor::recordFunctions(const CXXRec
 	}
 }
 
-bool OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(std::string childClassName, std::string parentClassName) {
+bool OMRStatistics::HMRecorder::recordParents(std::string childClassName, std::string parentClassName) {
 	if(parentClassName.compare(childClassName) != 0) {
 		auto itr = classHierarchy.find(childClassName);
 		auto end = classHierarchy.end();
@@ -106,30 +106,42 @@ bool OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(std::string ch
 	return false;
 }
 
-void OMRStatistics::ExtensibleClassCheckingVisitor::recordParents(const CXXRecordDecl *decl) {
+std::string OMRStatistics::HMRecorder::printLoc(const clang::CXXRecordDecl* d) {
+	std::string result;
+	result = d->getLocStart().printToString(d->getASTContext().getSourceManager()) + "\n";
+	return result;
+}
+
+void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	if(!decl) return;
 	std::string currentClassName = decl->getQualifiedNameAsString();
-	if(OMRCheckingConsumer::shouldIgnoreClassName(currentClassName)) return;
+	if(HMConsumer::shouldIgnoreClassName(currentClassName)) return;
 	CXXRecordDecl::base_class_const_iterator BI, BE, BC;
 	
 	BI = decl->bases_begin();
 	BE = decl->bases_end();
+	std::string* res = new std::string();
+	debug->emplace_back(res);
 	for(BC = BI; BC != BE; BC++) { //iterate through all parents
 		clang::QualType parentClassType = BC->getType();
 		CXXRecordDecl* parentDecl = parentClassType->getAsCXXRecordDecl();
+		
+		
 		std::string parentClassName = (parentDecl) ? parentDecl->getQualifiedNameAsString() : parentClassType.getAsString(); //Prioritize having the name of the CXX record over general QualTypes
-		if(OMRCheckingConsumer::shouldIgnoreClassName(parentClassName) || OMRCheckingConsumer::shouldIgnoreClassName(currentClassName)) continue;
+		if(!parentDecl) continue;
+		if(HMConsumer::shouldIgnoreClassName(parentClassName) || HMConsumer::shouldIgnoreClassName(currentClassName)) continue;
 		recordParents(currentClassName, parentClassName);
 		if(parentDecl) recordParents(parentDecl);
 		//TODO: recursively call this function on all classes, even if the class not a CXXDecl (even if it is a template)
 	}
 }
 
-bool OMRStatistics::ExtensibleClassCheckingVisitor::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
+bool OMRStatistics::HMRecorder::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
 	if(!decl || !decl->isClass() || !decl->hasDefinition()) return true;
-	
+	//debug->emplace_back(new std::string("Visiting: " + decl->getQualifiedNameAsString() + "\n"));
 	recordFunctions(decl);
 	recordParents(decl);
+	//debug->emplace_back(new std::string("---------------\n"));
 	
 	return true;
 }
@@ -157,7 +169,7 @@ bool OMRStatistics::Hierarchy::operator!=(const std::string other) {
 
 //Tracks the occurrences of each method, what classes, when overridden, and when overloaded
 OMRStatistics::MethodTracker::MethodTracker(std::string className, std::string methodSignature, bool firstOccurence) {
-	methodName = OMRCheckingConsumer::getName(methodSignature);
+	methodName = HMConsumer::getName(methodSignature);
 	this->methodSignature = methodSignature;
 	nbOfOccurences = 1;
 	classesOverriden = new std::vector<std::string>();
@@ -179,11 +191,11 @@ bool OMRStatistics::MethodTracker::operator==(const std::string other) {
 	return (methodSignature.compare(other) == 0);
 }
 
-OMRStatistics::OMRCheckingConsumer::OMRCheckingConsumer(llvm::StringRef filename, Config conf) {
+OMRStatistics::HMConsumer::HMConsumer(llvm::StringRef filename, Config conf) {
 	this->conf = conf;
 }
 
-OMRStatistics::Hierarchy* OMRStatistics::OMRCheckingConsumer::modifyBase(LinkedNode* oldBase, LinkedNode* newBase) {
+OMRStatistics::Hierarchy* OMRStatistics::HMConsumer::modifyBase(LinkedNode* oldBase, LinkedNode* newBase) {
 	for (auto hierarchy : hierarchies) 
 		if(hierarchy->base == oldBase) {
 			hierarchy->base = newBase;
@@ -192,7 +204,7 @@ OMRStatistics::Hierarchy* OMRStatistics::OMRCheckingConsumer::modifyBase(LinkedN
 	return nullptr;
 }
 
-void OMRStatistics::OMRCheckingConsumer::deleteHierarchy(LinkedNode* base) {
+void OMRStatistics::HMConsumer::deleteHierarchy(LinkedNode* base) {
 	
 	// Search for hierarchy to delete
 	auto itr = hierarchies.begin();
@@ -209,14 +221,14 @@ void OMRStatistics::OMRCheckingConsumer::deleteHierarchy(LinkedNode* base) {
 	}
 }
 
-bool OMRStatistics::OMRCheckingConsumer::isBase(std::string className) {
+bool OMRStatistics::HMConsumer::isBase(std::string className) {
 	for(Hierarchy* hierarchy : hierarchies)
 		if(hierarchy->base->name.compare(className) == 0) 
 			return true;
 	return false;
 }
 
-void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, std::vector<std::string>*> &map) {
+void OMRStatistics::HMConsumer::fillHierarchies(std::map<std::string, std::vector<std::string>*> &map) {
 	for(auto current : map) {
 		std::string childName = current.first;
 		std::vector<std::string>* parents = current.second;
@@ -272,11 +284,7 @@ void OMRStatistics::OMRCheckingConsumer::fillHierarchies(std::map<std::string, s
 	}
 }
 
-/*void OMRStatistics::OMRCheckingConsumer::printHierarchies(llvm::raw_ostream* out) {
-	
-}*/
-
-OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName) {
+OMRStatistics::MethodTracker* OMRStatistics::HMConsumer::searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName) {
 	std::string methodName = getName(method);
 	//Search for method trackers with same name
 	auto trackersVec = hierarchy->methodName2MethodTrackerVec;
@@ -301,14 +309,14 @@ OMRStatistics::MethodTracker* OMRStatistics::OMRCheckingConsumer::searchForTrack
 	return nullptr;
 }
 
-std::string OMRStatistics::OMRCheckingConsumer::getName(std::string methodSignature) {
+std::string OMRStatistics::HMConsumer::getName(std::string methodSignature) {
 	//Get method name from signature
 	std::size_t pos = methodSignature.find("(");
 	assert(pos != std::string::npos && "method name is invalid");
 	return methodSignature.substr(0, pos);
 }
 
-void OMRStatistics::OMRCheckingConsumer::collectMethodInfo(ExtensibleClassCheckingVisitor &visitor) {
+void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &visitor) {
 	auto map = visitor.getClass2Methods();
 	for(auto hierarchy : hierarchies) {
 		
@@ -363,19 +371,19 @@ std::vector<std::vector<OMRStatistics::LinkedNode>>* getTopToBaseAsArray(OMRStat
 	return nullptr;
 }
 
-bool OMRStatistics::OMRCheckingConsumer::shouldIgnoreNamespace(std::string nameSpace) {
+bool OMRStatistics::HMConsumer::shouldIgnoreNamespace(std::string nameSpace) {
 	if(nameSpace.compare("std") == 0) return true;
 	if(nameSpace.compare("__gnu_cxx") == 0) return true;
 	return false;
 }
 
-bool OMRStatistics::OMRCheckingConsumer::shouldIgnoreClassName(std::string className) {
+bool OMRStatistics::HMConsumer::shouldIgnoreClassName(std::string className) {
 	if(className.find("std::") != std::string::npos) return true;
 	if(className.find("__gnu_cxx::") != std::string::npos) return true;
 	return false;
 }
 
-std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameSpace(std::string input) {
+std::vector<std::string>* OMRStatistics::HMConsumer::seperateClassNameSpace(std::string input) {
 	std::string nameSpace = "";
 	std::string className = "";
 	if(input.find("::") != std::string::npos) {
@@ -400,7 +408,7 @@ std::vector<std::string>* OMRStatistics::OMRCheckingConsumer::seperateClassNameS
 	return tuple;
 }
 
-size_t OMRStatistics::OMRCheckingConsumer::findLastStringIn(std::string input, std::string key) {
+size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::string key) {
 	if(key.size() != 2) return -1; //This function only support keys of length 2
 	if(input.size() < 2) return -1;
 	
@@ -416,7 +424,7 @@ size_t OMRStatistics::OMRCheckingConsumer::findLastStringIn(std::string input, s
 	return pos;
 }
 
-void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
 	(*out) << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMapVec = hierarchy->methodName2MethodTrackerVec;
@@ -447,7 +455,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverloads(llvm::raw_ostream* out) 
 	}
 }
 
-void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 	(*out) << "BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMap = hierarchy->methodName2MethodTrackerVec;
@@ -477,7 +485,7 @@ void OMRStatistics::OMRCheckingConsumer::printOverrides(llvm::raw_ostream* out) 
 	}
 }
 
-void OMRStatistics::OMRCheckingConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
+void OMRStatistics::HMConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
 	for(auto pair : map) {
 		std::string className = pair.first;
 		std::vector<std::string> methods = pair.second;
@@ -487,14 +495,13 @@ void OMRStatistics::OMRCheckingConsumer::printClass2Method(std::map<std::string,
 	}
 }
 
-void OMRStatistics::OMRCheckingConsumer::printHierarchies(llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printHierarchies(llvm::raw_ostream* out) {
 	for(Hierarchy* h : hierarchies) {
 		printHierarchy("", h->base, "", out);
-		(*out) << "-------------------------\n";
 	}
 }
 
-void OMRStatistics::OMRCheckingConsumer::printHierarchy(std::string history, LinkedNode* node, std::string tabs, llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* node, std::string tabs, llvm::raw_ostream* out) {
 	history += node->name + " --> ";
 	std::vector<LinkedNode*>* parents = node->parents;
 	for(LinkedNode* parent : *parents) {
@@ -503,15 +510,14 @@ void OMRStatistics::OMRCheckingConsumer::printHierarchy(std::string history, Lin
 	if(parents->size() == 0) (*out) << history.substr(0, history.size() - 5) << "\n";
 }
 
-void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Context) {
+void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
-	ExtensibleClassCheckingVisitor extchkVisitor(&Context);
+	HMRecorder extchkVisitor(&Context);
 	extchkVisitor.TraverseDecl(Context.getTranslationUnitDecl());
 	
 	std::map<std::string, std::vector<std::string>*> classHierarchy = extchkVisitor.getclassHierarchy();
 	fillHierarchies(classHierarchy);
 	//collectMethodInfo(extchkVisitor);
-	
 	
 	llvm::raw_ostream* hierarchyOutput = nullptr;
 	llvm::raw_ostream* overloadOutput = nullptr;
@@ -540,9 +546,11 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 	}
 	
 	
-	/*if(conf.hierarchy)*/ printHierarchies(hierarchyOutput);
-	/*if(conf.overloading)*/ printOverloads(overloadOutput);
-	printOverrides(overrideOutput);
+	//if(conf.hierarchy) 
+		printHierarchies(hierarchyOutput);
+	//if(conf.overloading) 
+		//printOverloads(overloadOutput);
+	//printOverrides(overrideOutput);
 	
 	//Flush all outputs to their respective files
 	hierarchyOutput->flush();
@@ -559,7 +567,7 @@ void OMRStatistics::OMRCheckingConsumer::HandleTranslationUnit(ASTContext &Conte
 }
 
 std::unique_ptr<ASTConsumer> OMRStatistics::CheckingAction::CreateASTConsumer(CompilerInstance &CI, llvm::StringRef filename) {
-	return std::unique_ptr<ASTConsumer>(new OMRCheckingConsumer(filename, conf));
+	return std::unique_ptr<ASTConsumer>(new HMConsumer(filename, conf));
 }
 
 int OMRStatistics::CheckingAction::findLastCharIn(std::string input, char key) {
