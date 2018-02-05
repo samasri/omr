@@ -321,12 +321,15 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &visitor) {
 	for(auto hierarchy : hierarchies) {
 		
 		//iterate hierarchy from top to base
-		std::vector<std::vector<LinkedNode>>* hierarchyClasses = getTopToBaseAsArray(hierarchy);
-		assert(hierarchyClasses && hierarchyClasses->size() > 0 && "Passed an empty hierarchy to getTopToBaseAsArray");
+		
+		std::vector<std::vector<LinkedNode*>*>* subHierarchies = getTopToBaseAsArray(hierarchy);
+		assert(subHierarchies && subHierarchies->size() > 0 && "Passed an empty hierarchy to getTopToBaseAsArray");
+		
+		
 		//Iterate through each subHierarchy's classes
-		for(std::vector<LinkedNode> subHierarchyClasses : *hierarchyClasses) {
-			for(LinkedNode current : subHierarchyClasses) {
-				std::string className = current.name;
+		for(std::vector<LinkedNode*>* subHierarchyClasses : *subHierarchies) {
+			for(LinkedNode* current : *subHierarchyClasses) {
+				std::string className = current->name;
 				auto Class2MethodsIterator = map.find(className);
 				
 				/*if(Class2MethodsIterator == map.end()) {
@@ -367,8 +370,37 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &visitor) {
 	}
 }
 
-std::vector<std::vector<OMRStatistics::LinkedNode>>* getTopToBaseAsArray(OMRStatistics::Hierarchy hierarchy) {
-	return nullptr;
+std::vector<std::vector<OMRStatistics::LinkedNode*>*>* OMRStatistics::HMConsumer::getTopToBaseAsArray(OMRStatistics::Hierarchy* hierarchy) {
+	std::vector<LinkedNode*>* array = new std::vector<LinkedNode*>();
+	std::vector<std::vector<LinkedNode*>*>* subHierarchies = new std::vector<std::vector<LinkedNode*>*>;
+	getTopToBaseAsArray(hierarchy->base, array, subHierarchies);
+	
+	for(std::vector<LinkedNode*>* subHierarchy : *subHierarchies) {
+		//Switch nodes in each subHierarchy
+		int switch2 = subHierarchy->size() - 1;
+		for(unsigned long switch1 = 0; switch1 < subHierarchy->size()/2; switch1++) {
+			LinkedNode* temp = subHierarchy->at(switch1);
+			subHierarchy->at(switch1) = subHierarchy->at(switch2);
+			subHierarchy->at(switch2) = temp;
+			switch2--;
+		}
+	}
+	delete array;
+	return subHierarchies;
+}
+
+void OMRStatistics::HMConsumer::getTopToBaseAsArray(LinkedNode* node, std::vector<OMRStatistics::LinkedNode*>* array, std::vector<std::vector<LinkedNode*>*>* subHierarchies) {
+	array->push_back(node);
+	if(node->parents->size() == 0) { //This node is a top of a base hierarchy
+		auto arrayCpy = new std::vector<LinkedNode*>();
+		for(LinkedNode* n : *array) arrayCpy->push_back(n); //Make a permanent copy of array
+		subHierarchies->push_back(arrayCpy);
+		return;
+	}
+	int counter = 0;
+	for(LinkedNode* parent : *node->parents) 
+		getTopToBaseAsArray(parent, array, subHierarchies);
+	return;
 }
 
 bool OMRStatistics::HMConsumer::shouldIgnoreNamespace(std::string nameSpace) {
@@ -517,7 +549,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
 	std::map<std::string, std::vector<std::string>*> classHierarchy = extchkVisitor.getclassHierarchy();
 	fillHierarchies(classHierarchy);
-	//collectMethodInfo(extchkVisitor);
+	collectMethodInfo(extchkVisitor);
 	
 	llvm::raw_ostream* hierarchyOutput = nullptr;
 	llvm::raw_ostream* overloadOutput = nullptr;
@@ -542,12 +574,11 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		hierarchyOutput = &(llvm::outs());
 		overloadOutput = &(llvm::outs());
 		overrideOutput = &(llvm::outs());
-		llvm::outs() << "Passing here\n";
 	}
 	
 	
 	//if(conf.hierarchy) 
-		printHierarchies(hierarchyOutput);
+		//printHierarchies(hierarchyOutput);
 	//if(conf.overloading) 
 		//printOverloads(overloadOutput);
 	//printOverrides(overrideOutput);
