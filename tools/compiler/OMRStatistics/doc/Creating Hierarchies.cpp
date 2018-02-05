@@ -95,29 +95,27 @@ collectMethodInfo(class2Methods) {
 
 getTopToBaseAsArray(hierarchy) {
 	array = new vector<std::string>;
-	stack = new vector<std::string>;
-	getTopToBaseAsArray(hierarhchy->base, array, stack)
 	subHierarchies = new vector<std::vector<std::string>>;
-	subHierarchies.add(new vector<std::string>);
-	for(node : array) { //Traverse from last node to first node
-		currentHierarchy = subHierarchies.back() //get last element
-		currentHierarchy.add(node);
-		if(node == hierarchy.base) subHierarchies.add(new vector<std::string>);
+	getTopToBaseAsArray(hierarhchy->base, array, subHierarchies)
+	
+	for(subHierarchy : subHierarchies) {
+		switchNodes(subHierarchy)
 	}
-	subHierarchies.pop_back; //remove last element since its an empty vector
+	delete array
 	return subHierarchies;
 }
 
-void getTopToBaseAsArray(node, array, stack) {
-	stack.add(node)
+void getTopToBaseAsArray(node, array, subHierarchies) {
 	array.add(node)
-	int counter = 0;
-	for(parent : node.parents) {
-		if(node.parents.size > 1 && counter > 0) for(n : stack) array.add(n) //add everything on the stack
-		getTopToBaseAsArray(parent, array, stack)
-		counter++;
+	if(node.parents == 0) { //This node is a top of a base hierarchy
+		subHierarchies.add(copy of array)
+		return
 	}
-	stack.remove(node)
+	for(parent : node.parents) {
+		getTopToBaseAsArray(parent, array, subHierarchies)
+	}
+	array.pop_back();
+	return
 }
 
 //TODO: edit method tracker (addOccurrence) to handle overrides in subHierarchies? Not really right?
