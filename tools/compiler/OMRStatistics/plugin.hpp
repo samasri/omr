@@ -57,7 +57,7 @@ namespace OMRStatistics {
 		LinkedNode* base; //Base class of hierarchy
 		std::string name; //Base name, to identify the class
 		//Maps every method to the array of hierarchy classes where it occurred
-		std::vector<std::map<std::string, std::vector<MethodTracker>*>> methodName2MethodTrackerVec;
+		std::vector<std::map<std::string, std::vector<MethodTracker>*>*> methodName2MethodTrackerVec;
 		//Stores the names of each methodTracker in the hierarchy for faster searching
 		//std::unordered_set<std::string>* methodNames = new std::unordered_set<std::string>; 
 		
@@ -125,7 +125,7 @@ namespace OMRStatistics {
 		//Get method name from its signature
 		static std::string getName(std::string methodSignature);
 		//Search for the MethodTracker with the inputted function name in the inputted hierarchy
-		MethodTracker* searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName);
+		MethodTracker* searchForTracker(std::map<std::string, std::vector<MethodTracker>*>* methodName2MethodTracker, std::string method, bool* sameName);
 		//Iterates through the entries of Class2Methods in the HMRecorder and creates MethodTrackers out of them
 		void collectMethodInfo(HMRecorder &visitor);
 		//Converts the hierarchy to an array of nodes, starting from the top to the base
@@ -147,8 +147,6 @@ namespace OMRStatistics {
 		size_t findLastStringIn(std::string input, std::string key);
 		void printOverloads(llvm::raw_ostream* out);
 		void printOverrides(llvm::raw_ostream* out);
-		//Prints Class2Methods in HMRecorder
-		void printClass2Method(std::map<std::string, std::vector<std::string>> &map);
 		
 		virtual void HandleTranslationUnit(ASTContext &Context);
 	};

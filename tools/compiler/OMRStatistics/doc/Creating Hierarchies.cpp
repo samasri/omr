@@ -119,4 +119,3 @@ void getTopToBaseAsArray(node, array, subHierarchies) {
 }
 
 //TODO: edit method tracker (addOccurrence) to handle overrides in subHierarchies? Not really right?
-//TODO: edit searchForTracker (same algorithm, just use different signature)
