@@ -480,31 +480,33 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
 
 void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 	(*out) << "BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName\n";
-	for(auto hierarchy : hierarchies) {
-		auto trackerMap = hierarchy->methodName2MethodTrackerVec;
-		//Iterate map to go through all trackers
-		auto b = trackerMap.begin();
-		auto e = trackerMap.end();
-		auto itr = b;
-		/*while(itr != e) {
-			auto hierarchyTrackers = itr->second;
-			for(auto tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
-				std::string baseClassName = tracker.baseClassName;
-				for(std::string className : *tracker.classesOverriden) {
-					std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(baseClassName);
-					std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
-					if(!shouldIgnoreNamespace(baseClassNameTuple->at(0)) || !shouldIgnoreNamespace(classNameTuple->at(0))) {
-						(*out) << baseClassNameTuple->at(0) << ";"; //namespace
-						(*out) << baseClassNameTuple->at(1) << ";";//className
-						(*out) << tracker.methodSignature << ";";
-						(*out) << classNameTuple->at(0) << ";"; //namespace
-						(*out) << classNameTuple->at(1) << "\n";//className
+	for(Hierarchy* hierarchy : hierarchies) {
+		std::vector<std::map<std::string, std::vector<MethodTracker>*>*> trackerMapVec = hierarchy->methodName2MethodTrackerVec;
+		for(std::map<std::string, std::vector<MethodTracker>*>* trackerMap : trackerMapVec) {
+			//Iterate each subHierarchy map to go through all trackers
+			auto b = trackerMap->begin();
+			auto e = trackerMap->end();
+			auto itr = b;
+			while(itr != e) {
+				std::vector<MethodTracker>* hierarchyTrackers = itr->second;
+				for(MethodTracker tracker : *hierarchyTrackers) { //The code in this block will be accessed by every tracker
+					std::string baseClassName = tracker.baseClassName;
+					for(std::string className : *tracker.classesOverriden) {
+						std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(baseClassName);
+						std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
+						if(!shouldIgnoreNamespace(baseClassNameTuple->at(0)) || !shouldIgnoreNamespace(classNameTuple->at(0))) {
+							(*out) << baseClassNameTuple->at(0) << ";"; //namespace
+							(*out) << baseClassNameTuple->at(1) << ";";//className
+							(*out) << tracker.methodSignature << ";";
+							(*out) << classNameTuple->at(0) << ";"; //namespace
+							(*out) << classNameTuple->at(1) << "\n";//className
+						}
+						baseClassName = className;
 					}
-					baseClassName = className;
 				}
+				itr++;
 			}
-			itr++;
-		}*/
+		}
 	}
 }
 
@@ -530,7 +532,6 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
 	std::map<std::string, std::vector<std::string>*> classHierarchy = extchkVisitor.getclassHierarchy();
 	fillHierarchies(classHierarchy);
-	
 	collectMethodInfo(extchkVisitor);
 	
 	llvm::raw_ostream* hierarchyOutput = nullptr;
@@ -560,10 +561,10 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
 	
 	//if(conf.hierarchy) 
-		//printHierarchies(hierarchyOutput);
+		printHierarchies(hierarchyOutput);
 	//if(conf.overloading) 
 		printOverloads(overloadOutput);
-	//printOverrides(overrideOutput);
+	printOverrides(overrideOutput);
 	
 	//Flush all outputs to their respective files
 	hierarchyOutput->flush();
