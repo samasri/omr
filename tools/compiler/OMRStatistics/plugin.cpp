@@ -97,7 +97,6 @@ bool OMRStatistics::HMRecorder::recordParents(std::string childClassName, std::s
 			if(std::find(b, e, parentClassName) != e) return false;
 		}
 		
-		//llvm::outs() << childClassName << " --> " << parentClassName << "\n";
 		parents->push_back(parentClassName);
 			
 		return true;
@@ -279,30 +278,26 @@ void OMRStatistics::HMConsumer::fillHierarchies(std::map<std::string, std::vecto
 				class2Address.emplace(parentNode->name, parentNode);
 				class2Address.emplace(childNode->name, childNode);
 			}
-			llvm::outs().flush();
 		}
 	}
 }
 
-OMRStatistics::MethodTracker* OMRStatistics::HMConsumer::searchForTracker(Hierarchy* hierarchy, std::string method, bool* sameName) {
+OMRStatistics::MethodTracker* OMRStatistics::HMConsumer::searchForTracker(std::map<std::string, std::vector<MethodTracker>*>* methodName2MethodTracker, std::string method, bool* sameName) {
 	std::string methodName = getName(method);
 	//Search for method trackers with same name
-	auto trackersVec = hierarchy->methodName2MethodTrackerVec;
-	for(auto trackers : trackersVec) {
-		auto e1 = trackers.end();
-		auto itr1 = trackers.find(methodName);
-		if (itr1 != e1) {
-			*sameName = true;
-			//Search for the method tracker with the same signature
-			std::vector<MethodTracker>* trackersMatchingName = itr1->second;
-			auto b2 = trackersMatchingName->begin();
-			auto e2 = trackersMatchingName->end();
-			auto itr2 = std::find(b2, e2, method);
-			if (itr2 != e2) {
-				MethodTracker* t = trackersMatchingName->data() + (itr2-b2); //Change the iterator to the actual pointer to the target MethodTracker
-				
-				return t; 
-			}
+	auto e1 = methodName2MethodTracker->end();
+	auto itr1 = methodName2MethodTracker->find(methodName);
+	if (itr1 != e1) {
+		*sameName = true;
+		//Search for the method tracker with the same signature
+		std::vector<MethodTracker>* trackersMatchingName = itr1->second;
+		auto b2 = trackersMatchingName->begin();
+		auto e2 = trackersMatchingName->end();
+		auto itr2 = std::find(b2, e2, method);
+		if (itr2 != e2) {
+			MethodTracker* t = trackersMatchingName->data() + (itr2-b2); //Change the iterator to the actual pointer to the target MethodTracker
+			
+			return t; 
 		}
 	}
 	
@@ -319,52 +314,45 @@ std::string OMRStatistics::HMConsumer::getName(std::string methodSignature) {
 void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &visitor) {
 	auto map = visitor.getClass2Methods();
 	for(auto hierarchy : hierarchies) {
-		
 		//iterate hierarchy from top to base
 		
-		std::vector<std::vector<LinkedNode*>*>* subHierarchies = getTopToBaseAsArray(hierarchy);
+		std::vector<std::vector<LinkedNode*>*>* subHierarchies = getTopToBaseAsArray(hierarchy);	
 		assert(subHierarchies && subHierarchies->size() > 0 && "Passed an empty hierarchy to getTopToBaseAsArray");
 		
-		
 		//Iterate through each subHierarchy's classes
-		for(std::vector<LinkedNode*>* subHierarchyClasses : *subHierarchies) {
-			for(LinkedNode* current : *subHierarchyClasses) {
+		for(std::vector<LinkedNode*>* subHierarchy : *subHierarchies) {
+			//Create new methodTracker for subHierarchy
+			auto methodName2MethodTracker = new std::map<std::string, std::vector<MethodTracker>*>();
+			hierarchy->methodName2MethodTrackerVec.push_back(methodName2MethodTracker);
+			
+			//Process each method in every class of the subHierarchy
+			for(LinkedNode* current : *subHierarchy) {
 				std::string className = current->name;
-				auto Class2MethodsIterator = map.find(className);
-				
-				/*if(Class2MethodsIterator == map.end()) {
-					//This case is when the class is in the hierarchy but not recorded in Class2Methods maps, this is usually because the class has no functions
-					current = current->parent;
-					continue;
-				}*/
-				
-				//Iterate through the methods and connect them to their classes via MethodTracker objects
-				/*std::unordered_set<std::string*> methods = Class2MethodsIterator->second;
+				auto itr = map.find(className);
+				if(itr == map.end()) continue;
+				std::unordered_set<std::string*> methods = itr->second;
 				for(std::string* methodPtr : methods) {
 					std::string method = *methodPtr;
 					bool sameName = false;
-					auto tracker = searchForTracker(hierarchy, method, &sameName);
-					//If we found the methodTracker then add the class to it, or else create a new one
-					if(tracker) tracker->addOccurence(className);
+					MethodTracker* tracker = searchForTracker(methodName2MethodTracker, method, &sameName);
+					if(tracker)  //This is an override
+						tracker->addOccurence(className);
 					else {
 						std::string methodName = getName(method);
 						bool isFirstOccurence = true;
 						std::vector<MethodTracker>* trackers;
-						if(sameName) { //MethodTrackers with same name were found, this is an overload
+						if(sameName) { //This is an override
 							isFirstOccurence = false;
-							trackers = hierarchy->methodName2MethodTracker.find(methodName)->second;
+							trackers = methodName2MethodTracker->find(methodName)->second;
 						}
-						else { //This is a completely new method
+						else { //This is a completely new functions
 							trackers = new std::vector<MethodTracker>();
-							hierarchy->methodName2MethodTracker.emplace(methodName, trackers);
+							methodName2MethodTracker->emplace(methodName, trackers);
 						}
 						MethodTracker newTracker(className, method, isFirstOccurence);
 						trackers->emplace_back(newTracker);
 					}
-				}*/
-				
-				//Jump to parent class
-				//current = current->parent;
+				}
 			}
 		}
 	}
@@ -395,11 +383,12 @@ void OMRStatistics::HMConsumer::getTopToBaseAsArray(LinkedNode* node, std::vecto
 		auto arrayCpy = new std::vector<LinkedNode*>();
 		for(LinkedNode* n : *array) arrayCpy->push_back(n); //Make a permanent copy of array
 		subHierarchies->push_back(arrayCpy);
+		array->pop_back();
 		return;
 	}
-	int counter = 0;
 	for(LinkedNode* parent : *node->parents) 
 		getTopToBaseAsArray(parent, array, subHierarchies);
+	array->pop_back();
 	return;
 }
 
@@ -460,18 +449,20 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
 	(*out) << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMapVec = hierarchy->methodName2MethodTrackerVec;
-		for(auto trackerMap : trackerMapVec) {
-			//Iterate map to go through all trackers
-			auto b = trackerMap.begin();
-			auto e = trackerMap.end();
+		for(auto trackerMap : trackerMapVec) { //Go through the map of each subHierarchy
+			//Iterate the subHierarchy map to go through all trackers
+			auto b = trackerMap->begin();
+			auto e = trackerMap->end();
 			auto itr = b;
 			while(itr != e) {
 				auto hierarchyTrackers = *(itr->second);
-				if(hierarchyTrackers.size() < 2) {
+				if(hierarchyTrackers.size() < 2) { 
+				//If methodname has only one signature, then it is not overloaded
 					itr++;
 					continue;
 				}
-				for(auto tracker : hierarchyTrackers) { //The code in this block will be accessed by every tracker
+				//Go through each tracker (signature) for a specific method name and report the overloads
+				for(auto tracker : hierarchyTrackers) {
 					std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
 					if(!shouldIgnoreNamespace(tuple->at(0))) {
 						(*out) << tracker.methodName << ";";
@@ -517,16 +508,6 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 	}
 }
 
-void OMRStatistics::HMConsumer::printClass2Method(std::map<std::string, std::vector<std::string>> &map) {
-	for(auto pair : map) {
-		std::string className = pair.first;
-		std::vector<std::string> methods = pair.second;
-		for(std::string method : methods) {
-			llvm::outs() << className << " --> " << method << "\n";
-		}
-	}
-}
-
 void OMRStatistics::HMConsumer::printHierarchies(llvm::raw_ostream* out) {
 	for(Hierarchy* h : hierarchies) {
 		printHierarchy("", h->base, "", out);
@@ -549,6 +530,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
 	std::map<std::string, std::vector<std::string>*> classHierarchy = extchkVisitor.getclassHierarchy();
 	fillHierarchies(classHierarchy);
+	
 	collectMethodInfo(extchkVisitor);
 	
 	llvm::raw_ostream* hierarchyOutput = nullptr;
@@ -580,7 +562,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	//if(conf.hierarchy) 
 		//printHierarchies(hierarchyOutput);
 	//if(conf.overloading) 
-		//printOverloads(overloadOutput);
+		printOverloads(overloadOutput);
 	//printOverrides(overrideOutput);
 	
 	//Flush all outputs to their respective files
