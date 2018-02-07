@@ -4,33 +4,125 @@ CS2;BSDTimer;Read();CS2;Timer
 CS2;BSDTimer;Reset();CS2;Timer
 CS2;BSDTimer;Start();CS2;Timer
 CS2;BSDTimer;Stop();CS2;Timer
-OMR;AutomaticSymbol;AutomaticSymbol(TR::DataType);TR;AutomaticSymbol
-OMR;AutomaticSymbol;AutomaticSymbol(TR::DataType,uint32_t);TR;AutomaticSymbol
-OMR;AutomaticSymbol;AutomaticSymbol(TR::DataType,uint32_t,const char *);TR;AutomaticSymbol
-OMR;RegisterMappedSymbol;RegisterMappedSymbol(TR::DataType,uint32_t);TR;RegisterMappedSymbol
-OMR;RegisterMappedSymbol;RegisterMappedSymbol(TR::DataType);TR;RegisterMappedSymbol
-OMR;RegisterMappedSymbol;RegisterMappedSymbol(int32_t);TR;RegisterMappedSymbol
-OMR;Symbol;Symbol(TR::DataType);TR;Symbol
-OMR;Symbol;Symbol();TR;Symbol
-OMR;Symbol;Symbol(TR::DataType,uint32_t);TR;Symbol
-OMR;Symbol;getKind();OMR;AutomaticSymbol
-OMR;Symbol;getOffset();OMR;RegisterMappedSymbol
-OMR;Symbol;isReferenced();OMR;AutomaticSymbol
-OMR;Symbol;self();OMR;RegisterMappedSymbol
-OMR;RegisterMappedSymbol;self();OMR;AutomaticSymbol
-OMR;AutomaticSymbol;~AutomaticSymbol();TR;AutomaticSymbol
-OMR;RegisterMappedSymbol;~RegisterMappedSymbol();TR;RegisterMappedSymbol
-OMR;Symbol;~Symbol();TR;Symbol
 OMR;Block;Block(class TR_Memory *);TR;Block
 OMR;Block;Block(TR::TreeTop *,TR::TreeTop *,class TR_Memory *);TR;Block
 TR;CFGNode;asBlock();OMR;Block
 TR;CFGNode;removeFromCFG(TR::Compilation *);OMR;Block
 OMR;Block;~Block();TR;Block
-OMR;LabelSymbol;LabelSymbol(TR::CodeGenerator *);TR;LabelSymbol
-OMR;LabelSymbol;LabelSymbol();TR;LabelSymbol
-OMR;LabelSymbol;LabelSymbol(TR::CodeGenerator *,TR::Block *);TR;LabelSymbol
-OMR;Symbol;self();OMR;LabelSymbol
-OMR;LabelSymbol;~LabelSymbol();TR;LabelSymbol
+OMR;CPU;CPU();OMR::Power;CPU
+OMR::Power;CPU;CPU();TR;CPU
+OMR;CPU;getSupportsHardwareCopySign();OMR::Power;CPU
+OMR;CPU;getSupportsHardwareRound();OMR::Power;CPU
+OMR;CPU;getSupportsHardwareSQRT();OMR::Power;CPU
+OMR;CPU;~CPU();OMR::Power;CPU
+OMR::Power;CPU;~CPU();TR;CPU
+OMR;DebugEnv;DebugEnv();OMR::Power;DebugEnv
+OMR::Power;DebugEnv;DebugEnv();TR;DebugEnv
+OMR;DebugEnv;~DebugEnv();OMR::Power;DebugEnv
+OMR::Power;DebugEnv;~DebugEnv();TR;DebugEnv
+OMR;InstOpCode;InstOpCode();OMR::Power;InstOpCode
+OMR::Power;InstOpCode;InstOpCode();TR;InstOpCode
+OMR;InstOpCode;InstOpCode(enum OMR::InstOpCode::Mnemonic);OMR::Power;InstOpCode
+OMR;InstOpCode;~InstOpCode();OMR::Power;InstOpCode
+OMR::Power;InstOpCode;~InstOpCode();TR;InstOpCode
+OMR;Instruction;Instruction(TR::CodeGenerator *,TR::Instruction *,TR::class InstOpCode::Mnemonic,TR::Node *);OMR::Power;Instruction
+OMR;Instruction;Instruction(TR::CodeGenerator *,TR::class InstOpCode::Mnemonic,TR::Node *);OMR::Power;Instruction
+OMR;Instruction;assignRegisters(enum TR_RegisterKinds);OMR::Power;Instruction
+OMR;Instruction;defsRegister(TR::Register *);OMR::Power;Instruction
+OMR;Instruction;dependencyRefsRegister(TR::Register *);OMR::Power;Instruction
+OMR;Instruction;estimateBinaryLength(int32_t);OMR::Power;Instruction
+OMR;Instruction;generateBinaryEncoding();OMR::Power;Instruction
+OMR;Instruction;getBinaryLengthLowerBound();OMR::Power;Instruction
+OMR;Instruction;getKind();OMR::Power;Instruction
+OMR;Instruction;getOpCode();OMR::Power;Instruction
+OMR;Instruction;getOpCodeValue();OMR::Power;Instruction
+OMR;Instruction;refsRegister(TR::Register *);OMR::Power;Instruction
+OMR;Instruction;remove();OMR::Power;Instruction
+OMR;Instruction;setOpCodeValue(TR::class InstOpCode::Mnemonic);OMR::Power;Instruction
+OMR;Instruction;usesRegister(TR::Register *);OMR::Power;Instruction
+OMR;Instruction;~Instruction();OMR::Power;Instruction
+OMR::Power;Instruction;~Instruction();TR;Instruction
+OMR::Power;Machine;Machine(TR::CodeGenerator *);TR;Machine
+OMR;Machine;~Machine();OMR::Power;Machine
+OMR::Power;Machine;~Machine();TR;Machine
+OMR::Power;MemoryReference;MemoryReference(TR::Node *,TR::SymbolReference *,uint32_t,TR::CodeGenerator *);TR;MemoryReference
+OMR::Power;MemoryReference;MemoryReference(TR::Register *,int32_t,uint8_t,TR::CodeGenerator *);TR;MemoryReference
+OMR::Power;MemoryReference;MemoryReference(TR::CodeGenerator *);TR;MemoryReference
+OMR::Power;MemoryReference;MemoryReference(TR::Register *,TR::Register *,uint8_t,TR::CodeGenerator *);TR;MemoryReference
+OMR::Power;MemoryReference;MemoryReference(TR::Node *,uint32_t,TR::CodeGenerator *);TR;MemoryReference
+OMR;MemoryReference;jitPersistentAlloc(size_t);OMR::Power;MemoryReference
+OMR;MemoryReference;jitPersistentFree(void *);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete(void *,TR::Region &);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete(void *,size_t);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete[](void *,TR::Region &);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::Power;MemoryReference
+OMR;MemoryReference;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_PersistentMemory *);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new(size_t,TR::Internal::PersistentNewType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new(size_t,TR_ArenaAllocator *);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new(size_t,TR::Region &);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new[](size_t,TR::Region &);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_PersistentMemory *);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new[](size_t,TR::Internal::PersistentNewType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Power;MemoryReference
+OMR;MemoryReference;~MemoryReference();OMR::Power;MemoryReference
+OMR::Power;MemoryReference;~MemoryReference();TR;MemoryReference
+OMR::Power;RealRegister;RealRegister(TR::CodeGenerator *);TR;RealRegister
+OMR::Power;RealRegister;RealRegister(enum TR_RegisterKinds,uint16_t,RegState,RegNum,RegMask,TR::CodeGenerator *);TR;RealRegister
+OMR;Register;Register(enum TR_RegisterKinds,uint16_t);OMR::Power;Register
+OMR::Power;Register;Register(enum TR_RegisterKinds,uint16_t);TR;Register
+OMR;Register;Register(enum TR_RegisterKinds);OMR::Power;Register
+OMR::Power;Register;Register(enum TR_RegisterKinds);TR;Register
+OMR;Register;Register(uint32_t);OMR::Power;Register
+OMR::Power;Register;Register(uint32_t);TR;Register
+OMR;Register;block();OMR;RealRegister
+OMR;RealRegister;getAvailableRegistersMask(enum TR_RegisterKinds);OMR::Power;RealRegister
+OMR;Register;getRealRegister();OMR;RealRegister
+OMR;Register;getRegister();OMR;RealRegister
+OMR;RealRegister;regMaskToRealRegister(TR_RegisterMask,enum TR_RegisterKinds,TR::CodeGenerator *);OMR::Power;RealRegister
+OMR;Register;self();OMR;RealRegister
+OMR;Register;setAssignedRegister(TR::Register *);OMR;RealRegister
+OMR;Register;unblock();OMR;RealRegister
+OMR;RealRegister;~RealRegister();OMR::Power;RealRegister
+OMR::Power;RealRegister;~RealRegister();TR;RealRegister
+OMR;Register;~Register();OMR::Power;Register
+OMR::Power;Register;~Register();TR;Register
+OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);OMR::Power;Snippet
+OMR::Power;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);TR;Snippet
+OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);OMR::Power;Snippet
+OMR::Power;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);TR;Snippet
+OMR;Snippet;~Snippet();OMR::Power;Snippet
+OMR::Power;Snippet;~Snippet();TR;Snippet
+OMR;TreeEvaluator;unImpOpEvaluator(TR::Node *,TR::CodeGenerator *);OMR::Power;TreeEvaluator
+OMR;RegisterMappedSymbol;RegisterMappedSymbol(TR::DataType,uint32_t);TR;RegisterMappedSymbol
+OMR;RegisterMappedSymbol;RegisterMappedSymbol(TR::DataType);TR;RegisterMappedSymbol
+OMR;RegisterMappedSymbol;RegisterMappedSymbol(int32_t);TR;RegisterMappedSymbol
+OMR;Symbol;Symbol();TR;Symbol
+OMR;Symbol;Symbol(TR::DataType);TR;Symbol
+OMR;Symbol;Symbol(TR::DataType,uint32_t);TR;Symbol
+OMR;Symbol;getOffset();OMR;RegisterMappedSymbol
+OMR;Symbol;self();OMR;RegisterMappedSymbol
+OMR;RegisterMappedSymbol;~RegisterMappedSymbol();TR;RegisterMappedSymbol
+OMR;Symbol;~Symbol();TR;Symbol
+OMR;RegisterPair;RegisterPair();TR;RegisterPair
+OMR;RegisterPair;RegisterPair(enum TR_RegisterKinds);TR;RegisterPair
+OMR;RegisterPair;RegisterPair(TR::Register *,TR::Register *);TR;RegisterPair
+OMR;Register;block();OMR;RegisterPair
+OMR;Register;getHighOrder();OMR;RegisterPair
+OMR;Register;getLowOrder();OMR;RegisterPair
+OMR;Register;getRegister();OMR;RegisterPair
+OMR;Register;getRegisterPair();OMR;RegisterPair
+OMR;Register;unblock();OMR;RegisterPair
+OMR;RegisterPair;~RegisterPair();TR;RegisterPair
 OMR;MethodSymbol;MethodSymbol(enum TR_LinkageConventions,class TR_Method *);TR;MethodSymbol
 OMR;ResolvedMethodSymbol;ResolvedMethodSymbol(class TR_ResolvedMethod *,TR::Compilation *);TR;ResolvedMethodSymbol
 OMR;Symbol;isStatic();OMR;MethodSymbol
@@ -38,66 +130,12 @@ OMR;Symbol;self();OMR;MethodSymbol
 OMR;MethodSymbol;self();OMR;ResolvedMethodSymbol
 OMR;MethodSymbol;~MethodSymbol();TR;MethodSymbol
 OMR;ResolvedMethodSymbol;~ResolvedMethodSymbol();TR;ResolvedMethodSymbol
-OMR;StaticSymbol;StaticSymbol(TR::DataType,uint32_t);TR;StaticSymbol
 OMR;StaticSymbol;StaticSymbol(TR::DataType,void *);TR;StaticSymbol
 OMR;StaticSymbol;StaticSymbol(TR::DataType);TR;StaticSymbol
+OMR;StaticSymbol;StaticSymbol(TR::DataType,uint32_t);TR;StaticSymbol
 OMR;Symbol;getName();OMR;StaticSymbol
 OMR;Symbol;self();OMR;StaticSymbol
 OMR;StaticSymbol;~StaticSymbol();TR;StaticSymbol
-OMR::X86::AMD64;Machine;Machine(TR::CodeGenerator *);TR;Machine
-OMR;Machine;~Machine();OMR::X86;Machine
-OMR::X86;Machine;~Machine();OMR::X86::AMD64;Machine
-OMR::X86::AMD64;Machine;~Machine();TR;Machine
-OMR::X86;RealRegister;RealRegister(TR::CodeGenerator *);OMR::X86::AMD64;RealRegister
-OMR::X86;RealRegister;RealRegister(enum TR_RegisterKinds,uint16_t,RegState,RegNum,RegMask,TR::CodeGenerator *);OMR::X86::AMD64;RealRegister
-OMR;Register;Register(enum TR_RegisterKinds,uint16_t);OMR::X86;Register
-OMR::X86;Register;Register(enum TR_RegisterKinds,uint16_t);TR;Register
-OMR;Register;Register(enum TR_RegisterKinds);OMR::X86;Register
-OMR::X86;Register;Register(enum TR_RegisterKinds);TR;Register
-OMR;Register;Register(uint32_t);OMR::X86;Register
-OMR::X86;Register;Register(uint32_t);TR;Register
-OMR;Register;block();OMR;RealRegister
-OMR;RealRegister;getAvailableRegistersMask(enum TR_RegisterKinds);OMR::X86;RealRegister
-OMR;Register;getRealRegister();OMR;RealRegister
-OMR;Register;getRegister();OMR;RealRegister
-OMR;RealRegister;regMaskToRealRegister(TR_RegisterMask,enum TR_RegisterKinds,TR::CodeGenerator *);OMR::X86;RealRegister
-OMR;Register;self();OMR;RealRegister
-OMR;Register;setAssignedRegister(TR::Register *);OMR;RealRegister
-OMR;Register;unblock();OMR;RealRegister
-OMR;RealRegister;~RealRegister();OMR::X86;RealRegister
-OMR::X86;RealRegister;~RealRegister();OMR::X86::AMD64;RealRegister
-OMR::X86::AMD64;RealRegister;~RealRegister();TR;RealRegister
-OMR;Register;~Register();OMR::X86;Register
-OMR::X86;Register;~Register();TR;Register
-OMR;CPU;CPU();OMR::X86;CPU
-OMR::X86;CPU;CPU();TR;CPU
-OMR;CPU;~CPU();OMR::X86;CPU
-OMR::X86;CPU;~CPU();TR;CPU
-OMR;DebugEnv;DebugEnv();OMR::X86;DebugEnv
-OMR::X86;DebugEnv;DebugEnv();TR;DebugEnv
-OMR;DebugEnv;~DebugEnv();OMR::X86;DebugEnv
-OMR::X86;DebugEnv;~DebugEnv();TR;DebugEnv
-OMR;Instruction;Instruction(TR::CodeGenerator *,TR::Instruction *,TR::class InstOpCode::Mnemonic,TR::Node *);OMR::X86;Instruction
-OMR;Instruction;Instruction(TR::CodeGenerator *,TR::class InstOpCode::Mnemonic,TR::Node *);OMR::X86;Instruction
-OMR;Instruction;assignRegisters(enum TR_RegisterKinds);OMR::X86;Instruction
-OMR;Instruction;defsRegister(TR::Register *);OMR::X86;Instruction
-OMR;Instruction;dependencyRefsRegister(TR::Register *);OMR::X86;Instruction
-OMR;Instruction;estimateBinaryLength(int32_t);OMR::X86;Instruction
-OMR;Instruction;generateBinaryEncoding();OMR::X86;Instruction
-OMR;Instruction;getKind();OMR::X86;Instruction
-OMR;Instruction;getOpCode();OMR::X86;Instruction
-OMR;Instruction;getOpCodeValue();OMR::X86;Instruction
-OMR;Instruction;isPatchBarrier();OMR::X86;Instruction
-OMR;Instruction;refsRegister(TR::Register *);OMR::X86;Instruction
-OMR;Instruction;usesRegister(TR::Register *);OMR::X86;Instruction
-OMR;Instruction;~Instruction();OMR::X86;Instruction
-OMR::X86;Instruction;~Instruction();TR;Instruction
-OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);OMR::X86;Snippet
-OMR::X86;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);TR;Snippet
-OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);OMR::X86;Snippet
-OMR::X86;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);TR;Snippet
-OMR;Snippet;~Snippet();OMR::X86;Snippet
-OMR::X86;Snippet;~Snippet();TR;Snippet
 OMR;AliasBuilder;AliasBuilder(TR::SymbolReferenceTable *,size_t,TR::Compilation *);TR;AliasBuilder
 OMR;AliasBuilder;~AliasBuilder();TR;AliasBuilder
 OMR;ArithEnv;ArithEnv();TR;ArithEnv
@@ -131,93 +169,93 @@ OMR;ClassEnv;ClassEnv();TR;ClassEnv
 OMR;ClassEnv;~ClassEnv();TR;ClassEnv
 OMR;CodeGenPhase;CodeGenPhase(TR::CodeGenerator *);TR;CodeGenPhase
 OMR;CodeGenPhase;~CodeGenPhase();TR;CodeGenPhase
-OMR;CodeGenerator;CodeGenerator();OMR::X86;CodeGenerator
-OMR::X86;CodeGenerator;CodeGenerator();OMR::X86::AMD64;CodeGenerator
-OMR::X86::AMD64;CodeGenerator;CodeGenerator();TestCompiler;CodeGenerator
+OMR;CodeGenerator;CodeGenerator();OMR::Power;CodeGenerator
+OMR::Power;CodeGenerator;CodeGenerator();TestCompiler;CodeGenerator
 TestCompiler;CodeGenerator;CodeGenerator();TR;CodeGenerator
-OMR;CodeGenerator;allowGlobalRegisterAcrossBranch(class TR_RegisterCandidate *,TR::Node *);OMR::X86;CodeGenerator
-OMR::X86;CodeGenerator;allowVMThreadRematerialization();OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;apply32BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;apply32BitLoadLabelRelativeRelocation(TR::Instruction *,TR::LabelSymbol *,TR::LabelSymbol *,int32_t);OMR::X86;CodeGenerator
-OMR;CodeGenerator;arrayInitMinimumNumberOfBytes();OMR::X86;CodeGenerator
-OMR;CodeGenerator;arrayTranslateAndTestMinimumNumberOfIterations();OMR::X86;CodeGenerator
-OMR;CodeGenerator;arrayTranslateMinimumNumberOfElements(_Bool,_Bool);OMR::X86;CodeGenerator
-OMR;CodeGenerator;beginInstructionSelection();OMR::X86;CodeGenerator
-OMR;CodeGenerator;buildRegisterMapForInstruction(class TR_GCStackMap *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;canFoldLargeOffsetInAddressing();OMR::X86;CodeGenerator
-OMR;CodeGenerator;canNullChkBeImplicit(TR::Node *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;canTransformUnsafeCopyToArrayCopy();OMR::X86;CodeGenerator
-OMR;CodeGenerator;codegenSupportsUnsignedIntegerDivide();OMR::X86;CodeGenerator
-OMR;CodeGenerator;computeRegisterSaveDescription(class TR_BitVector *,_Bool);OMR::X86;CodeGenerator
-OMR;CodeGenerator;createLinkage(enum TR_LinkageConventions);OMR::X86;CodeGenerator
-OMR;CodeGenerator;doBinaryEncoding();OMR::X86;CodeGenerator
-OMR;CodeGenerator;doRegisterAssignment(enum TR_RegisterKinds);OMR::X86;CodeGenerator
-OMR;CodeGenerator;doRematerialization();OMR::X86;CodeGenerator
-OMR;CodeGenerator;dumpDataSnippets(TR::FILE *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;emitDataSnippets();OMR::X86;CodeGenerator
-OMR;CodeGenerator;endInstructionSelection();OMR::X86;CodeGenerator
-OMR;CodeGenerator;estimateBinaryLength(TR::MemoryReference *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,TR::RegisterDependencyConditions *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,class TR_ScratchRegisterManager &);OMR::X86;CodeGenerator
-OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,int32_t,class TR_ScratchRegisterManager &);OMR::X86;CodeGenerator
-OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,int32_t,TR::RegisterDependencyConditions *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;getGlobalFPRsPreservedAcrossCalls();OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;getGlobalGPRsPreservedAcrossCalls();OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;getGlobalRegisters(enum TR_SpillKinds,enum TR_LinkageConventions);OMR::X86;CodeGenerator
-OMR;CodeGenerator;getLinkageGlobalRegisterNumber(int8_t,TR::DataType);OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;getMaxPatchableInstructionLength();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *);OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;getMaximumNumbersOfAssignableFPRs();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getMaximumNumbersOfAssignableGPRs();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getMaximumNumbersOfAssignableVRs();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSizeOfCombinedBuffer();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSupportsBitOpCodes();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSupportsEncodeUtf16BigWithSurrogateTest();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSupportsEncodeUtf16LittleWithSurrogateTest();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSupportsIbyteswap();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSupportsNewObjectAlignment();OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSupportsOpCodeForAutoSIMD(TR::ILOpCode,TR::DataType);OMR::X86;CodeGenerator
-OMR;CodeGenerator;getSupportsTenuredObjectAlignment();OMR::X86;CodeGenerator
-OMR;CodeGenerator;hasComplexAddressingMode();OMR::X86;CodeGenerator
-OMR;CodeGenerator;hasDataSnippets();OMR::X86;CodeGenerator
-OMR;CodeGenerator;hasTMEvaluator();OMR::X86;CodeGenerator
-OMR;CodeGenerator;internalPointerSupportImplemented();OMR::X86;CodeGenerator
-OMR::X86;CodeGenerator;internalPointerSupportImplemented();OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;isAddressScaleIndexSupported(int32_t);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isAlignmentInstruction(TR::Instruction *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isBranchInstruction(TR::Instruction *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isFenceInstruction(TR::Instruction *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isLabelInstruction(TR::Instruction *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isObjectOfSizeWorthAligning(uint32_t);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isPreservedRegister(int32_t);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isReturnInstruction(TR::Instruction *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;isTargetSnippetOrOutOfLine(TR::Instruction *,TR::Instruction **,TR::Instruction **);OMR::X86;CodeGenerator
-OMR::X86;CodeGenerator;longClobberEvaluate(TR::Node *);OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;materializesHeapBase();OMR::X86;CodeGenerator
-OMR;CodeGenerator;needToAvoidCommoningInGRA();OMR::X86;CodeGenerator
-OMR;CodeGenerator;nodeResultGPRCount(TR::Node *,struct OMR::CodeGenerator::TR_RegisterPressureState *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;opCodeIsNoOpOnThisPlatform(TR::ILOpCode &);OMR::X86::AMD64;CodeGenerator
-OMR;CodeGenerator;processIncomingParameterUsage(class TR_BitVector **,int32_t);OMR::X86;CodeGenerator
-OMR;CodeGenerator;processInstruction(TR::Instruction *,class TR_BitVector **,int32_t &,int32_t &,_Bool);OMR::X86;CodeGenerator
-OMR;CodeGenerator;removeUnavailableRegisters(class TR_RegisterCandidate *,TR::Block **,class TR_BitVector &);OMR::X86;CodeGenerator
-OMR;CodeGenerator;setEstimatedLocationsForDataSnippetLabels(int32_t);OMR::X86;CodeGenerator
-OMR;CodeGenerator;simulateNodeEvaluation(TR::Node *,struct OMR::CodeGenerator::TR_RegisterPressureState *,struct OMR::CodeGenerator::TR_RegisterPressureSummary *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;splitBlockEntry(TR::Instruction *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;splitEdge(TR::Instruction *,_Bool,_Bool,TR::Instruction *,TR::list<TR::Instruction *> *,_Bool);OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsAtomicAdd();OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsComplexAddressing();OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsDebugCounters(TR::DebugCounterInjectionPoint);OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsDirectJNICallsForAOT();OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsInliningOfIsInstance();OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsMergingGuards();OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsPassThroughCopyToNewVirtualRegister();OMR::X86;CodeGenerator
-OMR;CodeGenerator;supportsSinglePrecisionSQRT();OMR::X86;CodeGenerator
-OMR;CodeGenerator;suppressInliningOfRecognizedMethod(TR::RecognizedMethod);OMR::X86;CodeGenerator
-OMR;CodeGenerator;updateSnippetMapWithRSD(TR::Instruction *,int32_t);OMR::X86;CodeGenerator
-OMR;CodeGenerator;willBeEvaluatedAsCallByCodeGen(TR::Node *,TR::Compilation *);OMR::X86;CodeGenerator
-OMR;CodeGenerator;~CodeGenerator();OMR::X86;CodeGenerator
-OMR::X86;CodeGenerator;~CodeGenerator();OMR::X86::AMD64;CodeGenerator
-OMR::X86::AMD64;CodeGenerator;~CodeGenerator();TestCompiler;CodeGenerator
+OMR;CodeGenerator;allowGlobalRegisterAcrossBranch(class TR_RegisterCandidate *,TR::Node *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;apply16BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;apply16BitLoadLabelRelativeRelocation(TR::Instruction *,TR::LabelSymbol *,TR::LabelSymbol *,int32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;apply24BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;apply64BitLoadLabelRelativeRelocation(TR::Instruction *,TR::LabelSymbol *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;arrayInitMinimumNumberOfBytes();OMR::Power;CodeGenerator
+OMR;CodeGenerator;arrayTranslateAndTestMinimumNumberOfIterations();OMR::Power;CodeGenerator
+OMR;CodeGenerator;arrayTranslateMinimumNumberOfElements(_Bool,_Bool);OMR::Power;CodeGenerator
+OMR;CodeGenerator;beginInstructionSelection();OMR::Power;CodeGenerator
+OMR;CodeGenerator;branchesAreExpensive();OMR::Power;CodeGenerator
+OMR;CodeGenerator;buildRegisterMapForInstruction(class TR_GCStackMap *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;calculateRegisterPressure();OMR::Power;CodeGenerator
+OMR;CodeGenerator;canTransformUnsafeCopyToArrayCopy();OMR::Power;CodeGenerator
+OMR;CodeGenerator;canTransformUnsafeSetMemory();OMR::Power;CodeGenerator
+OMR;CodeGenerator;computeRegisterSaveDescription(class TR_BitVector *,_Bool);OMR::Power;CodeGenerator
+OMR;CodeGenerator;createLinkage(enum TR_LinkageConventions);OMR::Power;CodeGenerator
+OMR;CodeGenerator;doBinaryEncoding();OMR::Power;CodeGenerator
+OMR;CodeGenerator;doPeephole();OMR::Power;CodeGenerator
+OMR;CodeGenerator;doRegisterAssignment(enum TR_RegisterKinds);OMR::Power;CodeGenerator
+OMR;CodeGenerator;doRematerialization();OMR::Power;CodeGenerator
+OMR;CodeGenerator;dumpDataSnippets(TR::FILE *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;emitDataSnippets();OMR::Power;CodeGenerator
+OMR;CodeGenerator;endInstructionSelection();OMR::Power;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,TR::RegisterDependencyConditions *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,class TR_ScratchRegisterManager &);OMR::Power;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,int32_t,class TR_ScratchRegisterManager &);OMR::Power;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,int32_t,TR::RegisterDependencyConditions *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;generateNop(TR::Node *,TR::Instruction *,enum TR_NOPKind);OMR::Power;CodeGenerator
+OMR;CodeGenerator;getCurrentBlockIndex();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getGlobalRegisters(enum TR_SpillKinds,enum TR_LinkageConventions);OMR::Power;CodeGenerator
+OMR;CodeGenerator;getInternalPtrMapBit();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getLinkageGlobalRegisterNumber(int8_t,TR::DataType);OMR::Power;CodeGenerator
+OMR;CodeGenerator;getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;getMaximumNumbersOfAssignableFPRs();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getMaximumNumbersOfAssignableGPRs();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getMaximumNumbersOfAssignableVRs();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getNextAvailableBlockIndex();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getPreferredLoopUnrollFactor();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsBitOpCodes();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsConstantOffsetInAddressing(int64_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsEncodeUtf16BigWithSurrogateTest();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsEncodeUtf16LittleWithSurrogateTest();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsIbyteswap();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsOpCodeForAutoSIMD(TR::ILOpCode,TR::DataType);OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsTLE();OMR::Power;CodeGenerator
+OMR;CodeGenerator;getSupportsTenuredObjectAlignment();OMR::Power;CodeGenerator
+OMR;CodeGenerator;hasDataSnippets();OMR::Power;CodeGenerator
+OMR;CodeGenerator;ilOpCodeIsSupported(TR::ILOpCodes);OMR::Power;CodeGenerator
+OMR;CodeGenerator;internalPointerSupportImplemented();OMR::Power;CodeGenerator
+OMR;CodeGenerator;isAlignmentInstruction(TR::Instruction *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isBranchInstruction(TR::Instruction *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isFenceInstruction(TR::Instruction *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isGlobalRegisterAvailable(TR_GlobalRegisterNumber,TR::DataType);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isLabelInstruction(TR::Instruction *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isObjectOfSizeWorthAligning(uint32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isOutOfLineHotPath();OMR::Power;CodeGenerator
+OMR;CodeGenerator;isPreservedRegister(int32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isReturnInstruction(TR::Instruction *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isRotateAndMask(TR::Node *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isSnippetMatched(TR::Snippet *,int32_t,TR::SymbolReference *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;isTargetSnippetOrOutOfLine(TR::Instruction *,TR::Instruction **,TR::Instruction **);OMR::Power;CodeGenerator
+OMR;CodeGenerator;materializesLargeConstants();OMR::Power;CodeGenerator
+OMR;CodeGenerator;mulDecompositionCostIsJustified(int,char [],char [],int64_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;needsNormalizationBeforeShifts();OMR::Power;CodeGenerator
+OMR;CodeGenerator;pickRegister(class TR_RegisterCandidate *,TR::Block **,class TR_BitVector &,TR_GlobalRegisterNumber &,TR_LinkHead<class TR_RegisterCandidate> *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;processIncomingParameterUsage(class TR_BitVector **,int32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;processInstruction(TR::Instruction *,class TR_BitVector **,int32_t &,int32_t &,_Bool);OMR::Power;CodeGenerator
+OMR;CodeGenerator;setCurrentBlockIndex(int32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;setEstimatedLocationsForDataSnippetLabels(int32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;setNextAvailableBlockIndex(int32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;shouldValueBeInACommonedNode(int64_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;simulateNodeEvaluation(TR::Node *,struct OMR::CodeGenerator::TR_RegisterPressureState *,struct OMR::CodeGenerator::TR_RegisterPressureSummary *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;splitBlockEntry(TR::Instruction *);OMR::Power;CodeGenerator
+OMR;CodeGenerator;splitEdge(TR::Instruction *,_Bool,_Bool,TR::Instruction *,TR::list<TR::Instruction *> *,_Bool);OMR::Power;CodeGenerator
+OMR;CodeGenerator;supportsDebugCounters(TR::DebugCounterInjectionPoint);OMR::Power;CodeGenerator
+OMR;CodeGenerator;supportsFusedMultiplyAdd();OMR::Power;CodeGenerator
+OMR;CodeGenerator;supportsNegativeFusedMultiplyAdd();OMR::Power;CodeGenerator
+OMR;CodeGenerator;supportsPassThroughCopyToNewVirtualRegister();OMR::Power;CodeGenerator
+OMR;CodeGenerator;supportsSinglePrecisionSQRT();OMR::Power;CodeGenerator
+OMR;CodeGenerator;suppressInliningOfRecognizedMethod(TR::RecognizedMethod);OMR::Power;CodeGenerator
+OMR;CodeGenerator;updateSnippetMapWithRSD(TR::Instruction *,int32_t);OMR::Power;CodeGenerator
+OMR;CodeGenerator;~CodeGenerator();OMR::Power;CodeGenerator
+OMR::Power;CodeGenerator;~CodeGenerator();TestCompiler;CodeGenerator
 TestCompiler;CodeGenerator;~CodeGenerator();TR;CodeGenerator
 OMR;Compilation;Compilation(int32_t,OMR_VMThread *,class TR_FrontEnd *,class TR_ResolvedMethod *,TR::IlGenRequest &,TR::Options &,TR::Region &,class TR_Memory *,class TR_OptimizationPlan *);TR;Compilation
 OMR;Compilation;~Compilation();TR;Compilation
@@ -234,12 +272,9 @@ TR;DebugCounterBase;getBumpCountSymRef(TR::Compilation *);TR;DebugCounterAggrega
 OMR;Environment;Environment();TR;Environment
 OMR;Environment;Environment(TR::MajorOperatingSystem,TR::Bitness);TR;Environment
 OMR;Environment;~Environment();TR;Environment
-OMR;GCRegisterMap;GCRegisterMap();TR;GCRegisterMap
-OMR;GCRegisterMap;~GCRegisterMap();TR;GCRegisterMap
-OMR;GCStackAtlas;GCStackAtlas(uint32_t,uint32_t,class TR_Memory *);TR;GCStackAtlas
 OMR;IL;~IL();TR;IL
-OMR;ILOpCode;ILOpCode();TR;ILOpCode
 OMR;ILOpCode;ILOpCode(TR::ILOpCodes);TR;ILOpCode
+OMR;ILOpCode;ILOpCode();TR;ILOpCode
 OMR;ILOpCode;~ILOpCode();TR;ILOpCode
 OMR;KnownObjectTable;KnownObjectTable(TR::Compilation *);TR;KnownObjectTable
 OMR;KnownObjectTable;~KnownObjectTable();TR;KnownObjectTable
@@ -256,16 +291,12 @@ TestCompiler;ObjectModel;~ObjectModel();TR;ObjectModel
 OMR;Optimizer;Optimizer(TR::Compilation *,TR::ResolvedMethodSymbol *,_Bool,const struct OptimizationStrategy *,uint16_t);TestCompiler;Optimizer
 TestCompiler;Optimizer;Optimizer(TR::Compilation *,TR::ResolvedMethodSymbol *,_Bool,const struct OptimizationStrategy *,uint16_t);TR;Optimizer
 OMR;Optimizer;optimizationStrategy(TR::Compilation *);TestCompiler;Optimizer
-OMR;Options;Options();TR;Options
 OMR;Options;Options(TR::Options &);TR;Options
+OMR;Options;Options();TR;Options
 OMR;Options;Options(class TR_Memory *,int32_t,int32_t,class TR_ResolvedMethod *,void *,class TR_OptimizationPlan *,_Bool,int32_t);TR;Options
 OMR;Options;self();OMR;Options
 OMR;PersistentInfo;PersistentInfo(class TR_PersistentMemory *);TR;PersistentInfo
 OMR;PersistentInfo;~PersistentInfo();TR;PersistentInfo
-OMR::X86;RegisterIterator;RegisterIterator(TR::Machine *,enum TR_RegisterKinds);TR;RegisterIterator
-OMR::X86;RegisterIterator;getCurrent();TR;X86FPStackIterator
-OMR::X86;RegisterIterator;getFirst();TR;X86FPStackIterator
-OMR::X86;RegisterIterator;getNext();TR;X86FPStackIterator
 TestCompiler;ResolvedMethod;ResolvedMethod(TR::MethodBuilder *);TR;ResolvedMethod
 TestCompiler;ResolvedMethod;ResolvedMethod(class TR_OpaqueMethodBlock *);TR;ResolvedMethod
 TR;ResolvedMethod;classNameChars();TestCompiler;ResolvedMethod
@@ -351,12 +382,12 @@ TestCompiler;Method;signatureLength();TestCompiler;ResolvedMethod
 OMR;SnippetGCMap;SnippetGCMap();TR;SnippetGCMap
 OMR;SnippetGCMap;~SnippetGCMap();TR;SnippetGCMap
 OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *);TR;SymbolReference
-OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,int32_t,TR::Symbol *,intptrj_t);TR;SymbolReference
-OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::class SymbolReferenceTable::CommonNonhelperSymbol,TR::Symbol *,intptrj_t);TR;SymbolReference
 OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::Symbol *,intptrj_t,const char *);TR;SymbolReference
-OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::Symbol *,class mcount_t,int32_t,int32_t);TR;SymbolReference
-OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::Symbol *,intptrj_t);TR;SymbolReference
+OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,int32_t,TR::Symbol *,intptrj_t);TR;SymbolReference
 OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::SymbolReference &,intptrj_t,TR::class KnownObjectTable::Index);TR;SymbolReference
+OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::Symbol *,intptrj_t);TR;SymbolReference
+OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::class SymbolReferenceTable::CommonNonhelperSymbol,TR::Symbol *,intptrj_t);TR;SymbolReference
+OMR;SymbolReference;SymbolReference(TR::SymbolReferenceTable *,TR::Symbol *,class mcount_t,int32_t,int32_t);TR;SymbolReference
 OMR;SymbolReference;~SymbolReference();TR;SymbolReference
 OMR;SymbolReferenceTable;SymbolReferenceTable(size_t,TR::Compilation *);TR;SymbolReferenceTable
 OMR;TreeTop;TreeTop(TR::Node *,TR::TreeTop *,TR::TreeTop *);TR;TreeTop
@@ -365,93 +396,6 @@ OMR;VMEnv;VMEnv();TR;VMEnv
 OMR;VMEnv;~VMEnv();TR;VMEnv
 OMR;VMMethodEnv;VMMethodEnv();TR;VMMethodEnv
 OMR;VMMethodEnv;~VMMethodEnv();TR;VMMethodEnv
-TR;BitVectorIterator;getFirstElement();TR;BitContainerIterator
-TR;BitVectorIterator;getNextElement();TR;BitContainerIterator
-TR;BitVectorIterator;hasMoreElements();TR;BitContainerIterator
-TR;HashTab;calculateHash(const void *);TR;HashTabDouble
-TR;HashTab;isEqual(const void *,const void *);TR;HashTabDouble
-TR;HashTab;calculateHash(const void *);TR;HashTabFloat
-TR;HashTab;isEqual(const void *,const void *);TR;HashTabFloat
-TR;HashTab;calculateHash(const void *);TR;HashTabInt
-TR;HashTab;calculateHash(const void *);TR;HashTabLong
-TR;HashTab;isEqual(const void *,const void *);TR;HashTabLong
-TR;HashTab;calculateHash(const void *);TR;HashTabString
-TR;HashTab;isEqual(const void *,const void *);TR;HashTabString
-TR;Dominators;jitPersistentAlloc(size_t);TR;PostDominators
-TR;Dominators;jitPersistentFree(void *);TR;PostDominators
-TR;Dominators;operator delete(void *,size_t);TR;PostDominators
-TR;Dominators;operator delete(void *,TR::Region &);TR;PostDominators
-TR;Dominators;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
-TR;Dominators;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator delete[](void *,TR::Region &);TR;PostDominators
-TR;Dominators;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
-TR;Dominators;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator new(size_t,TR_ArenaAllocator *);TR;PostDominators
-TR;Dominators;operator new(size_t,TR::Internal::PersistentNewType);TR;PostDominators
-TR;Dominators;operator new(size_t,class TR_PersistentMemory *);TR;PostDominators
-TR;Dominators;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
-TR;Dominators;operator new(size_t,TR::Region &);TR;PostDominators
-TR;Dominators;operator new[](size_t,TR::Region &);TR;PostDominators
-TR;Dominators;operator new[](size_t,TR::Internal::PersistentNewType);TR;PostDominators
-TR;Dominators;operator new[](size_t,class TR_PersistentMemory *);TR;PostDominators
-TR;Dominators;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
-TR;Dominators;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
-OMR;ParameterSymbol;ParameterSymbol(TR::DataType,_Bool,int32_t);TR;ParameterSymbol
-OMR;ParameterSymbol;ParameterSymbol(TR::DataType,_Bool,int32_t,size_t);TR;ParameterSymbol
-OMR;RegisterMappedSymbol;self();OMR;ParameterSymbol
-OMR;ParameterSymbol;~ParameterSymbol();TR;ParameterSymbol
-OMR;Recompilation;Recompilation(TR::Compilation *);TR;Recompilation
-OMR;Recompilation;~Recompilation();TR;Recompilation
-OMR;Optimization;Optimization(TR::OptimizationManager *);TR;Optimization
-OMR;Optimization;~Optimization();TR;Optimization
-OMR;OptimizationManager;OptimizationManager(TR::Optimizer *,OptimizationFactory,OMR::Optimizations,const struct OptimizationStrategy *);TR;OptimizationManager
-OMR;OptimizationManager;~OptimizationManager();TR;OptimizationManager
-TR;TreeTopIteratorImpl;currentNode();TR;NodeIterator
-TR;NodeIterator;currentNode();TR;NodeOccurrenceIterator
-TR;TreeTopIteratorImpl;currentTree();TR;NodeIterator
-TR;TreeTopIteratorImpl;isAt(class TR::PreorderNodeIterator &);TR;NodeIterator
-TR;TreeTopIteratorImpl;isAt(TR::TreeTop *);TR;NodeIterator
-TR;TreeTopIteratorImpl;logCurrentLocation();TR;NodeIterator
-TR;NodeIterator;logCurrentLocation();TR;NodeOccurrenceIterator
-TR;TreeTopIteratorImpl;operator!=(TR::TreeTop *);TR;NodeIterator
-TR;TreeTopIteratorImpl;operator++();TR;PostorderNodeOccurrenceIterator
-TR;TreeTopIteratorImpl;operator==(TR::TreeTop *);TR;NodeIterator
-TR;TreeTopIteratorImpl;stepForward();TR;PostorderNodeOccurrenceIterator
-TR;TreeTopIteratorImpl;operator++();TR;PostorderNodeIterator
-TR;TreeTopIteratorImpl;stepForward();TR;PostorderNodeIterator
-TR;TreeTopIteratorImpl;operator++();TR;PreorderNodeIterator
-TR;TreeTopIteratorImpl;stepForward();TR;PreorderNodeIterator
-TR;TreeTopIteratorImpl;operator++();TR;PreorderNodeOccurrenceIterator
-TR;TreeTopIteratorImpl;stepForward();TR;PreorderNodeOccurrenceIterator
-TR;TreeTopIteratorImpl;stepBackward();TR;TreeTopIterator
-TR;TreeTopIteratorImpl;stepForward();TR;TreeTopIterator
-OMR;MonitorTable;MonitorTable();TR;MonitorTable
-TR;Pattern;getName();TR;AnythingPattern
-TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;AnythingPattern
-TR;Pattern;getName();TR;ChildPattern
-TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;ChildPattern
-TR;Pattern;getName();TR;ChildrenPattern
-TR;ChildrenPattern;getName();TR;CommutativePattern
-TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;ChildrenPattern
-TR;ChildrenPattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;CommutativePattern
-TR;Pattern;getName();TR;ChoicePattern
-TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;ChoicePattern
-TR;Pattern;getName();TR;OpCodePattern
-TR;OpCodePattern;getName();TR;IConstPattern
-TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;OpCodePattern
-TR;OpCodePattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;IConstPattern
-TR;Pattern;tracePattern(TR::Node *);TR;OpCodePattern
-TR;OpCodePattern;getName();TR;LConstPattern
-TR;OpCodePattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;LConstPattern
-TR;Pattern;getName();TR;NoRegisterPattern
-TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;NoRegisterPattern
-TR;Pattern;getName();TR;UnifyPattern
-TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;UnifyPattern
 TR;VPConstraint;asArrayInfo();TR;VPArrayInfo
 TR;VPConstraint;getArrayInfo();TR;VPArrayInfo
 TR;VPConstraint;intersect1(TR::VPConstraint *,OMR::ValuePropagation *);TR;VPArrayInfo
@@ -540,8 +484,8 @@ TR;VPConstraint;mustBeLessThan();TR;VPEqual
 TR;VPConstraint;mustBeLessThanOrEqual();TR;VPEqual
 TR;VPConstraint;mustBeNotEqual();TR;VPEqual
 TR;VPConstraint;name();TR;VPEqual
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPEqual
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPEqual
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPEqual
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPEqual
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPEqual
 TR;VPConstraint;asGreaterThanOrEqual();TR;VPGreaterThanOrEqual
@@ -552,8 +496,8 @@ TR;VPConstraint;mustBeGreaterThan();TR;VPGreaterThanOrEqual
 TR;VPConstraint;mustBeGreaterThanOrEqual();TR;VPGreaterThanOrEqual
 TR;VPConstraint;mustBeNotEqual();TR;VPGreaterThanOrEqual
 TR;VPConstraint;name();TR;VPGreaterThanOrEqual
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPGreaterThanOrEqual
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPGreaterThanOrEqual
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPGreaterThanOrEqual
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPGreaterThanOrEqual
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPGreaterThanOrEqual
 TR;VPConstraint;add(TR::VPConstraint *,TR::DataType,OMR::ValuePropagation *);TR;VPIntConstraint
@@ -598,8 +542,8 @@ TR;VPConstraint;mustBeLessThan();TR;VPLessThanOrEqual
 TR;VPConstraint;mustBeLessThanOrEqual();TR;VPLessThanOrEqual
 TR;VPConstraint;mustBeNotEqual();TR;VPLessThanOrEqual
 TR;VPConstraint;name();TR;VPLessThanOrEqual
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPLessThanOrEqual
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPLessThanOrEqual
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPLessThanOrEqual
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPLessThanOrEqual
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPLessThanOrEqual
 TR;VPConstraint;add(TR::VPConstraint *,TR::DataType,OMR::ValuePropagation *);TR;VPLongConstraint
@@ -654,8 +598,8 @@ TR;VPRelation;getComplement(OMR::ValuePropagation *);TR;VPNotEqual
 TR;VPConstraint;intersect1(TR::VPConstraint *,OMR::ValuePropagation *);TR;VPNotEqual
 TR;VPConstraint;mustBeNotEqual();TR;VPNotEqual
 TR;VPConstraint;name();TR;VPNotEqual
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPNotEqual
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPNotEqual
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPNotEqual
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPNotEqual
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPNotEqual
 TR;VPConstraint;asNullObject();TR;VPNullObject
@@ -722,6 +666,47 @@ TR;VPClassType;isPrimitiveArray(TR::Compilation *);TR;VPUnresolvedClass
 TR;VPClassType;isReferenceArray(TR::Compilation *);TR;VPUnresolvedClass
 TR;VPConstraint;name();TR;VPUnresolvedClass
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPUnresolvedClass
+TR;DataFlowAnalysis;analyzeBlockStructure(class TR_BlockStructure *,_Bool);TR;BackwardDFSetAnalysis
+TR;DataFlowAnalysis;analyzeRegionStructure(class TR_RegionStructure *,_Bool);TR;BackwardDFSetAnalysis
+TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;GlobalAnticipatability
+TR;DataFlowAnalysis;asGlobalAnticipatability();TR;GlobalAnticipatability
+TR;BasicDFSetAnalysis;canGenAndKillForStructure(class TR_Structure *);TR;BackwardDFSetAnalysis
+TR;BasicDFSetAnalysis;compose(Container *,Container *);TR;BackwardDFSetAnalysis
+TR;BackwardDFSetAnalysis;compose(Container *,Container *);TR;BackwardIntersectionDFSetAnalysis
+TR;DataFlowAnalysis;getKind();TR;BasicDFSetAnalysis
+TR;BasicDFSetAnalysis;getKind();TR;BackwardDFSetAnalysis
+TR;BackwardDFSetAnalysis;getKind();TR;BackwardIntersectionDFSetAnalysis
+TR;BackwardIntersectionDFSetAnalysis;getKind();TR;GlobalAnticipatability
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;GlobalAnticipatability
+TR;BackwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;BackwardIntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeDFSetAnalysis();TR;BackwardDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForBlock(class TR_BlockStructure *);TR;BackwardDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForRegion(class TR_RegionStructure *);TR;BackwardDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeInfo(Container *);TR;BackwardDFSetAnalysis
+TR;BackwardDFSetAnalysis;initializeInfo(Container *);TR;BackwardIntersectionDFSetAnalysis
+TR;BackwardDFSetAnalysis;initializeOutSetInfo();TR;BackwardIntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;inverseCompose(Container *,Container *);TR;BackwardDFSetAnalysis
+TR;BackwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;BackwardIntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;inverseInitializeInfo(Container *);TR;BackwardDFSetAnalysis
+TR;BackwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;BackwardIntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;GlobalAnticipatability
+TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Liveness
+TR;DataFlowAnalysis;asLiveness();TR;Liveness
+TR;BackwardDFSetAnalysis;compose(Container *,Container *);TR;BackwardUnionDFSetAnalysis
+TR;BackwardDFSetAnalysis;getKind();TR;BackwardUnionDFSetAnalysis
+TR;BackwardUnionDFSetAnalysis;getKind();TR;Liveness
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;Liveness
+TR;BackwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;BackwardUnionDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;Liveness
+TR;BackwardDFSetAnalysis;initializeInfo(Container *);TR;BackwardUnionDFSetAnalysis
+TR;BackwardDFSetAnalysis;initializeOutSetInfo();TR;BackwardUnionDFSetAnalysis
+TR;BackwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;BackwardUnionDFSetAnalysis
+TR;BackwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;BackwardUnionDFSetAnalysis
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Liveness
+TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;Liveness
+TR;BitVectorIterator;getFirstElement();TR;BitContainerIterator
+TR;BitVectorIterator;getNextElement();TR;BitContainerIterator
+TR;BitVectorIterator;hasMoreElements();TR;BitContainerIterator
 TR;Structure;addExternalEdge(class TR_Structure *,int32_t,_Bool);TR;BlockStructure
 TR;Structure;asBlock();TR;BlockStructure
 TR;Structure;changeContinueLoopsToNestedLoops(class TR_RegionStructure *);TR;BlockStructure
@@ -747,6 +732,109 @@ TR;Structure;replacePart(class TR_Structure *,class TR_Structure *);TR;BlockStru
 TR;Structure;resetAnalysisInfo();TR;BlockStructure
 TR;Structure;resetAnalyzedStatus();TR;BlockStructure
 TR;Structure;resetVisitCounts(vcount_t);TR;BlockStructure
+TR;DataFlowAnalysis;analyzeBlockStructure(class TR_BlockStructure *,_Bool);TR;ForwardDFSetAnalysis
+TR;DataFlowAnalysis;analyzeRegionStructure(class TR_RegionStructure *,_Bool);TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Delayedness
+TR;DataFlowAnalysis;asDelayedness();TR;Delayedness
+TR;BasicDFSetAnalysis;canGenAndKillForStructure(class TR_Structure *);TR;ForwardDFSetAnalysis
+TR;BasicDFSetAnalysis;compose(Container *,Container *);TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;compose(Container *,Container *);TR;IntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;getKind();TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;getKind();TR;IntersectionDFSetAnalysis
+TR;IntersectionDFSetAnalysis;getKind();TR;Delayedness
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;Delayedness
+TR;BasicDFSetAnalysis;initialize();TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;IntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeDFSetAnalysis();TR;ForwardDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForBlock(class TR_BlockStructure *);TR;ForwardDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForRegion(class TR_RegionStructure *);TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;initializeInSetInfo();TR;IntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;initializeInfo(Container *);TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;initializeInfo(Container *);TR;IntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;inverseCompose(Container *,Container *);TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;IntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;inverseInitializeInfo(Container *);TR;ForwardDFSetAnalysis
+TR;ForwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;IntersectionDFSetAnalysis
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Delayedness
+TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Earliestness
+TR;DataFlowAnalysis;asEarliestness();TR;Earliestness
+TR;ForwardDFSetAnalysis;compose(Container *,Container *);TR;UnionDFSetAnalysis
+TR;ForwardDFSetAnalysis;getKind();TR;UnionDFSetAnalysis
+TR;UnionDFSetAnalysis;getKind();TR;Earliestness
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;Earliestness
+TR;ForwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;UnionDFSetAnalysis
+TR;ForwardDFSetAnalysis;initializeInSetInfo();TR;UnionDFSetAnalysis
+TR;ForwardDFSetAnalysis;initializeInfo(Container *);TR;UnionDFSetAnalysis
+TR;ForwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;UnionDFSetAnalysis
+TR;ForwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;UnionDFSetAnalysis
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Earliestness
+TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;FlowSensitiveEscapeAnalysis
+TR;DataFlowAnalysis;asFlowSensitiveEscapeAnalysis();TR;FlowSensitiveEscapeAnalysis
+TR;IntersectionDFSetAnalysis;getKind();TR;FlowSensitiveEscapeAnalysis
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;FlowSensitiveEscapeAnalysis
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;FlowSensitiveEscapeAnalysis
+TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;FlowSensitiveEscapeAnalysis
+TR;HashTab;calculateHash(const void *);TR;HashTabDouble
+TR;HashTab;isEqual(const void *,const void *);TR;HashTabDouble
+TR;HashTab;calculateHash(const void *);TR;HashTabFloat
+TR;HashTab;isEqual(const void *,const void *);TR;HashTabFloat
+TR;HashTab;calculateHash(const void *);TR;HashTabInt
+TR;HashTab;calculateHash(const void *);TR;HashTabLong
+TR;HashTab;isEqual(const void *,const void *);TR;HashTabLong
+TR;HashTab;calculateHash(const void *);TR;HashTabString
+TR;HashTab;isEqual(const void *,const void *);TR;HashTabString
+TR;DataFlowAnalysis;asIsolatedness();TR;Isolatedness
+TR;BackwardIntersectionDFSetAnalysis;getKind();TR;Isolatedness
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;Isolatedness
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Isolatedness
+TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Latestness
+TR;DataFlowAnalysis;asLatestness();TR;Latestness
+TR;BackwardIntersectionDFSetAnalysis;getKind();TR;Latestness
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;Latestness
+TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;LiveOnAllPaths
+TR;DataFlowAnalysis;asLiveOnAllPaths();TR;LiveOnAllPaths
+TR;BackwardIntersectionDFSetAnalysis;getKind();TR;LiveOnAllPaths
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;LiveOnAllPaths
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;LiveOnAllPaths
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;LiveOnAllPaths
+TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;LiveOnAllPaths
+TR;OutOfLineCodeSection;assignRegisters(enum TR_RegisterKinds);TR;PPCOutOfLineCodeSection
+TR;Dominators;jitPersistentAlloc(size_t);TR;PostDominators
+TR;Dominators;jitPersistentFree(void *);TR;PostDominators
+TR;Dominators;operator delete(void *,size_t);TR;PostDominators
+TR;Dominators;operator delete(void *,TR::Region &);TR;PostDominators
+TR;Dominators;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
+TR;Dominators;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator delete[](void *,TR::Region &);TR;PostDominators
+TR;Dominators;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
+TR;Dominators;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator new(size_t,TR_ArenaAllocator *);TR;PostDominators
+TR;Dominators;operator new(size_t,TR::Internal::PersistentNewType);TR;PostDominators
+TR;Dominators;operator new(size_t,class TR_PersistentMemory *);TR;PostDominators
+TR;Dominators;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
+TR;Dominators;operator new(size_t,TR::Region &);TR;PostDominators
+TR;Dominators;operator new[](size_t,TR::Region &);TR;PostDominators
+TR;Dominators;operator new[](size_t,TR::Internal::PersistentNewType);TR;PostDominators
+TR;Dominators;operator new[](size_t,class TR_PersistentMemory *);TR;PostDominators
+TR;Dominators;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators
+TR;Dominators;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators
+TR;ForwardDFSetAnalysis;analyzeBlockZeroStructure(class TR_BlockStructure *);TR;ReachingBlocks
+TR;UnionDFSetAnalysis;getKind();TR;ReachingBlocks
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;ReachingBlocks
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;ReachingBlocks
+TR;DataFlowAnalysis;perform();TR;ReachingBlocks
+TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;ReachingBlocks
+TR;ForwardDFSetAnalysis;analyzeBlockZeroStructure(class TR_BlockStructure *);TR;ReachingDefinitions
+TR;UnionDFSetAnalysis;getKind();TR;ReachingDefinitions
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;ReachingDefinitions
+TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;ReachingDefinitions
+TR;DataFlowAnalysis;perform();TR;ReachingDefinitions
+TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;ReachingDefinitions
 TR;Structure;addEdge(TR::CFGEdge *,_Bool);TR;RegionStructure
 TR;Structure;addExternalEdge(class TR_Structure *,int32_t,_Bool);TR;RegionStructure
 TR;Structure;asRegion();TR;RegionStructure
@@ -776,7 +864,74 @@ TR;Structure;replacePart(class TR_Structure *,class TR_Structure *);TR;RegionStr
 TR;Structure;resetAnalysisInfo();TR;RegionStructure
 TR;Structure;resetAnalyzedStatus();TR;RegionStructure
 TR;Structure;resetVisitCounts(vcount_t);TR;RegionStructure
+TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;RegisterAnticipatability
+TR;DataFlowAnalysis;asRegisterAnticipatability();TR;RegisterAnticipatability
+TR;BackwardIntersectionDFSetAnalysis;getKind();TR;RegisterAnticipatability
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;RegisterAnticipatability
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;RegisterAnticipatability
+TR;ForwardDFSetAnalysis;analyzeBlockZeroStructure(class TR_BlockStructure *);TR;RegisterAvailability
+TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;RegisterAvailability
+TR;DataFlowAnalysis;asRegisterAvailability();TR;RegisterAvailability
+TR;IntersectionDFSetAnalysis;getKind();TR;RegisterAvailability
+TR;BasicDFSetAnalysis;getNumberOfBits();TR;RegisterAvailability
+TR;BasicDFSetAnalysis;postInitializationProcessing();TR;RegisterAvailability
 TR;CFGNode;asStructureSubGraphNode();TR;StructureSubGraphNode
+OMR;ParameterSymbol;ParameterSymbol(TR::DataType,_Bool,int32_t);TR;ParameterSymbol
+OMR;ParameterSymbol;ParameterSymbol(TR::DataType,_Bool,int32_t,size_t);TR;ParameterSymbol
+OMR;RegisterMappedSymbol;self();OMR;ParameterSymbol
+OMR;ParameterSymbol;~ParameterSymbol();TR;ParameterSymbol
+OMR;Recompilation;Recompilation(TR::Compilation *);TR;Recompilation
+OMR;Recompilation;~Recompilation();TR;Recompilation
+OMR;Optimization;Optimization(TR::OptimizationManager *);TR;Optimization
+OMR;Optimization;~Optimization();TR;Optimization
+OMR;OptimizationManager;OptimizationManager(TR::Optimizer *,OptimizationFactory,OMR::Optimizations,const struct OptimizationStrategy *);TR;OptimizationManager
+OMR;OptimizationManager;~OptimizationManager();TR;OptimizationManager
+TR;TreeTopIteratorImpl;currentNode();TR;NodeIterator
+TR;NodeIterator;currentNode();TR;NodeOccurrenceIterator
+TR;TreeTopIteratorImpl;currentTree();TR;NodeIterator
+TR;TreeTopIteratorImpl;isAt(class TR::PreorderNodeIterator &);TR;NodeIterator
+TR;TreeTopIteratorImpl;isAt(TR::TreeTop *);TR;NodeIterator
+TR;TreeTopIteratorImpl;logCurrentLocation();TR;NodeIterator
+TR;NodeIterator;logCurrentLocation();TR;NodeOccurrenceIterator
+TR;TreeTopIteratorImpl;operator!=(TR::TreeTop *);TR;NodeIterator
+TR;TreeTopIteratorImpl;operator++();TR;PostorderNodeOccurrenceIterator
+TR;TreeTopIteratorImpl;operator==(TR::TreeTop *);TR;NodeIterator
+TR;TreeTopIteratorImpl;stepForward();TR;PostorderNodeOccurrenceIterator
+TR;TreeTopIteratorImpl;operator++();TR;PostorderNodeIterator
+TR;TreeTopIteratorImpl;stepForward();TR;PostorderNodeIterator
+TR;TreeTopIteratorImpl;operator++();TR;PreorderNodeIterator
+TR;TreeTopIteratorImpl;stepForward();TR;PreorderNodeIterator
+TR;TreeTopIteratorImpl;operator++();TR;PreorderNodeOccurrenceIterator
+TR;TreeTopIteratorImpl;stepForward();TR;PreorderNodeOccurrenceIterator
+TR;TreeTopIteratorImpl;stepBackward();TR;TreeTopIterator
+TR;TreeTopIteratorImpl;stepForward();TR;TreeTopIterator
+OMR;MonitorTable;MonitorTable();TR;MonitorTable
+TR;Pattern;getName();TR;AnythingPattern
+TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;AnythingPattern
+TR;Pattern;getName();TR;ChildPattern
+TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;ChildPattern
+TR;Pattern;getName();TR;ChildrenPattern
+TR;ChildrenPattern;getName();TR;CommutativePattern
+TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;ChildrenPattern
+TR;ChildrenPattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;CommutativePattern
+TR;Pattern;getName();TR;ChoicePattern
+TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;ChoicePattern
+TR;Pattern;getName();TR;OpCodePattern
+TR;OpCodePattern;getName();TR;IConstPattern
+TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;OpCodePattern
+TR;OpCodePattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;IConstPattern
+TR;Pattern;tracePattern(TR::Node *);TR;OpCodePattern
+TR;OpCodePattern;getName();TR;LConstPattern
+TR;OpCodePattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;LConstPattern
+TR;Pattern;getName();TR;NoRegisterPattern
+TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;NoRegisterPattern
+TR;Pattern;getName();TR;UnifyPattern
+TR;Pattern;thisMatches(TR::Node *,class TR_Unification &,TR::Compilation *);TR;UnifyPattern
+OMR;LabelSymbol;LabelSymbol();TR;LabelSymbol
+OMR;LabelSymbol;LabelSymbol(TR::CodeGenerator *);TR;LabelSymbol
+OMR;LabelSymbol;LabelSymbol(TR::CodeGenerator *,TR::Block *);TR;LabelSymbol
+OMR;Symbol;self();OMR;LabelSymbol
+OMR;LabelSymbol;~LabelSymbol();TR;LabelSymbol
 OMR;IlGenRequest;IlGenRequest(TR::IlGeneratorMethodDetails &);TR;IlGenRequest
 OMR;IlGenRequest;getIlGenerator(TR::ResolvedMethodSymbol *,class TR_FrontEnd *,TR::Compilation *,TR::SymbolReferenceTable *);TR;CompileIlGenRequest
 OMR;IlGenRequest;print(class TR_FrontEnd *,TR::FILE *,const char *);TR;CompileIlGenRequest
@@ -794,6 +949,13 @@ OMR;IlGenRequest;getIlGenerator(TR::ResolvedMethodSymbol *,class TR_FrontEnd *,T
 TR;InliningIlGenRequest;getIlGenerator(TR::ResolvedMethodSymbol *,class TR_FrontEnd *,TR::Compilation *,TR::SymbolReferenceTable *);TR;PartialInliningIlGenRequest
 OMR;IlGenRequest;print(class TR_FrontEnd *,TR::FILE *,const char *);TR;InliningIlGenRequest
 TR;InliningIlGenRequest;print(class TR_FrontEnd *,TR::FILE *,const char *);TR;PartialInliningIlGenRequest
+OMR;AutomaticSymbol;AutomaticSymbol(TR::DataType);TR;AutomaticSymbol
+OMR;AutomaticSymbol;AutomaticSymbol(TR::DataType,uint32_t,const char *);TR;AutomaticSymbol
+OMR;AutomaticSymbol;AutomaticSymbol(TR::DataType,uint32_t);TR;AutomaticSymbol
+OMR;Symbol;getKind();OMR;AutomaticSymbol
+OMR;Symbol;isReferenced();OMR;AutomaticSymbol
+OMR;RegisterMappedSymbol;self();OMR;AutomaticSymbol
+OMR;AutomaticSymbol;~AutomaticSymbol();TR;AutomaticSymbol
 OMR;Optimization;optDetailString();TR;Inliner
 OMR;Optimization;perform();TR;Inliner
 TR::GlobalSet;Set;get(uint32_t);TR::GlobalSet;DenseSet
@@ -879,28 +1041,46 @@ TR;Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;Indir
 TR;IndirectCallSite;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;FunctionPointerCallSite
 OMR;Optimization;optDetailString();TR;TrivialInliner
 OMR;Optimization;perform();TR;TrivialInliner
-OMR::X86;Linkage;Linkage(TR::CodeGenerator *);TR;Linkage
-OMR;Linkage;createEpilogue(TR::Instruction *);OMR::X86;Linkage
-OMR;Linkage;createPrologue(TR::Instruction *);OMR::X86;Linkage
-OMR;Linkage;getRightToLeft();OMR::X86;Linkage
-OMR;Linkage;mapSingleAutomatic(TR::AutomaticSymbol *,uint32_t &);OMR::X86;Linkage
-OMR;Linkage;mapStack(TR::ResolvedMethodSymbol *);OMR::X86;Linkage
-OMR;Linkage;numArgumentRegisters(enum TR_RegisterKinds);OMR::X86;Linkage
-OMR;Linkage;setParameterLinkageRegisterIndex(TR::ResolvedMethodSymbol *);OMR::X86;Linkage
-OMR;Linkage;~Linkage();OMR::X86;Linkage
-OMR::X86;Linkage;~Linkage();TR;Linkage
+OMR;Linkage;Linkage();OMR::Power;Linkage
+OMR::Power;Linkage;Linkage(TR::CodeGenerator *);TR;Linkage
+OMR;Linkage;hasToBeOnStack(TR::ParameterSymbol *);OMR::Power;Linkage
+OMR;Linkage;mapSingleAutomatic(TR::AutomaticSymbol *,uint32_t &);OMR::Power;Linkage
+OMR;Linkage;mapStack(TR::ResolvedMethodSymbol *);OMR::Power;Linkage
+OMR;Linkage;numArgumentRegisters(enum TR_RegisterKinds);OMR::Power;Linkage
+OMR;Linkage;setParameterLinkageRegisterIndex(TR::ResolvedMethodSymbol *);OMR::Power;Linkage
+OMR;Linkage;~Linkage();OMR::Power;Linkage
+OMR::Power;Linkage;~Linkage();TR;Linkage
+OMR;RegisterDependencyConditions;RegisterDependencyConditions();OMR::Power;RegisterDependencyConditions
+OMR::Power;RegisterDependencyConditions;RegisterDependencyConditions();TR;RegisterDependencyConditions
+OMR::Power;RegisterDependencyConditions;RegisterDependencyConditions(uint16_t,uint16_t,class TR_Memory *);TR;RegisterDependencyConditions
+OMR::Power;RegisterDependencyConditions;RegisterDependencyConditions(TR::CodeGenerator *,TR::Node *,uint32_t,TR::Instruction **);TR;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;jitPersistentAlloc(size_t);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;jitPersistentFree(void *);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,TR::Region &);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,size_t);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,TR::Region &);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,TR::Region &);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_PersistentMemory *);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,TR_ArenaAllocator *);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,TR::Internal::PersistentNewType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,TR::Region &);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,TR::Internal::PersistentNewType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_PersistentMemory *);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Power;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;~RegisterDependencyConditions();OMR::Power;RegisterDependencyConditions
 OMR;Optimization;optDetailString();TR;LoadExtensions
 OMR;Optimization;perform();TR;LoadExtensions
-OMR;RegisterPair;RegisterPair(TR::Register *,TR::Register *);TR;RegisterPair
-OMR;RegisterPair;RegisterPair(enum TR_RegisterKinds);TR;RegisterPair
-OMR;RegisterPair;RegisterPair();TR;RegisterPair
-OMR;Register;block();OMR;RegisterPair
-OMR;Register;getHighOrder();OMR;RegisterPair
-OMR;Register;getLowOrder();OMR;RegisterPair
-OMR;Register;getRegister();OMR;RegisterPair
-OMR;Register;getRegisterPair();OMR;RegisterPair
-OMR;Register;unblock();OMR;RegisterPair
-OMR;RegisterPair;~RegisterPair();TR;RegisterPair
 TR;ValueNumberInfo;allocateValueNumber(TR::Node *);TR;HashValueNumberInfo
 TR;ValueNumberInfo;initializeNode(TR::Node *,int32_t &);TR;HashValueNumberInfo
 OMR;IL;IL();TR;IL
@@ -920,146 +1100,32 @@ __cxxabiv1;__class_type_info;__do_upcast(const class __cxxabiv1::__class_type_in
 __cxxabiv1;__class_type_info;__do_dyncast(ptrdiff_t,enum __cxxabiv1::__class_type_info::__sub_kind,const class __cxxabiv1::__class_type_info *,const void *,const class __cxxabiv1::__class_type_info *,const void *,struct __cxxabiv1::__class_type_info::__dyncast_result &);__cxxabiv1;__vmi_class_type_info
 __cxxabiv1;__class_type_info;__do_find_public_src(ptrdiff_t,const void *,const class __cxxabiv1::__class_type_info *,const void *);__cxxabiv1;__vmi_class_type_info
 __cxxabiv1;__class_type_info;__do_upcast(const class __cxxabiv1::__class_type_info *,const void *,struct __cxxabiv1::__class_type_info::__upcast_result &__restrict);__cxxabiv1;__vmi_class_type_info
+OMR;GCRegisterMap;GCRegisterMap();TR;GCRegisterMap
+OMR;GCRegisterMap;~GCRegisterMap();TR;GCRegisterMap
+OMR;GCStackAtlas;GCStackAtlas(uint32_t,uint32_t,class TR_Memory *);TR;GCStackAtlas
+OMR::Power;RegisterIterator;RegisterIterator(TR::Machine *,enum TR_RegisterKinds);TR;RegisterIterator
 OMR;Optimization;optDetailString();TR;AsyncCheckInsertion
 OMR;Optimization;perform();TR;AsyncCheckInsertion
 OMR;Optimization;shouldPerform();TR;AsyncCheckInsertion
 TR;BackwardDFSetAnalysis;TR_BackwardDFSetAnalysis(TR::Compilation *,TR::CFG *,TR::Optimizer *,_Bool);TR;BackwardDFSetAnalysis
-TR;DataFlowAnalysis;analyzeBlockStructure(class TR_BlockStructure *,_Bool);TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;analyzeBlockStructure(class TR_BlockStructure *,_Bool);TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;analyzeNode(TR::Node *,vcount_t,class TR_BlockStructure *,class TR_BitVector *);TR;GlobalAnticipatability
 TR;BackwardDFSetAnalysis;analyzeNodeIfSuccessorsAnalyzed(class TR_RegionStructure *,class TR_BitVector &,class TR_BitVector &);TR;BackwardDFSetAnalysis
-TR;DataFlowAnalysis;analyzeRegionStructure(class TR_RegionStructure *,_Bool);TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;analyzeRegionStructure(class TR_RegionStructure *,_Bool);TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;GlobalAnticipatability
-TR;DataFlowAnalysis;asGlobalAnticipatability();TR;GlobalAnticipatability
-TR;BasicDFSetAnalysis;canGenAndKillForStructure(class TR_Structure *);TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;canGenAndKillForStructure(class TR_Structure *);TR;BackwardDFSetAnalysis
-TR;BasicDFSetAnalysis;compose(Container *,Container *);TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;compose(Container *,Container *);TR;BackwardIntersectionDFSetAnalysis
-TR;DataFlowAnalysis;getKind();TR;BasicDFSetAnalysis
-TR;BasicDFSetAnalysis;getKind();TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;getKind();TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;getKind();TR;BackwardIntersectionDFSetAnalysis
-TR;BackwardIntersectionDFSetAnalysis;getKind();TR;GlobalAnticipatability
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;GlobalAnticipatability
 TR;BackwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;BackwardIntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeDFSetAnalysis();TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;initializeDFSetAnalysis();TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;initializeGenAndKillSetInfo(class TR_RegionStructure *,class TR_BitVector &,class TR_BitVector &,_Bool);TR;BackwardDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForBlock(class TR_BlockStructure *);TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;initializeGenAndKillSetInfoForBlock(class TR_BlockStructure *);TR;BackwardDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForRegion(class TR_RegionStructure *);TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;initializeGenAndKillSetInfoForRegion(class TR_RegionStructure *);TR;BackwardDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeInfo(Container *);TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;initializeInfo(Container *);TR;BackwardIntersectionDFSetAnalysis
 TR;BackwardDFSetAnalysis;initializeOutSetInfo();TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;initializeOutSetInfo();TR;BackwardIntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;inverseCompose(Container *,Container *);TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;BackwardIntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;inverseInitializeInfo(Container *);TR;BackwardDFSetAnalysis
-TR;BackwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;BackwardIntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;GlobalAnticipatability
 TR;BackwardDFSetAnalysis;traceBBVA();TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;~TR_BackwardDFSetAnalysis();TR;BackwardDFSetAnalysis
 TR;BackwardDFSetAnalysis;analyzeNode(TR::Node *,vcount_t,class TR_BlockStructure *,class TR_BitVector *);TR;Liveness
-TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Liveness
-TR;DataFlowAnalysis;asLiveness();TR;Liveness
-TR;BackwardDFSetAnalysis;compose(Container *,Container *);TR;BackwardUnionDFSetAnalysis
-TR;BackwardDFSetAnalysis;getKind();TR;BackwardUnionDFSetAnalysis
-TR;BackwardUnionDFSetAnalysis;getKind();TR;Liveness
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;Liveness
-TR;BackwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;BackwardUnionDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;Liveness
-TR;BackwardDFSetAnalysis;initializeInfo(Container *);TR;BackwardUnionDFSetAnalysis
-TR;BackwardDFSetAnalysis;initializeOutSetInfo();TR;BackwardUnionDFSetAnalysis
-TR;BackwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;BackwardUnionDFSetAnalysis
-TR;BackwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;BackwardUnionDFSetAnalysis
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Liveness
-TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;Liveness
-TR;DataFlowAnalysis;analyzeBlockStructure(class TR_BlockStructure *,_Bool);TR;ForwardDFSetAnalysis
-TR;DataFlowAnalysis;analyzeRegionStructure(class TR_RegionStructure *,_Bool);TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Delayedness
-TR;DataFlowAnalysis;asDelayedness();TR;Delayedness
-TR;BasicDFSetAnalysis;canGenAndKillForStructure(class TR_Structure *);TR;ForwardDFSetAnalysis
-TR;BasicDFSetAnalysis;compose(Container *,Container *);TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;compose(Container *,Container *);TR;IntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;getKind();TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;getKind();TR;IntersectionDFSetAnalysis
-TR;IntersectionDFSetAnalysis;getKind();TR;Delayedness
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;Delayedness
-TR;BasicDFSetAnalysis;initialize();TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;IntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeDFSetAnalysis();TR;ForwardDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForBlock(class TR_BlockStructure *);TR;ForwardDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfoForRegion(class TR_RegionStructure *);TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;initializeInSetInfo();TR;IntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;initializeInfo(Container *);TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;initializeInfo(Container *);TR;IntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;inverseCompose(Container *,Container *);TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;IntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;inverseInitializeInfo(Container *);TR;ForwardDFSetAnalysis
-TR;ForwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;IntersectionDFSetAnalysis
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Delayedness
-TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Earliestness
-TR;DataFlowAnalysis;asEarliestness();TR;Earliestness
-TR;ForwardDFSetAnalysis;compose(Container *,Container *);TR;UnionDFSetAnalysis
-TR;ForwardDFSetAnalysis;getKind();TR;UnionDFSetAnalysis
-TR;UnionDFSetAnalysis;getKind();TR;Earliestness
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;Earliestness
-TR;ForwardDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;UnionDFSetAnalysis
-TR;ForwardDFSetAnalysis;initializeInSetInfo();TR;UnionDFSetAnalysis
-TR;ForwardDFSetAnalysis;initializeInfo(Container *);TR;UnionDFSetAnalysis
-TR;ForwardDFSetAnalysis;inverseCompose(Container *,Container *);TR;UnionDFSetAnalysis
-TR;ForwardDFSetAnalysis;inverseInitializeInfo(Container *);TR;UnionDFSetAnalysis
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Earliestness
-TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;FlowSensitiveEscapeAnalysis
-TR;DataFlowAnalysis;asFlowSensitiveEscapeAnalysis();TR;FlowSensitiveEscapeAnalysis
-TR;IntersectionDFSetAnalysis;getKind();TR;FlowSensitiveEscapeAnalysis
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;FlowSensitiveEscapeAnalysis
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;FlowSensitiveEscapeAnalysis
-TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;FlowSensitiveEscapeAnalysis
-TR;DataFlowAnalysis;asIsolatedness();TR;Isolatedness
-TR;BackwardIntersectionDFSetAnalysis;getKind();TR;Isolatedness
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;Isolatedness
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;Isolatedness
-TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;Latestness
-TR;DataFlowAnalysis;asLatestness();TR;Latestness
-TR;BackwardIntersectionDFSetAnalysis;getKind();TR;Latestness
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;Latestness
 TR;BackwardDFSetAnalysis;analyzeNode(TR::Node *,vcount_t,class TR_BlockStructure *,class TR_BitVector *);TR;LiveOnAllPaths
-TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;LiveOnAllPaths
-TR;DataFlowAnalysis;asLiveOnAllPaths();TR;LiveOnAllPaths
-TR;BackwardIntersectionDFSetAnalysis;getKind();TR;LiveOnAllPaths
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;LiveOnAllPaths
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;LiveOnAllPaths
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;LiveOnAllPaths
-TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;LiveOnAllPaths
-TR;ForwardDFSetAnalysis;analyzeBlockZeroStructure(class TR_BlockStructure *);TR;ReachingBlocks
-TR;UnionDFSetAnalysis;getKind();TR;ReachingBlocks
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;ReachingBlocks
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;ReachingBlocks
-TR;DataFlowAnalysis;perform();TR;ReachingBlocks
-TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;ReachingBlocks
-TR;ForwardDFSetAnalysis;analyzeBlockZeroStructure(class TR_BlockStructure *);TR;ReachingDefinitions
-TR;UnionDFSetAnalysis;getKind();TR;ReachingDefinitions
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;ReachingDefinitions
-TR;BasicDFSetAnalysis;initializeGenAndKillSetInfo();TR;ReachingDefinitions
-TR;DataFlowAnalysis;perform();TR;ReachingDefinitions
-TR;BasicDFSetAnalysis;supportsGenAndKillSets();TR;ReachingDefinitions
 TR;BackwardDFSetAnalysis;analyzeNode(TR::Node *,vcount_t,class TR_BlockStructure *,class TR_BitVector *);TR;RegisterAnticipatability
-TR;BackwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;RegisterAnticipatability
-TR;DataFlowAnalysis;asRegisterAnticipatability();TR;RegisterAnticipatability
-TR;BackwardIntersectionDFSetAnalysis;getKind();TR;RegisterAnticipatability
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;RegisterAnticipatability
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;RegisterAnticipatability
-TR;ForwardDFSetAnalysis;analyzeBlockZeroStructure(class TR_BlockStructure *);TR;RegisterAvailability
-TR;ForwardDFSetAnalysis;analyzeTreeTopsInBlockStructure(class TR_BlockStructure *);TR;RegisterAvailability
-TR;DataFlowAnalysis;asRegisterAvailability();TR;RegisterAvailability
-TR;IntersectionDFSetAnalysis;getKind();TR;RegisterAvailability
-TR;BasicDFSetAnalysis;getNumberOfBits();TR;RegisterAvailability
-TR;BasicDFSetAnalysis;postInitializationProcessing();TR;RegisterAvailability
 TR;BackwardIntersectionDFSetAnalysis;getKind();TR;BackwardIntersectionDFSetAnalysis
 TR;BackwardIntersectionDFSetAnalysis;initializeCurrentGenKillSetInfo();TR;BackwardIntersectionDFSetAnalysis
 TR;BackwardIntersectionDFSetAnalysis;initializeOutSetInfo();TR;BackwardIntersectionDFSetAnalysis
@@ -1460,8 +1526,10 @@ TR;Stats;update(double);TR;StatsHisto
 TR;Stats;mean();TR;StatsInterval
 TR;Stats;report(FILE *);TR;StatsInterval
 TR;Stats;stddev();TR;StatsInterval
-OMR;AheadOfTimeCompile;AheadOfTimeCompile(uint32_t *,TR::Compilation *);TR;AheadOfTimeCompile
-OMR;AheadOfTimeCompile;~AheadOfTimeCompile();TR;AheadOfTimeCompile
+OMR;AheadOfTimeCompile;AheadOfTimeCompile(uint32_t *,TR::Compilation *);OMR::Power;AheadOfTimeCompile
+OMR::Power;AheadOfTimeCompile;AheadOfTimeCompile(uint32_t *,TR::Compilation *);TR;AheadOfTimeCompile
+OMR;AheadOfTimeCompile;~AheadOfTimeCompile();OMR::Power;AheadOfTimeCompile
+OMR::Power;AheadOfTimeCompile;~AheadOfTimeCompile();TR;AheadOfTimeCompile
 TR;Relocation;addAOTRelocation(TR::CodeGenerator *);TR;ExternalRelocation
 TR;Relocation;apply(TR::CodeGenerator *);TR;ExternalRelocation
 TR;Relocation;getUpdateLocation();TR;BeforeBinaryEncodingExternalRelocation
@@ -1485,430 +1553,250 @@ TR;Relocation;isAOTRelocation();TR;LoadLabelRelative16BitRelocation
 TR;Relocation;apply(TR::CodeGenerator *);TR;LoadLabelRelative32BitRelocation
 TR;Relocation;isAOTRelocation();TR;LoadLabelRelative32BitRelocation
 TR;Relocation;apply(TR::CodeGenerator *);TR;LoadLabelRelative64BitRelocation
-OMR;RegisterDependencyConditions;RegisterDependencyConditions();OMR::X86;RegisterDependencyConditions
-OMR::X86;RegisterDependencyConditions;RegisterDependencyConditions();TR;RegisterDependencyConditions
-OMR::X86;RegisterDependencyConditions;RegisterDependencyConditions(class TR_X86RegisterDependencyIndex,class TR_X86RegisterDependencyIndex,class TR_Memory *);TR;RegisterDependencyConditions
-OMR::X86;RegisterDependencyConditions;RegisterDependencyConditions(TR::Node *,TR::CodeGenerator *,class TR_X86RegisterDependencyIndex,List<TR::Register> *);TR;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;jitPersistentAlloc(size_t);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;jitPersistentFree(void *);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete(void *,TR::Region &);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete(void *,size_t);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete[](void *,TR::Region &);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new(size_t,TR_ArenaAllocator *);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new(size_t,TR::Region &);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new(size_t,TR::Internal::PersistentNewType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new(size_t,class TR_PersistentMemory *);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new[](size_t,class TR_PersistentMemory *);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new[](size_t,TR::Internal::PersistentNewType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new[](size_t,TR::Region &);OMR::X86;RegisterDependencyConditions
-OMR;RegisterDependencyConditions;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions
+TR;Relocation;apply(TR::CodeGenerator *);TR;PPCPairedLabelAbsoluteRelocation
+TR;PPCRelocation;mapRelocation(TR::CodeGenerator *);TR;PPCPairedRelocation
 OMR;UnresolvedDataSnippet;UnresolvedDataSnippet(TR::CodeGenerator *,TR::Node *,TR::SymbolReference *,_Bool,_Bool);TR;UnresolvedDataSnippet
 OMR;Snippet;emitSnippetBody();OMR;UnresolvedDataSnippet
 OMR;Snippet;getLength(int32_t);OMR;UnresolvedDataSnippet
 OMR;Snippet;self();OMR;UnresolvedDataSnippet
 OMR;UnresolvedDataSnippet;~UnresolvedDataSnippet();TR;UnresolvedDataSnippet
-OMR::X86;MemoryReference;MemoryReference(TR::MemoryReference &,intptrj_t,TR::CodeGenerator *,class TR_ScratchRegisterManager *);OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;MemoryReference(TR::Register *,intptrj_t,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::Register *,intptrj_t,TR::CodeGenerator *);TR;MemoryReference
-OMR::X86;MemoryReference;MemoryReference(TR::Register *,TR::Register *,uint8_t,intptrj_t,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::Register *,TR::Register *,uint8_t,intptrj_t,TR::CodeGenerator *);TR;MemoryReference
-OMR::X86;MemoryReference;MemoryReference(TR::Register *,TR::SymbolReference *,TR::Register *,uint8_t,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::Register *,TR::SymbolReference *,TR::Register *,uint8_t,TR::CodeGenerator *);TR;MemoryReference
-OMR::X86;MemoryReference;MemoryReference(TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::CodeGenerator *);TR;MemoryReference
-OMR::X86;MemoryReference;MemoryReference(TR::Register *,TR::Register *,uint8_t,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::Register *,TR::Register *,uint8_t,TR::CodeGenerator *);TR;MemoryReference
-OMR::X86;MemoryReference;MemoryReference(TR::IA32DataSnippet *,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::IA32DataSnippet *,TR::CodeGenerator *);TR;MemoryReference
-OMR::X86;MemoryReference;MemoryReference(TR::LabelSymbol *,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::LabelSymbol *,TR::CodeGenerator *);TR;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::Node *,TR::CodeGenerator *,_Bool,class TR_ScratchRegisterManager *);TR;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(intptrj_t,TR::CodeGenerator *,class TR_ScratchRegisterManager *);TR;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::SymbolReference *,TR::CodeGenerator *,class TR_ScratchRegisterManager *);TR;MemoryReference
-OMR::X86::AMD64;MemoryReference;MemoryReference(TR::SymbolReference *,intptrj_t,TR::CodeGenerator *,class TR_ScratchRegisterManager *);TR;MemoryReference
-OMR::X86;MemoryReference;assignRegisters(TR::Instruction *,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;blockRegisters();OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;decNodeReferenceCounts(TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;estimateBinaryLength(TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;generateBinaryEncoding(uint8_t *,TR::Instruction *,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;getAddressRegister();OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;jitPersistentAlloc(size_t);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;jitPersistentAlloc(size_t);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;jitPersistentFree(void *);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;jitPersistentFree(void *);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete(void *,size_t);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete(void *,size_t);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete(void *,TR::Region &);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete(void *,TR::Region &);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete[](void *,TR::Region &);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete[](void *,TR::Region &);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new(size_t,TR_ArenaAllocator *);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new(size_t,TR_ArenaAllocator *);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new(size_t,TR::Internal::PersistentNewType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new(size_t,TR::Internal::PersistentNewType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new(size_t,class TR_PersistentMemory *);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new(size_t,class TR_PersistentMemory *);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new(size_t,TR::Region &);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new(size_t,TR::Region &);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new[](size_t,TR::Region &);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new[](size_t,TR::Region &);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new[](size_t,TR::Internal::PersistentNewType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new[](size_t,TR::Internal::PersistentNewType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new[](size_t,class TR_PersistentMemory *);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new[](size_t,class TR_PersistentMemory *);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86;MemoryReference
-OMR::X86;MemoryReference;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;unblockRegisters();OMR::X86::AMD64;MemoryReference
-OMR::X86;MemoryReference;useRegisters(TR::Instruction *,TR::CodeGenerator *);OMR::X86::AMD64;MemoryReference
-OMR;MemoryReference;~MemoryReference();OMR::X86;MemoryReference
-OMR::X86;MemoryReference;~MemoryReference();OMR::X86::AMD64;MemoryReference
-OMR::X86::AMD64;MemoryReference;~MemoryReference();TR;MemoryReference
-OMR;Snippet;emitSnippetBody();TR;IA32DataSnippet
-OMR::X86;Snippet;getKind();TR;IA32DataSnippet
-TR;IA32DataSnippet;getKind();TR;IA32ConstantDataSnippet
-OMR;Snippet;getLength(int32_t);TR;IA32DataSnippet
-TR;AMD64Imm64Instruction;addMetaDataForCodeAddress(uint8_t *);TR;AMD64Imm64SymInstruction
-OMR::X86;Instruction;description();TR;AMD64Imm64Instruction
-TR;AMD64Imm64Instruction;description();TR;AMD64Imm64SymInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;AMD64Imm64Instruction
-TR;AMD64Imm64Instruction;estimateBinaryLength(int32_t);TR;AMD64Imm64SymInstruction
-OMR::X86;Instruction;generateOperand(uint8_t *);TR;AMD64Imm64Instruction
-TR;AMD64Imm64Instruction;generateOperand(uint8_t *);TR;AMD64Imm64SymInstruction
-OMR;Instruction;getBinaryLengthLowerBound();TR;AMD64Imm64Instruction
-OMR::X86;Instruction;getKind();TR;AMD64Imm64Instruction
-TR;AMD64Imm64Instruction;getKind();TR;AMD64Imm64SymInstruction
-TR;AMD64RegImm64Instruction;addMetaDataForCodeAddress(uint8_t *);TR;AMD64RegImm64SymInstruction
-OMR::X86;Instruction;assignRegisters(enum TR_RegisterKinds);TR;X86RegInstruction
-OMR::X86;Instruction;defsRegister(TR::Register *);TR;X86RegInstruction
-OMR::X86;Instruction;description();TR;X86RegInstruction
-TR;X86RegInstruction;description();TR;AMD64RegImm64Instruction
-TR;AMD64RegImm64Instruction;description();TR;AMD64RegImm64SymInstruction
-OMR::X86;Instruction;enlarge(int32_t,int32_t,_Bool);TR;X86RegInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86RegInstruction
-TR;X86RegInstruction;estimateBinaryLength(int32_t);TR;AMD64RegImm64Instruction
-OMR::X86;Instruction;generateOperand(uint8_t *);TR;X86RegInstruction
-TR;X86RegInstruction;generateOperand(uint8_t *);TR;AMD64RegImm64Instruction
-TR;AMD64RegImm64Instruction;generateOperand(uint8_t *);TR;AMD64RegImm64SymInstruction
-OMR;Instruction;getBinaryLengthLowerBound();TR;X86RegInstruction
-TR;X86RegInstruction;getBinaryLengthLowerBound();TR;AMD64RegImm64Instruction
-OMR::X86;Instruction;getIA32RegInstruction();TR;X86RegInstruction
-OMR::X86;Instruction;getKind();TR;X86RegInstruction
-TR;X86RegInstruction;getKind();TR;AMD64RegImm64Instruction
-TR;AMD64RegImm64Instruction;getKind();TR;AMD64RegImm64SymInstruction
-OMR::X86;Instruction;getNumOperandReferencedGPRegisters();TR;X86RegInstruction
-OMR::X86;Instruction;getTargetRegister();TR;X86RegInstruction
-OMR::X86;Instruction;refsRegister(TR::Register *);TR;X86RegInstruction
-OMR::X86;Instruction;rexBits();TR;X86RegInstruction
-OMR::X86;Instruction;usesRegister(TR::Register *);TR;X86RegInstruction
-OMR::X86;Instruction;description();TR;X86AlignmentInstruction
-OMR::X86;Instruction;enlarge(int32_t,int32_t,_Bool);TR;X86AlignmentInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86AlignmentInstruction
-OMR::X86;Instruction;generateBinaryEncoding();TR;X86AlignmentInstruction
-OMR::X86;Instruction;getKind();TR;X86AlignmentInstruction
-OMR::X86;Instruction;assignRegisters(enum TR_RegisterKinds);TR;X86BoundaryAvoidanceInstruction
-TR;X86BoundaryAvoidanceInstruction;betterPadLength(int32_t,const struct TR_AtomicRegion *,int32_t);TR;X86PatchableCodeAlignmentInstruction
-OMR::X86;Instruction;description();TR;X86BoundaryAvoidanceInstruction
-TR;X86BoundaryAvoidanceInstruction;description();TR;X86PatchableCodeAlignmentInstruction
-OMR::X86;Instruction;enlarge(int32_t,int32_t,_Bool);TR;X86BoundaryAvoidanceInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86BoundaryAvoidanceInstruction
-OMR::X86;Instruction;generateBinaryEncoding();TR;X86BoundaryAvoidanceInstruction
-OMR::X86;Instruction;getKind();TR;X86BoundaryAvoidanceInstruction
-TR;X86BoundaryAvoidanceInstruction;getKind();TR;X86PatchableCodeAlignmentInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86CallMemInstruction
-OMR::X86;Instruction;assignRegisters(enum TR_RegisterKinds);TR;X86MemInstruction
-TR;X86MemInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86CallMemInstruction
-OMR::X86;Instruction;defsRegister(TR::Register *);TR;X86MemInstruction
-OMR::X86;Instruction;description();TR;X86MemInstruction
-TR;X86MemInstruction;description();TR;X86CallMemInstruction
-OMR::X86;Instruction;enlarge(int32_t,int32_t,_Bool);TR;X86MemInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86MemInstruction
-OMR::X86;Instruction;generateOperand(uint8_t *);TR;X86MemInstruction
-OMR;Instruction;getBinaryLengthLowerBound();TR;X86MemInstruction
-OMR::X86;Instruction;getKind();TR;X86MemInstruction
-TR;X86MemInstruction;getKind();TR;X86CallMemInstruction
-OMR::X86;Instruction;getMemoryReference();TR;X86MemInstruction
-OMR::X86;Instruction;getNumOperandReferencedGPRegisters();TR;X86MemInstruction
-OMR;Instruction;getSnippetForGC();TR;X86MemInstruction
-OMR::X86;Instruction;needsLockPrefix();TR;X86MemInstruction
-OMR::X86;Instruction;refsRegister(TR::Register *);TR;X86MemInstruction
-OMR::X86;Instruction;rexBits();TR;X86MemInstruction
-OMR::X86;Instruction;usesRegister(TR::Register *);TR;X86MemInstruction
-TR;X86RegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86RegRegInstruction
-TR;X86RegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPRegRegInstruction
-TR;X86FPRegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPArithmeticRegRegInstruction
-TR;X86RegInstruction;defsRegister(TR::Register *);TR;X86RegRegInstruction
-TR;X86RegInstruction;description();TR;X86RegRegInstruction
-TR;X86RegRegInstruction;description();TR;X86FPRegRegInstruction
-TR;X86FPRegRegInstruction;description();TR;X86FPArithmeticRegRegInstruction
-TR;X86RegInstruction;generateOperand(uint8_t *);TR;X86RegRegInstruction
-TR;X86RegRegInstruction;generateOperand(uint8_t *);TR;X86FPRegRegInstruction
-TR;X86FPRegRegInstruction;generateOperand(uint8_t *);TR;X86FPArithmeticRegRegInstruction
-TR;X86RegInstruction;getIA32RegRegInstruction();TR;X86RegRegInstruction
-TR;X86RegInstruction;getKind();TR;X86RegRegInstruction
-TR;X86RegRegInstruction;getKind();TR;X86FPRegRegInstruction
-TR;X86FPRegRegInstruction;getKind();TR;X86FPArithmeticRegRegInstruction
-OMR::X86;Instruction;getNumOperandReferencedFPRegisters();TR;X86FPRegRegInstruction
-TR;X86RegInstruction;getNumOperandReferencedGPRegisters();TR;X86RegRegInstruction
-TR;X86RegRegInstruction;getNumOperandReferencedGPRegisters();TR;X86FPRegRegInstruction
-OMR::X86;Instruction;getSourceRegister();TR;X86RegRegInstruction
-TR;X86RegInstruction;refsRegister(TR::Register *);TR;X86RegRegInstruction
-TR;X86RegInstruction;rexBits();TR;X86RegRegInstruction
-TR;X86RegInstruction;usesRegister(TR::Register *);TR;X86RegRegInstruction
-OMR::X86;Instruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPCompareEvalInstruction
-OMR::X86;Instruction;description();TR;X86FPCompareEvalInstruction
-OMR::X86;Instruction;getKind();TR;X86FPCompareEvalInstruction
-TR;X86FPRegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPCompareRegRegInstruction
-TR;X86FPRegRegInstruction;description();TR;X86FPCompareRegRegInstruction
-TR;X86FPRegRegInstruction;generateOperand(uint8_t *);TR;X86FPCompareRegRegInstruction
-TR;X86FPRegRegInstruction;getKind();TR;X86FPCompareRegRegInstruction
-TR;X86MemInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86MemRegInstruction
-TR;X86MemRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPMemRegInstruction
-TR;X86MemInstruction;defsRegister(TR::Register *);TR;X86MemRegInstruction
-TR;X86MemInstruction;description();TR;X86MemRegInstruction
-TR;X86MemRegInstruction;description();TR;X86FPMemRegInstruction
-TR;X86MemInstruction;generateOperand(uint8_t *);TR;X86MemRegInstruction
-TR;X86MemRegInstruction;generateOperand(uint8_t *);TR;X86FPMemRegInstruction
-TR;X86MemInstruction;getKind();TR;X86MemRegInstruction
-TR;X86MemRegInstruction;getKind();TR;X86FPMemRegInstruction
-OMR::X86;Instruction;getNumOperandReferencedFPRegisters();TR;X86FPMemRegInstruction
-TR;X86MemInstruction;getNumOperandReferencedGPRegisters();TR;X86MemRegInstruction
-TR;X86MemRegInstruction;getNumOperandReferencedGPRegisters();TR;X86FPMemRegInstruction
-OMR::X86;Instruction;getSourceRegister();TR;X86MemRegInstruction
-TR;X86MemInstruction;refsRegister(TR::Register *);TR;X86MemRegInstruction
-TR;X86MemInstruction;rexBits();TR;X86MemRegInstruction
-TR;X86MemInstruction;usesRegister(TR::Register *);TR;X86MemRegInstruction
-TR;X86RegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPRegInstruction
-TR;X86RegInstruction;generateOperand(uint8_t *);TR;X86FPRegInstruction
-TR;X86RegInstruction;getKind();TR;X86FPRegInstruction
-OMR::X86;Instruction;getNumOperandReferencedFPRegisters();TR;X86FPRegInstruction
-TR;X86RegInstruction;getNumOperandReferencedGPRegisters();TR;X86FPRegInstruction
-TR;X86RegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86RegMemInstruction
-TR;X86RegMemInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPRegMemInstruction
-TR;X86RegInstruction;description();TR;X86RegMemInstruction
-TR;X86RegMemInstruction;description();TR;X86FPRegMemInstruction
-TR;X86RegInstruction;enlarge(int32_t,int32_t,_Bool);TR;X86RegMemInstruction
-TR;X86RegInstruction;estimateBinaryLength(int32_t);TR;X86RegMemInstruction
-TR;X86RegInstruction;generateOperand(uint8_t *);TR;X86RegMemInstruction
-TR;X86RegMemInstruction;generateOperand(uint8_t *);TR;X86FPRegMemInstruction
-TR;X86RegInstruction;getBinaryLengthLowerBound();TR;X86RegMemInstruction
-TR;X86RegMemInstruction;getBinaryLengthLowerBound();TR;X86FPRegMemInstruction
-TR;X86RegInstruction;getIA32RegMemInstruction();TR;X86RegMemInstruction
-TR;X86RegInstruction;getKind();TR;X86RegMemInstruction
-TR;X86RegMemInstruction;getKind();TR;X86FPRegMemInstruction
-OMR::X86;Instruction;getMemoryReference();TR;X86RegMemInstruction
-OMR::X86;Instruction;getNumOperandReferencedFPRegisters();TR;X86FPRegMemInstruction
-TR;X86RegInstruction;getNumOperandReferencedGPRegisters();TR;X86RegMemInstruction
-TR;X86RegMemInstruction;getNumOperandReferencedGPRegisters();TR;X86FPRegMemInstruction
-OMR;Instruction;getSnippetForGC();TR;X86RegMemInstruction
-OMR::X86;Instruction;needsLockPrefix();TR;X86RegMemInstruction
-TR;X86RegInstruction;refsRegister(TR::Register *);TR;X86RegMemInstruction
-TR;X86RegInstruction;rexBits();TR;X86RegMemInstruction
-TR;X86RegInstruction;usesRegister(TR::Register *);TR;X86RegMemInstruction
-TR;X86FPRegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPST0ST1RegRegInstruction
-TR;X86FPST0ST1RegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPRemainderRegRegInstruction
-TR;X86FPRegRegInstruction;description();TR;X86FPST0ST1RegRegInstruction
-TR;X86FPST0ST1RegRegInstruction;description();TR;X86FPRemainderRegRegInstruction
-TR;X86FPRegRegInstruction;generateOperand(uint8_t *);TR;X86FPST0ST1RegRegInstruction
-TR;X86FPRegRegInstruction;getKind();TR;X86FPST0ST1RegRegInstruction
-TR;X86FPST0ST1RegRegInstruction;getKind();TR;X86FPRemainderRegRegInstruction
-TR;X86FPRegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPST0STiRegRegInstruction
-TR;X86FPRegRegInstruction;description();TR;X86FPST0STiRegRegInstruction
-TR;X86FPRegRegInstruction;generateOperand(uint8_t *);TR;X86FPST0STiRegRegInstruction
-TR;X86FPRegRegInstruction;getKind();TR;X86FPST0STiRegRegInstruction
-TR;X86FPRegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86FPSTiST0RegRegInstruction
-TR;X86FPRegRegInstruction;description();TR;X86FPSTiST0RegRegInstruction
-TR;X86FPRegRegInstruction;generateOperand(uint8_t *);TR;X86FPSTiST0RegRegInstruction
-TR;X86FPRegRegInstruction;getKind();TR;X86FPSTiST0RegRegInstruction
-OMR::X86;Instruction;description();TR;X86FenceInstruction
-OMR::X86;Instruction;generateBinaryEncoding();TR;X86FenceInstruction
-OMR::X86;Instruction;getKind();TR;X86FenceInstruction
-TR;X86ImmInstruction;addMetaDataForCodeAddress(uint8_t *);TR;X86ImmSnippetInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86ImmInstruction
-OMR::X86;Instruction;description();TR;X86ImmInstruction
-TR;X86ImmInstruction;description();TR;X86ImmSnippetInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86ImmInstruction
-OMR::X86;Instruction;generateOperand(uint8_t *);TR;X86ImmInstruction
-TR;X86ImmInstruction;generateOperand(uint8_t *);TR;X86ImmSnippetInstruction
-OMR;Instruction;getBinaryLengthLowerBound();TR;X86ImmInstruction
-OMR::X86;Instruction;getIA32ImmInstruction();TR;X86ImmInstruction
-OMR::X86;Instruction;getKind();TR;X86ImmInstruction
-TR;X86ImmInstruction;getKind();TR;X86ImmSnippetInstruction
-OMR;Instruction;getSnippetForGC();TR;X86ImmSnippetInstruction
-TR;X86ImmInstruction;addMetaDataForCodeAddress(uint8_t *);TR;X86ImmSymInstruction
-TR;X86ImmInstruction;description();TR;X86ImmSymInstruction
-TR;X86ImmInstruction;estimateBinaryLength(int32_t);TR;X86ImmSymInstruction
-TR;X86ImmInstruction;generateOperand(uint8_t *);TR;X86ImmSymInstruction
-TR;X86ImmInstruction;getKind();TR;X86ImmSymInstruction
-OMR::X86;Instruction;assignRegisters(enum TR_RegisterKinds);TR;X86LabelInstruction
-OMR::X86;Instruction;description();TR;X86LabelInstruction
-OMR::X86;Instruction;enlarge(int32_t,int32_t,_Bool);TR;X86LabelInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86LabelInstruction
-OMR::X86;Instruction;generateBinaryEncoding();TR;X86LabelInstruction
-OMR;Instruction;getBinaryLengthLowerBound();TR;X86LabelInstruction
-OMR::X86;Instruction;getIA32LabelInstruction();TR;X86LabelInstruction
-OMR::X86;Instruction;getKind();TR;X86LabelInstruction
-OMR;Instruction;getLabelSymbol();TR;X86LabelInstruction
-OMR;Instruction;getSnippetForGC();TR;X86LabelInstruction
-OMR::X86;Instruction;isPatchBarrier();TR;X86LabelInstruction
-TR;X86MemImmInstruction;addMetaDataForCodeAddress(uint8_t *);TR;X86MemImmSymInstruction
-TR;X86MemInstruction;description();TR;X86MemImmInstruction
-TR;X86MemImmInstruction;description();TR;X86MemImmSymInstruction
-TR;X86MemInstruction;estimateBinaryLength(int32_t);TR;X86MemImmInstruction
-TR;X86MemInstruction;generateOperand(uint8_t *);TR;X86MemImmInstruction
-TR;X86MemImmInstruction;generateOperand(uint8_t *);TR;X86MemImmSymInstruction
-TR;X86MemInstruction;getBinaryLengthLowerBound();TR;X86MemImmInstruction
-TR;X86MemInstruction;getKind();TR;X86MemImmInstruction
-TR;X86MemImmInstruction;getKind();TR;X86MemImmSymInstruction
-TR;X86MemRegInstruction;description();TR;X86MemRegImmInstruction
-TR;X86MemInstruction;estimateBinaryLength(int32_t);TR;X86MemRegImmInstruction
-TR;X86MemRegInstruction;generateOperand(uint8_t *);TR;X86MemRegImmInstruction
-TR;X86MemInstruction;getBinaryLengthLowerBound();TR;X86MemRegImmInstruction
-TR;X86MemRegInstruction;getKind();TR;X86MemRegImmInstruction
-TR;X86MemRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86MemRegRegInstruction
-TR;X86MemRegInstruction;description();TR;X86MemRegRegInstruction
-TR;X86MemRegInstruction;getKind();TR;X86MemRegRegInstruction
-TR;X86MemRegInstruction;getNumOperandReferencedGPRegisters();TR;X86MemRegRegInstruction
-OMR::X86;Instruction;getSourceRightRegister();TR;X86MemRegRegInstruction
-TR;X86MemRegInstruction;refsRegister(TR::Register *);TR;X86MemRegRegInstruction
-TR;X86MemRegInstruction;usesRegister(TR::Register *);TR;X86MemRegRegInstruction
-TR;X86MemInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86MemTableInstruction
-TR;X86MemInstruction;description();TR;X86MemTableInstruction
-TR;X86MemInstruction;getKind();TR;X86MemTableInstruction
-OMR::X86;Instruction;description();TR;X86PaddingInstruction
-TR;X86PaddingInstruction;description();TR;X86PaddingSnippetInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86PaddingInstruction
-OMR::X86;Instruction;generateBinaryEncoding();TR;X86PaddingInstruction
-OMR::X86;Instruction;getKind();TR;X86PaddingInstruction
-OMR;Instruction;getSnippetForGC();TR;X86PaddingSnippetInstruction
-TR;X86RegImmInstruction;addMetaDataForCodeAddress(uint8_t *);TR;X86RegImmSymInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86RegImmInstruction
-TR;X86RegInstruction;description();TR;X86RegImmInstruction
-TR;X86RegImmInstruction;description();TR;X86RegImmSymInstruction
-TR;X86RegInstruction;estimateBinaryLength(int32_t);TR;X86RegImmInstruction
-TR;X86RegInstruction;generateOperand(uint8_t *);TR;X86RegImmInstruction
-TR;X86RegImmInstruction;generateOperand(uint8_t *);TR;X86RegImmSymInstruction
-TR;X86RegInstruction;getBinaryLengthLowerBound();TR;X86RegImmInstruction
-TR;X86RegInstruction;getKind();TR;X86RegImmInstruction
-TR;X86RegImmInstruction;getKind();TR;X86RegImmSymInstruction
-TR;X86RegMemInstruction;description();TR;X86RegMemImmInstruction
-TR;X86RegMemInstruction;estimateBinaryLength(int32_t);TR;X86RegMemImmInstruction
-TR;X86RegMemInstruction;generateOperand(uint8_t *);TR;X86RegMemImmInstruction
-TR;X86RegMemInstruction;getBinaryLengthLowerBound();TR;X86RegMemImmInstruction
-TR;X86RegMemInstruction;getKind();TR;X86RegMemImmInstruction
-TR;X86RegRegInstruction;description();TR;X86RegRegImmInstruction
-TR;X86RegInstruction;estimateBinaryLength(int32_t);TR;X86RegRegImmInstruction
-TR;X86RegRegInstruction;generateOperand(uint8_t *);TR;X86RegRegImmInstruction
-TR;X86RegInstruction;getBinaryLengthLowerBound();TR;X86RegRegImmInstruction
-TR;X86RegRegInstruction;getKind();TR;X86RegRegImmInstruction
-TR;X86RegRegInstruction;getNumOperandReferencedGPRegisters();TR;X86RegRegImmInstruction
-TR;X86RegRegInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86RegRegRegInstruction
-TR;X86RegRegInstruction;defsRegister(TR::Register *);TR;X86RegRegRegInstruction
-TR;X86RegRegInstruction;description();TR;X86RegRegRegInstruction
-TR;X86RegRegInstruction;getKind();TR;X86RegRegRegInstruction
-TR;X86RegRegInstruction;getNumOperandReferencedGPRegisters();TR;X86RegRegRegInstruction
-OMR::X86;Instruction;getSourceRightRegister();TR;X86RegRegRegInstruction
-TR;X86RegRegInstruction;refsRegister(TR::Register *);TR;X86RegRegRegInstruction
-TR;X86RegRegInstruction;usesRegister(TR::Register *);TR;X86RegRegRegInstruction
-OMR::X86;Instruction;description();TR;X86RestoreVMThreadInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86RestoreVMThreadInstruction
-OMR::X86;Instruction;generateBinaryEncoding();TR;X86RestoreVMThreadInstruction
-OMR;Instruction;getBinaryLengthLowerBound();TR;X86RestoreVMThreadInstruction
-OMR::X86;Instruction;getKind();TR;X86RestoreVMThreadInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86VFPCallCleanupInstruction
-OMR::X86;Instruction;assignRegisters(enum TR_RegisterKinds);TR;X86VFPCallCleanupInstruction
-OMR::X86;Instruction;description();TR;X86VFPCallCleanupInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86VFPCallCleanupInstruction
-OMR::X86;Instruction;getKind();TR;X86VFPCallCleanupInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86VFPDedicateInstruction
-TR;X86RegMemInstruction;assignRegisters(enum TR_RegisterKinds);TR;X86VFPDedicateInstruction
-TR;X86RegMemInstruction;description();TR;X86VFPDedicateInstruction
-TR;X86RegMemInstruction;getKind();TR;X86VFPDedicateInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86VFPReleaseInstruction
-OMR::X86;Instruction;assignRegisters(enum TR_RegisterKinds);TR;X86VFPReleaseInstruction
-OMR::X86;Instruction;description();TR;X86VFPReleaseInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86VFPReleaseInstruction
-OMR::X86;Instruction;getKind();TR;X86VFPReleaseInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86VFPRestoreInstruction
-OMR::X86;Instruction;description();TR;X86VFPRestoreInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86VFPRestoreInstruction
-OMR::X86;Instruction;getKind();TR;X86VFPRestoreInstruction
-OMR::X86;Instruction;adjustVFPState(struct TR_VFPState *,TR::CodeGenerator *);TR;X86VFPSaveInstruction
-OMR::X86;Instruction;description();TR;X86VFPSaveInstruction
-OMR::X86;Instruction;estimateBinaryLength(int32_t);TR;X86VFPSaveInstruction
-OMR::X86;Instruction;getKind();TR;X86VFPSaveInstruction
-OMR;Snippet;emitSnippetBody();TR;X86DivideCheckSnippet
-OMR::X86;Snippet;getKind();TR;X86RestartSnippet
-TR;X86RestartSnippet;getKind();TR;X86DivideCheckSnippet
-OMR;Snippet;getLength(int32_t);TR;X86DivideCheckSnippet
-OMR;RegisterDependencyConditions;~RegisterDependencyConditions();OMR::X86;RegisterDependencyConditions
-TR;X86FPCompareAnalyser;fpCompareAnalyser(TR::Node *,enum TR_X86OpCodes,enum TR_X86OpCodes,enum TR_X86OpCodes,_Bool);TR;IA32XMMCompareAnalyser
-OMR;Snippet;emitSnippetBody();TR;X86FPConversionSnippet
-TR;X86FPConversionSnippet;genFPConversion(uint8_t *);TR;X86FPConvertToIntSnippet
-TR;X86RestartSnippet;getKind();TR;X86FPConversionSnippet
-TR;X86FPConversionSnippet;getKind();TR;X86FPConvertToIntSnippet
-OMR;Snippet;getLength(int32_t);TR;X86FPConvertToIntSnippet
-TR;X86FPConversionSnippet;genFPConversion(uint8_t *);TR;X86FPConvertToLongSnippet
-TR;X86FPConversionSnippet;getKind();TR;X86FPConvertToLongSnippet
-OMR;Snippet;getLength(int32_t);TR;X86FPConvertToLongSnippet
-OMR;Snippet;emitSnippetBody();TR;X86HelperCallSnippet
-TR;X86HelperCallSnippet;genHelperCall(uint8_t *);TR;X86CheckAsyncMessagesSnippet
-TR;X86RestartSnippet;getKind();TR;X86HelperCallSnippet
-OMR;Snippet;getLength(int32_t);TR;X86HelperCallSnippet
-OMR::X86;Linkage;buildDirectDispatch(TR::Node *,_Bool);TR;X86SystemLinkage
-OMR::X86;Linkage;buildIndirectDispatch(TR::Node *);TR;X86SystemLinkage
-OMR::X86;Linkage;copyGlRegDepsToParameterSymbols(TR::Node *,TR::CodeGenerator *);TR;X86SystemLinkage
-OMR::X86;Linkage;copyLinkageInfoToParameterSymbols();TR;X86SystemLinkage
-OMR::X86;Linkage;createEpilogue(TR::Instruction *);TR;X86SystemLinkage
-OMR::X86;Linkage;createPrologue(TR::Instruction *);TR;X86SystemLinkage
-OMR::X86;Linkage;getProperties();TR;X86SystemLinkage
-OMR::X86;Linkage;mapIncomingParms(TR::ResolvedMethodSymbol *);TR;X86SystemLinkage
-TR;X86SystemLinkage;buildArgs(TR::Node *,TR::RegisterDependencyConditions *);TR;AMD64SystemLinkage
-TR;X86SystemLinkage;buildDirectDispatch(TR::Node *,_Bool);TR;AMD64SystemLinkage
-TR;X86SystemLinkage;buildIndirectDispatch(TR::Node *);TR;AMD64SystemLinkage
-TR;X86SystemLinkage;buildVolatileAndReturnDependencies(TR::Node *,TR::RegisterDependencyConditions *);TR;AMD64SystemLinkage
-TR;X86SystemLinkage;getAlignment(TR::DataType);TR;AMD64SystemLinkage
-TR;X86SystemLinkage;getSingleWordFrameAllocationRegister();TR;AMD64SystemLinkage
-TR;X86SystemLinkage;layoutParm(TR::Node *,int32_t &,uint16_t &,uint16_t &,TR::parmLayoutResult &);TR;AMD64SystemLinkage
-TR;X86SystemLinkage;layoutParm(TR::ParameterSymbol *,int32_t &,uint16_t &,uint16_t &,TR::parmLayoutResult &);TR;AMD64SystemLinkage
-TR;X86SystemLinkage;mapIncomingParms(TR::ResolvedMethodSymbol *,uint32_t &);TR;AMD64ABILinkage
-TR;X86SystemLinkage;setUpStackSizeForCallNode(TR::Node *);TR;AMD64SystemLinkage
-OMR::X86;RegisterIterator;~RegisterIterator();TR;RegisterIterator
+OMR::Power;Instruction;estimateBinaryLength(int32_t);TR;PPCAdminInstruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCAdminInstruction
+OMR::Power;Instruction;getKind();TR;PPCAdminInstruction
+OMR::Power;Instruction;isDebugFence();TR;PPCAdminInstruction
+OMR::Power;Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCLabelInstruction
+OMR::Power;Instruction;estimateBinaryLength(int32_t);TR;PPCLabelInstruction
+TR;PPCLabelInstruction;estimateBinaryLength(int32_t);TR;PPCAlignedLabelInstruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCLabelInstruction
+TR;PPCLabelInstruction;generateBinaryEncoding();TR;PPCAlignedLabelInstruction
+OMR::Power;Instruction;getKind();TR;PPCLabelInstruction
+TR;PPCLabelInstruction;getKind();TR;PPCAlignedLabelInstruction
+OMR;Instruction;getLabelSymbol();TR;PPCLabelInstruction
+OMR;Instruction;getSnippetForGC();TR;PPCLabelInstruction
+OMR;Instruction;isPatchBarrier();TR;PPCLabelInstruction
+TR;PPCLabelInstruction;assignRegisters(enum TR_RegisterKinds);TR;PPCConditionalBranchInstruction
+TR;PPCConditionalBranchInstruction;assignRegisters(enum TR_RegisterKinds);TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCConditionalBranchInstruction
+TR;PPCConditionalBranchInstruction;defsRealRegister(TR::Register *);TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCConditionalBranchInstruction
+TR;PPCConditionalBranchInstruction;defsRegister(TR::Register *);TR;PPCDepConditionalBranchInstruction
+TR;PPCLabelInstruction;estimateBinaryLength(int32_t);TR;PPCConditionalBranchInstruction
+TR;PPCLabelInstruction;generateBinaryEncoding();TR;PPCConditionalBranchInstruction
+OMR::Power;Instruction;getDependencyConditions();TR;PPCDepConditionalBranchInstruction
+TR;PPCLabelInstruction;getKind();TR;PPCConditionalBranchInstruction
+TR;PPCConditionalBranchInstruction;getKind();TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;getPPCConditionalBranchInstruction();TR;PPCConditionalBranchInstruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCConditionalBranchInstruction
+TR;PPCConditionalBranchInstruction;getSourceRegister(uint32_t);TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;getTargetRegister(uint32_t);TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;isExceptBranchOp();TR;PPCConditionalBranchInstruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCConditionalBranchInstruction
+TR;PPCConditionalBranchInstruction;refsRegister(TR::Register *);TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;setDependencyConditions(TR::RegisterDependencyConditions *);TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;setExceptBranchOp();TR;PPCConditionalBranchInstruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCConditionalBranchInstruction
+TR;PPCConditionalBranchInstruction;usesRegister(TR::Register *);TR;PPCDepConditionalBranchInstruction
+OMR::Power;Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;estimateBinaryLength(int32_t);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCControlFlowInstruction
+OMR::Power;Instruction;getDependencyConditions();TR;PPCControlFlowInstruction
+OMR::Power;Instruction;getKind();TR;PPCControlFlowInstruction
+OMR;Instruction;getLabelSymbol();TR;PPCControlFlowInstruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;getTargetRegister(uint32_t);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCControlFlowInstruction
+OMR::Power;Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCDepInstruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCDepInstruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCDepInstruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCDepImmInstruction
+OMR::Power;Instruction;getDependencyConditions();TR;PPCDepInstruction
+OMR::Power;Instruction;getKind();TR;PPCDepInstruction
+TR;PPCDepInstruction;getKind();TR;PPCDepImmInstruction
+OMR::Power;Instruction;getPPCDepImmInstruction();TR;PPCDepImmInstruction
+OMR::Power;Instruction;getSourceImmediate();TR;PPCDepImmInstruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCDepInstruction
+OMR::Power;Instruction;getTargetRegister(uint32_t);TR;PPCDepInstruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCDepInstruction
+OMR::Power;Instruction;setDependencyConditions(TR::RegisterDependencyConditions *);TR;PPCDepInstruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCDepInstruction
+OMR::Power;Instruction;estimateBinaryLength(int32_t);TR;PPCDepImmSymInstruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCDepImmSymInstruction
+TR;PPCDepInstruction;getKind();TR;PPCDepImmSymInstruction
+OMR;Instruction;getSnippetForGC();TR;PPCDepImmSymInstruction
+TR;PPCLabelInstruction;assignRegisters(enum TR_RegisterKinds);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;getDependencyConditions();TR;PPCDepLabelInstruction
+TR;PPCLabelInstruction;getKind();TR;PPCDepLabelInstruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;getTargetRegister(uint32_t);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;setDependencyConditions(TR::RegisterDependencyConditions *);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCDepLabelInstruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCImmInstruction
+TR;PPCImmInstruction;generateBinaryEncoding();TR;PPCImm2Instruction
+OMR::Power;Instruction;getKind();TR;PPCImmInstruction
+TR;PPCImmInstruction;getKind();TR;PPCImm2Instruction
+OMR::Power;Instruction;getPPCImmInstruction();TR;PPCImmInstruction
+OMR::Power;Instruction;getSourceImmediate();TR;PPCImmInstruction
+OMR::Power;Instruction;updateImmediateField(uint32_t);TR;PPCImmInstruction
+OMR::Power;Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCMemInstruction
+TR;PPCMemInstruction;assignRegisters(enum TR_RegisterKinds);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;estimateBinaryLength(int32_t);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCMemInstruction
+TR;PPCMemInstruction;generateBinaryEncoding();TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;getDependencyConditions();TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;getKind();TR;PPCMemInstruction
+TR;PPCMemInstruction;getKind();TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;getMemoryBase();TR;PPCMemInstruction
+OMR::Power;Instruction;getMemoryDataRegister();TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;getMemoryIndex();TR;PPCMemInstruction
+OMR::Power;Instruction;getMemoryReference();TR;PPCMemInstruction
+OMR::Power;Instruction;getOffset();TR;PPCMemInstruction
+OMR;Instruction;getSnippetForGC();TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCMemInstruction
+TR;PPCMemInstruction;getSourceRegister(uint32_t);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;getTargetRegister(uint32_t);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCMemInstruction
+TR;PPCMemInstruction;refsRegister(TR::Register *);TR;PPCMemSrc1Instruction
+TR;PPCMemInstruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCMemSrc1Instruction
+TR;PPCMemInstruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCMemInstruction
+TR;PPCMemInstruction;usesRegister(TR::Register *);TR;PPCMemSrc1Instruction
+OMR::Power;Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCSrc1Instruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCSrc1Instruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCSrc1Instruction
+TR;PPCImmInstruction;generateBinaryEncoding();TR;PPCSrc1Instruction
+TR;PPCImmInstruction;getKind();TR;PPCSrc1Instruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCSrc1Instruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCSrc1Instruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCSrc1Instruction
+OMR::Power;Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCSrc2Instruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCSrc2Instruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCSrc2Instruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCSrc2Instruction
+OMR::Power;Instruction;getKind();TR;PPCSrc2Instruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCSrc2Instruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCSrc2Instruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCSrc2Instruction
+OMR::Power;Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCTrg1Instruction
+OMR::Power;Instruction;defsRealRegister(TR::Register *);TR;PPCTrg1Instruction
+OMR::Power;Instruction;defsRegister(TR::Register *);TR;PPCTrg1Instruction
+OMR::Power;Instruction;estimateBinaryLength(int32_t);TR;PPCTrg1ImmInstruction
+OMR::Power;Instruction;generateBinaryEncoding();TR;PPCTrg1Instruction
+TR;PPCTrg1Instruction;generateBinaryEncoding();TR;PPCTrg1ImmInstruction
+OMR::Power;Instruction;getKind();TR;PPCTrg1Instruction
+TR;PPCTrg1Instruction;getKind();TR;PPCTrg1ImmInstruction
+OMR::Power;Instruction;getPrimaryTargetRegister();TR;PPCTrg1Instruction
+OMR::Power;Instruction;getSourceImmediate();TR;PPCTrg1ImmInstruction
+OMR::Power;Instruction;getTargetRegister(uint32_t);TR;PPCTrg1Instruction
+OMR::Power;Instruction;getTrg1Register();TR;PPCTrg1Instruction
+OMR::Power;Instruction;refsRegister(TR::Register *);TR;PPCTrg1Instruction
+TR;PPCTrg1Instruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1ImmInstruction
+TR;PPCTrg1Instruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1ImmInstruction
+OMR::Power;Instruction;updateImmediateField(uint32_t);TR;PPCTrg1ImmInstruction
+OMR::Power;Instruction;usesRegister(TR::Register *);TR;PPCTrg1Instruction
+TR;PPCTrg1Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;estimateBinaryLength(int32_t);TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;generateBinaryEncoding();TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;getDependencyConditions();TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;getKind();TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;getMemoryBase();TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;getMemoryDataRegister();TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;getMemoryIndex();TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;getMemoryReference();TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;getOffset();TR;PPCTrg1MemInstruction
+OMR;Instruction;getSnippetForGC();TR;PPCTrg1MemInstruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;getTargetRegister(uint32_t);TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;getTargetRegister();TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;refsRegister(TR::Register *);TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;usesRegister(TR::Register *);TR;PPCTrg1MemInstruction
+TR;PPCTrg1Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Instruction;defsRealRegister(TR::Register *);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Instruction;defsRegister(TR::Register *);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Instruction;generateBinaryEncoding();TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Src1Instruction;generateBinaryEncoding();TR;PPCTrg1Src1ImmInstruction
+TR;PPCTrg1Src1ImmInstruction;generateBinaryEncoding();TR;PPCTrg1Src1Imm2Instruction
+TR;PPCTrg1Instruction;getKind();TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Src1Instruction;getKind();TR;PPCTrg1Src1ImmInstruction
+TR;PPCTrg1Src1ImmInstruction;getKind();TR;PPCTrg1Src1Imm2Instruction
+OMR::Power;Instruction;getSourceImmediate();TR;PPCTrg1Src1ImmInstruction
+OMR::Power;Instruction;getSourceRegister(uint32_t);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Instruction;insertTargetRegister(uint32_t *);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Src1Instruction;insertTargetRegister(uint32_t *);TR;PPCTrg1Src1ImmInstruction
+TR;PPCTrg1Instruction;refsRegister(TR::Register *);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Instruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Src1Instruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src1ImmInstruction
+TR;PPCTrg1Src1ImmInstruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src1Imm2Instruction
+TR;PPCTrg1Instruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Src1Instruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src1ImmInstruction
+TR;PPCTrg1Src1ImmInstruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src1Imm2Instruction
+OMR::Power;Instruction;updateImmediateField(uint32_t);TR;PPCTrg1Src1ImmInstruction
+TR;PPCTrg1Instruction;usesRegister(TR::Register *);TR;PPCTrg1Src1Instruction
+TR;PPCTrg1Src1Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;defsRealRegister(TR::Register *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;defsRegister(TR::Register *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;generateBinaryEncoding();TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src2Instruction;generateBinaryEncoding();TR;PPCTrg1Src2ImmInstruction
+TR;PPCTrg1Src1Instruction;getKind();TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src2Instruction;getKind();TR;PPCTrg1Src2ImmInstruction
+TR;PPCTrg1Src1Instruction;getSourceRegister(uint32_t);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;insertSource1Register(uint32_t *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;insertTargetRegister(uint32_t *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;refsRegister(TR::Register *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src1Instruction;usesRegister(TR::Register *);TR;PPCTrg1Src2Instruction
+TR;PPCTrg1Src2Instruction;assignRegisters(enum TR_RegisterKinds);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;generateBinaryEncoding();TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;getKind();TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;getSourceRegister(uint32_t);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;insertSource1Register(uint32_t *);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;insertSource2Register(uint32_t *);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;insertTargetRegister(uint32_t *);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;refsRegister(TR::Register *);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;registersGoDead(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;registersGoLive(TR::class CodeGenerator::TR_RegisterPressureState *);TR;PPCTrg1Src3Instruction
+TR;PPCTrg1Src2Instruction;usesRegister(TR::Register *);TR;PPCTrg1Src3Instruction
+OMR;Snippet;emitSnippetBody();TR;PPCHelperCallSnippet
+TR;PPCHelperCallSnippet;emitSnippetBody();TR;PPCArrayCopyCallSnippet
+OMR::Power;Snippet;getKind();TR;PPCHelperCallSnippet
+TR;PPCHelperCallSnippet;getKind();TR;PPCArrayCopyCallSnippet
+OMR;Snippet;getLength(int32_t);TR;PPCHelperCallSnippet
+TR;PPCHelperCallSnippet;getLength(int32_t);TR;PPCArrayCopyCallSnippet
+OMR;TableOfConstants;getTOCSize();TR;PPCTableOfConstants
+OMR;TableOfConstants;setTOCSize(uint32_t);TR;PPCTableOfConstants
+OMR::Power;Linkage;buildArgs(TR::Node *,TR::RegisterDependencyConditions *);TR;PPCSystemLinkage
+OMR::Power;Linkage;buildDirectDispatch(TR::Node *);TR;PPCSystemLinkage
+OMR::Power;Linkage;buildIndirectDispatch(TR::Node *);TR;PPCSystemLinkage
+OMR::Power;Linkage;buildVirtualDispatch(TR::Node *,TR::RegisterDependencyConditions *,uint32_t);TR;PPCSystemLinkage
+OMR::Power;Linkage;calculateActualParameterOffset(uintptr_t,TR::ParameterSymbol &);TR;PPCSystemLinkage
+OMR::Power;Linkage;calculateParameterRegisterOffset(uintptr_t,TR::ParameterSymbol &);TR;PPCSystemLinkage
+OMR;Linkage;createEpilogue(TR::Instruction *);TR;PPCSystemLinkage
+OMR;Linkage;createPrologue(TR::Instruction *);TR;PPCSystemLinkage
+OMR::Power;Linkage;getProperties();TR;PPCSystemLinkage
+OMR;Linkage;getRightToLeft();TR;PPCSystemLinkage
+OMR::Power;Linkage;hasToBeOnStack(TR::ParameterSymbol *);TR;PPCSystemLinkage
+OMR::Power;Linkage;initPPCRealRegisterLinkage();TR;PPCSystemLinkage
+OMR::Power;Linkage;mapSingleAutomatic(TR::AutomaticSymbol *,uint32_t &);TR;PPCSystemLinkage
+OMR::Power;Linkage;mapStack(TR::ResolvedMethodSymbol *);TR;PPCSystemLinkage
+OMR::Power;Linkage;setParameterLinkageRegisterIndex(TR::ResolvedMethodSymbol *);TR;PPCSystemLinkage
+OMR;Linkage;setParameterLinkageRegisterIndex(TR::ResolvedMethodSymbol *,List<TR::ParameterSymbol> &);TR;PPCSystemLinkage
+OMR;ConstantDataSnippet;ConstantDataSnippet(TR::CodeGenerator *);TR;ConstantDataSnippet
+OMR;ConstantDataSnippet;~ConstantDataSnippet();TR;ConstantDataSnippet
 OMR;CodeCache;CodeCache();TR;CodeCache
-OMR;CodeCacheConfig;CodeCacheConfig();TR;CodeCacheConfig
-OMR;CodeCacheConfig;~CodeCacheConfig();TR;CodeCacheConfig
+OMR;CodeCacheConfig;CodeCacheConfig();OMR::Power;CodeCacheConfig
+OMR::Power;CodeCacheConfig;CodeCacheConfig();TR;CodeCacheConfig
+OMR;CodeCacheConfig;~CodeCacheConfig();OMR::Power;CodeCacheConfig
+OMR::Power;CodeCacheConfig;~CodeCacheConfig();TR;CodeCacheConfig
 OMR;CodeCacheManager;CodeCacheManager(class TR_FrontEnd *);TestCompiler;CodeCacheManager
 TestCompiler;CodeCacheManager;CodeCacheManager(class TR_FrontEnd *);TR;CodeCacheManager
 OMR;CodeCacheManager;freeMemory(void *);TestCompiler;CodeCacheManager
@@ -1953,6 +1841,9 @@ OMR;IlInjector;jitPersistentFree(void *);TestCompiler;IlInjector
 TestCompiler;IlInjector;jitPersistentFree(void *);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;BinaryOpIlInjector
 TR;IlGenerator;methodSymbol();OMR;IlInjector
+OMR;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector
+TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector
 OMR;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector
@@ -1965,9 +1856,9 @@ TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;BinaryOpIl
 OMR;IlInjector;operator delete(void *,TR::Region &);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;BinaryOpIlInjector
-OMR;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector
-TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector
+OMR;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector
+TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector
 OMR;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector
@@ -1977,12 +1868,6 @@ TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;Bi
 OMR;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector
-OMR;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector
-TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector
-OMR;IlInjector;operator new(size_t,TR::Region &);TestCompiler;IlInjector
-TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;OpIlInjector
-TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;BinaryOpIlInjector
 OMR;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector
@@ -1998,18 +1883,18 @@ TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_Memo
 OMR;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;BinaryOpIlInjector
+OMR;IlInjector;operator new(size_t,TR::Region &);TestCompiler;IlInjector
+TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;OpIlInjector
+TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;BinaryOpIlInjector
 OMR;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;BinaryOpIlInjector
-OMR;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector
 OMR;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector
-OMR;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;IlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;OpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BinaryOpIlInjector
+OMR;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector
 OMR;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;BinaryOpIlInjector
@@ -2019,6 +1904,9 @@ TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;Binar
 OMR;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector
+OMR;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;IlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;OpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BinaryOpIlInjector
 OMR;IlInjector;~IlInjector();TestCompiler;IlInjector
 TestCompiler;IlInjector;~IlInjector();TR;IlInjector
 TestCompiler;OpIlInjector;injectIL();TestCompiler;UnaryOpIlInjector
@@ -2027,6 +1915,8 @@ TestCompiler;OpIlInjector;jitPersistentAlloc(size_t);TestCompiler;UnaryOpIlInjec
 TestCompiler;UnaryOpIlInjector;jitPersistentAlloc(size_t);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;jitPersistentFree(void *);TestCompiler;ChildlessUnaryOpIlInjector
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
+TestCompiler;UnaryOpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
@@ -2035,18 +1925,14 @@ TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;UnaryOpIlI
 TestCompiler;UnaryOpIlInjector;operator delete(void *,size_t);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator delete(void *,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
-TestCompiler;UnaryOpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
+TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
-TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
-TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;UnaryOpIlInjector
-TestCompiler;UnaryOpIlInjector;operator new(size_t,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;UnaryOpIlInjector
@@ -2057,45 +1943,47 @@ TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_Memo
 TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;ChildlessUnaryOpIlInjector
+TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;UnaryOpIlInjector
+TestCompiler;UnaryOpIlInjector;operator new(size_t,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;ChildlessUnaryOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector
-TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;UnaryOpIlInjector
-TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;ChildlessUnaryOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector
+TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector
 TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;UnaryOpIlInjector
+TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;ChildlessUnaryOpIlInjector
 TestCompiler;OpIlInjector;injectIL();TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;jitPersistentAlloc(size_t);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;CmpBranchOpIlInjector
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;CmpBranchOpIlInjector
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
-TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;CmpBranchOpIlInjector
+TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;CmpBranchOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;CmpBranchOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;CmpBranchOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;CmpBranchOpIlInjector
 OMR;IlBuilder;IlBuilder(TR::MethodBuilder *,TR::TypeDictionary *);TestCompiler;IlBuilder
 OMR;IlBuilder;IlBuilder(TR::IlBuilder *);TestCompiler;IlBuilder
 TestCompiler;IlBuilder;IlBuilder(TR::IlBuilder *);TR;IlBuilder
@@ -2161,78 +2049,78 @@ OMR;TypeDictionary;~TypeDictionary();TR;TypeDictionary
 TestCompiler;OpIlInjector;injectIL();TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;jitPersistentAlloc(size_t);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;StoreOpIlInjector
 TestCompiler;OpIlInjector;injectIL();TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;jitPersistentAlloc(size_t);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;TernaryOpIlInjector
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;TernaryOpIlInjector
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
-TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;TernaryOpIlInjector
+TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;TernaryOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;TernaryOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;TernaryOpIlInjector
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;TernaryOpIlInjector
 OMR;IlInjector;injectIL();TestCompiler;BarIlInjector
 TestCompiler;IlInjector;jitPersistentAlloc(size_t);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;jitPersistentFree(void *);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector
+TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator delete(void *,size_t);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;BarIlInjector
-TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
+TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator delete[](void *,TR::Region &);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
-TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector
-TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;BarIlInjector
+TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;BarIlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BarIlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;BarIlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BarIlInjector
 TestCompiler;TestDriver;compileTestMethods();TestCompiler;FooBarTest
 TestCompiler;TestDriver;invokeTests();TestCompiler;FooBarTest
 testing;Test;TestBody();;JITILBuilderTest_ControlFlowTest_Test
@@ -2421,32 +2309,33 @@ testing::internal;ParameterizedTestCaseInfoBase;GetTestCaseTypeId();testing::int
 testing::internal;ParameterizedTestCaseInfoBase;RegisterTests();testing::internal;ParameterizedTestCaseInfo
 testing::internal;TestFactoryBase;CreateTest();testing::internal;ParameterizedTestFactory
 testing::internal;TestFactoryBase;CreateTest();testing::internal;TestFactoryImpl
+testing::internal::ThreadLocal;ValueHolderFactory;MakeNewHolder();testing::internal::ThreadLocal;DefaultValueHolderFactory
+testing::internal::ThreadLocal;ValueHolderFactory;MakeNewHolder();testing::internal::ThreadLocal;InstanceValueHolderFactory
 testing::internal;ThreadWithParamBase;Run();testing::internal;ThreadWithParam
-testing;Test;TestBody();;JITTest_FooBarTest_Test
 OMR;IlInjector;injectIL();TestCompiler;FooIlInjector
 TestCompiler;IlInjector;jitPersistentAlloc(size_t);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;jitPersistentFree(void *);TestCompiler;FooIlInjector
+TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete(void *,size_t);TestCompiler;FooIlInjector
-TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator delete[](void *,TR::Region &);TestCompiler;FooIlInjector
+TestCompiler;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;FooIlInjector
-TestCompiler;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;FooIlInjector
-TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
+TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;FooIlInjector
+TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;FooIlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;FooIlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;FooIlInjector
-TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;FooIlInjector
 TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;FooIlInjector
 testing;Test;TestBody();TestCompiler;LimitFileTest_CheckVLogTest_Test
 testing;Test;TestBody();TestCompiler;LimitFileTest_CreateVLogTest_Test
@@ -2470,6 +2359,22 @@ testing;Test;TestBody();;JITCrossPlatformsOpCodesTest_MemoryOperationTest_Test
 testing;Test;TestBody();;JITCrossPlatformsOpCodesTest_TernaryTest_Test
 testing;Test;TestBody();;JITCrossPlatformsOpCodesTest_UnaryTest_Test
 testing;Test;TestBody();;JITCrossPlatformsOpCodesTest_UnsupportedOpCodesTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_BitwiseTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_CompareTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLEBitwiseTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLECompareTests_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLEConvertTests_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLEDirectCallTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLEFloatArithmeticTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLEIntegerArithmeticTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLEMemoryOperationTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLETernaryTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_DISABLED_PPCLEUnaryTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_MemoryOperationTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_PPCAddressTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_TernaryTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_UnaryTest_Test
+testing;Test;TestBody();;JITPPCOpCodesTest_UnsupportedOpCodesTest_Test
 TestCompiler;OpCodesTest;UnsupportedOpCodesTests();TestCompiler;PPCOpCodesTest
 TestCompiler;OpCodesTest;compileAddressTestMethods();TestCompiler;PPCOpCodesTest
 TestCompiler;OpCodesTest;compileCompareTestMethods();TestCompiler;PPCOpCodesTest
@@ -2489,25 +2394,25 @@ TestCompiler;IlInjector;jitPersistentFree(void *);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;Qux2IlInjector
-TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator delete(void *,size_t);TestCompiler;Qux2IlInjector
-TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Qux2IlInjector
+TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator delete[](void *,TR::Region &);TestCompiler;Qux2IlInjector
+TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;Qux2IlInjector
-TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;Qux2IlInjector
-TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
+TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
+TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;Qux2IlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;Qux2IlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Qux2IlInjector
 TestCompiler;TestDriver;compileTestMethods();TestCompiler;Qux2Test
 TestCompiler;TestDriver;invokeTests();TestCompiler;Qux2Test
 TestCompiler;TestDriver;compileTestMethods();TestCompiler;OptTestDriver
@@ -2516,28 +2421,28 @@ testing;Test;TestBody();TestCompiler;SimplifierFoldAndTest_SimplifierFoldAndTest
 OMR;IlInjector;injectIL();TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;jitPersistentAlloc(size_t);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;jitPersistentFree(void *);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator delete(void *,size_t);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator delete(void *,size_t);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator delete[](void *,TR::Region &);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;SimplifierFoldAndIlInjector
-TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
 TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;SimplifierFoldAndIlInjector
+TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;SimplifierFoldAndIlInjector
 TR;IlVerifier;verify(TR::ResolvedMethodSymbol *);TestCompiler;SimplifierFoldAndIlVerifier
 TestCompiler;OpCodesTest;compileAddressTestMethods();TestCompiler;S390OpCodesTest
 TestCompiler;OpCodesTest;compileCompareTestMethods();TestCompiler;S390OpCodesTest
@@ -2554,20 +2459,6 @@ TestCompiler;OpCodesTest;invokeTernaryTests();TestCompiler;S390OpCodesTest
 TestCompiler;OpCodesTest;invokeUnaryTests();TestCompiler;S390OpCodesTest
 TR;IlVerifier;verify(TR::ResolvedMethodSymbol *);TR;AllIlVerifier
 TR;IlVerifier;verify(TR::ResolvedMethodSymbol *);TR;NoCodegenVerifier
-testing;Test;TestBody();;JITX86OpCodesTest_BitwiseTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_CompareTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_DISABLED_X86ConvertOpCodesTests_Test
-testing;Test;TestBody();;JITX86OpCodesTest_DISABLED_X86IntegerArithmeticTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_DISABLED_X86MemoryOpCodesTests_Test
-testing;Test;TestBody();;JITX86OpCodesTest_DISABLED_X86UnaryTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_DirectCallTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_FloatArithmeticTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_IntegerArithmeticTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_MemoryOperationTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_TernaryTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_UnaryTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_UnsupportedOpCodesTest_Test
-testing;Test;TestBody();;JITX86OpCodesTest_X86AddressTest_Test
 TestCompiler;OpCodesTest;UnsupportedOpCodesTests();TestCompiler;X86OpCodesTest
 TestCompiler;OpCodesTest;compileAddressTestMethods();TestCompiler;X86OpCodesTest
 TestCompiler;OpCodesTest;compileCompareTestMethods();TestCompiler;X86OpCodesTest
@@ -2604,28 +2495,28 @@ OMR;IlBuilder;setHandlerInfo(uint32_t);OMR;BytecodeBuilder
 OMR;BytecodeBuilder;~BytecodeBuilder();TR;BytecodeBuilder
 TestCompiler;IlBuilder;jitPersistentAlloc(size_t);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;jitPersistentFree(void *);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator delete(void *,TR::Region &);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator delete(void *,size_t);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator delete(void *,TR::Region &);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator delete[](void *,TR::Region &);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator new(size_t,TR::Region &);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator new(size_t,TR::Internal::PersistentNewType);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator new(size_t,TR_ArenaAllocator *);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator new(size_t,class TR_PersistentMemory *);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator new(size_t,TR::Region &);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator new(size_t,TR::Internal::PersistentNewType);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator new[](size_t,TR::Internal::PersistentNewType);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator new[](size_t,class TR_PersistentMemory *);OMR;BytecodeBuilder
-TestCompiler;IlBuilder;operator new[](size_t,TR::Region &);OMR;BytecodeBuilder
 TestCompiler;IlBuilder;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator new[](size_t,TR::Internal::PersistentNewType);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator new[](size_t,TR::Region &);OMR;BytecodeBuilder
+TestCompiler;IlBuilder;operator new[](size_t,class TR_PersistentMemory *);OMR;BytecodeBuilder
 OMR;IlType;baseType();OMR;PointerType
 OMR;IlType;getName();OMR;PointerType
 OMR;IlType;getPrimitiveType();OMR;PointerType
@@ -2737,6 +2628,6 @@ OMR;IlType;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::Object
 OMR;IlType;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;UnionType
 OMR;IlType;operator new[](size_t,class TR_PersistentMemory *);OMR;UnionType
 OMR;CodeCacheMemorySegment;CodeCacheMemorySegment(uint8_t *,uint8_t *);TR;CodeCacheMemorySegment
-OMR;CodeCacheMemorySegment;CodeCacheMemorySegment(uint8_t *,size_t);TR;CodeCacheMemorySegment
 OMR;CodeCacheMemorySegment;CodeCacheMemorySegment();TR;CodeCacheMemorySegment
+OMR;CodeCacheMemorySegment;CodeCacheMemorySegment(uint8_t *,size_t);TR;CodeCacheMemorySegment
 

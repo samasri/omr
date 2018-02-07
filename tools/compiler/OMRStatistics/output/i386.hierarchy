@@ -41,6 +41,7 @@ TR::PersistentInfo --> OMR::PersistentInfo
 TR::Region::Instance --> TR::Region::Destructable
 TR_X86FPStackIterator --> TR::RegisterIterator --> OMR::X86::RegisterIterator
 TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::ResolvedMethodBase --> TR_ResolvedMethod
+TR::ResolvedMethod --> TestCompiler::ResolvedMethod --> TestCompiler::Method --> TR_Method
 TR::SnippetGCMap --> OMR::SnippetGCMap
 TR::StackMemoryRegion --> TR::Region
 TR::SymbolReference --> OMR::SymbolReference
@@ -69,7 +70,6 @@ TR_SymRefIterator --> TR_BitVectorIterator
 TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
 TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
 TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
-TestCompiler::Method --> TR_Method
 TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
 TR::CFGNode --> TR_Link1
 TR::IO --> OMR::IO
@@ -81,6 +81,7 @@ TR::Recompilation --> OMR::Recompilation
 TR::BlockChecklist --> TR::Checklist
 TR::NodeChecklist --> TR::Checklist
 TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
 TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
 TR::AllBlockIterator --> TR::BlockIterator
@@ -134,8 +135,11 @@ TR::CompileIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
 TR::IlGeneratorMethodDetails --> TestCompiler::IlGeneratorMethodDetails --> OMR::IlGeneratorMethodDetails
 TR::PartialInliningIlGenRequest --> TR::InliningIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
 TR_Inliner --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_Inliner --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 OMR_InlinerPolicy --> TR::OptimizationPolicy --> TR::Allocatable
+OMR_InlinerPolicy --> OMR_InlinerHelper
 OMR_InlinerUtil --> TR::OptimizationUtil --> TR::Allocatable
+OMR_InlinerUtil --> OMR_InlinerHelper
 TR::GlobalSet::DenseSet --> TR::GlobalSet::Set
 TR::GlobalSet::SparseSet --> TR::GlobalSet::Set
 TR::TransformUtil --> OMR::TransformUtil
@@ -146,14 +150,21 @@ TR_FunctionPointerCallSite --> TR_IndirectCallSite --> TR_CallSite --> TR_Link -
 TR_InlinerTracer --> TR_LogTracer
 TR_RegisterCandidate --> TR_Link --> TR_Link0
 TR_TrivialInliner --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_TrivialInliner --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
 TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
 TR_LoadExtensions --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LoadExtensions --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::RegisterPair --> OMR::RegisterPair --> TR::Register --> OMR::X86::Register --> OMR::Register
 TR_HashValueNumberInfo --> TR_ValueNumberInfo --> TR::Allocatable
 OMR::SystemSegmentProvider --> TR::SegmentAllocator --> TR::SegmentProvider
 TR_LinuxCallStackIterator --> TR_CallStackIterator
+__cxxabiv1::__pointer_to_member_type_info --> __cxxabiv1::__pbase_type_info
+__cxxabiv1::__pointer_type_info --> __cxxabiv1::__pbase_type_info
+__cxxabiv1::__si_class_type_info --> __cxxabiv1::__class_type_info
+__cxxabiv1::__vmi_class_type_info --> __cxxabiv1::__class_type_info
 TR_AsyncCheckInsertion --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_AsyncCheckInsertion --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
 TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
 TR_BackwardUnionSingleBitContainerAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
@@ -172,28 +183,47 @@ TR_RegisterAvailability --> TR_IntersectionBitVectorAnalysis --> TR_Intersection
 TR_UnionSingleBitContainerAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
 TR_UseDefInfo --> TR::Allocatable
 TR_CatchBlockRemover --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_CatchBlockRemover --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_CFGSimplifier --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_CFGSimplifier --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_CompactLocals --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_CompactLocals --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_CopyPropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_CopyPropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_DeadStoreElimination --> TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_DeadStoreElimination --> TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::DeadTreesElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::DeadTreesElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_ExpressionsSimplification --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_ExpressionsSimplification --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_FieldPrivatizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_FieldPrivatizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_RedundantInductionVarElimination --> TR_LoopCanonicalizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_RedundantInductionVarElimination --> TR_LoopCanonicalizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_LoopInverter --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LoopInverter --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_InductionVariableAnalysis --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_InductionVariableAnalysis --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_DerivedInductionVariable --> TR_BasicInductionVariable
 TR_GeneralLoopUnroller --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_GeneralLoopUnroller --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_IVTypeTransformer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_IVTypeTransformer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_LoopStrider --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LoopStrider --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_PrimaryInductionVariable --> TR_BasicInductionVariable
 TR_GlobalRegisterAllocator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_GlobalRegisterAllocator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_LiveRangeSplitter --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LiveRangeSplitter --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 multipleJumpSuccessorIterator --> SuccessorIterator
 switchSuccessorIterator --> SuccessorIterator
 TR_LocalLiveRangeReduction --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LocalLiveRangeReduction --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_LocalReordering --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LocalReordering --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_Arraycmp --> TR_ArrayLoop
 TR_Arraycopy --> TR_ArrayLoop
 TR_Arrayset --> TR_ArrayLoop
@@ -203,62 +233,105 @@ TR_ByteToCharArraycopy --> TR_ArrayLoop
 TR_CharToByteArraycopy --> TR_ArrayLoop
 TR_LRAddressTree --> TR_AddressTree
 TR_LoopReducer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LoopReducer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_RangeTranslateTable --> TR_TranslateTable
 TR_SetTranslateTable --> TR_TranslateTable
 TR_LoopReplicator --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LoopReplicator --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_LoopSpecializer --> TR_LoopVersioner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LoopSpecializer --> TR_LoopVersioner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::LocalCSE --> OMR::LocalCSE --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::LocalCSE --> OMR::LocalCSE --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::LocalDeadStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::LocalDeadStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_ArraysetStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_ArraysetStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_CleanseTrees --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_CleanseTrees --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_BlockShuffling --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_BlockShuffling --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_BlockSplitter --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_BlockSplitter --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_BlockSplitter::TR_BinaryHeap --> TR_Array
 TR_CheckcastAndProfiledGuardCoalescer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_CheckcastAndProfiledGuardCoalescer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_ColdBlockOutlining --> TR_ColdBlockMarker --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_ColdBlockOutlining --> TR_ColdBlockMarker --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_CompactNullChecks --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_CompactNullChecks --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_EliminateRedundantGotos --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_EliminateRedundantGotos --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_ExtendBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_ExtendBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_HoistBlocks --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_HoistBlocks --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_InvariantArgumentPreexistence --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_InvariantArgumentPreexistence --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_LongRegAllocation --> TR_Rematerialization --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_LongRegAllocation --> TR_Rematerialization --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_OrderBlocks --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_OrderBlocks --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_PeepHoleBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_PeepHoleBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_ProfiledNodeVersioning --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_ProfiledNodeVersioning --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_SimplifyAnds --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_SimplifyAnds --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_TrivialBlockExtension --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_TrivialBlockExtension --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_TrivialDeadTreeRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_TrivialDeadTreeRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::Simplifier --> OMR::Simplifier --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::Simplifier --> OMR::Simplifier --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_OrderedBlockList --> List --> ListBase
 OMR::ValuePropagation::ValueConstraint --> TR_HedgeNode
 OMR::ValuePropagation::ValueConstraintHandler --> TR_HedgeTreeHandler
 TR::ArraycopyTransformation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::ArraycopyTransformation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::GlobalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::GlobalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::LocalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::LocalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR::RegDepCopyRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR::RegDepCopyRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_ExceptionCheckMotion --> TR_DataFlowAnalysis --> TR::Allocatable
 TR_GeneralSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_GeneralSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_IndexExprManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_IndexExprManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_InnerPreexistence --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_InnerPreexistence --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_LiveOnNotAllPaths --> TR::Allocatable
 TR_OSRDefAnalysis --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_OSRDefAnalysis --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_OSRDefInfo --> TR_UseDefInfo --> TR::Allocatable
 TR_OSRExceptionEdgeRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_OSRExceptionEdgeRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_OSRLiveRangeAnalysis --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_OSRLiveRangeAnalysis --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_PartialRedundancy --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_PartialRedundancy --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_PrefetchInsertion --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_PrefetchInsertion --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_RedundantAsyncCheckRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_RedundantAsyncCheckRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_RedundantExpressionAdjustment --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
 TR_ShrinkWrap --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_ShrinkWrap --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_StripMiner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_StripMiner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_TrivialSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_TrivialSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_VirtualGuardHeadMerger --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_VirtualGuardHeadMerger --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_VirtualGuardTailSplitter --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+TR_VirtualGuardTailSplitter --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_CanReachGivenBlocks --> TR_BackwardReachability --> TR_ReachabilityAnalysis
 TR_CanBeReachedFromCatchBlock --> TR_ForwardReachability --> TR_ReachabilityAnalysis
 TR_CanBeReachedWithoutExceptionEdges --> TR_ForwardReachabilityWithoutExceptionEdges --> TR_ReachabilityAnalysis
 TR_CanReachNonColdBlocks --> TR_BackwardReachability --> TR_ReachabilityAnalysis
 OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
+OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 TR_StatsHisto --> TR_Stats
 TR_StatsInterval --> TR_Stats
 TR::AheadOfTimeCompile --> OMR::AheadOfTimeCompile
@@ -421,6 +494,7 @@ JITQuxTest_QuxTest2_Test --> testing::Test
 TestCompiler::Qux2IlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 TestCompiler::Qux2Test --> TestCompiler::TestDriver
 TestCompiler::SimplifierFoldAndTest_SimplifierFoldAndTest_Test --> TestCompiler::SimplifierFoldAndTest --> TestCompiler::OptTestDriver --> TestCompiler::TestDriver
+TestCompiler::SimplifierFoldAndTest_SimplifierFoldAndTest_Test --> TestCompiler::SimplifierFoldAndTest --> TestCompiler::OptTestDriver --> testing::Test
 TestCompiler::SimplifierFoldAndIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 TestCompiler::SimplifierFoldAndIlVerifier --> TR::IlVerifier
 TestCompiler::SimplifierFoldAndInfo --> TestCompiler::MethodInfo
@@ -429,6 +503,7 @@ TR::AllIlVerifier --> TR::IlVerifier
 TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 TR::NoCodegenVerifier --> TR::IlVerifier
 TestCompiler::OptTestDriver --> TestCompiler::TestDriver
+TestCompiler::OptTestDriver --> testing::Test
 TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 JITX86OpCodesTest_BitwiseTest_Test --> testing::Test
 JITX86OpCodesTest_CompareTest_Test --> testing::Test
