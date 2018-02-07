@@ -1,4 +1,5 @@
 import csv
+import sys
 
 #Print the head tag for all web pages
 def printHead(r):
@@ -18,19 +19,25 @@ class methodStruct:
 	def addSig(self, sig):
 		self.methodSigs.append(sig)
 
+def searchMethodName(methodName, methods):
+	for method in methods:
+		if method.methodName == methodName:
+			return method
+	return -1
+
 def processOverloadsCSV(r, f):
 	firstTime = 1
 	methodName = ""
 	methods = []
 	for row in f:
 		if not row: continue
-		if methodName != row[0]:
+		result = searchMethodName(row[0], methods)
+		if result != -1:
+			result.addSig(row[3] + "::" + row[4] + "::" + row[1])
+		else:
 			n = methodStruct(row[0])
 			n.addSig(row[3] + "::" + row[4] + "::" + row[1])
 			methods.append(n)
-		else:
-			methods[-1].methodSigs.append(row[3] + "::" + row[4] + "::" + row[1])
-		methodName = row[0]
 	return methods
 			
 
@@ -65,7 +72,7 @@ def printOverloadsHTML(r, f):
 	printOverloadsBody(r, f)
 	r.write("</html>\n")
 
-
-overloadsCSV = csv.reader(open('amd64.overloads','r'), delimiter=";")
-overloadsOut = open('amd64.overloads.html', 'w')
+if sys.argv[1] == '': sys.exit()
+overloadsCSV = csv.reader(open(sys.argv[1],'r'), delimiter=";")
+overloadsOut = open(sys.argv[1] + '.html', 'w')
 printOverloadsHTML(overloadsOut, overloadsCSV)
