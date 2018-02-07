@@ -217,7 +217,7 @@ window.onload = start;
 function start() {
 	var request = new XMLHttpRequest();
 	request.onreadystatechange = handleRequest;
-	request.open('Get', 'amd64.overrides');
+	request.open('Get', 'overrides');
 	request.send();
 	
 	
