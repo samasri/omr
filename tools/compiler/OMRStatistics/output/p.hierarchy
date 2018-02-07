@@ -504,3 +504,4 @@ OMR::PrimitiveType --> TR::IlType --> OMR::IlType
 OMR::StructType --> TR::IlType --> OMR::IlType
 OMR::UnionType --> TR::IlType --> OMR::IlType
 TR::CodeCacheMemorySegment --> OMR::CodeCacheMemorySegment
+
