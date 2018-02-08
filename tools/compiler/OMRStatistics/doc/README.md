@@ -65,7 +65,5 @@ To run all tests and identify the failed ones, run `make test` in the main OMRSt
 
 # Future steps
 * Run OMRStatistics over bruteclang to collect results from all architectures
-* Process output CSV file to create visualizations
 * Package OMRStatistics as a command-line tool
-* Change the algorithm that records polymorphism from source code to support classes with multiple parents
 * Consider using Doxygen as our documentation tool
