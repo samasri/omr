@@ -194,6 +194,8 @@ function processCSV(csv) {
 			}
 		}
 	}
+	var html = content.parentNode.parentNode.parentNode;
+	alert(html.innerHTML)
 }
 
 function hideDisplay() {

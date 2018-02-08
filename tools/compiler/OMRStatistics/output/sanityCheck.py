@@ -1,24 +1,27 @@
 #This sanity check takes the overrides from all architectures and makes sure there is no record of any function being overridden in the TR NameSpace, other than the constructors
 
 import csv
+import sys
 
-try: amd64 = open('amd64.overrides', 'r')
+path = ''
+if len(sys.argv) > 1: path = sys.argv[1] + '/'
+try: amd64 = open(path + 'amd64.overrides', 'r')
 except IOError as e: amd64 = 0
 if amd64: amd64 = csv.reader(amd64, delimiter=";")
 
-try: i386 = open('i386.overrides', 'r')
+try: i386 = open(path + 'i386.overrides', 'r')
 except IOError as e: i386 = 0
 if i386: i386 = csv.reader(i386, delimiter=";")
 
-try: p = open('p.overrides', 'r')
+try: p = open(path + 'p.overrides', 'r')
 except IOError as e: arm = 0
 if p: p = csv.reader(p, delimiter=";")
 
-try: z = open('z.overrides', 'r')
+try: z = open(path + 'z.overrides', 'r')
 except IOError as e: z = 0
 if z: z = csv.reader(z, delimiter=";")
 
-try: arm = open('arm.overrides', 'r')
+try: arm = open(path + 'arm.overrides', 'r')
 except IOError as e: arm = 0
 if arm: arm = csv.reader(arm, delimiter=";")
 
