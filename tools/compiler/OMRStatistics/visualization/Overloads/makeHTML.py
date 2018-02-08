@@ -1,3 +1,4 @@
+#Takes the name of the CSV input file as a parameter, creates an HTML visualization out of it
 import csv
 import sys
 

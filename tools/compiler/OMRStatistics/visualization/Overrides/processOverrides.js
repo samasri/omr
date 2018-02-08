@@ -1,3 +1,5 @@
+//Assumes that the CSV input file is in the same directory and is named 'overrides'
+//Uses that file to fill the HTML DOM with the right objects
 function CSVToArray( strData, strDelimiter ){
 	// Check to see if the delimiter is defined. If not,
 	// then default to comma.
@@ -219,6 +221,4 @@ function start() {
 	request.onreadystatechange = handleRequest;
 	request.open('Get', 'overrides');
 	request.send();
-	
-	
 }
