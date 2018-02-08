@@ -3,24 +3,11 @@ OMR = ../../../
 # Path to clang bin (if using Ubuntu, use the clang that is provided by Ubuntu packages, rebuilding clang from source code and running it doesn't work for some reason)
 CXX = clang++-3.8
 # Path to compiler that compiles the plugin
-GXX = clang++-3.8 #g++
-# All defines in one variable
-DEFINES = '-D__sync()=' '-D__lwsync()=' '-D__isync()=' -DBITVECTOR_BIT_NUMBERING_MSB -DUT_DIRECT_TRACE_REGISTRATION -DJITTEST -DTEST_PROJECT_SPECIFIC -DTR_HOST_X86 -DTR_HOST_64BIT -DBITVECTOR_64BIT -DLINUX -DTR_TARGET_X86 -DTR_TARGET_64BIT -DSUPPORTS_THREAD_LOCAL -D_LONG_LONG -DJ9HAMMER -DDEBUG
+GXX = clang++-3.8
 
-# All includes in one variable
+# Get defines and includes for all architectures
+include crossCompilationDefines.mk
 COMPILATION_INCLUDES = -I/home/se-team/Desktop/llvm-clang/3.8-llvm/tools/clang/include/ -I/home/se-team/Desktop/llvm-clang/3.8-build/tools/clang/include/
-PLUGIN_INCLUDES = -I $(OMR)/include_core \
--I $(OMR)/fvtest/compilertest/x/amd64 \
--I $(OMR)/fvtest/compilertest/x \
--I $(OMR)/fvtest/compilertest \
--I $(OMR)/fvtest \
--I $(OMR)/compiler/x/amd64 \
--I $(OMR)/compiler/x \
--I $(OMR)/compiler \
--I $(OMR)/ \
--I $(OMR)/third_party/gtest-1.7.0 \
--I $(OMR)/third_party/gtest-1.7.0/include \
--I $(OMR)/compiler/
 
 # Path to shared object file. NOTE: when adding this to plugin always remember to put ./ before the path. Failing to do so will give you a 'shared object not found' error which will drive you crazy!!
 SO = ./plugin.so
@@ -47,20 +34,20 @@ clean:
 sample: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES) $(PLUGIN_INCLUDES) -c $(OMR)/compiler/codegen/OMRCodeGenerator.cpp
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/codegen/OMRCodeGenerator.cpp
 	#-Xclang -plugin-arg-$(PL) -Xclang "./tests/CodeGenOut"
 	#Add above between CC1_MAINARG and DEFINES
 
 sample2: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./i386CodeGenOut" $(DEFINES) $(PLUGIN_INCLUDES) -c $(OMR)/compiler/x/i386/codegen/OMRCodeGenerator.cpp
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./i386CodeGenOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/x/i386/codegen/OMRCodeGenerator.cpp
 
-# Run test cases
+# Running test cases
 include tests.mk
 
-#Running on different architectures
-include crossCompilationDefines.mk
+#Running on all architectures
+ARCHS = amd64 i386 p z
 
 include sources/common_amd64.mk
 include sources/common_i386.mk
@@ -74,23 +61,97 @@ LIST_P = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_P)
 LIST_Z = $(JIT_PRODUCT_BACKEND_SOURCES_Z) $(JIT_PRODUCT_SOURCE_FILES_Z) 
 LIST_ARM = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_ARM) 
 
-targets_amd64 = $(addprefix , $(LIST_AMD64))
-targets_i386 = $(addprefix , $(LIST_I386))
-targets_p = $(addprefix , $(LIST_P))
-targets_z = $(addprefix , $(LIST_Z))
-targets_arm = $(addprefix , $(LIST_ARM))
+TARGETS_AMD64 = $(addprefix , $(LIST_AMD64))
+TARGETS_I386 = $(addprefix , $(LIST_I386))
+TARGETS_P = $(addprefix , $(LIST_P))
+TARGETS_Z = $(addprefix , $(LIST_Z))
+TARGETS_ARM = $(addprefix , $(LIST_ARM))
 
-writeCSV: $(SO)
-	@make output/lastCreated
+produceVisualizations: $(SO)
+	@make output/lastCreated --no-print-directory
 
 output/lastCreated: $(SO)
+	@rm -f output/amd64.*
+	@rm -f output/i386.*
+	@rm -f output/p.*
 	@rm -f output/z.*
-	@make executeAllClasses
+
+	@make executeAMD64
+	@make executeI386
+	@make executeP
+	@make executeZ
+	
+	@make copyOriginal
+	@make trimOutput
+	@make createTotalOutput
+	@make moveOutputToVisualization
+	
+	@python visualization/Overloads/makeHTML.py visualization/Overloads/overloads
+	
 	@touch output/lastCreated
-	@echo "Done"
+	@echo "------------Visualizations are ready------------"
 
-executeAllClasses: $(SO) $(targets_z)
+copyOriginal:
+	@echo "Copying original files..."
+	@mkdir -p "output/original (untrimmed) results/"
+	@for file in $(ARCHS) ; do \
+		cp output/"$$file".hierarchy "output/original (untrimmed) results" ; \
+		cp output/"$$file".overloads "output/original (untrimmed) results" ; \
+		cp output/"$$file".overrides "output/original (untrimmed) results" ; \
+	done
 
-$(targets_z):
-	@echo "Compiling $@"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/z"  $(DEFINES_Z) $(PLUGIN_INCLUDES_Z) -c $@
+trimOutput:
+	@echo "Trimming output..."
+	@for file in $(ARCHS) ; do \
+		python output/trim3Outputs.py output/"$$file" ; \
+	rm output/"$$file".hierarchy ; \
+	rm output/"$$file".overrides ; \
+	rm output/"$$file".overloads ; \
+	mv output/"$$file".hierarchy.trimmed output/"$$file".hierarchy ; \
+	mv output/"$$file".overloads.trimmed output/"$$file".overloads ; \
+	mv output/"$$file".overrides.trimmed output/"$$file".overrides ; \
+	done
+
+createTotalOutput:
+	@echo "Producing output from all archs..."
+	@python output/sanityCheck.py output > output/sanityCheck
+	@for file in $(ARCHS) ; do \
+	cat output/"$$file".hierarchy >> output/hierarchy ; \
+	cat output/"$$file".overloads >> output/overloads ; \
+	cat output/"$$file".overrides >> output/overrides ; \
+	python output/trimOneFile.py output/hierarchy ; \
+	python output/trimOneFile.py output/overloads ; \
+	python output/trimOneFile.py output/overrides ; \
+	mv output/hierarchy.trimmed output/hierarchy ; \
+	mv output/overloads.trimmed output/overloads ; \
+	mv output/overrides.trimmed output/overrides ; \
+	done
+
+moveOutputToVisualization:
+	@echo "Moving output to the right directory for visualization..."
+	@mv output/overloads visualization/Overloads/overloads
+	@mv output/overrides visualization/Overrides/overrides
+
+executeAMD64: $(SO)
+	@for file in $(TARGETS_AMD64) ; do \
+	echo "(Arch: amd64)": Compiling $$file; \
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/amd64"  $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $$file ;\
+	done
+
+executeI386: $(SO)
+	@for file in $(TARGETS_I386) ; do \
+	echo "(Arch: i386)": Compiling $$file; \
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/i386"  $(DEFINES_I386) $(PLUGIN_INCLUDES_I386) -c $$file ;\
+	done
+
+executeP: $(SO)
+	@for file in $(TARGETS_P) ; do \
+	echo "(Arch: Power)": Compiling $$file; \
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/p"  $(DEFINES_P) $(PLUGIN_INCLUDES_P) -c $$file ;\
+	done
+
+executeZ: $(SO)
+	@for file in $(TARGETS_Z) ; do \
+	echo "(Arch: Z)": Compiling $$file; \
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/z"  $(DEFINES_Z) $(PLUGIN_INCLUDES_Z) -c $$file ;\
+	done

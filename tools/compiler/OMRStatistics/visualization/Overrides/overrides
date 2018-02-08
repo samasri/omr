@@ -3252,3 +3252,749 @@ testing;Test;TestBody();;JITPPCOpCodesTest_PPCAddressTest_Test
 testing;Test;TestBody();;JITPPCOpCodesTest_TernaryTest_Test
 testing;Test;TestBody();;JITPPCOpCodesTest_UnaryTest_Test
 testing;Test;TestBody();;JITPPCOpCodesTest_UnsupportedOpCodesTest_Test
+OMR::Z;RealRegister;RealRegister(TR::CodeGenerator *);TR;RealRegister
+OMR::Z;RealRegister;RealRegister(enum TR_RegisterKinds,uint16_t,RegState,RegNum,RegMask,TR::CodeGenerator *);TR;RealRegister
+OMR;Register;Register(uint32_t);OMR::Z;Register
+OMR::Z;Register;Register(uint32_t);TR;Register
+OMR;Register;Register(enum TR_RegisterKinds,uint16_t);OMR::Z;Register
+OMR::Z;Register;Register(enum TR_RegisterKinds,uint16_t);TR;Register
+OMR;Register;Register(enum TR_RegisterKinds);OMR::Z;Register
+OMR::Z;Register;Register(enum TR_RegisterKinds);TR;Register
+OMR;Register;containsCollectedReference();OMR::Z;Register
+OMR;Register;decFutureUseCount(ncount_t);OMR::Z;Register
+OMR;Register;resetIsLive();OMR::Z;Register
+OMR;Register;setContainsCollectedReference();OMR::Z;Register
+OMR;RealRegister;setHasBeenAssignedInMethod(_Bool);OMR::Z;RealRegister
+OMR;Register;setPlaceholderReg();OMR::Z;Register
+OMR;RealRegister;~RealRegister();OMR::Z;RealRegister
+OMR::Z;RealRegister;~RealRegister();TR;RealRegister
+OMR;Register;~Register();OMR::Z;Register
+OMR::Z;Register;~Register();TR;Register
+OMR;CPU;CPU();OMR::Z;CPU
+OMR::Z;CPU;CPU();TR;CPU
+OMR;CPU;getSupportsHardwareSQRT();OMR::Z;CPU
+OMR;CPU;~CPU();OMR::Z;CPU
+OMR::Z;CPU;~CPU();TR;CPU
+OMR;CodeGenPhase;CodeGenPhase(TR::CodeGenerator *);OMR::Z;CodeGenPhase
+OMR::Z;CodeGenPhase;CodeGenPhase(TR::CodeGenerator *);TR;CodeGenPhase
+OMR;CodeGenPhase;getName(enum OMR::CodeGenPhase::PhaseValue);OMR::Z;CodeGenPhase
+OMR;CodeGenPhase;getName();OMR::Z;CodeGenPhase
+OMR;CodeGenPhase;getNumPhases();OMR::Z;CodeGenPhase
+OMR;CodeGenPhase;~CodeGenPhase();OMR::Z;CodeGenPhase
+OMR::Z;CodeGenPhase;~CodeGenPhase();TR;CodeGenPhase
+OMR;DebugEnv;DebugEnv();OMR::Z;DebugEnv
+OMR::Z;DebugEnv;DebugEnv();TR;DebugEnv
+OMR;DebugEnv;~DebugEnv();OMR::Z;DebugEnv
+OMR::Z;DebugEnv;~DebugEnv();TR;DebugEnv
+OMR;InstOpCode;InstOpCode(enum OMR::InstOpCode::Mnemonic);OMR::Z;InstOpCode
+OMR::Z;InstOpCode;InstOpCode(enum OMR::InstOpCode::Mnemonic);TR;InstOpCode
+OMR;InstOpCode;InstOpCode();OMR::Z;InstOpCode
+OMR::Z;InstOpCode;InstOpCode();TR;InstOpCode
+OMR;InstOpCode;~InstOpCode();OMR::Z;InstOpCode
+OMR::Z;InstOpCode;~InstOpCode();TR;InstOpCode
+OMR;Instruction;Instruction(TR::CodeGenerator *,TR::Instruction *,TR::class InstOpCode::Mnemonic,TR::Node *);OMR::Z;Instruction
+OMR;Instruction;Instruction(TR::CodeGenerator *,TR::class InstOpCode::Mnemonic,TR::Node *);OMR::Z;Instruction
+OMR;Instruction;assignRegisters(enum TR_RegisterKinds);OMR::Z;Instruction
+OMR;Instruction;defsRegister(TR::Register *);OMR::Z;Instruction
+OMR;Instruction;dependencyRefsRegister(TR::Register *);OMR::Z;Instruction
+OMR;Instruction;estimateBinaryLength(int32_t);OMR::Z;Instruction
+OMR;Instruction;generateBinaryEncoding();OMR::Z;Instruction
+OMR;Instruction;getKind();OMR::Z;Instruction
+OMR;Instruction;refsRegister(TR::Register *);OMR::Z;Instruction
+OMR;Instruction;usesRegister(TR::Register *);OMR::Z;Instruction
+OMR;Instruction;~Instruction();OMR::Z;Instruction
+OMR::Z;Instruction;~Instruction();TR;Instruction
+OMR::Z;Machine;Machine(TR::CodeGenerator *);TR;Machine
+OMR;Machine;getRealRegister(TR_GlobalRegisterNumber);OMR::Z;Machine
+OMR;Machine;~Machine();OMR::Z;Machine
+OMR::Z;Machine;~Machine();TR;Machine
+OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);OMR::Z;Snippet
+OMR::Z;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);TR;Snippet
+OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);OMR::Z;Snippet
+OMR::Z;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);TR;Snippet
+OMR;Snippet;~Snippet();OMR::Z;Snippet
+OMR::Z;Snippet;~Snippet();TR;Snippet
+OMR;TreeEvaluator;badILOpEvaluator(TR::Node *,TR::CodeGenerator *);OMR::Z;TreeEvaluator
+OMR;CodeGenerator;CodeGenerator();OMR::Z;CodeGenerator
+OMR::Z;CodeGenerator;CodeGenerator();TestCompiler;CodeGenerator
+TestCompiler;CodeGenerator;CodeGenerator();TestCompiler::Z;CodeGenerator
+TestCompiler::Z;CodeGenerator;CodeGenerator();TR;CodeGenerator
+OMR;CodeGenerator;IsInMemoryType(TR::DataType);OMR::Z;CodeGenerator
+OMR;CodeGenerator;allowDSEOfVolatiles();OMR::Z;CodeGenerator
+OMR;CodeGenerator;allowGlobalRegisterAcrossBranch(class TR_RegisterCandidate *,TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;apply12BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *,_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;apply16BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *,int8_t,_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;apply16BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;apply32BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;apply32BitLabelTableRelocation(int32_t *,TR::LabelSymbol *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;arithmeticNeedsLiteralFromPool(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;arrayInitMinimumNumberOfBytes();OMR::Z;CodeGenerator
+OMR;CodeGenerator;arrayTranslateAndTestMinimumNumberOfIterations();OMR::Z;CodeGenerator
+OMR;CodeGenerator;arrayTranslateMinimumNumberOfElements(_Bool,_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;arrayTranslateTableRequiresAlignment(_Bool,_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;beginInstructionSelection();OMR::Z;CodeGenerator
+OMR;CodeGenerator;bitwiseOpNeedsLiteralFromPool(TR::Node *,TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;bndsChkNeedsLiteralFromPool(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;buildRegisterMapForInstruction(class TR_GCStackMap *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;canBeAffectedByStoreTagStalls();OMR::Z;CodeGenerator
+OMR;CodeGenerator;canTransformUnsafeCopyToArrayCopy();OMR::Z;CodeGenerator
+OMR;CodeGenerator;canUseImmedInstruction(int64_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;codegenSupportsLoadlessBNDCheck();OMR::Z;CodeGenerator
+OMR;CodeGenerator;computeRegisterSaveDescription(class TR_BitVector *,_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;considerTypeForGRA(TR::DataType);OMR::Z;CodeGenerator
+OMR;CodeGenerator;considerTypeForGRA(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;considerTypeForGRA(TR::SymbolReference *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;constLoadNeedsLiteralFromPool(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;createLinkage(enum TR_LinkageConventions);OMR::Z;CodeGenerator
+OMR;CodeGenerator;disableCommoningOfVolatiles();OMR::Z;CodeGenerator
+OMR;CodeGenerator;doBinaryEncoding();OMR::Z;CodeGenerator
+OMR;CodeGenerator;doInstructionSelection();OMR::Z;CodeGenerator
+OMR;CodeGenerator;doPeephole();OMR::Z;CodeGenerator
+OMR;CodeGenerator;doRegisterAssignment(enum TR_RegisterKinds);OMR::Z;CodeGenerator
+OMR;CodeGenerator;doRematerialization();OMR::Z;CodeGenerator
+OMR;CodeGenerator;dumpDataSnippets(TR::FILE *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;dumpTargetAddressSnippets(TR::FILE *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;emitDataSnippets();OMR::Z;CodeGenerator
+OMR;CodeGenerator;emitTargetAddressSnippets();OMR::Z;CodeGenerator
+OMR;CodeGenerator;enableLiteralPoolRegisterForGRA();OMR::Z;CodeGenerator
+OMR;CodeGenerator;endInstructionSelection();OMR::Z;CodeGenerator
+OMR;CodeGenerator;endInternalControlFlow(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;excludeInvariantsFromGRAEnabled();OMR::Z;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,TR::RegisterDependencyConditions *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,class TR_ScratchRegisterManager &);OMR::Z;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,int32_t,class TR_ScratchRegisterManager &);OMR::Z;CodeGenerator
+OMR;CodeGenerator;generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,int32_t,TR::RegisterDependencyConditions *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;generateNop(TR::Node *,TR::Instruction *,enum TR_NOPKind);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getCurrentBlockIndex();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getGlobalFPRsPreservedAcrossCalls();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getGlobalGPRFromHPR(TR_GlobalRegisterNumber);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getGlobalGPRsPreservedAcrossCalls();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getGlobalHPRFromGPR(TR_GlobalRegisterNumber);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getGlobalRegisterNumber(uint32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getGlobalRegisters(enum TR_SpillKinds,enum TR_LinkageConventions);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getLinkageGlobalRegisterNumber(int8_t,TR::DataType);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMaximumNumbersOfAssignableFPRs();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMaximumNumbersOfAssignableGPRs();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMaximumNumbersOfAssignableVRs();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMinByteForLongCompareNarrower();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMinShortForLongCompareNarrower();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getMinimumNumberOfNodesBetweenMonitorsForTLE();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getNextAvailableBlockIndex();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getSupportsBitOpCodes();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getSupportsConstantOffsetInAddressing(int64_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;getSupportsEncodeUtf16BigWithSurrogateTest();OMR::Z;CodeGenerator
+OMR;CodeGenerator;getSupportsOpCodeForAutoSIMD(TR::ILOpCode,TR::DataType);OMR::Z;CodeGenerator
+OMR;CodeGenerator;hasDataSnippets();OMR::Z;CodeGenerator
+OMR;CodeGenerator;hasTargetAddressSnippets();OMR::Z;CodeGenerator
+OMR;CodeGenerator;ilOpCodeIsSupported(TR::ILOpCodes);OMR::Z;CodeGenerator
+OMR;CodeGenerator;internalPointerSupportImplemented();OMR::Z;CodeGenerator
+OMR;CodeGenerator;isAddressScaleIndexSupported(int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isAlignmentInstruction(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isBranchInstruction(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isFenceInstruction(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isGlobalRegisterAvailable(TR_GlobalRegisterNumber,TR::DataType);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isInternalControlFlowReg(TR::Register *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isLabelInstruction(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isLiteralPoolOnDemandOn();OMR::Z;CodeGenerator
+OMR;CodeGenerator;isOutOfLineHotPath();OMR::Z;CodeGenerator
+OMR;CodeGenerator;isPreservedRegister(int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isReturnInstruction(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;isTargetSnippetOrOutOfLine(TR::Instruction *,TR::Instruction **,TR::Instruction **);OMR::Z;CodeGenerator
+OMR;CodeGenerator;lowerTreeIfNeeded(TR::Node *,int32_t,TR::Node *,TR::TreeTop *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;lowerTreesPropagateBlockToNode(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;lowerTreesWalk(TR::Node *,TR::TreeTop *,vcount_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;materializesLargeConstants();OMR::Z;CodeGenerator
+OMR;CodeGenerator;nodeMayCauseException(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;opCodeIsNoOpOnThisPlatform(TR::ILOpCode &);OMR::Z;CodeGenerator
+OMR;CodeGenerator;preLowerTrees();OMR::Z;CodeGenerator
+OMR;CodeGenerator;prepareForGRA();OMR::Z;CodeGenerator
+OMR;CodeGenerator;prepareRegistersForAssignment();OMR::Z;CodeGenerator
+OMR;CodeGenerator;processIncomingParameterUsage(class TR_BitVector **,int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;processInstruction(TR::Instruction *,class TR_BitVector **,int32_t &,int32_t &,_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;removeUnavailableRegisters(class TR_RegisterCandidate *,TR::Block **,class TR_BitVector &);OMR::Z;CodeGenerator
+OMR;CodeGenerator;setCurrentBlockIndex(int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;setEstimatedLocationsForDataSnippetLabels(int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;setEstimatedLocationsForTargetAddressSnippetLabels(int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;setNextAvailableBlockIndex(int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;setOnDemandLiteralPoolRun(_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;setUnavailableRegistersUsage(TR_Array<class TR_BitVector> &,TR_Array<class TR_BitVector> &);OMR::Z;CodeGenerator
+OMR;CodeGenerator;setVMThreadRequired(_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;shouldValueBeInACommonedNode(int64_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;shouldYankCompressedRefs();OMR::Z;CodeGenerator
+OMR;CodeGenerator;simulateNodeEvaluation(TR::Node *,struct OMR::CodeGenerator::TR_RegisterPressureState *,struct OMR::CodeGenerator::TR_RegisterPressureSummary *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;splitBlockEntry(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;splitEdge(TR::Instruction *,_Bool,_Bool,TR::Instruction *,TR::list<TR::Instruction *> *,_Bool);OMR::Z;CodeGenerator
+OMR;CodeGenerator;startInternalControlFlow(TR::Instruction *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;supports32bitAiadd();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsDirectIntegralLoadStoresFromLiteralPool();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsDirectJNICallsForAOT();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsFusedMultiplyAdd();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsHighWordFacility();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsInliningOfIsInstance();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsLengthMinusOneForMemoryOpts();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsLongRegAllocation();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsMergingGuards();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsOnDemandLiteralPool();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsSinglePrecisionSQRT();OMR::Z;CodeGenerator
+OMR;CodeGenerator;supportsTrapsInTMRegion();OMR::Z;CodeGenerator
+OMR;CodeGenerator;suppressInliningOfRecognizedMethod(TR::RecognizedMethod);OMR::Z;CodeGenerator
+OMR;CodeGenerator;updateSnippetMapWithRSD(TR::Instruction *,int32_t);OMR::Z;CodeGenerator
+OMR;CodeGenerator;usesImplicit64BitGPRs(TR::Node *);OMR::Z;CodeGenerator
+OMR;CodeGenerator;yankIndexScalingOp();OMR::Z;CodeGenerator
+OMR;CodeGenerator;~CodeGenerator();OMR::Z;CodeGenerator
+OMR::Z;CodeGenerator;~CodeGenerator();TestCompiler;CodeGenerator
+TestCompiler;CodeGenerator;~CodeGenerator();TestCompiler::Z;CodeGenerator
+TestCompiler::Z;CodeGenerator;~CodeGenerator();TR;CodeGenerator
+TR;OutOfLineCodeSection;assignRegisters(enum TR_RegisterKinds);TR;S390OutOfLineCodeSection
+OMR::Z;Linkage;Linkage(TR::CodeGenerator *,enum TR_S390LinkageConventions,enum TR_LinkageConventions);TR;Linkage
+OMR;Linkage;createEpilogue(TR::Instruction *);OMR::Z;Linkage
+OMR;Linkage;createPrologue(TR::Instruction *);OMR::Z;Linkage
+OMR;Linkage;getFormalParameterGlobalRegister(TR::ParameterSymbol *);OMR::Z;Linkage
+OMR;Linkage;getRegisterSaveSize();OMR::Z;Linkage
+OMR;Linkage;getRightToLeft();OMR::Z;Linkage
+OMR;Linkage;hasToBeOnStack(TR::ParameterSymbol *);OMR::Z;Linkage
+OMR;Linkage;mapSingleAutomatic(TR::AutomaticSymbol *,uint32_t &);OMR::Z;Linkage
+OMR;Linkage;mapStack(TR::ResolvedMethodSymbol *);OMR::Z;Linkage
+OMR;Linkage;numArgumentRegisters(enum TR_RegisterKinds);OMR::Z;Linkage
+OMR;Linkage;setParameterLinkageRegisterIndex(TR::ResolvedMethodSymbol *);OMR::Z;Linkage
+OMR;Linkage;setParameterLinkageRegisterIndex(TR::ResolvedMethodSymbol *,List<TR::ParameterSymbol> &);OMR::Z;Linkage
+OMR;Linkage;useCachedStaticAreaAddresses(TR::Compilation *);OMR::Z;Linkage
+OMR;Linkage;~Linkage();OMR::Z;Linkage
+OMR::Z;Linkage;~Linkage();TR;Linkage
+OMR::Z;MemoryReference;MemoryReference(TR::Register *,TR::Register *,int32_t,TR::CodeGenerator *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(int32_t,TR::CodeGenerator *,_Bool);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::Node *,TR::CodeGenerator *,_Bool,class TR_StorageReference *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::Register *,int32_t,TR::SymbolReference *,TR::CodeGenerator *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::Snippet *,TR::CodeGenerator *,TR::Register *,TR::Node *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::Node *,TR::SymbolReference *,TR::CodeGenerator *,class TR_StorageReference *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::Register *,int32_t,TR::CodeGenerator *,const char *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::CodeGenerator *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::Node *,_Bool,TR::CodeGenerator *);TR;MemoryReference
+OMR::Z;MemoryReference;MemoryReference(TR::Snippet *,TR::Register *,int32_t,TR::CodeGenerator *);TR;MemoryReference
+OMR;MemoryReference;jitPersistentAlloc(size_t);OMR::Z;MemoryReference
+OMR;MemoryReference;jitPersistentFree(void *);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete(void *,size_t);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete(void *,TR::Region &);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete[](void *,TR::Region &);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::Z;MemoryReference
+OMR;MemoryReference;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_PersistentMemory *);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new(size_t,TR_ArenaAllocator *);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new(size_t,TR::Internal::PersistentNewType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new(size_t,TR::Region &);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new[](size_t,TR::Region &);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_PersistentMemory *);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new[](size_t,TR::Internal::PersistentNewType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;MemoryReference
+OMR;MemoryReference;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Z;MemoryReference
+OMR;MemoryReference;~MemoryReference();OMR::Z;MemoryReference
+OMR::Z;MemoryReference;~MemoryReference();TR;MemoryReference
+OMR;RegisterDependencyConditions;RegisterDependencyConditions();OMR::Z;RegisterDependencyConditions
+OMR::Z;RegisterDependencyConditions;RegisterDependencyConditions();TR;RegisterDependencyConditions
+OMR::Z;RegisterDependencyConditions;RegisterDependencyConditions(class TR_S390RegisterDependencyGroup *,class TR_S390RegisterDependencyGroup *,uint16_t,uint16_t,TR::CodeGenerator *);TR;RegisterDependencyConditions
+OMR::Z;RegisterDependencyConditions;RegisterDependencyConditions(uint16_t,uint16_t,TR::CodeGenerator *);TR;RegisterDependencyConditions
+OMR::Z;RegisterDependencyConditions;RegisterDependencyConditions(TR::CodeGenerator *,TR::Node *,uint32_t,TR::Instruction **);TR;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;jitPersistentAlloc(size_t);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;jitPersistentFree(void *);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,TR::Region &);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,size_t);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,TR::Region &);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,TR_ArenaAllocator *);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,TR::Internal::PersistentNewType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_PersistentMemory *);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new(size_t,TR::Region &);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,TR::Region &);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_PersistentMemory *);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,TR::Internal::PersistentNewType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::Z;RegisterDependencyConditions
+OMR;RegisterDependencyConditions;~RegisterDependencyConditions();OMR::Z;RegisterDependencyConditions
+OMR;Snippet;emitSnippetBody();TR;S390ConstantDataSnippet
+TR;S390ConstantDataSnippet;emitSnippetBody();TR;S390ConstantInstructionSnippet
+TR;S390ConstantDataSnippet;getConstantSize();TR;S390ConstantInstructionSnippet
+TR;S390ConstantDataSnippet;getDataAs8Bytes();TR;S390ConstantInstructionSnippet
+OMR::Z;Snippet;getKind();TR;S390ConstantDataSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390ConstantInstructionSnippet
+OMR;Snippet;getLength(int32_t);TR;S390ConstantDataSnippet
+TR;S390ConstantDataSnippet;getLength(int32_t);TR;S390ConstantInstructionSnippet
+TR;S390ConstantDataSnippet;emitSnippetBody();TR;S390DeclTrampSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390DeclTrampSnippet
+TR;S390ConstantDataSnippet;emitSnippetBody();TR;S390EyeCatcherDataSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390EyeCatcherDataSnippet
+TR;S390ConstantDataSnippet;emitSnippetBody();TR;S390InterfaceCallDataSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390InterfaceCallDataSnippet
+TR;S390ConstantDataSnippet;getLength(int32_t);TR;S390InterfaceCallDataSnippet
+TR;S390ConstantDataSnippet;emitSnippetBody();TR;S390JNICallDataSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390JNICallDataSnippet
+TR;S390ConstantDataSnippet;getLength(int32_t);TR;S390JNICallDataSnippet
+OMR;Snippet;print(TR::FILE *,class TR_Debug *);TR;S390JNICallDataSnippet
+TR;S390ConstantDataSnippet;emitSnippetBody();TR;S390LabelTableSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390LabelTableSnippet
+TR;S390ConstantDataSnippet;getLength(int32_t);TR;S390LabelTableSnippet
+OMR;Snippet;emitSnippetBody();TR;S390TargetAddressSnippet
+TR;S390TargetAddressSnippet;emitSnippetBody();TR;S390LookupSwitchSnippet
+OMR::Z;Snippet;getKind();TR;S390TargetAddressSnippet
+TR;S390TargetAddressSnippet;getKind();TR;S390LookupSwitchSnippet
+OMR;Snippet;getLength(int32_t);TR;S390TargetAddressSnippet
+TR;S390TargetAddressSnippet;getLength(int32_t);TR;S390LookupSwitchSnippet
+TR;S390ConstantDataSnippet;emitSnippetBody();TR;S390SortJumpTrampSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390SortJumpTrampSnippet
+TR;S390ConstantDataSnippet;getKind();TR;S390WritableDataSnippet
+OMR::Z;Register;FlattenRegisterPairs(TR_Queue<TR::Register> *);OMR;RegisterPair
+OMR;RegisterPair;RegisterPair(TR::Register *,TR::Register *);OMR::Z;RegisterPair
+OMR::Z;RegisterPair;RegisterPair(TR::Register *,TR::Register *);TR;RegisterPair
+OMR;RegisterPair;RegisterPair(enum TR_RegisterKinds);OMR::Z;RegisterPair
+OMR::Z;RegisterPair;RegisterPair(enum TR_RegisterKinds);TR;RegisterPair
+OMR;RegisterPair;RegisterPair();OMR::Z;RegisterPair
+OMR::Z;RegisterPair;RegisterPair();TR;RegisterPair
+OMR;RegisterPair;setHighOrder(TR::Register *,TR::CodeGenerator *);OMR::Z;RegisterPair
+OMR;RegisterPair;setLowOrder(TR::Register *,TR::CodeGenerator *);OMR::Z;RegisterPair
+OMR::Z;Register;usesRegister(TR::Register *);OMR;RegisterPair
+OMR;RegisterPair;~RegisterPair();OMR::Z;RegisterPair
+OMR::Z;RegisterPair;~RegisterPair();TR;RegisterPair
+OMR::Z;RegisterIterator;RegisterIterator(TR::Machine *,enum TR_RegisterKinds);TR;RegisterIterator
+OMR::Z;Instruction;description();TR;S390AnnotationInstruction
+OMR::Z;Instruction;getKind();TR;S390AnnotationInstruction
+OMR::Z;Instruction;assignRegistersAndDependencies(enum TR_RegisterKinds);TR;S390BranchInstruction
+OMR::Z;Instruction;description();TR;S390LabeledInstruction
+TR;S390LabeledInstruction;description();TR;S390BranchInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390LabeledInstruction
+TR;S390LabeledInstruction;estimateBinaryLength(int32_t);TR;S390BranchInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390LabeledInstruction
+TR;S390LabeledInstruction;generateBinaryEncoding();TR;S390BranchInstruction
+OMR::Z;Instruction;getKind();TR;S390LabeledInstruction
+TR;S390LabeledInstruction;getKind();TR;S390BranchInstruction
+OMR;Instruction;getLabelSymbol();TR;S390LabeledInstruction
+OMR;Instruction;getSnippetForGC();TR;S390BranchInstruction
+TR;S390LabeledInstruction;description();TR;S390BranchOnCountInstruction
+TR;S390LabeledInstruction;estimateBinaryLength(int32_t);TR;S390BranchOnCountInstruction
+TR;S390LabeledInstruction;generateBinaryEncoding();TR;S390BranchOnCountInstruction
+TR;S390LabeledInstruction;getKind();TR;S390BranchOnCountInstruction
+OMR::Z;Instruction;refsRegister(TR::Register *);TR;S390BranchOnCountInstruction
+TR;S390LabeledInstruction;description();TR;S390BranchOnIndexInstruction
+TR;S390LabeledInstruction;estimateBinaryLength(int32_t);TR;S390BranchOnIndexInstruction
+TR;S390LabeledInstruction;generateBinaryEncoding();TR;S390BranchOnIndexInstruction
+TR;S390LabeledInstruction;getKind();TR;S390BranchOnIndexInstruction
+OMR::Z;Instruction;refsRegister(TR::Register *);TR;S390BranchOnIndexInstruction
+OMR::Z;Instruction;description();TR;S390PseudoInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390PseudoInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390PseudoInstruction
+TR;S390PseudoInstruction;generateBinaryEncoding();TR;S390DebugCounterBumpInstruction
+OMR::Z;Instruction;getKind();TR;S390PseudoInstruction
+OMR::Z;Instruction;description();TR;S390EInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390EInstruction
+OMR::Z;Instruction;getKind();TR;S390EInstruction
+OMR::Z;Instruction;description();TR;S390IEInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390IEInstruction
+OMR::Z;Instruction;getKind();TR;S390IEInstruction
+OMR::Z;Instruction;description();TR;S390IInstruction
+OMR::Z;Instruction;getKind();TR;S390IInstruction
+OMR::Z;Instruction;description();TR;S390Imm2Instruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390Imm2Instruction
+OMR::Z;Instruction;getKind();TR;S390Imm2Instruction
+OMR::Z;Instruction;description();TR;S390ImmInstruction
+TR;S390ImmInstruction;description();TR;S390ImmSnippetInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390ImmInstruction
+TR;S390ImmInstruction;generateBinaryEncoding();TR;S390ImmSnippetInstruction
+OMR::Z;Instruction;getKind();TR;S390ImmInstruction
+TR;S390ImmInstruction;getKind();TR;S390ImmSnippetInstruction
+OMR::Z;Instruction;getS390ImmInstruction();TR;S390ImmInstruction
+TR;S390ImmInstruction;description();TR;S390ImmSymInstruction
+TR;S390ImmInstruction;generateBinaryEncoding();TR;S390ImmSymInstruction
+TR;S390ImmInstruction;getKind();TR;S390ImmSymInstruction
+OMR::Z;Instruction;assignRegistersAndDependencies(enum TR_RegisterKinds);TR;S390LabelInstruction
+TR;S390LabeledInstruction;description();TR;S390LabelInstruction
+TR;S390LabeledInstruction;estimateBinaryLength(int32_t);TR;S390LabelInstruction
+TR;S390LabeledInstruction;generateBinaryEncoding();TR;S390LabelInstruction
+TR;S390LabeledInstruction;getKind();TR;S390LabelInstruction
+OMR::Z;Instruction;description();TR;S390MIIInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390MIIInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390MIIInstruction
+OMR::Z;Instruction;getKind();TR;S390MIIInstruction
+OMR;Instruction;getLabelSymbol();TR;S390MIIInstruction
+OMR::Z;Instruction;description();TR;S390MemInstruction
+TR;S390MemInstruction;description();TR;S390MemMemInstruction
+TR;S390MemMemInstruction;description();TR;S390SS1Instruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390MemMemInstruction
+TR;S390MemMemInstruction;estimateBinaryLength(int32_t);TR;S390SS1Instruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390MemInstruction
+TR;S390MemInstruction;generateBinaryEncoding();TR;S390MemMemInstruction
+TR;S390MemMemInstruction;generateBinaryEncoding();TR;S390SS1Instruction
+OMR::Z;Instruction;getKind();TR;S390MemInstruction
+TR;S390MemInstruction;getKind();TR;S390MemMemInstruction
+TR;S390MemMemInstruction;getKind();TR;S390SS1Instruction
+OMR::Z;Instruction;getMemoryReference();TR;S390MemInstruction
+OMR::Z;Instruction;getMemoryReference2();TR;S390MemMemInstruction
+OMR::Z;Instruction;refsRegister(TR::Register *);TR;S390MemInstruction
+OMR::Z;Instruction;description();TR;S390NOPInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390NOPInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390NOPInstruction
+OMR::Z;Instruction;getKind();TR;S390NOPInstruction
+OMR::Z;Instruction;description();TR;S390OpCodeOnlyInstruction
+OMR::Z;Instruction;getKind();TR;S390OpCodeOnlyInstruction
+OMR::Z;Instruction;description();TR;S390RegInstruction
+TR;S390RegInstruction;description();TR;S390RIEInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390RIEInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390RegInstruction
+TR;S390RegInstruction;generateBinaryEncoding();TR;S390RIEInstruction
+TR;S390RegInstruction;getBranchCondition();TR;S390RIEInstruction
+OMR::Z;Instruction;getKind();TR;S390RegInstruction
+TR;S390RegInstruction;getKind();TR;S390RIEInstruction
+OMR;Instruction;getLabelSymbol();TR;S390RIEInstruction
+TR;S390RegInstruction;getMask();TR;S390RIEInstruction
+OMR;Instruction;getSnippetForGC();TR;S390RIEInstruction
+OMR::Z;Instruction;isRegInstruction();TR;S390RegInstruction
+OMR::Z;Instruction;matchesTargetRegister(TR::Register *);TR;S390RegInstruction
+OMR::Z;Instruction;refsRegister(TR::Register *);TR;S390RegInstruction
+TR;S390RegInstruction;setBranchCondition(TR::class InstOpCode::S390BranchCondition);TR;S390RIEInstruction
+TR;S390RegInstruction;description();TR;S390RIInstruction
+TR;S390RIInstruction;description();TR;S390RISInstruction
+TR;S390RegInstruction;generateBinaryEncoding();TR;S390RIInstruction
+TR;S390RIInstruction;generateBinaryEncoding();TR;S390RISInstruction
+TR;S390RegInstruction;getBranchCondition();TR;S390RISInstruction
+TR;S390RegInstruction;getKind();TR;S390RIInstruction
+TR;S390RIInstruction;getKind();TR;S390RISInstruction
+TR;S390RegInstruction;getMask();TR;S390RISInstruction
+TR;S390RegInstruction;setBranchCondition(TR::class InstOpCode::S390BranchCondition);TR;S390RISInstruction
+OMR::Z;Instruction;description();TR;S390RILInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390RILInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390RILInstruction
+OMR::Z;Instruction;getKind();TR;S390RILInstruction
+OMR::Z;Instruction;matchesTargetRegister(TR::Register *);TR;S390RILInstruction
+OMR::Z;Instruction;refsRegister(TR::Register *);TR;S390RILInstruction
+TR;S390RegInstruction;description();TR;S390RRInstruction
+TR;S390RRInstruction;description();TR;S390RREInstruction
+TR;S390RegInstruction;generateBinaryEncoding();TR;S390RRInstruction
+TR;S390RegInstruction;getKind();TR;S390RRInstruction
+TR;S390RRInstruction;getKind();TR;S390RREInstruction
+TR;S390RegInstruction;refsRegister(TR::Register *);TR;S390RRInstruction
+TR;S390RRInstruction;description();TR;S390RRFInstruction
+TR;S390RRInstruction;generateBinaryEncoding();TR;S390RRFInstruction
+TR;S390RRInstruction;getKind();TR;S390RRFInstruction
+TR;S390RegInstruction;getMask();TR;S390RRFInstruction
+TR;S390RRInstruction;refsRegister(TR::Register *);TR;S390RRFInstruction
+TR;S390RRInstruction;description();TR;S390RRRInstruction
+TR;S390RRInstruction;generateBinaryEncoding();TR;S390RRRInstruction
+TR;S390RRInstruction;getKind();TR;S390RRRInstruction
+TR;S390RRInstruction;refsRegister(TR::Register *);TR;S390RRRInstruction
+TR;S390RRInstruction;description();TR;S390RRSInstruction
+TR;S390RRInstruction;generateBinaryEncoding();TR;S390RRSInstruction
+TR;S390RegInstruction;getBranchCondition();TR;S390RRSInstruction
+TR;S390RRInstruction;getKind();TR;S390RRSInstruction
+TR;S390RegInstruction;getMask();TR;S390RRSInstruction
+TR;S390RegInstruction;setBranchCondition(TR::class InstOpCode::S390BranchCondition);TR;S390RRSInstruction
+TR;S390RegInstruction;description();TR;S390RSInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390RSInstruction
+TR;S390RegInstruction;generateBinaryEncoding();TR;S390RSInstruction
+TR;S390RegInstruction;getFirstRegister();TR;S390RSInstruction
+TR;S390RegInstruction;getKind();TR;S390RSInstruction
+TR;S390RegInstruction;getLastRegister();TR;S390RSInstruction
+OMR::Z;Instruction;getMemoryReference();TR;S390RSInstruction
+OMR::Z;Instruction;setKind(enum OMR::Instruction::Kind);TR;S390RSInstruction
+OMR::Z;Instruction;swap_operands(int,int);TR;S390RSWithImplicitPairStoresInstruction
+TR;S390MemInstruction;description();TR;S390RSLInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390RSLInstruction
+TR;S390MemInstruction;generateBinaryEncoding();TR;S390RSLInstruction
+TR;S390MemInstruction;getKind();TR;S390RSLInstruction
+TR;S390RegInstruction;description();TR;S390RSLbInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390RSLbInstruction
+TR;S390RegInstruction;generateBinaryEncoding();TR;S390RSLbInstruction
+TR;S390RegInstruction;getKind();TR;S390RSLbInstruction
+TR;S390RegInstruction;getMask();TR;S390RSLbInstruction
+OMR::Z;Instruction;getMemoryReference();TR;S390RSLbInstruction
+TR;S390RSInstruction;description();TR;S390RSYInstruction
+TR;S390RSInstruction;getKind();TR;S390RSYInstruction
+TR;S390RegInstruction;description();TR;S390RXInstruction
+TR;S390RXInstruction;description();TR;S390RXEInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390RXInstruction
+TR;S390RXInstruction;estimateBinaryLength(int32_t);TR;S390RXEInstruction
+TR;S390RegInstruction;generateBinaryEncoding();TR;S390RXInstruction
+TR;S390RXInstruction;generateBinaryEncoding();TR;S390RXEInstruction
+TR;S390RegInstruction;getKind();TR;S390RXInstruction
+TR;S390RXInstruction;getKind();TR;S390RXEInstruction
+OMR::Z;Instruction;getMemoryReference();TR;S390RXInstruction
+TR;S390RegInstruction;refsRegister(TR::Register *);TR;S390RXInstruction
+OMR::Z;Instruction;setKind(enum OMR::Instruction::Kind);TR;S390RXInstruction
+TR;S390RRInstruction;description();TR;S390RXFInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390RXFInstruction
+TR;S390RRInstruction;generateBinaryEncoding();TR;S390RXFInstruction
+TR;S390RRInstruction;getKind();TR;S390RXFInstruction
+OMR::Z;Instruction;getMemoryReference();TR;S390RXFInstruction
+TR;S390RRInstruction;refsRegister(TR::Register *);TR;S390RXFInstruction
+TR;S390RXInstruction;description();TR;S390RXYInstruction
+TR;S390RXInstruction;estimateBinaryLength(int32_t);TR;S390RXYInstruction
+TR;S390RXInstruction;generateBinaryEncoding();TR;S390RXYInstruction
+TR;S390RXInstruction;getKind();TR;S390RXYInstruction
+TR;S390MemInstruction;description();TR;S390RXYbInstruction
+TR;S390MemInstruction;getKind();TR;S390RXYbInstruction
+OMR::Z;Instruction;setKind(enum OMR::Instruction::Kind);TR;S390RXYbInstruction
+TR;S390MemInstruction;description();TR;S390SIInstruction
+TR;S390SIInstruction;description();TR;S390SIYInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390SIInstruction
+TR;S390SIInstruction;estimateBinaryLength(int32_t);TR;S390SIYInstruction
+TR;S390MemInstruction;generateBinaryEncoding();TR;S390SIInstruction
+TR;S390SIInstruction;generateBinaryEncoding();TR;S390SIYInstruction
+TR;S390MemInstruction;getKind();TR;S390SIInstruction
+TR;S390SIInstruction;getKind();TR;S390SIYInstruction
+OMR::Z;Instruction;setKind(enum OMR::Instruction::Kind);TR;S390SIInstruction
+TR;S390MemInstruction;description();TR;S390SILInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390SILInstruction
+TR;S390MemInstruction;generateBinaryEncoding();TR;S390SILInstruction
+TR;S390MemInstruction;getKind();TR;S390SILInstruction
+TR;S390MemInstruction;description();TR;S390SInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390SInstruction
+TR;S390MemInstruction;generateBinaryEncoding();TR;S390SInstruction
+TR;S390MemInstruction;getKind();TR;S390SInstruction
+OMR::Z;Instruction;description();TR;S390SMIInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390SMIInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390SMIInstruction
+OMR::Z;Instruction;getKind();TR;S390SMIInstruction
+OMR;Instruction;getLabelSymbol();TR;S390SMIInstruction
+OMR::Z;Instruction;getMemoryReference();TR;S390SMIInstruction
+TR;S390SS1Instruction;description();TR;S390SS2Instruction
+TR;S390SS1Instruction;generateBinaryEncoding();TR;S390SS2Instruction
+TR;S390SS1Instruction;getKind();TR;S390SS2Instruction
+TR;S390SS1Instruction;description();TR;S390SS4Instruction
+TR;S390SS1Instruction;generateBinaryEncoding();TR;S390SS4Instruction
+TR;S390SS1Instruction;getKind();TR;S390SS4Instruction
+TR;S390MemMemInstruction;description();TR;S390SSEInstruction
+TR;S390MemMemInstruction;getKind();TR;S390SSEInstruction
+TR;S390RXInstruction;description();TR;S390SSFInstruction
+TR;S390RXInstruction;estimateBinaryLength(int32_t);TR;S390SSFInstruction
+TR;S390RXInstruction;generateBinaryEncoding();TR;S390SSFInstruction
+TR;S390RXInstruction;getKind();TR;S390SSFInstruction
+OMR::Z;Instruction;getMemoryReference2();TR;S390SSFInstruction
+TR;S390RXInstruction;refsRegister(TR::Register *);TR;S390SSFInstruction
+OMR::Z;Instruction;description();TR;S390TranslateInstruction
+OMR::Z;Instruction;generateBinaryEncoding();TR;S390TranslateInstruction
+OMR::Z;Instruction;getKind();TR;S390TranslateInstruction
+OMR::Z;Instruction;refsRegister(TR::Register *);TR;S390TranslateInstruction
+TR;S390RegInstruction;description();TR;S390VInstruction
+TR;S390VInstruction;description();TR;S390VRIInstruction
+TR;S390VRIInstruction;description();TR;S390VRIaInstruction
+OMR::Z;Instruction;estimateBinaryLength(int32_t);TR;S390VInstruction
+TR;S390RegInstruction;generateBinaryEncoding();TR;S390VInstruction
+TR;S390VInstruction;generateBinaryEncoding();TR;S390VRIInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIaInstruction
+TR;S390VInstruction;getExtendedMnemonicName();TR;S390VRIInstruction
+TR;S390RegInstruction;getKind();TR;S390VInstruction
+TR;S390VInstruction;getKind();TR;S390VRIInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIaInstruction
+TR;S390VRIInstruction;description();TR;S390VRIbInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIbInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIbInstruction
+TR;S390VRIInstruction;description();TR;S390VRIcInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIcInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIcInstruction
+TR;S390VRIInstruction;description();TR;S390VRIdInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIdInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIdInstruction
+TR;S390VRIInstruction;description();TR;S390VRIeInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIeInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIeInstruction
+TR;S390VRIInstruction;description();TR;S390VRIfInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIfInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIfInstruction
+TR;S390VRIInstruction;description();TR;S390VRIgInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIgInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIgInstruction
+TR;S390VRIInstruction;description();TR;S390VRIhInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIhInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIhInstruction
+TR;S390VRIInstruction;description();TR;S390VRIiInstruction
+TR;S390VRIInstruction;generateBinaryEncoding();TR;S390VRIiInstruction
+TR;S390VRIInstruction;getKind();TR;S390VRIiInstruction
+TR;S390VInstruction;description();TR;S390VRRInstruction
+TR;S390VRRInstruction;description();TR;S390VRRaInstruction
+TR;S390VInstruction;generateBinaryEncoding();TR;S390VRRInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRaInstruction
+TR;S390VInstruction;getExtendedMnemonicName();TR;S390VRRInstruction
+TR;S390VInstruction;getKind();TR;S390VRRInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRaInstruction
+TR;S390VRRInstruction;description();TR;S390VRRbInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRbInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRbInstruction
+TR;S390VRRInstruction;description();TR;S390VRRcInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRcInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRcInstruction
+TR;S390VRRInstruction;description();TR;S390VRRdInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRdInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRdInstruction
+TR;S390VRRInstruction;description();TR;S390VRReInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRReInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRReInstruction
+TR;S390VRRInstruction;description();TR;S390VRRfInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRfInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRfInstruction
+TR;S390VRRInstruction;description();TR;S390VRRgInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRgInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRgInstruction
+TR;S390VRRInstruction;description();TR;S390VRRhInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRhInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRhInstruction
+TR;S390VRRInstruction;description();TR;S390VRRiInstruction
+TR;S390VRRInstruction;generateBinaryEncoding();TR;S390VRRiInstruction
+TR;S390VRRInstruction;getKind();TR;S390VRRiInstruction
+TR;S390RegInstruction;getFirstRegister();TR;S390VRSInstruction
+TR;S390RegInstruction;getLastRegister();TR;S390VRSInstruction
+TR;S390VInstruction;description();TR;S390VStorageInstruction
+TR;S390VStorageInstruction;description();TR;S390VRSaInstruction
+TR;S390VInstruction;estimateBinaryLength(int32_t);TR;S390VStorageInstruction
+TR;S390VInstruction;generateBinaryEncoding();TR;S390VStorageInstruction
+TR;S390VInstruction;getExtendedMnemonicName();TR;S390VStorageInstruction
+TR;S390VInstruction;getKind();TR;S390VStorageInstruction
+TR;S390VStorageInstruction;getKind();TR;S390VRSaInstruction
+OMR::Z;Instruction;getMemoryReference();TR;S390VStorageInstruction
+TR;S390VStorageInstruction;description();TR;S390VRSbInstruction
+TR;S390VStorageInstruction;getKind();TR;S390VRSbInstruction
+TR;S390VStorageInstruction;description();TR;S390VRScInstruction
+TR;S390VStorageInstruction;getKind();TR;S390VRScInstruction
+TR;S390VStorageInstruction;description();TR;S390VRSdInstruction
+TR;S390VStorageInstruction;generateBinaryEncoding();TR;S390VRSdInstruction
+TR;S390VStorageInstruction;getKind();TR;S390VRSdInstruction
+TR;S390VStorageInstruction;generateBinaryEncoding();TR;S390VRVInstruction
+TR;S390VStorageInstruction;getKind();TR;S390VRVInstruction
+TR;S390VStorageInstruction;getKind();TR;S390VRXInstruction
+TR;S390VStorageInstruction;description();TR;S390VSIInstruction
+TR;S390VStorageInstruction;generateBinaryEncoding();TR;S390VSIInstruction
+TR;S390VStorageInstruction;getKind();TR;S390VSIInstruction
+OMR;Snippet;emitSnippetBody();TR;S390CallSnippet
+OMR::Z;Snippet;getKind();TR;S390CallSnippet
+OMR;Snippet;getLength(int32_t);TR;S390CallSnippet
+OMR::Z;Snippet;isCallSnippet();TR;S390CallSnippet
+OMR;Snippet;emitSnippetBody();TR;S390HelperCallSnippet
+OMR::Z;Snippet;getKind();TR;S390HelperCallSnippet
+OMR;Snippet;getLength(int32_t);TR;S390HelperCallSnippet
+;MemToMemMacroOp;generateDependencies();;BitOpMemConstLenMacroOp
+;MemToMemMacroOp;generateLoop();;MemToMemConstLenMacroOp
+;MemToMemMacroOp;generateRemainder();;MemToMemConstLenMacroOp
+;MemToMemMacroOp;generateDependencies();;BitOpMemVarLenMacroOp
+;MemToMemVarLenMacroOp;generateInstruction(int32_t,int64_t);;BitOpMemVarLenMacroOp
+;MemToMemMacroOp;generateLoop();;MemToMemVarLenMacroOp
+;MemToMemMacroOp;generateRemainder();;MemToMemVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelper();;BitOpMemVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelperSymRef();;BitOpMemVarLenMacroOp
+;MemToMemMacroOp;getKind();;BitOpMemVarLenMacroOp
+;MemToMemMacroOp;generateDependencies();;MemClearConstLenMacroOp
+;MemToMemConstLenMacroOp;generateInstruction(int32_t,int64_t,TR::Instruction *);;MemClearConstLenMacroOp
+;MemToMemMacroOp;generateDependencies();;MemClearVarLenMacroOp
+;MemToMemVarLenMacroOp;generateInstruction(int32_t,int64_t);;MemClearVarLenMacroOp
+;MemToMemVarLenMacroOp;generateRemainder();;MemClearVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelper();;MemClearVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelperSymRef();;MemClearVarLenMacroOp
+;MemToMemMacroOp;getKind();;MemClearVarLenMacroOp
+;MemToMemMacroOp;generate(TR::Register *,TR::Register *);;MemCmpConstLenMacroOp
+;MemCmpConstLenMacroOp;generate(TR::Register *,TR::Register *);;MemCmpConstLenSignMacroOp
+;MemCmpConstLenMacroOp;generate(TR::Register *,TR::Register *,TR::Register *,int32_t,TR::Instruction *);;MemCmpConstLenSignMacroOp
+;MemToMemMacroOp;generateDependencies();;MemCmpConstLenMacroOp
+;MemToMemConstLenMacroOp;generateInstruction(int32_t,int64_t,TR::Instruction *);;MemCmpConstLenMacroOp
+;MemToMemMacroOp;generate(TR::Register *,TR::Register *);;MemCmpVarLenMacroOp
+;MemCmpVarLenMacroOp;generate(TR::Register *,TR::Register *);;MemCmpVarLenSignMacroOp
+;MemCmpVarLenMacroOp;generate(TR::Register *,TR::Register *,TR::Register *,int32_t,TR::Instruction *);;MemCmpVarLenSignMacroOp
+;MemToMemMacroOp;generateDependencies();;MemCmpVarLenMacroOp
+;MemToMemVarLenMacroOp;generateInstruction(int32_t,int64_t);;MemCmpVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelper();;MemCmpVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelperSymRef();;MemCmpVarLenMacroOp
+;MemToMemMacroOp;getKind();;MemCmpVarLenMacroOp
+;MemCmpVarLenMacroOp;getKind();;MemCmpVarLenSignMacroOp
+;MemToMemTypedMacroOp;createLoopDependencies(TR::Instruction *);;MemCpyAtomicMacroOp
+;MemToMemTypedVarLenMacroOp;generateInstruction();;MemCpyAtomicMacroOp
+;MemToMemTypedMacroOp;generateLoop();;MemToMemTypedVarLenMacroOp
+;MemToMemTypedVarLenMacroOp;generateLoop();;MemCpyAtomicMacroOp
+;MemToMemMacroOp;generateDependencies();;MemCpyConstLenMacroOp
+;MemToMemMacroOp;generateDependencies();;MemCpyVarLenMacroOp
+;MemToMemVarLenMacroOp;generateInstruction(int32_t,int64_t);;MemCpyVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelper();;MemCpyVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelperSymRef();;MemCpyVarLenMacroOp
+;MemToMemMacroOp;getKind();;MemCpyVarLenMacroOp
+;MemToMemTypedMacroOp;createLoopDependencies(TR::Instruction *);;MemCpyVarLenTypedMacroOp
+;MemToMemTypedVarLenMacroOp;generateInstruction();;MemCpyVarLenTypedMacroOp
+;MemToMemMacroOp;generateDependencies();;MemInitConstLenMacroOp
+;MemToMemConstLenMacroOp;generateInstruction(int32_t,int64_t,TR::Instruction *);;MemInitConstLenMacroOp
+;MemToMemConstLenMacroOp;generateLoop();;MemInitConstLenMacroOp
+;MemToMemConstLenMacroOp;generateRemainder();;MemInitConstLenMacroOp
+;MemToMemMacroOp;generateDependencies();;MemInitVarLenMacroOp
+;MemToMemVarLenMacroOp;generateInstruction(int32_t,int64_t);;MemInitVarLenMacroOp
+;MemToMemVarLenMacroOp;generateRemainder();;MemInitVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelper();;MemInitVarLenMacroOp
+;MemToMemVarLenMacroOp;getHelperSymRef();;MemInitVarLenMacroOp
+;MemToMemMacroOp;getKind();;MemInitVarLenMacroOp
+;MemToMemTypedMacroOp;createLoopDependencies(TR::Instruction *);;MemInitVarLenTypedMacroOp
+;MemToMemTypedVarLenMacroOp;generateInstruction();;MemInitVarLenTypedMacroOp
+OMR::Z;Linkage;buildDirectDispatch(TR::Node *);TR;S390SystemLinkage
+OMR::Z;Linkage;buildIndirectDispatch(TR::Node *);TR;S390SystemLinkage
+TR;S390SystemLinkage;callNativeFunction(TR::Node *,TR::RegisterDependencyConditions *,intptrj_t,TR::Register *,TR::Register *,TR::LabelSymbol *,TR::S390JNICallDataSnippet *,_Bool);TR;S390zLinuxSystemLinkage
+OMR::Z;Linkage;canDataTypeBePassedByReference(TR::DataType);TR;S390zLinuxSystemLinkage
+TR;S390SystemLinkage;checkLeafRoutine(int32_t,TR::Instruction **);TR;S390zLinuxSystemLinkage
+OMR::Z;Linkage;createEpilogue(TR::Instruction *);TR;S390SystemLinkage
+OMR::Z;Linkage;createPrologue(TR::Instruction *);TR;S390SystemLinkage
+TR;S390SystemLinkage;generateInstructionsForCall(TR::Node *,TR::RegisterDependencyConditions *,intptrj_t,TR::Register *,TR::Register *,TR::LabelSymbol *,TR::S390JNICallDataSnippet *,_Bool);TR;S390zLinuxSystemLinkage
+OMR::Z;Linkage;getNormalStackPointerRealRegister();TR;S390SystemLinkage
+OMR::Z;Linkage;getNormalStackPointerRegister();TR;S390SystemLinkage
+TR;S390SystemLinkage;getRegisterSaveOffset(TR::class RealRegister::RegNum);TR;S390zLinuxSystemLinkage
+OMR::Z;Linkage;hasToBeOnStack(TR::ParameterSymbol *);TR;S390SystemLinkage
+TR;S390SystemLinkage;initParamOffset(TR::ResolvedMethodSymbol *,int32_t,List<TR::ParameterSymbol> *);TR;S390zLinuxSystemLinkage
+OMR::Z;Linkage;initS390RealRegisterLinkage();TR;S390SystemLinkage
+OMR::Z;Linkage;isSymbolPassedByReference(TR::Symbol *);TR;S390zLinuxSystemLinkage
+OMR::Z;Linkage;mapSingleAutomatic(TR::AutomaticSymbol *,uint32_t &);TR;S390SystemLinkage
+OMR::Z;Linkage;mapStack(TR::ResolvedMethodSymbol *);TR;S390SystemLinkage
+OMR;Linkage;self();TR;S390SystemLinkage
+TR;S390SystemLinkage;callNativeFunction(TR::Node *,TR::RegisterDependencyConditions *,intptrj_t,TR::Register *,TR::Register *,TR::LabelSymbol *,TR::S390JNICallDataSnippet *,_Bool);TR;S390zOSSystemLinkage
+TR;S390SystemLinkage;generateInstructionsForCall(TR::Node *,TR::RegisterDependencyConditions *,intptrj_t,TR::Register *,TR::Register *,TR::LabelSymbol *,TR::S390JNICallDataSnippet *,_Bool);TR;S390zOSSystemLinkage
+OMR::Z;Linkage;getCAAPointerRegister();TR::Z;ZOSBaseSystemLinkage
+OMR::Z;Linkage;getEnvironmentPointerRegister();TR;S390zOSSystemLinkage
+OMR::Z;Linkage;getFrameType();TR;S390zOSSystemLinkage
+OMR::Z;Linkage;getIsLeafRoutine();TR;S390zOSSystemLinkage
+OMR::Z;Linkage;getOutgoingParameterBlockSize();TR;S390zOSSystemLinkage
+OMR::Z;Linkage;getParentDSAPointerRegister();TR::Z;ZOSBaseSystemLinkage
+TR;S390SystemLinkage;getRegisterSaveOffset(TR::class RealRegister::RegNum);TR;S390zOSSystemLinkage
+OMR::Z;Linkage;isAggregateReturnedInIntRegisters(int32_t);TR::Z;ZOSBaseSystemLinkage
+TR::Z;ZOSBaseSystemLinkage;isAggregateReturnedInIntRegisters(int32_t);TR;S390zOSSystemLinkage
+OMR::Z;Linkage;isAggregateReturnedInIntRegistersAndMemory(int32_t);TR::Z;ZOSBaseSystemLinkage
+OMR::Z;Linkage;isCAASpecialArgumentRegister(int8_t);TR;S390zOSSystemLinkage
+OMR::Z;Linkage;isEnvironmentSpecialArgumentRegister(int8_t);TR;S390zOSSystemLinkage
+OMR::Z;Linkage;isParentDSASpecialArgumentRegister(int8_t);TR;S390zOSSystemLinkage
+OMR;Linkage;isSpecialNonVolatileArgumentRegister(int8_t);TR;S390zOSSystemLinkage
+OMR;Snippet;emitSnippetBody();TR;S390RestoreGPR7Snippet
+OMR::Z;Snippet;getKind();TR;S390RestoreGPR7Snippet
+OMR;Snippet;getLength(int32_t);TR;S390RestoreGPR7Snippet
+TR;FrontEnd;generateBinaryEncodingPrologue(struct TR_BinaryEncodingData *,TR::CodeGenerator *);TestCompiler;FrontEnd
+testing;Test;TestBody();;JITS390OpCodesTest_BitwiseTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_CompareTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390BitwiseTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390CompareTests_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390ConvertToAddressTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390DirectCallTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390IntegerArithmeticTests_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390MemoryOperationTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390TernaryTests_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DISABLED_S390UnaryTests_Test
+testing;Test;TestBody();;JITS390OpCodesTest_DirectCallTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_FloatArithmeticTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_IntegerArithmeticTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_MemoryOperationTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_S390AddressTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_TernaryTest_Test
+testing;Test;TestBody();;JITS390OpCodesTest_UnaryTest_Test

@@ -54,6 +54,6 @@ JIT_PRODUCT_BACKEND_SOURCES_Z+=\
     "$(JIT_OMR_DIRTY_DIR)/z/codegen/OMRCodeGenerator.cpp"
 
 JIT_PRODUCT_SOURCE_FILES_Z+=\
-    $(JIT_PRODUCT_DIR)/z/codegen/TestCodeGenerator.cpp" \
-    $(JIT_PRODUCT_DIR)/z/codegen/Evaluator.cpp" \
+    "$(JIT_PRODUCT_DIR)/z/codegen/TestCodeGenerator.cpp" \
+    "$(JIT_PRODUCT_DIR)/z/codegen/Evaluator.cpp" \
     "$(JIT_OMR_DIRTY_DIR)/z/env/OMRDebugEnv.cpp"
