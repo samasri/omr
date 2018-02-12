@@ -3,6 +3,11 @@
 	width: 1024px;
 }
 
+#showImplicit {
+	float: right;
+	position: fixed;
+}
+
 ul, li { list-style: none; margin: 0; padding: 0; }
 ul { padding-left: 1em; }
 li { padding-left: 1em;
@@ -32,4 +37,8 @@ ul li:last-child ul {
 .functionP {
 	color: blue;
 	text-decoration: underline;
+}
+
+.implicit {
+	display: none;
 }
