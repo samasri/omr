@@ -1,5 +1,8 @@
+#Takes the overrides csv path+name as input and produces an html file with the same name (suffixed by ".html")
+
 import csv
 import sys
+isImplicitMap = {}
 
 #Print the head tag for all web pages
 def printHead(r):
@@ -16,8 +19,9 @@ class methodStruct:
 		self.methodName = name
 		self.methodSigs = []
 	
-	def addSig(self, sig):
+	def addSig(self, sig, isImplicit):
 		self.methodSigs.append(sig)
+		isImplicitMap[sig] = isImplicit
 
 def searchMethodName(methodName, methods):
 	for method in methods:
@@ -33,16 +37,17 @@ def processOverloadsCSV(r, f):
 		if not row: continue
 		result = searchMethodName(row[0], methods)
 		if result != -1:
-			result.addSig(row[3] + "::" + row[4] + "::" + row[1])
+			result.addSig(row[3] + "::" + row[4] + "::" + row[1], row[5])
 		else:
 			n = methodStruct(row[0])
-			n.addSig(row[3] + "::" + row[4] + "::" + row[1])
+			n.addSig(row[3] + "::" + row[4] + "::" + row[1], row[5])
 			methods.append(n)
 	return methods
 			
 
 def printOverloadsBody(r, f):
 	r.write("<body>\n")
+	r.write("	 <button id='showImplicit'>Show Implicit Declarations</button>")
 	r.write("    <div id='content'>\n")
 	methods = processOverloadsCSV(r, f)
 	counter= 0
@@ -59,7 +64,10 @@ def printOverloadsBody(r, f):
 				if isFirst:
 					isFirst = 0
 					continue
-				r.write("				<li><p>" + sig + "</p></li>\n")
+				className = ""
+				if isImplicitMap[sig] == '1':
+					className = " class='implicit'"
+				r.write("				<li" + className + "><p>" + sig + "</p></li>\n")
 			r.write("			</ul>\n")
 		r.write("		</div>\n")
 	r.write("	</div>\n")

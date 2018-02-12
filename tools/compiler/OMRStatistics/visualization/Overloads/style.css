@@ -4,6 +4,11 @@
 	width: 1024px;
 }
 
+#showImplicit {
+	float: right;
+	position: fixed;
+}
+
 .function {
 	margin-top: 8px;
 }
@@ -16,10 +21,6 @@
 	color: blue;
 	text-decoration: underline;
 	cursor: pointer;
-}
-
-li {
-	color: red;
 }
 
 .signatures {
@@ -56,4 +57,9 @@ li ul {
 ul li:last-child ul {
   border-left: 1px solid white;
   margin-left: -17px;
+}
+
+.implicit {
+	color: red;
+	display: none;
 }

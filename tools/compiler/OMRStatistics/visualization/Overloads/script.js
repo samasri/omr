@@ -7,6 +7,18 @@ function hideDisplay(result) {
 	else if(correspondingSigsDiv.style.display == "block") correspondingSigsDiv.style.display = 'none';
 }
 
+function toggleImplicitDecls() {
+	var decls = document.getElementsByClassName("implicit");
+	if(decls[0].style.display == 'block') for(var i = 0; i  < decls.length; i++) {
+		decls[i].style.display = 'none';
+		this.innerHTML = "Hide Implicit Declarations";
+	}
+	else {
+		for(var i = 0; i  < decls.length; i++) decls[i].style.display = 'block';
+		this.innerHTML = "Show Implicit Declarations";
+	}
+}
+
 window.onload = start;
 function start() {
 	var functionNames = document.getElementsByClassName("functionName");
@@ -19,6 +31,7 @@ function start() {
 		var sigUl = document.getElementById("s" + nb);
 		map.set(functionNames[i], sigUl);
 		functionNames[i].onclick = hideDisplay;
+		document.getElementById('showImplicit').onclick = toggleImplicitDecls;
 	}
 }
 
