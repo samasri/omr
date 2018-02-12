@@ -18,16 +18,19 @@ namespace OMRStatistics {
 	private:
 		//Mapping between each class and all its methods
 		std::map<std::string, std::unordered_set<std::string*>> Class2Methods;
+		//Mapping between each function signature and if its implicit or not
+		std::map<std::string, bool> functionImplicit;
 		//Parent-child relationship mapping (child --> parents)
 		std::map<std::string, std::vector<std::string>*> classHierarchy;
 	
 	public:
-		std::vector<std::string*>* debug = new std::vector<std::string*>();
 		//Getters and setters
 		std::map<std::string, std::unordered_set<std::string*>> getClass2Methods();
-		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods);
+		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>>);
 		std::map<std::string, std::vector<std::string>*> getclassHierarchy();
-		void setclassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy);
+		void setclassHierarchy(std::map<std::string, std::vector<std::string>*>);
+		std::map<std::string, bool> getfunctionImplicit();
+		void setfunctionImplicit(std::map<std::string, bool>);
 		
 		explicit HMRecorder(ASTContext *Context) { }
 		
@@ -41,6 +44,7 @@ namespace OMRStatistics {
 		bool VisitCXXRecordDecl(const CXXRecordDecl *decl);
 		//Prints the location of a specific declaration
 		static std::string printLoc(const clang::CXXRecordDecl*);
+		std::string printLoc(clang::CXXMethodDecl*);
 	};
 	
 	class MethodTracker;
@@ -77,8 +81,9 @@ namespace OMRStatistics {
 		std::vector<std::string>* classesOverriden; //Tracks the classes where this method was overridden
 		bool firstOccurence; //Specifies if this is the first occurrence of this function name or not (for overload)
 		std::string baseClassName; //The first occurrence of this signature, this value includes namespace
+		bool isImplicit; //Indicates whether this declaration is an implicit one or not
 		
-		MethodTracker(std::string className, std::string methodSignature, bool firstOccurence);
+		MethodTracker(std::string className, std::string methodSignature, bool firstOccurence, bool isImplicit);
 		//Add an occurence for this method
 		void addOccurence(std::string className);
 		
