@@ -37,7 +37,12 @@ def printErrors(f):
 		baseClassName = row[1]
 		functionSignature = row[2]
 		if row[3] == 'TR' and not isConstructor(baseClassName, functionSignature):
-			print row
+			counter = 0
+			for r in row:
+				counter += 1;
+				sys.stdout.write(r)
+				if counter != len(row): sys.stdout.write(';')
+				else: print('')
 
 if amd64: printErrors(amd64)
 if i386: printErrors(i386)
