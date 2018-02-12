@@ -43,14 +43,19 @@ void OMRStatistics::HMRecorder::setClass2Methods(std::map<std::string, std::unor
 std::map<std::string, std::vector<std::string>*> OMRStatistics::HMRecorder::getclassHierarchy() {return classHierarchy;}
 
 void OMRStatistics::HMRecorder::setclassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {this->classHierarchy = classHierarchy;}
+
+std::map<std::string, bool> OMRStatistics::HMRecorder::getfunctionImplicit() {
+	return functionImplicit;
+}
+
+void OMRStatistics::HMRecorder::setfunctionImplicit(std::map<std::string, bool>) {
+	this->functionImplicit = functionImplicit;
+}
 	   
 void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
-		auto srcLoc = A->getLocation();
-		std::string srcLocStr = srcLoc.printToString(inputClass->getASTContext().getSourceManager());
-		
 		//Get function name with parameter types (AKA: recreate function signature)
 		std::string* function = new std::string((*A)->getNameAsString());
 		ArrayRef<clang::ParmVarDecl*> functions = A->parameters();
@@ -63,6 +68,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			function->replace(function->end()-1, function->end(), "");
 			*function += ")";
 		}
+		functionImplicit.emplace(*function, (*A)->isImplicit());
 		
 		auto iterator = Class2Methods.find(className);
 		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
@@ -111,6 +117,12 @@ std::string OMRStatistics::HMRecorder::printLoc(const clang::CXXRecordDecl* d) {
 	return result;
 }
 
+std::string OMRStatistics::HMRecorder::printLoc(clang::CXXMethodDecl* d) {
+	std::string result;
+	result = d->getLocStart().printToString(d->getASTContext().getSourceManager()) + "\n";
+	return result;
+}
+
 void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	if(!decl) return;
 	std::string currentClassName = decl->getQualifiedNameAsString();
@@ -119,8 +131,6 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	
 	BI = decl->bases_begin();
 	BE = decl->bases_end();
-	std::string* res = new std::string();
-	debug->emplace_back(res);
 	for(BC = BI; BC != BE; BC++) { //iterate through all parents
 		clang::QualType parentClassType = BC->getType();
 		CXXRecordDecl* parentDecl = parentClassType->getAsCXXRecordDecl();
@@ -137,10 +147,8 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 
 bool OMRStatistics::HMRecorder::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
 	if(!decl || !decl->isClass() || !decl->hasDefinition()) return true;
-	//debug->emplace_back(new std::string("Visiting: " + decl->getQualifiedNameAsString() + "\n"));
 	recordFunctions(decl);
 	recordParents(decl);
-	//debug->emplace_back(new std::string("---------------\n"));
 	
 	return true;
 }
@@ -167,13 +175,14 @@ bool OMRStatistics::Hierarchy::operator!=(const std::string other) {
 }
 
 //Tracks the occurrences of each method, what classes, when overridden, and when overloaded
-OMRStatistics::MethodTracker::MethodTracker(std::string className, std::string methodSignature, bool firstOccurence) {
+OMRStatistics::MethodTracker::MethodTracker(std::string className, std::string methodSignature, bool firstOccurence, bool isImplicit) {
 	methodName = HMConsumer::getName(methodSignature);
 	this->methodSignature = methodSignature;
 	nbOfOccurences = 1;
 	classesOverriden = new std::vector<std::string>();
 	this->firstOccurence = firstOccurence;
 	baseClassName = className;
+	this->isImplicit = isImplicit;
 }
 
 void OMRStatistics::MethodTracker::addOccurence(std::string className) {
@@ -311,8 +320,9 @@ std::string OMRStatistics::HMConsumer::getName(std::string methodSignature) {
 	return methodSignature.substr(0, pos);
 }
 
-void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &visitor) {
-	auto map = visitor.getClass2Methods();
+void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
+	auto map = recorder.getClass2Methods();
+	auto functionImplicit = recorder.getfunctionImplicit();
 	for(auto hierarchy : hierarchies) {
 		//iterate hierarchy from top to base
 		
@@ -349,7 +359,7 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &visitor) {
 							trackers = new std::vector<MethodTracker>();
 							methodName2MethodTracker->emplace(methodName, trackers);
 						}
-						MethodTracker newTracker(className, method, isFirstOccurence);
+						MethodTracker newTracker(className, method, isFirstOccurence, functionImplicit[method]);
 						trackers->emplace_back(newTracker);
 					}
 				}
@@ -446,7 +456,7 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 }
 
 void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
-	(*out) << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName\n";
+	(*out) << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMapVec = hierarchy->methodName2MethodTrackerVec;
 		for(auto trackerMap : trackerMapVec) { //Go through the map of each subHierarchy
@@ -469,7 +479,8 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
 						(*out) << tracker.methodSignature << ";";
 						(*out) << tracker.firstOccurence << ";";
 						(*out) << tuple->at(0) << ";"; //namespace
-						(*out) << tuple->at(1) << "\n";//className
+						(*out) << tuple->at(1) << ";";//className
+						(*out) << tracker.isImplicit << "\n";//className
 					}
 				}
 				itr++;
@@ -499,7 +510,8 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 							(*out) << baseClassNameTuple->at(1) << ";";//className
 							(*out) << tracker.methodSignature << ";";
 							(*out) << classNameTuple->at(0) << ";"; //namespace
-							(*out) << classNameTuple->at(1) << "\n";//className
+							(*out) << classNameTuple->at(1) << ";";//className
+							(*out) << tracker.isImplicit << "\n";//className
 						}
 						baseClassName = className;
 					}
@@ -527,12 +539,13 @@ void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* 
 
 void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
-	HMRecorder extchkVisitor(&Context);
-	extchkVisitor.TraverseDecl(Context.getTranslationUnitDecl());
+	HMRecorder recorder(&Context);
+	recorder.TraverseDecl(Context.getTranslationUnitDecl());
 	
-	std::map<std::string, std::vector<std::string>*> classHierarchy = extchkVisitor.getclassHierarchy();
+	std::map<std::string, std::vector<std::string>*> classHierarchy = recorder.getclassHierarchy();
+	std::map<std::string, bool> functionImplicit = recorder.getfunctionImplicit();
 	fillHierarchies(classHierarchy);
-	collectMethodInfo(extchkVisitor);
+	collectMethodInfo(recorder);
 	
 	llvm::raw_ostream* hierarchyOutput = nullptr;
 	llvm::raw_ostream* overloadOutput = nullptr;
@@ -561,7 +574,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
 	
 	//if(conf.hierarchy) 
-		printHierarchies(hierarchyOutput);
+		//printHierarchies(hierarchyOutput);
 	//if(conf.overloading) 
 		printOverloads(overloadOutput);
 	printOverrides(overrideOutput);
