@@ -140,6 +140,7 @@ function processCSV(csv) {
 		var baseClassName = row[0] + "::" + row[1];
 		var overridingClassName = row[3] + "::" + row[4];
 		var signature = row[2];
+		var isImplicit = row[3];
 		var counter = 0;
 		
 		if(!functionSig2id[signature]) {
@@ -171,6 +172,10 @@ function processCSV(csv) {
 				
 				var p = document.createElement("P");
 				p.innerHTML = overridingClassName;
+				if(isImplicit) {
+					p.style.color = 'red';
+					p.className = "implicit";
+				}
 				li2.appendChild(p);
 			}
 			else { 
@@ -195,7 +200,6 @@ function processCSV(csv) {
 		}
 	}
 	var html = content.parentNode.parentNode.parentNode;
-	alert(html.innerHTML);
 }
 
 function hideDisplay() {
@@ -217,10 +221,23 @@ function handleRequest() {
 	}
 }
 
+function toggleImplicitDecls() {
+	var decls = document.getElementsByClassName("implicit");
+	if(decls[0].style.display == 'block') for(var i = 0; i  < decls.length; i++) {
+		decls[i].style.display = 'none';
+		this.innerHTML = "Hide Implicit Declarations";
+	}
+	else {
+		for(var i = 0; i  < decls.length; i++) decls[i].style.display = 'block';
+		this.innerHTML = "Show Implicit Declarations";
+	}
+}
+
 window.onload = start;
 function start() {
 	var request = new XMLHttpRequest();
 	request.onreadystatechange = handleRequest;
 	request.open('Get', 'overrides');
 	request.send();
+	document.getElementById('showImplicit').onclick = toggleImplicitDecls;
 }
