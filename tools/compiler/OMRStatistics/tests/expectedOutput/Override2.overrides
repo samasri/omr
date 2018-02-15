@@ -1,2 +1,2 @@
-BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName
-TR;A;a();TR;C
+BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName; isImplicit; isVirtual
+TR;A;a();TR;C;0;0

@@ -1,5 +1,5 @@
-BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName
-OMR;A;f();Ruby;A
-OMR;A;h();Ruby;A
-Ruby;A;h();TR;A
-OMR;A;h(int);TR;A
+BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName; isImplicit; isVirtual
+OMR;A;f();Ruby;A;0;0
+OMR;A;h();Ruby;A;0;0
+Ruby;A;h();TR;A;0;0
+OMR;A;h(int);TR;A;0;0

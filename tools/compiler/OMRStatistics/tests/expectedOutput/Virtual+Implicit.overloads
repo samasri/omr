@@ -1,0 +1,7 @@
+FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit; isVirtual
+operator=;operator=(const class OMR::A &);1;OMR;A;1;0
+operator=;operator=(class OMR::A &&);0;OMR;A;1;0
+operator=;operator=(class X86::A &&);0;X86;A;1;0
+operator=;operator=(const class X86::A &);0;X86;A;1;0
+operator=;operator=(class TR::A &&);0;TR;A;1;0
+operator=;operator=(const class TR::A &);0;TR;A;1;0

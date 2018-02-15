@@ -1,5 +1,5 @@
-FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName
-f;f();1;OMR;A
-f;f(int);0;TR;A
-h;h();1;OMR;A
-h;h(int);0;OMR;A
+FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit; isVirtual
+f;f();1;OMR;A;0;0
+f;f(int);0;TR;A;0;0
+h;h();1;OMR;A;0;0
+h;h(int);0;OMR;A;0;0
