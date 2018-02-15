@@ -63,3 +63,7 @@ ul li:last-child ul {
 	color: red;
 	display: none;
 }
+
+.virtual {
+	color: green;
+}

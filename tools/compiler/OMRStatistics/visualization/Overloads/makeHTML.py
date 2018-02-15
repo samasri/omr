@@ -3,6 +3,7 @@
 import csv
 import sys
 isImplicitMap = {}
+isVirtualMap = {}
 
 #Print the head tag for all web pages
 def printHead(r):
@@ -19,9 +20,10 @@ class methodStruct:
 		self.methodName = name
 		self.methodSigs = []
 	
-	def addSig(self, sig, isImplicit):
+	def addSig(self, sig, isImplicit, isVirtual):
 		self.methodSigs.append(sig)
 		isImplicitMap[sig] = isImplicit
+		isVirtualMap[sig] = isVirtual
 
 def searchMethodName(methodName, methods):
 	for method in methods:
@@ -37,10 +39,10 @@ def processOverloadsCSV(r, f):
 		if not row: continue
 		result = searchMethodName(row[0], methods)
 		if result != -1:
-			result.addSig(row[3] + "::" + row[4] + "::" + row[1], row[5])
+			result.addSig(row[3] + "::" + row[4] + "::" + row[1], row[5], row[6])
 		else:
 			n = methodStruct(row[0])
-			n.addSig(row[3] + "::" + row[4] + "::" + row[1], row[5])
+			n.addSig(row[3] + "::" + row[4] + "::" + row[1], row[5], row[6])
 			methods.append(n)
 	return methods
 			
@@ -67,6 +69,8 @@ def printOverloadsBody(r, f):
 				className = ""
 				if isImplicitMap[sig] == '1':
 					className = " class='implicit'"
+				elif isVirtualMap[sig] == '1':
+					className = " class='virtual'"
 				r.write("				<li" + className + "><p>" + sig + "</p></li>\n")
 			r.write("			</ul>\n")
 		r.write("		</div>\n")
