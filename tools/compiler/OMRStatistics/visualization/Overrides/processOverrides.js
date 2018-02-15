@@ -104,13 +104,15 @@ function getParagraphWithHTML(node, className) {
 	return result;
 }
 
-function addNewFunction(content, signature, baseClassName, overridingClassName) {
+function addNewFunction(signature, baseClassName, overridingClassName, isVirtual) {
+	var content = document.getElementById('content');
 	var li = document.createElement("LI");
 	li.className = "container function";
 	content.appendChild(li);
 	
 	var p = document.createElement("P");
 	p.className = "functionP";
+	if(isVirtual == 1) p.className += " virtual";
 	li.appendChild(p);
 	p.innerHTML = baseClassName + "::" + signature;
 	
@@ -131,7 +133,6 @@ function addNewFunction(content, signature, baseClassName, overridingClassName) 
 
 function processCSV(csv) {
 	var array = CSVToArray(csv, ";");
-	var content = document.getElementById('content');
 	var string = "";
 	var functionSig2id = {};
 	var functionSigs2FirstOccurrence = {}
@@ -140,11 +141,12 @@ function processCSV(csv) {
 		var baseClassName = row[0] + "::" + row[1];
 		var overridingClassName = row[3] + "::" + row[4];
 		var signature = row[2];
-		var isImplicit = row[3];
+		var isImplicit = row[5];
+		var isVirtual = row[6];
 		var counter = 0;
 		
 		if(!functionSig2id[signature]) {
-			var li = addNewFunction(content, signature, baseClassName, overridingClassName);
+			var li = addNewFunction(signature, baseClassName, overridingClassName, isVirtual);
 			
 			functionSig2id[signature] = li;
 			functionSigs2FirstOccurrence[signature] = baseClassName;
@@ -172,10 +174,7 @@ function processCSV(csv) {
 				
 				var p = document.createElement("P");
 				p.innerHTML = overridingClassName;
-				if(isImplicit) {
-					p.style.color = 'red';
-					p.className = "implicit";
-				}
+				if(isImplicit == 1) p.className = "implicit";
 				li2.appendChild(p);
 			}
 			else { 
@@ -192,14 +191,13 @@ function processCSV(csv) {
 					li2.appendChild(p);
 				}
 				else { //Case when the function appears in a different hierarchy (we need a new list)
-					var li = addNewFunction(content, signature, baseClassName, overridingClassName);
+					var li = addNewFunction(signature, baseClassName, overridingClassName, isVirtual);
 					functionSig2id[signature] = li;
 					functionSigs2FirstOccurrence[signature] = baseClassName;
 				}
 			}
 		}
 	}
-	var html = content.parentNode.parentNode.parentNode;
 }
 
 function hideDisplay() {
