@@ -9,8 +9,9 @@ Prints out all class hierarchies in this source file (and all its includes).
 Prints out each method in each of the class hierarchies, which classes it is overridden in, and how many times it is overloaded in each class.
 
 # How to build and run
-* Running `make sample` will build the plugin and run it on _OMRCodeGenerator.cpp_ (in _omr/compiler/codegen_)
-* Running `make test` will test the plugins on all the available test cases and makes sure all outputs are as expected
+* Running `make sample` builds the plugin and runs it on _OMRCodeGenerator.cpp_ (in _omr/compiler/codegen_)
+* Running `make test` tests the plugins on all the available test cases and makes sure all outputs are as expected
+* Running `make produceVisualization` runs OMRStatistics on all architectures in OMR, merges the output from different architectures in the same file, trims the outputs to remove duplicates, and copy the right file to the right directory for visualizations.
 
 # Assumptions
 * All classes are expected to be processed when the tool is triggered and added in the output (not only OMR_EXTENSIBLE files)
