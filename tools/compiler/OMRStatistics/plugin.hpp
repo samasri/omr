@@ -19,7 +19,7 @@ namespace OMRStatistics {
 		//Mapping between each class and all its methods
 		std::map<std::string, std::unordered_set<std::string*>> Class2Methods;
 		//Mapping between each function signature and if its implicit or not
-		std::map<std::string, bool> functionImplicit;
+		std::map<std::string, bool*> functionDeclInfo;
 		//Parent-child relationship mapping (child --> parents)
 		std::map<std::string, std::vector<std::string>*> classHierarchy;
 	
@@ -29,8 +29,8 @@ namespace OMRStatistics {
 		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>>);
 		std::map<std::string, std::vector<std::string>*> getclassHierarchy();
 		void setclassHierarchy(std::map<std::string, std::vector<std::string>*>);
-		std::map<std::string, bool> getfunctionImplicit();
-		void setfunctionImplicit(std::map<std::string, bool>);
+		std::map<std::string, bool*> getfunctionDeclInfo();
+		void setfunctionDeclInfo(std::map<std::string, bool*>);
 		
 		explicit HMRecorder(ASTContext *Context) { }
 		
@@ -82,8 +82,9 @@ namespace OMRStatistics {
 		bool firstOccurence; //Specifies if this is the first occurrence of this function name or not (for overload)
 		std::string baseClassName; //The first occurrence of this signature, this value includes namespace
 		bool isImplicit; //Indicates whether this declaration is an implicit one or not
+		bool isVirtual; //Indicates whether this function is a case of dynamic or static polymorphism
 		
-		MethodTracker(std::string className, std::string methodSignature, bool firstOccurence, bool isImplicit);
+		MethodTracker(std::string className, std::string methodSignature, bool firstOccurence, bool isImplicit, bool isVirtual);
 		//Add an occurence for this method
 		void addOccurence(std::string className);
 		
