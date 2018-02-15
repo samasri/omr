@@ -1,5 +1,5 @@
 #Includes all test cases targets
-test: writeCSV testHierarchy1 testHierarchy2 testHierarchy3 testHierarchy4 testHierarchy5 testHierarchy6 testOverride1 testOverride2 testOverride3 testOverride4 testOverload1 testOverload2 testOverload3 testOverload4 testOverrideOverloadMix testOverrideOverloadMix-DifferentNamespaces testControversialCase1 testControversialCase2 testControversialCase3 testNoNamespace
+test: produceVisualizations testHierarchy1 testHierarchy2 testHierarchy3 testHierarchy4 testHierarchy5 testHierarchy6 testTemplates testNestedClasses testOverride1 testOverride2 testOverride3 testOverride4 testOverload1 testOverload2 testOverload3 testOverload4 testOverrideOverloadMix testOverrideOverloadMix-DifferentNamespaces testControversialCase1 testControversialCase2 testControversialCase3 testNoNamespace testVirtualImplicit
 	@python tests/tests.py output/amd64.overrides
 	@rm tests/*.hierarchy
 	@rm tests/*.overrides
@@ -30,13 +30,13 @@ testHierarchy6: $(SO)
 	@echo Executing Hierarchy Test 6...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy6" $(DEFINES) $(PLUGIN_INCLUDES) -c "tests/input/Hierarchy6 - Multiple Parents.cpp"
 	
-testHierarchy7: $(SO)
-	@echo Executing Hierarchy Test 7...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy7" $(DEFINES) $(PLUGIN_INCLUDES) -c "tests/input/Hierarchy7 - Templates.cpp"
+testTemplates: $(SO)
+	@echo Executing Template Test...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Templates" $(DEFINES) $(PLUGIN_INCLUDES) -c "tests/input/Templates.cpp"
 	
-testHierarchy8: $(SO)
-	@echo Executing Hierarchy Test 8...
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy8" $(DEFINES) $(PLUGIN_INCLUDES) -c "tests/input/Hierarchy8 - Nested Classes.cpp"
+testNestedClasses: $(SO)
+	@echo Executing Nested Classes Test...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/NestedClasses" $(DEFINES) $(PLUGIN_INCLUDES) -c "tests/input/NestedClasses.cpp"
 
 testOverride1: $(SO)
 	@echo Executing Override Test 1...
@@ -93,3 +93,7 @@ testControversialCase3: $(SO)
 testNoNamespace: $(SO)
 	@echo Executing No Namespace Test...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/NoNamespace" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/NoNamespace.cpp
+
+testVirtualImplicit: $(SO)
+	@echo Executing Virtual and Implicit Functions Test...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Virtual+Implicit" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/Virtual+Implicit.cpp

@@ -1,5 +1,7 @@
 FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit; isVirtual
 a;a(int);1;TR;A;0;0
 a;a();0;TR;A;0;0
-b;b(int);1;;B;0;0
-b;b();0;;B;0;0
+b;b();1;TR;B;0;0
+b;b(int);0;TR;C;0;0
+a;a(int);1;TR;A;0;0
+a;a();0;TR;A;0;0
