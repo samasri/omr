@@ -1,7 +1,10 @@
 f = open('hierarchy', 'r')
 o = open('graph.dot', 'w')
 
-o.write('graph {\n')
+o.write('digraph {\n')
+o.write('\tnode [shape=box];\n')
+o.write('\trankdir=BT;\n')
+o.write('\tedge[arrowhead="onormal"];\n')
 uniqueLines = set()
 for row in f:
 	row = row.strip().split(" --> ")
@@ -10,7 +13,7 @@ for row in f:
 		if prevClas == -1: 
 			prevClas = clas
 			continue
-		toWrite = '"' + prevClas + '" -- "' + clas + '"\n'
+		toWrite = '\t"' + prevClas + '" -> "' + clas + '"\n'
 		if toWrite in uniqueLines:
 			prevClas = clas
 			continue
