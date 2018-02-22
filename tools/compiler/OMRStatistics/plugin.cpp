@@ -561,17 +561,19 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 	}
 }
 
-void OMRStatistics::HMConsumer::printHierarchies(llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
+	(*out) << "isExtensible; Hierarchy\n";
 	for(Hierarchy* h : hierarchies) {
-		printHierarchy("", h->base, "", out);
+		std::string isExtensible = (recorder.getIsExtensible()[h->base->name]) ? "1;" : "0;";
+		printHierarchy(isExtensible, h->base, out);
 	}
 }
 
-void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* node, std::string tabs, llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* node, llvm::raw_ostream* out) {
 	history += node->name + " --> ";
 	std::vector<LinkedNode*>* parents = node->parents;
 	for(LinkedNode* parent : *parents) {
-		printHierarchy(history, parent, tabs + "\t", out);
+		printHierarchy(history, parent, out);
 	}
 	if(parents->size() == 0) (*out) << history.substr(0, history.size() - 5) << "\n";
 }
@@ -623,7 +625,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	}
 	
 	if(conf.hierarchy)  {
-		printHierarchies(hierarchyOutput);
+		printHierarchies(recorder, hierarchyOutput);
 		printWeirdHierarchies(recorder, weirdHierarchyOutput);
 	}
 	if(conf.overloading) 
