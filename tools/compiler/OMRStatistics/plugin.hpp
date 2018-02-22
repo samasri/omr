@@ -13,13 +13,21 @@ using namespace llvm;
 using namespace clang;
 
 namespace OMRStatistics {
+	//Includes information needed from the HMRecorder when processing the info by the HMConsumer
+	struct FunctionDeclInfo {
+		bool isImplicit;
+		bool isVirtual;
+		FunctionDeclInfo(bool isImplicit, bool isVirtual);
+	};
 	
 	class HMRecorder : public RecursiveASTVisitor<HMRecorder> {
 	private:
 		//Mapping between each class and all its methods
 		std::map<std::string, std::unordered_set<std::string*>> Class2Methods;
+		//Mapping between each class and whether its extensible or not
+		std::map<std::string, bool> isExtensible;
 		//Mapping between each function signature and if its implicit or not
-		std::map<std::string, bool*> functionDeclInfo;
+		std::map<std::string, FunctionDeclInfo*> functionDeclInfo;
 		//Parent-child relationship mapping (child --> parents)
 		std::map<std::string, std::vector<std::string>*> classHierarchy;
 	
@@ -27,13 +35,17 @@ namespace OMRStatistics {
 		//Getters and setters
 		std::map<std::string, std::unordered_set<std::string*>> getClass2Methods();
 		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>>);
-		std::map<std::string, std::vector<std::string>*> getclassHierarchy();
-		void setclassHierarchy(std::map<std::string, std::vector<std::string>*>);
-		std::map<std::string, bool*> getfunctionDeclInfo();
-		void setfunctionDeclInfo(std::map<std::string, bool*>);
+		std::map<std::string, std::vector<std::string>*> getClassHierarchy();
+		void setClassHierarchy(std::map<std::string, std::vector<std::string>*>);
+		std::map<std::string, FunctionDeclInfo*> getfunctionDeclInfo();
+		void setfunctionDeclInfo(std::map<std::string, FunctionDeclInfo*>);
+		std::map<std::string, bool> getIsExtensible();
+		void setIsExtensible(std::map<std::string, bool>);
 		
 		explicit HMRecorder(ASTContext *Context) { }
 		
+		//Checks if a specific declaration contains "OMR_EXTENSIBLE" or not
+		bool checkExtensibility(const CXXRecordDecl*);
 		//Loop through the methods of the given class and input them in Class2Methods
 		void recordFunctions(const CXXRecordDecl* inputClass);
 		//Given a child and parent class names, it adds them to the classHierarchy map
@@ -85,7 +97,7 @@ namespace OMRStatistics {
 		bool isVirtual; //Indicates whether this function is a case of dynamic or static polymorphism
 		
 		MethodTracker(std::string className, std::string methodSignature, bool firstOccurence, bool isImplicit, bool isVirtual);
-		//Add an occurence for this method
+		//Add an occurrence for this method
 		void addOccurence(std::string className);
 		
 		//Overriding operators for faster comparisons
@@ -142,6 +154,7 @@ namespace OMRStatistics {
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
 		void printHierarchy(std::string, LinkedNode*, std::string, llvm::raw_ostream*);
 		void printHierarchies(llvm::raw_ostream*);
+		void printWeirdHierarchies(HMRecorder&, llvm::raw_ostream*);
 		
 		//Printing the method information
 		

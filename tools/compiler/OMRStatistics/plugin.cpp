@@ -36,20 +36,47 @@
 #include "plugin.hpp"
 #include <sstream>
 
+OMRStatistics::FunctionDeclInfo::FunctionDeclInfo(bool isImplicit, bool isVirtual) {
+	this->isImplicit = isImplicit;
+	this->isVirtual = isVirtual;
+}
+
 std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::HMRecorder::getClass2Methods() {return Class2Methods;}
 
 void OMRStatistics::HMRecorder::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods) {this->Class2Methods = Class2Methods;}
 
-std::map<std::string, std::vector<std::string>*> OMRStatistics::HMRecorder::getclassHierarchy() {return classHierarchy;}
+std::map<std::string, std::vector<std::string>*> OMRStatistics::HMRecorder::getClassHierarchy() {return classHierarchy;}
 
-void OMRStatistics::HMRecorder::setclassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {this->classHierarchy = classHierarchy;}
+void OMRStatistics::HMRecorder::setClassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {this->classHierarchy = classHierarchy;}
 
-std::map<std::string, bool*> OMRStatistics::HMRecorder::getfunctionDeclInfo() {
+std::map<std::string, OMRStatistics::FunctionDeclInfo*> OMRStatistics::HMRecorder::getfunctionDeclInfo() {
 	return functionDeclInfo;
 }
 
-void OMRStatistics::HMRecorder::setfunctionDeclInfo(std::map<std::string, bool*>) {
+void OMRStatistics::HMRecorder::setfunctionDeclInfo(std::map<std::string, FunctionDeclInfo*>) {
 	this->functionDeclInfo = functionDeclInfo;
+}
+
+std::map<std::string, bool> OMRStatistics::HMRecorder::getIsExtensible() {
+	return isExtensible;
+}
+
+void OMRStatistics::HMRecorder::setIsExtensible(std::map<std::string, bool> isExtensible) {this->isExtensible = isExtensible;}
+
+bool OMRStatistics::HMRecorder::checkExtensibility(const CXXRecordDecl* declIn) {
+	const CXXRecordDecl* decl = declIn;
+  
+	//while (decl) {
+	for (Decl::attr_iterator A = decl->attr_begin(), E = decl->attr_end(); A != E; ++A) {
+		if (isa<AnnotateAttr>(*A)) {
+			AnnotateAttr *annotation = dyn_cast<AnnotateAttr>(*A);
+			if (annotation->getAnnotation() == "OMR_Extensible") return true;
+		}
+	}
+	//decl = decl->getPreviousDecl();
+	// }
+  
+  return false;
 }
 	   
 void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass) {
@@ -68,9 +95,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			function->replace(function->end()-1, function->end(), "");
 			*function += ")";
 		}
-		bool* info = (bool*) malloc(2*sizeof(bool));
-		info[0] = (*A)->isImplicit();
-		info[1] = (*A)->isVirtual(); 
+		FunctionDeclInfo* info = new FunctionDeclInfo((*A)->isImplicit(), (*A)->isVirtual());
 		functionDeclInfo.emplace(*function, info);
 		
 		auto iterator = Class2Methods.find(className);
@@ -116,7 +141,7 @@ bool OMRStatistics::HMRecorder::recordParents(std::string childClassName, std::s
 
 std::string OMRStatistics::HMRecorder::printLoc(const clang::CXXRecordDecl* d) {
 	std::string result;
-	result = d->getLocStart().printToString(d->getASTContext().getSourceManager()) + "\n";
+	result = d->getLocStart().printToString(d->getASTContext().getSourceManager());
 	return result;
 }
 
@@ -129,6 +154,14 @@ std::string OMRStatistics::HMRecorder::printLoc(clang::CXXMethodDecl* d) {
 void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	if(!decl) return;
 	std::string currentClassName = decl->getQualifiedNameAsString();
+	
+	//Record extensibility of the declaration
+	bool currentIsExtensible =  checkExtensibility(decl);
+	if(isExtensible.find(currentClassName) == isExtensible.end()) 
+		isExtensible.emplace(currentClassName, currentIsExtensible);
+	else if(isExtensible[currentClassName] == false) 
+		isExtensible[currentClassName] = currentIsExtensible;
+	
 	if(HMConsumer::shouldIgnoreClassName(currentClassName)) return;
 	CXXRecordDecl::base_class_const_iterator BI, BE, BC;
 	
@@ -326,7 +359,7 @@ std::string OMRStatistics::HMConsumer::getName(std::string methodSignature) {
 
 void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 	auto map = recorder.getClass2Methods();
-	std::map<std::string, bool*> functionDeclInfo = recorder.getfunctionDeclInfo();
+	std::map<std::string, FunctionDeclInfo*> functionDeclInfo = recorder.getfunctionDeclInfo();
 	for(auto hierarchy : hierarchies) {
 		//iterate hierarchy from top to base
 		
@@ -363,7 +396,7 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 							trackers = new std::vector<MethodTracker>();
 							methodName2MethodTracker->emplace(methodName, trackers);
 						}
-						MethodTracker newTracker(className, method, isFirstOccurence, functionDeclInfo[method][0], functionDeclInfo[method][1]);
+						MethodTracker newTracker(className, method, isFirstOccurence, functionDeclInfo[method]->isImplicit, functionDeclInfo[method]->isVirtual);
 						trackers->emplace_back(newTracker);
 					}
 				}
@@ -543,16 +576,24 @@ void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* 
 	if(parents->size() == 0) (*out) << history.substr(0, history.size() - 5) << "\n";
 }
 
+void OMRStatistics::HMConsumer::printWeirdHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
+	std::map<std::string, bool> isExtensible = recorder.getIsExtensible();
+	for(auto clas : recorder.getClassHierarchy()) {
+		for(auto parent : *clas.second)	if(isExtensible[clas.first] != isExtensible[parent])
+			llvm::outs() << clas.first << "(" << isExtensible[clas.first] << ") --> " << parent << "(" << isExtensible[parent] << ")\n";
+	}
+}
+
 void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
-	
 	HMRecorder recorder(&Context);
 	recorder.TraverseDecl(Context.getTranslationUnitDecl());
 	
-	std::map<std::string, std::vector<std::string>*> classHierarchy = recorder.getclassHierarchy();
+	std::map<std::string, std::vector<std::string>*> classHierarchy = recorder.getClassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
 	
 	llvm::raw_ostream* hierarchyOutput = nullptr;
+	llvm::raw_ostream* weirdHierarchyOutput = nullptr;
 	llvm::raw_ostream* overloadOutput = nullptr;
 	llvm::raw_ostream* overrideOutput = nullptr;
 	bool useLLVMOuts = true;
@@ -565,6 +606,9 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		hierarchyOutput = new llvm::raw_fd_ostream(conf.outputDir + ".hierarchy", EC, llvm::sys::fs::F_Append);
 		assert(!EC);
 		
+		weirdHierarchyOutput = new llvm::raw_fd_ostream(conf.outputDir + ".weirdHierarchy", EC, llvm::sys::fs::F_Append);
+		assert(!EC);
+		
 		overloadOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overloads", EC, llvm::sys::fs::F_Append);
 		assert(!EC);
 		
@@ -573,14 +617,16 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	}
 	else {
 		hierarchyOutput = &(llvm::outs());
+		weirdHierarchyOutput = &(llvm::outs());
 		overloadOutput = &(llvm::outs());
 		overrideOutput = &(llvm::outs());
 	}
 	
-	
-	//if(conf.hierarchy) 
+	if(conf.hierarchy)  {
 		printHierarchies(hierarchyOutput);
-	//if(conf.overloading) 
+		printWeirdHierarchies(recorder, weirdHierarchyOutput);
+	}
+	if(conf.overloading) 
 		printOverloads(overloadOutput);
 	printOverrides(overrideOutput);
 	
