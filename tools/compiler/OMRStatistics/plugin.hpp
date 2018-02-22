@@ -152,8 +152,8 @@ namespace OMRStatistics {
 		
 		//Printing methods to check the results
 		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
-		void printHierarchy(std::string, LinkedNode*, std::string, llvm::raw_ostream*);
-		void printHierarchies(llvm::raw_ostream*);
+		void printHierarchy(std::string, LinkedNode*, llvm::raw_ostream*);
+		void printHierarchies(HMRecorder&, llvm::raw_ostream*);
 		void printWeirdHierarchies(HMRecorder&, llvm::raw_ostream*);
 		
 		//Printing the method information
