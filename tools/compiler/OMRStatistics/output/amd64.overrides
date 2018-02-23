@@ -10,8 +10,8 @@ OMR;AutomaticSymbol;AutomaticSymbol(TR::DataType,uint32_t);TR;AutomaticSymbol;0;
 OMR;RegisterMappedSymbol;RegisterMappedSymbol(TR::DataType,uint32_t);TR;RegisterMappedSymbol;0;0
 OMR;RegisterMappedSymbol;RegisterMappedSymbol(TR::DataType);TR;RegisterMappedSymbol;0;0
 OMR;RegisterMappedSymbol;RegisterMappedSymbol(int32_t);TR;RegisterMappedSymbol;0;0
-OMR;Symbol;Symbol(TR::DataType);TR;Symbol;0;0
 OMR;Symbol;Symbol(TR::DataType,uint32_t);TR;Symbol;0;0
+OMR;Symbol;Symbol(TR::DataType);TR;Symbol;0;0
 OMR;Symbol;Symbol();TR;Symbol;0;0
 OMR;Symbol;getKind();OMR;AutomaticSymbol;0;1
 OMR;Symbol;getOffset();OMR;RegisterMappedSymbol;0;0
@@ -92,10 +92,10 @@ OMR;Instruction;refsRegister(TR::Register *);OMR::X86;Instruction;0;1
 OMR;Instruction;usesRegister(TR::Register *);OMR::X86;Instruction;0;1
 OMR;Instruction;~Instruction();OMR::X86;Instruction;1;0
 OMR::X86;Instruction;~Instruction();TR;Instruction;1;0
-OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);OMR::X86;Snippet;0;0
-OMR::X86;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);TR;Snippet;0;0
 OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);OMR::X86;Snippet;0;0
 OMR::X86;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *);TR;Snippet;0;0
+OMR;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);OMR::X86;Snippet;0;0
+OMR::X86;Snippet;Snippet(TR::CodeGenerator *,TR::Node *,TR::LabelSymbol *,_Bool);TR;Snippet;0;0
 OMR;Snippet;~Snippet();OMR::X86;Snippet;1;0
 OMR::X86;Snippet;~Snippet();TR;Snippet;1;0
 OMR;AliasBuilder;AliasBuilder(TR::SymbolReferenceTable *,size_t,TR::Compilation *);TR;AliasBuilder;0;0
@@ -266,8 +266,8 @@ OMR::X86;RegisterIterator;RegisterIterator(TR::Machine *,enum TR_RegisterKinds);
 OMR::X86;RegisterIterator;getCurrent();TR;X86FPStackIterator;0;0
 OMR::X86;RegisterIterator;getFirst();TR;X86FPStackIterator;0;0
 OMR::X86;RegisterIterator;getNext();TR;X86FPStackIterator;0;0
-TestCompiler;ResolvedMethod;ResolvedMethod(class TR_OpaqueMethodBlock *);TR;ResolvedMethod;0;0
 TestCompiler;ResolvedMethod;ResolvedMethod(TR::MethodBuilder *);TR;ResolvedMethod;0;0
+TestCompiler;ResolvedMethod;ResolvedMethod(class TR_OpaqueMethodBlock *);TR;ResolvedMethod;0;0
 TR;ResolvedMethod;classNameChars();TestCompiler;ResolvedMethod;0;1
 TR;ResolvedMethod;classNameLength();TestCompiler;ResolvedMethodBase;0;1
 TR;ResolvedMethod;convertToMethod();TestCompiler;ResolvedMethod;0;1
@@ -319,28 +319,28 @@ TR;Method;jitPersistentFree(void *);TestCompiler;Method;0;0
 TR;Method;nameChars();TestCompiler;Method;0;1
 TestCompiler;Method;nameChars();TestCompiler;ResolvedMethod;0;1
 TR;Method;nameLength();TestCompiler;Method;0;1
+TR;Method;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
 TR;Method;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
 TR;Method;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Method;0;0
 TR;Method;operator delete(void *,TR::Region &);TestCompiler;Method;0;0
-TR;Method;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
 TR;Method;operator delete(void *,size_t);TestCompiler;Method;0;0
 TR;Method;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Method;0;0
-TR;Method;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
-TR;Method;operator delete[](void *,TR::Region &);TestCompiler;Method;0;0
 TR;Method;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
-TR;Method;operator new(size_t,TR::Region &);TestCompiler;Method;0;0
+TR;Method;operator delete[](void *,TR::Region &);TestCompiler;Method;0;0
+TR;Method;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
 TR;Method;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Method;0;0
 TR;Method;operator new(size_t,class TR_PersistentMemory *);TestCompiler;Method;0;0
-TR;Method;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;Method;0;0
-TR;Method;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
-TR;Method;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
 TR;Method;operator new(size_t,TR_ArenaAllocator *);TestCompiler;Method;0;0
+TR;Method;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
+TR;Method;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;Method;0;0
+TR;Method;operator new(size_t,TR::Region &);TestCompiler;Method;0;0
+TR;Method;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
 TR;Method;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;Method;0;0
 TR;Method;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
-TR;Method;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
+TR;Method;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;Method;0;0
 TR;Method;operator new[](size_t,TR::Region &);TestCompiler;Method;0;0
 TR;Method;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;Method;0;0
-TR;Method;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;Method;0;0
+TR;Method;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;Method;0;0
 TR;Method;parmType(uint32_t);TestCompiler;ResolvedMethod;0;1
 TR;Method;returnType();TestCompiler;ResolvedMethod;0;1
 TR;Method;signature(class TR_Memory *,enum TR_AllocationKind);TestCompiler;ResolvedMethod;0;1
@@ -381,23 +381,23 @@ TR;Dominators;jitPersistentAlloc(size_t);TR;PostDominators;0;0
 TR;Dominators;jitPersistentFree(void *);TR;PostDominators;0;0
 TR;Dominators;operator delete(void *,size_t);TR;PostDominators;0;0
 TR;Dominators;operator delete(void *,TR::Region &);TR;PostDominators;0;0
-TR;Dominators;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators;0;0
 TR;Dominators;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
 TR;Dominators;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
+TR;Dominators;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators;0;0
 TR;Dominators;operator delete[](void *,TR::Region &);TR;PostDominators;0;0
 TR;Dominators;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
 TR;Dominators;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
 TR;Dominators;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators;0;0
-TR;Dominators;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
 TR;Dominators;operator new(size_t,TR::Internal::PersistentNewType);TR;PostDominators;0;0
 TR;Dominators;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
+TR;Dominators;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
 TR;Dominators;operator new(size_t,TR_ArenaAllocator *);TR;PostDominators;0;0
 TR;Dominators;operator new(size_t,class TR_PersistentMemory *);TR;PostDominators;0;0
-TR;Dominators;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators;0;0
 TR;Dominators;operator new(size_t,TR::Region &);TR;PostDominators;0;0
+TR;Dominators;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators;0;0
+TR;Dominators;operator new[](size_t,class TR_PersistentMemory *);TR;PostDominators;0;0
 TR;Dominators;operator new[](size_t,TR::Internal::PersistentNewType);TR;PostDominators;0;0
 TR;Dominators;operator new[](size_t,TR::Region &);TR;PostDominators;0;0
-TR;Dominators;operator new[](size_t,class TR_PersistentMemory *);TR;PostDominators;0;0
 TR;Dominators;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
 TR;Dominators;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;PostDominators;0;0
 TR;Dominators;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;PostDominators;0;0
@@ -542,8 +542,8 @@ TR;VPConstraint;mustBeLessThan();TR;VPEqual;0;1
 TR;VPConstraint;mustBeLessThanOrEqual();TR;VPEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPEqual;0;1
 TR;VPConstraint;name();TR;VPEqual;0;0
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPEqual;0;0
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPEqual;0;0
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPEqual;0;1
 TR;VPConstraint;asGreaterThanOrEqual();TR;VPGreaterThanOrEqual;0;1
@@ -554,8 +554,8 @@ TR;VPConstraint;mustBeGreaterThan();TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;mustBeGreaterThanOrEqual();TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;name();TR;VPGreaterThanOrEqual;0;0
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPGreaterThanOrEqual;0;0
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPGreaterThanOrEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPGreaterThanOrEqual;0;0
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPGreaterThanOrEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;add(TR::VPConstraint *,TR::DataType,OMR::ValuePropagation *);TR;VPIntConstraint;0;1
@@ -600,8 +600,8 @@ TR;VPConstraint;mustBeLessThan();TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;mustBeLessThanOrEqual();TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;name();TR;VPLessThanOrEqual;0;0
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPLessThanOrEqual;0;0
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPLessThanOrEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPLessThanOrEqual;0;0
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPLessThanOrEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;add(TR::VPConstraint *,TR::DataType,OMR::ValuePropagation *);TR;VPLongConstraint;0;1
@@ -656,8 +656,8 @@ TR;VPRelation;getComplement(OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPConstraint;intersect1(TR::VPConstraint *,OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPNotEqual;0;1
 TR;VPConstraint;name();TR;VPNotEqual;0;0
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPNotEqual;0;0
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPNotEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPNotEqual;0;0
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPConstraint;asNullObject();TR;VPNullObject;0;1
@@ -813,13 +813,13 @@ TR;Link;jitPersistentAlloc(size_t);TR;DirectCallSite;0;0
 TR;Link;jitPersistentFree(void *);TR;DirectCallSite;0;0
 TR;Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
 TR;Link;operator delete(void *,TR::Region &);TR;DirectCallSite;0;0
+TR;Link;operator delete(void *,size_t);TR;DirectCallSite;0;0
 TR;Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;DirectCallSite;0;0
 TR;Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
-TR;Link;operator delete(void *,size_t);TR;DirectCallSite;0;0
 TR;Link;operator delete[](void *,TR::Region &);TR;DirectCallSite;0;0
+TR;Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;DirectCallSite;0;0
 TR;Link;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
 TR;Link;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
-TR;Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;DirectCallSite;0;0
 TR;Link;operator new(size_t,TR::Internal::PersistentNewType);TR;DirectCallSite;0;0
 TR;Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
 TR;Link;operator new(size_t,class TR_PersistentMemory *);TR;DirectCallSite;0;0
@@ -828,9 +828,9 @@ TR;Link;operator new(size_t,TR_ArenaAllocator *);TR;DirectCallSite;0;0
 TR;Link;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;DirectCallSite;0;0
 TR;Link;operator new(size_t,TR::Region &);TR;DirectCallSite;0;0
 TR;Link;operator new[](size_t,TR::Region &);TR;DirectCallSite;0;0
-TR;Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
 TR;Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
 TR;Link;operator new[](size_t,class TR_PersistentMemory *);TR;DirectCallSite;0;0
+TR;Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;DirectCallSite;0;0
 TR;Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;DirectCallSite;0;0
 TR;Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;DirectCallSite;0;0
 TR;InlinerBase;inlineCallTargets(TR::ResolvedMethodSymbol *,class TR_CallStack *,class TR_InnerPreexistenceInfo *);TR;DumbInliner;0;1
@@ -843,20 +843,20 @@ TR;Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectTy
 TR;IndirectCallSite;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;FunctionPointerCallSite;0;0
 TR;Link;operator delete(void *,TR::Region &);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator delete(void *,TR::Region &);TR;FunctionPointerCallSite;0;0
+TR;Link;operator delete(void *,size_t);TR;IndirectCallSite;0;0
+TR;IndirectCallSite;operator delete(void *,size_t);TR;FunctionPointerCallSite;0;0
 TR;Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;FunctionPointerCallSite;0;0
 TR;Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;FunctionPointerCallSite;0;0
-TR;Link;operator delete(void *,size_t);TR;IndirectCallSite;0;0
-TR;IndirectCallSite;operator delete(void *,size_t);TR;FunctionPointerCallSite;0;0
 TR;Link;operator delete[](void *,TR::Region &);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator delete[](void *,TR::Region &);TR;FunctionPointerCallSite;0;0
+TR;Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;IndirectCallSite;0;0
+TR;IndirectCallSite;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;FunctionPointerCallSite;0;0
 TR;Link;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;FunctionPointerCallSite;0;0
 TR;Link;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;FunctionPointerCallSite;0;0
-TR;Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;IndirectCallSite;0;0
-TR;IndirectCallSite;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;FunctionPointerCallSite;0;0
 TR;Link;operator new(size_t,TR::Internal::PersistentNewType);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator new(size_t,TR::Internal::PersistentNewType);TR;FunctionPointerCallSite;0;0
 TR;Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;IndirectCallSite;0;0
@@ -873,12 +873,12 @@ TR;Link;operator new(size_t,TR::Region &);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator new(size_t,TR::Region &);TR;FunctionPointerCallSite;0;0
 TR;Link;operator new[](size_t,TR::Region &);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator new[](size_t,TR::Region &);TR;FunctionPointerCallSite;0;0
-TR;Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;IndirectCallSite;0;0
-TR;IndirectCallSite;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;FunctionPointerCallSite;0;0
 TR;Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;FunctionPointerCallSite;0;0
 TR;Link;operator new[](size_t,class TR_PersistentMemory *);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator new[](size_t,class TR_PersistentMemory *);TR;FunctionPointerCallSite;0;0
+TR;Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;IndirectCallSite;0;0
+TR;IndirectCallSite;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;FunctionPointerCallSite;0;0
 TR;Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;IndirectCallSite;0;0
 TR;IndirectCallSite;operator new[](size_t,TR::Internal::PersistentNewType);TR;FunctionPointerCallSite;0;0
 TR;Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;IndirectCallSite;0;0
@@ -1117,8 +1117,8 @@ TR;ForwardDFSetAnalysis;initializeGenAndKillSetInfo(class TR_RegionStructure *,c
 TR;ForwardDFSetAnalysis;initializeGenAndKillSetInfoForBlock(class TR_BlockStructure *);TR;ForwardDFSetAnalysis;0;1
 TR;ForwardDFSetAnalysis;initializeGenAndKillSetInfoForRegion(class TR_RegionStructure *);TR;ForwardDFSetAnalysis;0;1
 TR;ForwardDFSetAnalysis;initializeInSetInfo();TR;ForwardDFSetAnalysis;0;1
-TR;BasicDFSetAnalysis;initializeInfo(class TR_SingleBitContainer *);TR;ForwardDFSetAnalysis;0;1
 TR;BasicDFSetAnalysis;initializeInfo(class TR_BitVector *);TR;ForwardDFSetAnalysis;0;1
+TR;BasicDFSetAnalysis;initializeInfo(class TR_SingleBitContainer *);TR;ForwardDFSetAnalysis;0;1
 TR;BasicDFSetAnalysis;inverseCompose(class TR_BitVector *,class TR_BitVector *);TR;ForwardDFSetAnalysis;0;1
 TR;BasicDFSetAnalysis;inverseCompose(class TR_SingleBitContainer *,class TR_SingleBitContainer *);TR;ForwardDFSetAnalysis;0;1
 TR;BasicDFSetAnalysis;inverseInitializeInfo(class TR_BitVector *);TR;ForwardDFSetAnalysis;0;1
@@ -1345,38 +1345,38 @@ OMR;Simplifier;~Simplifier();TR;Simplifier;1;1
 ;List;operator delete(void *,size_t);TR;OrderedBlockList;0;0
 ;ListBase;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);;List;0;0
 ;List;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
-;ListBase;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);;List;0;0
-;List;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
 ;ListBase;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);;List;0;0
 ;List;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;OrderedBlockList;0;0
-;ListBase;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);;List;0;0
-;List;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;OrderedBlockList;0;0
-;ListBase;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);;List;0;0
-;List;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
+;ListBase;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);;List;0;0
+;List;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
 ;ListBase;operator delete[](void *,TR::Region &);;List;0;0
 ;List;operator delete[](void *,TR::Region &);TR;OrderedBlockList;0;0
+;ListBase;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);;List;0;0
+;List;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;OrderedBlockList;0;0
 ;ListBase;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);;List;0;0
 ;List;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
-;ListBase;operator new(size_t,TR::Region &);;List;0;0
-;List;operator new(size_t,TR::Region &);TR;OrderedBlockList;0;0
-;ListBase;operator new(size_t,TR_ArenaAllocator *);;List;0;0
-;List;operator new(size_t,TR_ArenaAllocator *);TR;OrderedBlockList;0;0
-;ListBase;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);;List;0;0
-;List;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;OrderedBlockList;0;0
-;ListBase;operator new(size_t,TR::Internal::PersistentNewType);;List;0;0
-;List;operator new(size_t,TR::Internal::PersistentNewType);TR;OrderedBlockList;0;0
-;ListBase;operator new(size_t,class TR_PersistentMemory *);;List;0;0
-;List;operator new(size_t,class TR_PersistentMemory *);TR;OrderedBlockList;0;0
+;ListBase;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);;List;0;0
+;List;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
 ;ListBase;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);;List;0;0
 ;List;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
+;ListBase;operator new(size_t,TR_ArenaAllocator *);;List;0;0
+;List;operator new(size_t,TR_ArenaAllocator *);TR;OrderedBlockList;0;0
+;ListBase;operator new(size_t,class TR_PersistentMemory *);;List;0;0
+;List;operator new(size_t,class TR_PersistentMemory *);TR;OrderedBlockList;0;0
+;ListBase;operator new(size_t,TR::Internal::PersistentNewType);;List;0;0
+;List;operator new(size_t,TR::Internal::PersistentNewType);TR;OrderedBlockList;0;0
 ;ListBase;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);;List;0;0
 ;List;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
+;ListBase;operator new(size_t,TR::Region &);;List;0;0
+;List;operator new(size_t,TR::Region &);TR;OrderedBlockList;0;0
+;ListBase;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);;List;0;0
+;List;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;OrderedBlockList;0;0
 ;ListBase;operator new[](size_t,TR::Region &);;List;0;0
 ;List;operator new[](size_t,TR::Region &);TR;OrderedBlockList;0;0
-;ListBase;operator new[](size_t,class TR_PersistentMemory *);;List;0;0
-;List;operator new[](size_t,class TR_PersistentMemory *);TR;OrderedBlockList;0;0
 ;ListBase;operator new[](size_t,TR::Internal::PersistentNewType);;List;0;0
 ;List;operator new[](size_t,TR::Internal::PersistentNewType);TR;OrderedBlockList;0;0
+;ListBase;operator new[](size_t,class TR_PersistentMemory *);;List;0;0
+;List;operator new[](size_t,class TR_PersistentMemory *);TR;OrderedBlockList;0;0
 ;ListBase;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);;List;0;0
 ;List;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;OrderedBlockList;0;0
 ;ListBase;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);;List;0;0
@@ -1537,14 +1537,14 @@ OMR;RegisterDependencyConditions;operator delete(void *,class TR_HeapMemory,clas
 OMR;RegisterDependencyConditions;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions;0;0
-OMR;RegisterDependencyConditions;operator delete[](void *,TR::Region &);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);OMR::X86;RegisterDependencyConditions;0;0
+OMR;RegisterDependencyConditions;operator delete[](void *,TR::Region &);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new(size_t,class TR_PersistentMemory *);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;RegisterDependencyConditions;0;0
-OMR;RegisterDependencyConditions;operator new(size_t,TR_ArenaAllocator *);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new(size_t,TR::Internal::PersistentNewType);OMR::X86;RegisterDependencyConditions;0;0
+OMR;RegisterDependencyConditions;operator new(size_t,TR_ArenaAllocator *);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new(size_t,TR::Region &);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new[](size_t,TR::Region &);OMR::X86;RegisterDependencyConditions;0;0
 OMR;RegisterDependencyConditions;operator new[](size_t,TR::Internal::PersistentNewType);OMR::X86;RegisterDependencyConditions;0;0
@@ -1618,14 +1618,14 @@ OMR;MemoryReference;operator new(size_t,class TR_Memory *,enum TR_AllocationKind
 OMR::X86;MemoryReference;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86::AMD64;MemoryReference;0;0
 OMR;MemoryReference;operator new(size_t,TR::Region &);OMR::X86;MemoryReference;0;0
 OMR::X86;MemoryReference;operator new(size_t,TR::Region &);OMR::X86::AMD64;MemoryReference;0;0
-OMR;MemoryReference;operator new[](size_t,TR::Region &);OMR::X86;MemoryReference;0;0
-OMR::X86;MemoryReference;operator new[](size_t,TR::Region &);OMR::X86::AMD64;MemoryReference;0;0
+OMR;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference;0;0
+OMR::X86;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference;0;0
 OMR;MemoryReference;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference;0;0
 OMR::X86;MemoryReference;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference;0;0
 OMR;MemoryReference;operator new[](size_t,class TR_PersistentMemory *);OMR::X86;MemoryReference;0;0
 OMR::X86;MemoryReference;operator new[](size_t,class TR_PersistentMemory *);OMR::X86::AMD64;MemoryReference;0;0
-OMR;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86;MemoryReference;0;0
-OMR::X86;MemoryReference;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);OMR::X86::AMD64;MemoryReference;0;0
+OMR;MemoryReference;operator new[](size_t,TR::Region &);OMR::X86;MemoryReference;0;0
+OMR::X86;MemoryReference;operator new[](size_t,TR::Region &);OMR::X86::AMD64;MemoryReference;0;0
 OMR;MemoryReference;operator new[](size_t,TR::Internal::PersistentNewType);OMR::X86;MemoryReference;0;0
 OMR::X86;MemoryReference;operator new[](size_t,TR::Internal::PersistentNewType);OMR::X86::AMD64;MemoryReference;0;0
 OMR;MemoryReference;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR::X86;MemoryReference;0;0
@@ -2048,72 +2048,72 @@ OMR;IlInjector;jitPersistentFree(void *);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;jitPersistentFree(void *);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;BinaryOpIlInjector;0;0
 TR;IlGenerator;methodSymbol();OMR;IlInjector;0;1
-OMR;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator delete(void *,TR::Region &);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator delete(void *,size_t);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,size_t);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator delete[](void *,TR::Region &);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator delete[](void *,TR::Region &);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator new(size_t,TR::Region &);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;BinaryOpIlInjector;0;0
-OMR;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
 TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;BinaryOpIlInjector;0;0
+OMR;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;IlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;OpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;BinaryOpIlInjector;0;0
 OMR;IlInjector;~IlInjector();TestCompiler;IlInjector;0;1
 TestCompiler;IlInjector;~IlInjector();TR;IlInjector;0;1
 TestCompiler;OpIlInjector;injectIL();TestCompiler;UnaryOpIlInjector;0;1
@@ -2122,75 +2122,75 @@ TestCompiler;OpIlInjector;jitPersistentAlloc(size_t);TestCompiler;UnaryOpIlInjec
 TestCompiler;UnaryOpIlInjector;jitPersistentAlloc(size_t);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;jitPersistentFree(void *);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator delete(void *,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator delete(void *,size_t);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator new(size_t,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector;0;0
-TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
 TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;ChildlessUnaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;UnaryOpIlInjector;0;0
+TestCompiler;UnaryOpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;ChildlessUnaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;injectIL();TestCompiler;CmpBranchOpIlInjector;0;1
 TestCompiler;OpIlInjector;jitPersistentAlloc(size_t);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;CmpBranchOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;CmpBranchOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;CmpBranchOpIlInjector;0;0
 OMR;IlBuilder;IlBuilder(TR::MethodBuilder *,TR::TypeDictionary *);TestCompiler;IlBuilder;0;0
 OMR;IlBuilder;IlBuilder(TR::IlBuilder *);TestCompiler;IlBuilder;0;0
 TestCompiler;IlBuilder;IlBuilder(TR::IlBuilder *);TR;IlBuilder;0;0
@@ -2281,53 +2281,53 @@ TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType)
 TestCompiler;OpIlInjector;injectIL();TestCompiler;TernaryOpIlInjector;0;1
 TestCompiler;OpIlInjector;jitPersistentAlloc(size_t);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;jitPersistentFree(void *);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,TR::Region &);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete(void *,size_t);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,TR::Region &);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,TR::Region &);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;TernaryOpIlInjector;0;0
-TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
 TestCompiler;OpIlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;TernaryOpIlInjector;0;0
+TestCompiler;OpIlInjector;operator new[](size_t,TR::Region &);TestCompiler;TernaryOpIlInjector;0;0
 OMR;IlInjector;injectIL();TestCompiler;BarIlInjector;0;1
 TestCompiler;IlInjector;jitPersistentAlloc(size_t);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;jitPersistentFree(void *);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,TR::Region &);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator delete(void *,size_t);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator delete[](void *,TR::Region &);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator new(size_t,TR::Region &);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,TR_ArenaAllocator *);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator new(size_t,class TR_PersistentMemory *);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;BarIlInjector;0;0
-TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,TR::Internal::PersistentNewType);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
 TestCompiler;IlInjector;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,class TR_PersistentMemory *);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,TR::Internal::PersistentNewType);TestCompiler;BarIlInjector;0;0
+TestCompiler;IlInjector;operator new[](size_t,TR::Region &);TestCompiler;BarIlInjector;0;0
 TestCompiler;TestDriver;compileTestMethods();TestCompiler;FooBarTest;0;1
 TestCompiler;TestDriver;invokeTests();TestCompiler;FooBarTest;0;1
 testing;Test;TestBody();;JITILBuilderTest_ControlFlowTest_Test;0;1
@@ -2835,6 +2835,6 @@ OMR;IlType;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::Object
 OMR;IlType;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);OMR;UnionType;0;0
 OMR;IlType;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);OMR;UnionType;0;0
 OMR;CodeCacheMemorySegment;CodeCacheMemorySegment(uint8_t *,uint8_t *);TR;CodeCacheMemorySegment;0;0
-OMR;CodeCacheMemorySegment;CodeCacheMemorySegment();TR;CodeCacheMemorySegment;0;0
 OMR;CodeCacheMemorySegment;CodeCacheMemorySegment(uint8_t *,size_t);TR;CodeCacheMemorySegment;0;0
+OMR;CodeCacheMemorySegment;CodeCacheMemorySegment();TR;CodeCacheMemorySegment;0;0
 TR;FrontEnd;unreserveCodeCache(TR::CodeCache *);TR;FEBase;0;0
