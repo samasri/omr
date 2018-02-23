@@ -223,11 +223,11 @@ function toggleImplicitDecls() {
 	var decls = document.getElementsByClassName("implicit");
 	if(decls[0].style.display == 'block') for(var i = 0; i  < decls.length; i++) {
 		decls[i].style.display = 'none';
-		this.innerHTML = "Hide Implicit Declarations";
+		this.innerHTML = "Show Implicit Declarations";
 	}
 	else {
 		for(var i = 0; i  < decls.length; i++) decls[i].style.display = 'block';
-		this.innerHTML = "Show Implicit Declarations";
+		this.innerHTML = "Hide Implicit Declarations";
 	}
 }
 
