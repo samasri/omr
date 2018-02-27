@@ -35,8 +35,8 @@ sample: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/codegen/OMRCodeGenerator.cpp
-	#-Xclang -plugin-arg-$(PL) -Xclang "./tests/CodeGenOut"
-	#Add above between CC1_MAINARG and DEFINES
+#-Xclang -plugin-arg-$(PL) -Xclang "./tests/CodeGenOut"
+#Add above between CC1_MAINARG and DEFINES
 
 sample2: $(SO)
 	@echo Executing with OMRStatistics...
@@ -48,6 +48,7 @@ include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
+OUTPUTS = hierarchy weirdHierarchy overloads allFunctions overrides  
 
 include sources/common_amd64.mk
 include sources/common_i386.mk
@@ -95,42 +96,68 @@ copyOriginal:
 	@echo "Copying original files..."
 	@mkdir -p "output/original (untrimmed) results/"
 	@for file in $(ARCHS) ; do \
+#@for $$output in $(OUTPUTS); do \
+#	cp output/"$$file".$$output "output/original (untrimmed) results" ; \
+#done \
 		cp output/"$$file".hierarchy "output/original (untrimmed) results" ; \
+		cp output/"$$file".weirdHierarchy "output/original (untrimmed) results" ; \
 		cp output/"$$file".overloads "output/original (untrimmed) results" ; \
+		cp output/"$$file".allFunctions "output/original (untrimmed) results" ; \
 		cp output/"$$file".overrides "output/original (untrimmed) results" ; \
 	done
 
 trimOutput:
 	@echo "Trimming output..."
 	@for file in $(ARCHS) ; do \
-		python output/trim3Outputs.py output/"$$file" ; \
-	rm output/"$$file".hierarchy ; \
-	rm output/"$$file".overrides ; \
-	rm output/"$$file".overloads ; \
-	mv output/"$$file".hierarchy.trimmed output/"$$file".hierarchy ; \
-	mv output/"$$file".overloads.trimmed output/"$$file".overloads ; \
-	mv output/"$$file".overrides.trimmed output/"$$file".overrides ; \
+		python output/trimAllOutputs.py output/"$$file" ; \
+#@for $$output in $(OUTPUTS); do \
+#	rm output/"$$file".$$output ; \
+#	mv output/"$$file".$$output.trimmed output/"$$file".$$output ; \
+#done \
+		rm output/"$$file".hierarchy ; \
+		rm output/"$$file".weirdHierarchy ; \
+		rm output/"$$file".overloads ; \
+		rm output/"$$file".allFunctions ; \
+		rm output/"$$file".overrides ; \
+		mv output/"$$file".hierarchy.trimmed output/"$$file".hierarchy ; \
+		mv output/"$$file".weirdHierarchy.trimmed output/"$$file".weirdHierarchy ; \
+		mv output/"$$file".overloads.trimmed output/"$$file".overloads ; \
+		mv output/"$$file".allFunctions.trimmed output/"$$file".allFunctions ; \
+		mv output/"$$file".overrides.trimmed output/"$$file".overrides ; \
 	done
 
 createTotalOutput:
 	@echo "Producing output from all archs..."
 	@python output/sanityCheck.py output > output/sanityCheck
+	@rm -f hierarchy weirdHierarchy overloads allFunctions overrides
 	@for file in $(ARCHS) ; do \
-	cat output/"$$file".hierarchy >> output/hierarchy ; \
-	cat output/"$$file".overloads >> output/overloads ; \
-	cat output/"$$file".overrides >> output/overrides ; \
-	python output/trimOneFile.py output/hierarchy ; \
-	python output/trimOneFile.py output/overloads ; \
-	python output/trimOneFile.py output/overrides ; \
-	mv output/hierarchy.trimmed output/hierarchy ; \
-	mv output/overloads.trimmed output/overloads ; \
-	mv output/overrides.trimmed output/overrides ; \
+#@for $$output in $(OUTPUTS); do \
+#	cat output/"$$file".$$output >> output/$$output ; \
+#	python output/trimOneFile.py output/$$output ; \
+#	mv output/$$output.trimmed output/$$output ; \
+#done \
+		cat output/"$$file".hierarchy >> output/hierarchy ; \
+		cat output/"$$file".weirdHierarchy >> output/weirdHierarchy ; \
+		cat output/"$$file".overloads >> output/overloads ; \
+		cat output/"$$file".allFunctions >> output/allFunctions ; \
+		cat output/"$$file".overrides >> output/overrides ; \
+		python output/trimOneFile.py output/hierarchy ; \
+		python output/trimOneFile.py output/weirdHierarchy ; \
+		python output/trimOneFile.py output/overloads ; \
+		python output/trimOneFile.py output/allFunctions ; \
+		python output/trimOneFile.py output/overrides ; \
+		mv output/hierarchy.trimmed output/hierarchy ; \
+		mv output/weirdHierarchy.trimmed output/weirdHierarchy ; \
+		mv output/overloads.trimmed output/overloads ; \
+		mv output/allFunctions.trimmed output/allFunctions ; \
+		mv output/overrides.trimmed output/overrides ; \
 	done
 
 moveOutputToVisualization:
 	@echo "Moving output to the right directory for visualization..."
 	@mv output/overloads visualization/Overloads/overloads
 	@mv output/overrides visualization/Overrides/overrides
+	@mv output/hierarchy visualization/Hierarchy/hierarchy
 
 executeAMD64: $(SO)
 	@for file in $(TARGETS_AMD64) ; do \
