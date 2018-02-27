@@ -164,7 +164,7 @@ namespace OMRStatistics {
 		
 		std::vector<std::string>* seperateClassNameSpace(std::string input);
 		size_t findLastStringIn(std::string input, std::string key);
-		void printOverloads(llvm::raw_ostream* out);
+		void printOverloads(llvm::raw_ostream* out, bool printAll);
 		void printOverrides(llvm::raw_ostream* out);
 		
 		virtual void HandleTranslationUnit(ASTContext &Context);

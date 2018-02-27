@@ -492,8 +492,8 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 	return pos;
 }
 
-void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
-	(*out) << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit; isVirtual\n";
+void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool printAll) {
+	*out << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit; isVirtual\n";
 	for(auto hierarchy : hierarchies) {
 		auto trackerMapVec = hierarchy->methodName2MethodTrackerVec;
 		for(auto trackerMap : trackerMapVec) { //Go through the map of each subHierarchy
@@ -503,7 +503,7 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
 			auto itr = b;
 			while(itr != e) {
 				auto hierarchyTrackers = *(itr->second);
-				if(hierarchyTrackers.size() < 2) { 
+				if(!printAll && hierarchyTrackers.size() < 2) { 
 				//If methodname has only one signature, then it is not overloaded
 					itr++;
 					continue;
@@ -512,13 +512,13 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
 				for(auto tracker : hierarchyTrackers) {
 					std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
 					if(!shouldIgnoreNamespace(tuple->at(0))) {
-						(*out) << tracker.methodName << ";";
-						(*out) << tracker.methodSignature << ";";
-						(*out) << tracker.firstOccurence << ";";
-						(*out) << tuple->at(0) << ";"; //namespace
-						(*out) << tuple->at(1) << ";";//className
-						(*out) << tracker.isImplicit << ";";
-						(*out) << tracker.isVirtual << "\n";
+						*out << tracker.methodName << ";";
+						*out << tracker.methodSignature << ";";
+						*out << tracker.firstOccurence << ";";
+						*out << tuple->at(0) << ";"; //namespace
+						*out << tuple->at(1) << ";";//className
+						*out << tracker.isImplicit << ";";
+						*out << tracker.isVirtual << "\n";
 					}
 				}
 				itr++;
@@ -528,7 +528,7 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out) {
 }
 
 void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
-	(*out) << "BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName; isImplicit; isVirtual\n";
+	*out << "BaseNamespace; BaseClassName; FunctionSignature; OverridingNamespace; OverridingClassName; isImplicit; isVirtual\n";
 	for(Hierarchy* hierarchy : hierarchies) {
 		std::vector<std::map<std::string, std::vector<MethodTracker>*>*> trackerMapVec = hierarchy->methodName2MethodTrackerVec;
 		for(std::map<std::string, std::vector<MethodTracker>*>* trackerMap : trackerMapVec) {
@@ -544,13 +544,13 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 						std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(baseClassName);
 						std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
 						if(!shouldIgnoreNamespace(baseClassNameTuple->at(0)) || !shouldIgnoreNamespace(classNameTuple->at(0))) {
-							(*out) << baseClassNameTuple->at(0) << ";"; //namespace
-							(*out) << baseClassNameTuple->at(1) << ";";//className
-							(*out) << tracker.methodSignature << ";";
-							(*out) << classNameTuple->at(0) << ";"; //namespace
-							(*out) << classNameTuple->at(1) << ";";//className
-							(*out) << tracker.isImplicit << ";";
-							(*out) << tracker.isVirtual << "\n";
+							*out << baseClassNameTuple->at(0) << ";"; //namespace
+							*out << baseClassNameTuple->at(1) << ";";//className
+							*out << tracker.methodSignature << ";";
+							*out << classNameTuple->at(0) << ";"; //namespace
+							*out << classNameTuple->at(1) << ";";//className
+							*out << tracker.isImplicit << ";";
+							*out << tracker.isVirtual << "\n";
 						}
 						baseClassName = className;
 					}
@@ -562,7 +562,7 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 }
 
 void OMRStatistics::HMConsumer::printHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
-	(*out) << "isExtensible; Hierarchy\n";
+	*out << "isExtensible; Hierarchy\n";
 	for(Hierarchy* h : hierarchies) {
 		std::string isExtensible = (recorder.getIsExtensible()[h->base->name]) ? "1;" : "0;";
 		printHierarchy(isExtensible, h->base, out);
@@ -575,14 +575,15 @@ void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* 
 	for(LinkedNode* parent : *parents) {
 		printHierarchy(history, parent, out);
 	}
-	if(parents->size() == 0) (*out) << history.substr(0, history.size() - 5) << "\n";
+	if(parents->size() == 0) *out << history.substr(0, history.size() - 5) << "\n";
 }
 
 void OMRStatistics::HMConsumer::printWeirdHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
+	*out << "childClassName(isExtensible) --> parentClassName(isExtensible)\n";
 	std::map<std::string, bool> isExtensible = recorder.getIsExtensible();
 	for(auto clas : recorder.getClassHierarchy()) {
 		for(auto parent : *clas.second)	if(isExtensible[clas.first] != isExtensible[parent])
-			llvm::outs() << clas.first << "(" << isExtensible[clas.first] << ") --> " << parent << "(" << isExtensible[parent] << ")\n";
+			*out << clas.first << "(" << isExtensible[clas.first] << ") --> " << parent << "(" << isExtensible[parent] << ")\n";
 	}
 }
 
@@ -597,6 +598,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	llvm::raw_ostream* hierarchyOutput = nullptr;
 	llvm::raw_ostream* weirdHierarchyOutput = nullptr;
 	llvm::raw_ostream* overloadOutput = nullptr;
+	llvm::raw_ostream* allFunctionsOutput = nullptr;
 	llvm::raw_ostream* overrideOutput = nullptr;
 	bool useLLVMOuts = true;
 	
@@ -614,6 +616,9 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		overloadOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overloads", EC, llvm::sys::fs::F_Append);
 		assert(!EC);
 		
+		allFunctionsOutput = new llvm::raw_fd_ostream(conf.outputDir + ".allFunctions", EC, llvm::sys::fs::F_Append);
+		assert(!EC);
+		
 		overrideOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overrides", EC, llvm::sys::fs::F_Append);
 		assert(!EC);
 	}
@@ -621,6 +626,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		hierarchyOutput = &(llvm::outs());
 		weirdHierarchyOutput = &(llvm::outs());
 		overloadOutput = &(llvm::outs());
+		allFunctionsOutput = &(llvm::outs());
 		overrideOutput = &(llvm::outs());
 	}
 	
@@ -628,19 +634,25 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		printHierarchies(recorder, hierarchyOutput);
 		printWeirdHierarchies(recorder, weirdHierarchyOutput);
 	}
-	if(conf.overloading) 
-		printOverloads(overloadOutput);
+	if(conf.overloading) {
+		printOverloads(overloadOutput, false);
+		printOverloads(allFunctionsOutput, true);
+	}
 	printOverrides(overrideOutput);
 	
 	//Flush all outputs to their respective files
 	hierarchyOutput->flush();
+	weirdHierarchyOutput->flush();
 	overloadOutput->flush();
+	allFunctionsOutput->flush();
 	overrideOutput->flush();
 	
 	//Free memory
 	if(conf.outputDir.compare("-1") != 0) {
 		delete hierarchyOutput;
+		delete weirdHierarchyOutput;
 		delete overloadOutput;
+		delete allFunctionsOutput;
 		delete overrideOutput;
 	}
 	 
