@@ -155,6 +155,7 @@ namespace OMRStatistics {
 		void printHierarchy(std::string, LinkedNode*, llvm::raw_ostream*);
 		void printHierarchies(HMRecorder&, llvm::raw_ostream*);
 		void printWeirdHierarchies(HMRecorder&, llvm::raw_ostream*);
+		void printAllClasses(HMRecorder&, llvm::raw_ostream*);
 		
 		//Printing the method information
 		

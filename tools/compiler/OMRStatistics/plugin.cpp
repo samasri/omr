@@ -171,7 +171,6 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 		clang::QualType parentClassType = BC->getType();
 		CXXRecordDecl* parentDecl = parentClassType->getAsCXXRecordDecl();
 		
-		
 		std::string parentClassName = (parentDecl) ? parentDecl->getQualifiedNameAsString() : parentClassType.getAsString(); //Prioritize having the name of the CXX record over general QualTypes
 		if(!parentDecl) continue;
 		if(HMConsumer::shouldIgnoreClassName(parentClassName) || HMConsumer::shouldIgnoreClassName(currentClassName)) continue;
@@ -587,6 +586,16 @@ void OMRStatistics::HMConsumer::printWeirdHierarchies(HMRecorder& recorder, llvm
 	}
 }
 
+void OMRStatistics::HMConsumer::printAllClasses(HMRecorder& recorder, llvm::raw_ostream* out) {
+	*out << "Namespace;ClassName;isExtensible\n";
+	std::map<std::string, bool> isExtensible = recorder.getIsExtensible();
+	for(auto itr : isExtensible) { //itr: QualifiedClassName --> isExtensible
+		if(HMConsumer::shouldIgnoreClassName(itr.first)) continue;
+		std::vector<std::string>* tuple = seperateClassNameSpace(itr.first);
+		*out << tuple->at(0)/*namespace*/ << ";" << tuple->at(1)/*className*/ << ";" << itr.second << "\n";
+	}
+}
+
 void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	HMRecorder recorder(&Context);
 	recorder.TraverseDecl(Context.getTranslationUnitDecl());
@@ -597,6 +606,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
 	llvm::raw_ostream* hierarchyOutput = nullptr;
 	llvm::raw_ostream* weirdHierarchyOutput = nullptr;
+	llvm::raw_ostream* allClassesOutput = nullptr;
 	llvm::raw_ostream* overloadOutput = nullptr;
 	llvm::raw_ostream* allFunctionsOutput = nullptr;
 	llvm::raw_ostream* overrideOutput = nullptr;
@@ -613,6 +623,9 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		weirdHierarchyOutput = new llvm::raw_fd_ostream(conf.outputDir + ".weirdHierarchy", EC, llvm::sys::fs::F_Append);
 		assert(!EC);
 		
+		allClassesOutput = new llvm::raw_fd_ostream(conf.outputDir + ".allClasses", EC, llvm::sys::fs::F_Append);
+		assert(!EC);
+		
 		overloadOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overloads", EC, llvm::sys::fs::F_Append);
 		assert(!EC);
 		
@@ -625,6 +638,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	else {
 		hierarchyOutput = &(llvm::outs());
 		weirdHierarchyOutput = &(llvm::outs());
+		allClassesOutput = &(llvm::outs());
 		overloadOutput = &(llvm::outs());
 		allFunctionsOutput = &(llvm::outs());
 		overrideOutput = &(llvm::outs());
@@ -633,6 +647,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	if(conf.hierarchy)  {
 		printHierarchies(recorder, hierarchyOutput);
 		printWeirdHierarchies(recorder, weirdHierarchyOutput);
+		printAllClasses(recorder, allClassesOutput);
 	}
 	if(conf.overloading) {
 		printOverloads(overloadOutput, false);
@@ -643,6 +658,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	//Flush all outputs to their respective files
 	hierarchyOutput->flush();
 	weirdHierarchyOutput->flush();
+	allClassesOutput ->flush();
 	overloadOutput->flush();
 	allFunctionsOutput->flush();
 	overrideOutput->flush();
@@ -651,6 +667,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	if(conf.outputDir.compare("-1") != 0) {
 		delete hierarchyOutput;
 		delete weirdHierarchyOutput;
+		delete allClassesOutput;
 		delete overloadOutput;
 		delete allFunctionsOutput;
 		delete overrideOutput;

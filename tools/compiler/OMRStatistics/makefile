@@ -48,7 +48,7 @@ include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
-OUTPUTS = hierarchy weirdHierarchy overloads allFunctions overrides  
+OUTPUTS = hierarchy weirdHierarchy allClasses overloads allFunctions overrides
 
 include sources/common_amd64.mk
 include sources/common_i386.mk
@@ -76,6 +76,9 @@ output/lastCreated: $(SO)
 	@rm -f output/i386.*
 	@rm -f output/p.*
 	@rm -f output/z.*
+	@rm -f output/allFunctions
+	@rm -f output/weirdHierarchy
+	@rm -f output/sanityCheck
 
 	@make executeAMD64
 	@make executeI386
@@ -96,34 +99,19 @@ copyOriginal:
 	@echo "Copying original files..."
 	@mkdir -p "output/original (untrimmed) results/"
 	@for file in $(ARCHS) ; do \
-#@for $$output in $(OUTPUTS); do \
-#	cp output/"$$file".$$output "output/original (untrimmed) results" ; \
-#done \
-		cp output/"$$file".hierarchy "output/original (untrimmed) results" ; \
-		cp output/"$$file".weirdHierarchy "output/original (untrimmed) results" ; \
-		cp output/"$$file".overloads "output/original (untrimmed) results" ; \
-		cp output/"$$file".allFunctions "output/original (untrimmed) results" ; \
-		cp output/"$$file".overrides "output/original (untrimmed) results" ; \
+		for output in $(OUTPUTS) ; do \
+			cp output/"$$file".$$output "output/original (untrimmed) results" ; \
+		done \
 	done
 
 trimOutput:
 	@echo "Trimming output..."
 	@for file in $(ARCHS) ; do \
 		python output/trimAllOutputs.py output/"$$file" ; \
-#@for $$output in $(OUTPUTS); do \
-#	rm output/"$$file".$$output ; \
-#	mv output/"$$file".$$output.trimmed output/"$$file".$$output ; \
-#done \
-		rm output/"$$file".hierarchy ; \
-		rm output/"$$file".weirdHierarchy ; \
-		rm output/"$$file".overloads ; \
-		rm output/"$$file".allFunctions ; \
-		rm output/"$$file".overrides ; \
-		mv output/"$$file".hierarchy.trimmed output/"$$file".hierarchy ; \
-		mv output/"$$file".weirdHierarchy.trimmed output/"$$file".weirdHierarchy ; \
-		mv output/"$$file".overloads.trimmed output/"$$file".overloads ; \
-		mv output/"$$file".allFunctions.trimmed output/"$$file".allFunctions ; \
-		mv output/"$$file".overrides.trimmed output/"$$file".overrides ; \
+		for output in $(OUTPUTS); do \
+			rm output/"$$file".$$output ; \
+			mv output/"$$file".$$output.trimmed output/"$$file".$$output ; \
+		done \
 	done
 
 createTotalOutput:
@@ -131,26 +119,11 @@ createTotalOutput:
 	@python output/sanityCheck.py output > output/sanityCheck
 	@rm -f hierarchy weirdHierarchy overloads allFunctions overrides
 	@for file in $(ARCHS) ; do \
-#@for $$output in $(OUTPUTS); do \
-#	cat output/"$$file".$$output >> output/$$output ; \
-#	python output/trimOneFile.py output/$$output ; \
-#	mv output/$$output.trimmed output/$$output ; \
-#done \
-		cat output/"$$file".hierarchy >> output/hierarchy ; \
-		cat output/"$$file".weirdHierarchy >> output/weirdHierarchy ; \
-		cat output/"$$file".overloads >> output/overloads ; \
-		cat output/"$$file".allFunctions >> output/allFunctions ; \
-		cat output/"$$file".overrides >> output/overrides ; \
-		python output/trimOneFile.py output/hierarchy ; \
-		python output/trimOneFile.py output/weirdHierarchy ; \
-		python output/trimOneFile.py output/overloads ; \
-		python output/trimOneFile.py output/allFunctions ; \
-		python output/trimOneFile.py output/overrides ; \
-		mv output/hierarchy.trimmed output/hierarchy ; \
-		mv output/weirdHierarchy.trimmed output/weirdHierarchy ; \
-		mv output/overloads.trimmed output/overloads ; \
-		mv output/allFunctions.trimmed output/allFunctions ; \
-		mv output/overrides.trimmed output/overrides ; \
+		for output in $(OUTPUTS); do \
+			cat output/"$$file".$$output >> output/$$output ; \
+			python output/trimOneFile.py output/$$output ; \
+			mv output/$$output.trimmed output/$$output ; \
+		done \
 	done
 
 moveOutputToVisualization:
