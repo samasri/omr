@@ -60,7 +60,7 @@ The tool works as follows:
 5. The tool iterates through all the records in the _hierarchy_ map processing each child/parent relationship to create `Hierarchy` structures. A `Hierarchy` is a data structure that represents a hierarchy of classes, keeping track of the base class and other important information.
 6. After that, the tool iterates through the records in the _function_ map creating a `MethodTracker` class. A `MethodTracker` keeps track of the occurrence information of a unique function across all classes in a hierarchy. Hence, each _Hierarchy_ structure contains an array of `MethodTracker`s, one for each unique method.
 
-PS: More detailed algorithms for each functionality are found in the 2 files: [Collecting Method Information Algorithm.cpp](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/Collecting%20Method%20Information%20Algorithm.cpp) and [Creating Hierarchies Algorithm.md](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/Creating%20Hierarchies%20Algorithm.md)
+PS: More detailed algorithms for each functionality are found in the 2 files: [Collecting Method Information Algorithm.md](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/Collecting%20Method%20Information%20Algorithm.md) and [Creating Hierarchies Algorithm.md](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/Creating%20Hierarchies%20Algorithm.md)
 
 # Building & running OMRStatistics on different architectures
 The OMRStatistics is built in the [_SO_ target](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/makefile#L24) of the main makefile
