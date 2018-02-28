@@ -1,30 +1,30 @@
 isExtensible; Hierarchy
 0;CS2::ABitVector::iterator --> CS2::ABitVector::Cursor
-0;CS2::TableOf::Cursor --> CS2::TableOf::ConstCursor
 0;CS2::Timer --> CS2::BSDTimer
 0;TR::GlobalSingletonAllocator --> CS2::stat_allocator --> TRPersistentMemoryAllocator
 1;TR::AutomaticSymbol --> OMR::AutomaticSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
 1;TR::Block --> OMR::Block --> TR::CFGNode --> TR_Link1
 1;TR::LabelSymbol --> OMR::LabelSymbol --> TR::Symbol --> OMR::Symbol
-0;TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::i386::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
 1;TR::ResolvedMethodSymbol --> OMR::ResolvedMethodSymbol --> TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
 1;TR::StaticSymbol --> OMR::StaticSymbol --> TR::Symbol --> OMR::Symbol
 0;TR::CPU --> OMR::X86::CPU --> OMR::CPU
 1;TR::DebugEnv --> OMR::X86::DebugEnv --> OMR::DebugEnv
+1;TR::Machine --> OMR::X86::I386::Machine --> OMR::X86::Machine --> OMR::Machine
+0;TR_X86FPStackRegister --> TR::RealRegister --> OMR::X86::I386::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
+1;TR::TreeEvaluator --> OMR::X86::I386::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
 1;TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
-1;TR::Machine --> OMR::X86::i386::Machine --> OMR::X86::Machine --> OMR::Machine
 1;TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
-1;TR::TreeEvaluator --> OMR::X86::i386::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
 0;TR::AliasBuilder --> OMR::AliasBuilder
 1;TR::ArithEnv --> OMR::ArithEnv
+0;TR::BlockChecklist --> TR::Checklist
 0;TR::CFG --> OMR::CFG
 0;TR::CFGEdge --> TR_Link --> TR_Link0
 1;TR::ClassEnv --> OMR::ClassEnv
 1;TR::CodeGenPhase --> OMR::CodeGenPhase
-1;TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::i386::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
+1;TR::CodeGenerator --> TestCompiler::CodeGenerator --> OMR::X86::I386::CodeGenerator --> OMR::X86::CodeGenerator --> OMR::CodeGenerator
 1;TR::Compilation --> OMR::Compilation
 1;TR::CompilerEnv --> OMR::CompilerEnv
-0;TR::DataType --> OMR::DataType
+1;TR::DataType --> OMR::DataType
 0;TR::DebugCounter --> TR::DebugCounterBase
 0;TR::DebugCounterAggregation --> TR::DebugCounterBase
 0;TR::Environment --> OMR::Environment
@@ -32,11 +32,13 @@ isExtensible; Hierarchy
 1;TR::GCStackAtlas --> OMR::GCStackAtlas
 1;TR::IL --> OMR::IL
 0;TR::ILOpCode --> OMR::ILOpCode
+1;TR::IO --> OMR::IO
 1;TR::KnownObjectTable --> OMR::KnownObjectTable
 0;TR::Monitor --> OMR::Monitor
 1;TR::Node --> OMR::Node
+0;TR::NodeChecklist --> TR::Checklist
 0;TR::ObjectModel --> TestCompiler::ObjectModel --> OMR::ObjectModel
-0;TR::Optimizer --> TestCompiler::Optimizer --> OMR::Optimizer
+0;TR::Optimizer --> OMR::Optimizer
 1;TR::Options --> OMR::Options
 0;TR::PersistentInfo --> OMR::PersistentInfo
 0;TR::Region::Instance --> TR::Region::Destructable
@@ -62,39 +64,33 @@ isExtensible; Hierarchy
 0;TR_HashTabString --> TR_HashTab
 0;TR_HeapMemory --> TR_MemoryAllocationType
 0;TR_Memory --> TR_MemoryBase
+0;TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
+0;TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
 0;TR_PersistentMemory --> TR_MemoryBase
 0;TR_PostDominators --> TR_Dominators
 0;TR_PredecessorIterator --> TR_CFGIterator
 0;TR_StackMemory --> TR_MemoryAllocationType
 0;TR_SuccessorIterator --> TR_CFGIterator
+0;TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
 0;TR_SymRefIterator --> TR_BitVectorIterator
+0;TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
 0;TR_X86OpCode::Estimator --> TR_X86OpCode::BufferBase
 0;TR_X86OpCode::Writer --> TR_X86OpCode::BufferBase
 0;TR_X86ScratchRegisterManager --> TR_ScratchRegisterManager
 1;TR::ParameterSymbol --> OMR::ParameterSymbol --> TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
 0;TR::CFGNode --> TR_Link1
-1;TR::IO --> OMR::IO
-0;TR_NodeKillAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
-0;TR_NodeUseAliasSetInterface --> TR_NodeAliasSetInterface --> TR_AliasSetInterface
-0;TR_UseDefAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
-0;TR_UseOnlyAliasSetInterface --> TR_SymAliasSetInterface --> TR_AliasSetInterface
 0;TR::Recompilation --> OMR::Recompilation
-0;TR::BlockChecklist --> TR::Checklist
-0;TR::NodeChecklist --> TR::Checklist
 1;TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-1;TR::Optimization --> OMR::Optimization --> TR::Allocatable
-1;TR::OptimizationManager --> OMR::OptimizationManager --> TR::Allocatable
 1;TR::RegisterMappedSymbol --> OMR::RegisterMappedSymbol --> TR::Symbol --> OMR::Symbol
 0;TR::AllBlockIterator --> TR::BlockIterator
 0;TR::PostorderNodeOccurrenceIterator --> TR::NodeOccurrenceIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
-0;TR::OptimizationData --> TR::Allocatable
-0;TR::OptimizationPolicy --> TR::Allocatable
-0;TR::OptimizationUtil --> TR::Allocatable
+1;TR::OptimizationManager --> OMR::OptimizationManager
 0;TR::PostorderNodeIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
 0;TR::PreorderNodeIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
 0;TR::PreorderNodeOccurrenceIterator --> TR::NodeOccurrenceIterator --> TR::NodeIterator --> TR::TreeTopIteratorImpl
 0;TR::ReversePostorderSnapshotBlockIterator --> TR::BlockIterator
 0;TR::TreeTopIterator --> TR::TreeTopIteratorImpl
+0;TR::TreeTopOrderExtendedBlockIterator --> TR::BlockIterator
 0;TR_InterferenceGraph --> TR_IGBase
 1;TR::MonitorTable --> OMR::MonitorTable
 0;RandomExercizer --> TR_HasRandomGenerator
@@ -136,13 +132,10 @@ isExtensible; Hierarchy
 1;TR::IlGeneratorMethodDetails --> TestCompiler::IlGeneratorMethodDetails --> OMR::IlGeneratorMethodDetails
 0;TR::PartialInliningIlGenRequest --> TR::InliningIlGenRequest --> TR::IlGenRequest --> OMR::IlGenRequest
 0;TR_Inliner --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_Inliner --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
-0;OMR_InlinerPolicy --> TR::OptimizationPolicy --> TR::Allocatable
+0;OMR_InlinerPolicy --> TR::OptimizationPolicy
 0;OMR_InlinerPolicy --> OMR_InlinerHelper
-0;OMR_InlinerUtil --> TR::OptimizationUtil --> TR::Allocatable
+0;OMR_InlinerUtil --> TR::OptimizationUtil
 0;OMR_InlinerUtil --> OMR_InlinerHelper
-0;TR::GlobalSet::DenseSet --> TR::GlobalSet::Set
-0;TR::GlobalSet::SparseSet --> TR::GlobalSet::Set
 1;TR::TransformUtil --> OMR::TransformUtil
 0;TR_DirectCallSite --> TR_CallSite --> TR_Link --> TR_Link0
 0;TR_CallStack --> TR_Link --> TR_Link0
@@ -151,13 +144,11 @@ isExtensible; Hierarchy
 0;TR_InlinerTracer --> TR_LogTracer
 0;TR_RegisterCandidate --> TR_Link --> TR_Link0
 0;TR_TrivialInliner --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_TrivialInliner --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 1;TR::MethodSymbol --> OMR::MethodSymbol --> TR::Symbol --> OMR::Symbol
 1;TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
 0;TR_LoadExtensions --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LoadExtensions --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 1;TR::RegisterPair --> OMR::RegisterPair --> TR::Register --> OMR::X86::Register --> OMR::Register
-0;TR_HashValueNumberInfo --> TR_ValueNumberInfo --> TR::Allocatable
+0;TR_HashValueNumberInfo --> TR_ValueNumberInfo
 0;OMR::SystemSegmentProvider --> TR::SegmentAllocator --> TR::SegmentProvider
 0;TR_LinuxCallStackIterator --> TR_CallStackIterator
 0;__cxxabiv1::__pointer_to_member_type_info --> __cxxabiv1::__pbase_type_info
@@ -165,66 +156,45 @@ isExtensible; Hierarchy
 0;__cxxabiv1::__si_class_type_info --> __cxxabiv1::__class_type_info
 0;__cxxabiv1::__vmi_class_type_info --> __cxxabiv1::__class_type_info
 0;TR_AsyncCheckInsertion --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_AsyncCheckInsertion --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
-0;TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_BackwardUnionSingleBitContainerAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_Delayedness --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_Earliestness --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_FlowSensitiveEscapeAnalysis --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_Isolatedness --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_Latestness --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_LiveOnAllPaths --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+0;TR_GlobalAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_Liveness --> TR_BackwardUnionBitVectorAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_BackwardUnionSingleBitContainerAnalysis --> TR_BackwardUnionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_Delayedness --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_Earliestness --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_FlowSensitiveEscapeAnalysis --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_Isolatedness --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_Latestness --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_LiveOnAllPaths --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
 0;TR_LocalAnticipatability --> TR_LocalAnalysis
 0;TR_LocalTransparency --> TR_LocalAnalysis
-0;TR_ReachingBlocks --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_ReachingDefinitions --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_RegisterAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_RegisterAvailability --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_UnionSingleBitContainerAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
-0;TR_UseDefInfo --> TR::Allocatable
+0;TR_OSRLiveVariableInformation --> TR_LiveVariableInformation
+0;TR_ReachingDefinitions --> TR_UnionBitVectorAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_RegisterAnticipatability --> TR_BackwardIntersectionBitVectorAnalysis --> TR_BackwardIntersectionDFSetAnalysis --> TR_BackwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_RegisterAvailability --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
+0;TR_UnionSingleBitContainerAnalysis --> TR_UnionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
 0;TR_CatchBlockRemover --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_CatchBlockRemover --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_CFGSimplifier --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_CFGSimplifier --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_CompactLocals --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_CompactLocals --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_CopyPropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_CopyPropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_DeadStoreElimination --> TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_DeadStoreElimination --> TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR::DeadTreesElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::DeadTreesElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_ExpressionsSimplification --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_ExpressionsSimplification --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_FieldPrivatizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_FieldPrivatizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_IsolatedStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_RedundantInductionVarElimination --> TR_LoopCanonicalizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_RedundantInductionVarElimination --> TR_LoopCanonicalizer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_LoopInverter --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LoopInverter --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_InductionVariableAnalysis --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_InductionVariableAnalysis --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_DerivedInductionVariable --> TR_BasicInductionVariable
 0;TR_GeneralLoopUnroller --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_GeneralLoopUnroller --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_IVTypeTransformer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_IVTypeTransformer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_LoopStrider --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LoopStrider --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_PrimaryInductionVariable --> TR_BasicInductionVariable
 0;TR_GlobalRegisterAllocator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_GlobalRegisterAllocator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_LiveRangeSplitter --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LiveRangeSplitter --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;multipleJumpSuccessorIterator --> SuccessorIterator
 0;switchSuccessorIterator --> SuccessorIterator
 0;TR_LocalLiveRangeReduction --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LocalLiveRangeReduction --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_LocalReordering --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LocalReordering --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_Arraycmp --> TR_ArrayLoop
 0;TR_Arraycopy --> TR_ArrayLoop
 0;TR_Arrayset --> TR_ArrayLoop
@@ -234,105 +204,62 @@ isExtensible; Hierarchy
 0;TR_CharToByteArraycopy --> TR_ArrayLoop
 0;TR_LRAddressTree --> TR_AddressTree
 0;TR_LoopReducer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LoopReducer --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_RangeTranslateTable --> TR_TranslateTable
 0;TR_SetTranslateTable --> TR_TranslateTable
 0;TR_LoopReplicator --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LoopReplicator --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_LoopSpecializer --> TR_LoopVersioner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LoopSpecializer --> TR_LoopVersioner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR::LocalCSE --> OMR::LocalCSE --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::LocalCSE --> OMR::LocalCSE --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR::LocalDeadStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::LocalDeadStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_ArraysetStoreElimination --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_ArraysetStoreElimination --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_CleanseTrees --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_CleanseTrees --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_BlockShuffling --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_BlockShuffling --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_BlockSplitter --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_BlockSplitter --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_BlockSplitter::TR_BinaryHeap --> TR_Array
 0;TR_CheckcastAndProfiledGuardCoalescer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_CheckcastAndProfiledGuardCoalescer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_ColdBlockOutlining --> TR_ColdBlockMarker --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_ColdBlockOutlining --> TR_ColdBlockMarker --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_CompactNullChecks --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_CompactNullChecks --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_EliminateRedundantGotos --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_EliminateRedundantGotos --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_ExtendBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_ExtendBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_HoistBlocks --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_HoistBlocks --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_InvariantArgumentPreexistence --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_InvariantArgumentPreexistence --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_LongRegAllocation --> TR_Rematerialization --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_LongRegAllocation --> TR_Rematerialization --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_OrderBlocks --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_OrderBlocks --> TR_BlockOrderingOptimization --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_PeepHoleBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_PeepHoleBasicBlocks --> TR_BlockManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_ProfiledNodeVersioning --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_ProfiledNodeVersioning --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_SimplifyAnds --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_SimplifyAnds --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_TrivialBlockExtension --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_TrivialBlockExtension --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_TrivialDeadTreeRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_TrivialDeadTreeRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR::Simplifier --> OMR::Simplifier --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::Simplifier --> OMR::Simplifier --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_OrderedBlockList --> List --> ListBase
+0;TR::RecognizedCallTransformer --> OMR::RecognizedCallTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
 0;OMR::ValuePropagation::ValueConstraint --> TR_HedgeNode
 0;OMR::ValuePropagation::ValueConstraintHandler --> TR_HedgeTreeHandler
 0;TR::ArraycopyTransformation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::ArraycopyTransformation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR::GlobalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::GlobalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR::LocalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::LocalValuePropagation --> TR::ValuePropagation --> OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR::RegDepCopyRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR::RegDepCopyRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
-0;TR_ExceptionCheckMotion --> TR_DataFlowAnalysis --> TR::Allocatable
+0;TR_ExceptionCheckMotion --> TR_DataFlowAnalysis
 0;TR_GeneralSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_GeneralSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_IndexExprManipulator --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_IndexExprManipulator --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_InnerPreexistence --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_InnerPreexistence --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
-0;TR_LiveOnNotAllPaths --> TR::Allocatable
 0;TR_OSRDefAnalysis --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_OSRDefAnalysis --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
-0;TR_OSRDefInfo --> TR_UseDefInfo --> TR::Allocatable
+0;TR_OSRDefInfo --> TR_UseDefInfo
 0;TR_OSRExceptionEdgeRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_OSRExceptionEdgeRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_OSRLiveRangeAnalysis --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_OSRLiveRangeAnalysis --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_PartialRedundancy --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_PartialRedundancy --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_PrefetchInsertion --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_PrefetchInsertion --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_RedundantAsyncCheckRemoval --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_RedundantAsyncCheckRemoval --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
-0;TR_RedundantExpressionAdjustment --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis --> TR::Allocatable
+0;TR_RedundantExpressionAdjustment --> TR_IntersectionBitVectorAnalysis --> TR_IntersectionDFSetAnalysis --> TR_ForwardDFSetAnalysis --> TR_BasicDFSetAnalysis --> TR_DataFlowAnalysis
 0;TR_ShrinkWrap --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_ShrinkWrap --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_StripMiner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_StripMiner --> TR_LoopTransformer --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_TrivialSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_TrivialSinkStores --> TR_SinkStores --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_VirtualGuardHeadMerger --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_VirtualGuardHeadMerger --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_VirtualGuardTailSplitter --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;TR_VirtualGuardTailSplitter --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_CanReachGivenBlocks --> TR_BackwardReachability --> TR_ReachabilityAnalysis
 0;TR_CanBeReachedFromCatchBlock --> TR_ForwardReachability --> TR_ReachabilityAnalysis
 0;TR_CanBeReachedWithoutExceptionEdges --> TR_ForwardReachabilityWithoutExceptionEdges --> TR_ReachabilityAnalysis
 0;TR_CanReachNonColdBlocks --> TR_BackwardReachability --> TR_ReachabilityAnalysis
 0;OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR_HasRandomGenerator
-0;OMR::ValuePropagation --> TR::Optimization --> OMR::Optimization --> TR::Allocatable
 0;TR_StatsHisto --> TR_Stats
 0;TR_StatsInterval --> TR_Stats
 1;TR::AheadOfTimeCompile --> OMR::AheadOfTimeCompile
@@ -355,7 +282,7 @@ isExtensible; Hierarchy
 0;TR::UnresolvedDataSnippet --> OMR::UnresolvedDataSnippet --> TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
 1;TR::MemoryReference --> OMR::X86::MemoryReference --> OMR::MemoryReference
 0;TR::IA32ConstantDataSnippet --> TR::IA32DataSnippet --> TR::Snippet --> OMR::X86::Snippet --> OMR::Snippet
-0;TR_X86ComputeCC --> TR::TreeEvaluator --> OMR::X86::i386::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
+0;TR_X86ComputeCC --> TR::TreeEvaluator --> OMR::X86::I386::TreeEvaluator --> OMR::X86::TreeEvaluator --> OMR::TreeEvaluator
 0;TR::AMD64Imm64SymInstruction --> TR::AMD64Imm64Instruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 0;TR::AMD64RegImm64SymInstruction --> TR::AMD64RegImm64Instruction --> TR::X86RegInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 0;TR::X86AlignmentInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
@@ -383,7 +310,6 @@ isExtensible; Hierarchy
 0;TR::X86RegMemImmInstruction --> TR::X86RegMemInstruction --> TR::X86RegInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 0;TR::X86RegRegImmInstruction --> TR::X86RegRegInstruction --> TR::X86RegInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 0;TR::X86RegRegRegInstruction --> TR::X86RegRegInstruction --> TR::X86RegInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
-0;TR::X86RestoreVMThreadInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 0;TR::X86VFPCallCleanupInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 0;TR::X86VFPDedicateInstruction --> TR::X86RegMemInstruction --> TR::X86RegInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
 0;TR::X86VFPReleaseInstruction --> TR::Instruction --> OMR::X86::Instruction --> OMR::Instruction
@@ -402,37 +328,21 @@ isExtensible; Hierarchy
 1;TR::Register --> OMR::X86::Register --> OMR::Register
 0;TR::IA32SystemLinkage --> TR::X86SystemLinkage --> TR::Linkage --> OMR::X86::Linkage --> OMR::Linkage
 1;TR::RegisterIterator --> OMR::X86::RegisterIterator
-1;TR::RealRegister --> OMR::X86::i386::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
-1;TR::CodeCache --> OMR::CodeCache --> OMR::CodeCacheBase
-0;OMR::CodeCache::CacheCriticalSection --> OMR::CriticalSection
-0;OMR::CodeCacheManager::CacheListCriticalSection --> OMR::CriticalSection
-0;OMR::CodeCacheManager::RepositoryMonitorCriticalSection --> OMR::CriticalSection
-1;TR::CodeCacheConfig --> OMR::CodeCacheConfig
-1;TR::CodeCacheManager --> TestCompiler::CodeCacheManager --> OMR::CodeCacheManager
-0;TR::FrontEnd --> TestCompiler::FrontEnd --> TR::FEBase --> TR::FECommon --> TR_FrontEnd --> TR_Uncopyable
-0;TestCompiler::BinaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::JitConfig --> TR::JitConfig
-0;TestCompiler::ChildlessUnaryOpIlInjector --> TestCompiler::UnaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::CmpBranchOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TR::IlType --> OMR::IlType
-0;TR::IlValue --> OMR::IlValue
-0;TR::TypeDictionary --> OMR::TypeDictionary
-0;TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::StoreOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::TernaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::UnaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::BarIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::FooBarTest --> TestCompiler::TestDriver
+1;TR::RealRegister --> OMR::X86::I386::RealRegister --> OMR::X86::RealRegister --> OMR::RealRegister --> TR::Register --> OMR::X86::Register --> OMR::Register
 0;JITILBuilderTest_ControlFlowTest_Test --> testing::Test
 0;JITILBuilderTest_NestedControlFlowLoopTest_Test --> testing::Test
 0;JITTest_BuilderTest_Test --> testing::Test
+0;TR::IlType --> OMR::IlType
+0;TR::IlValue --> OMR::IlValue
 0;TestCompiler::AbsDiffIfThenElseMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
+0;TR::TypeDictionary --> OMR::TypeDictionary
 0;TestCompiler::BasicForLoopDownMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::BasicForLoopUpMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::IndirectStoreIlInjector --> TestCompiler::BinaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::BuilderTest --> TestCompiler::TestDriver
 0;TestCompiler::CallIlInjector --> TestCompiler::UnaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
+0;TestCompiler::ChildlessUnaryOpIlInjector --> TestCompiler::UnaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
+0;TestCompiler::CmpBranchOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::DoWhileFibonnaciMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::DoWhileIfThenElseMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::DoWhileWithBreakAndContinueMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
@@ -449,7 +359,8 @@ isExtensible; Hierarchy
 0;TestCompiler::OpCodesTest --> TestCompiler::TestDriver
 0;TestCompiler::RecursiveFibonnaciMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::ShootoutNestedLoopMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
-0;TestCompiler::SubIfFalseThenMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
+0;TestCompiler::StoreOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
+0;TestCompiler::TernaryOpIlInjector --> TestCompiler::OpIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::WhileDoFibonnaciMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::WhileDoIfThenElseMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::WhileDoWithBreakAndContinueMethod --> TR::MethodBuilder --> TestCompiler::MethodBuilder --> OMR::MethodBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
@@ -468,6 +379,9 @@ isExtensible; Hierarchy
 0;testing::internal::ThreadLocal::ValueHolder --> testing::internal::ThreadLocalValueHolderBase
 0;testing::internal::ThreadWithParam --> testing::internal::ThreadWithParamBase
 0;JITTest_FooBarTest_Test --> testing::Test
+0;TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
+0;TestCompiler::BarIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
+0;TestCompiler::FooBarTest --> TestCompiler::TestDriver
 0;TestCompiler::FooIlInjector --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
 0;TestCompiler::LimitFileTest_CheckVLogTest_Test --> TestCompiler::LimitFileTest --> testing::Test
 0;TestCompiler::LimitFileTest_CreateVLogTest_Test --> TestCompiler::LimitFileTest --> testing::Test
@@ -521,6 +435,14 @@ isExtensible; Hierarchy
 0;JITX86OpCodesTest_UnsupportedOpCodesTest_Test --> testing::Test
 0;JITX86OpCodesTest_X86AddressTest_Test --> testing::Test
 0;TestCompiler::X86OpCodesTest --> TestCompiler::OpCodesTest --> TestCompiler::TestDriver
+1;TR::CodeCache --> OMR::CodeCache --> OMR::CodeCacheBase
+0;OMR::CodeCache::CacheCriticalSection --> OMR::CriticalSection
+0;OMR::CodeCacheManager::CacheListCriticalSection --> OMR::CriticalSection
+0;OMR::CodeCacheManager::RepositoryMonitorCriticalSection --> OMR::CriticalSection
+1;TR::CodeCacheConfig --> OMR::CodeCacheConfig
+1;TR::CodeCacheManager --> TestCompiler::CodeCacheManager --> OMR::CodeCacheManager
+0;TR::FrontEnd --> TestCompiler::FrontEnd --> TR::FEBase --> TR::FECommon --> TR_FrontEnd --> TR_Uncopyable
+0;TestCompiler::JitConfig --> TR::JitConfig
 0;TR::DefaultCompilationStrategy --> TR::CompilationStrategy
 0;TR::DebugSegmentProvider --> TR::SegmentAllocator --> TR::SegmentProvider
 0;TR::BytecodeBuilder --> OMR::BytecodeBuilder --> TR::IlBuilder --> TestCompiler::IlBuilder --> OMR::IlBuilder --> TR::IlInjector --> TestCompiler::IlInjector --> OMR::IlInjector --> TR_IlGenerator
@@ -529,3 +451,4 @@ isExtensible; Hierarchy
 0;OMR::StructType --> TR::IlType --> OMR::IlType
 0;OMR::UnionType --> TR::IlType --> OMR::IlType
 1;TR::CodeCacheMemorySegment --> OMR::CodeCacheMemorySegment
+1;TR::ELFRelocationResolver --> OMR::ELFRelocationResolver

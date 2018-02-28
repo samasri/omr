@@ -99,7 +99,8 @@ nameIndex = path.index('getDatabaseSQL.py')
 path = path[:nameIndex]
 
 allFunctions = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
-hierarchy = csv.reader(open(path + '../visualization/Hierarchy/hierarchy','r'), delimiter=";")
+allClasses = csv.reader(open(path + 'allClasses','r'), delimiter=";")
+
 
 maxFunctionNameLength = -1
 maxSignatureLength = -1
@@ -130,7 +131,7 @@ classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 # Fill tables
 classToIDMap = {}
 id = 1
-for row in hierarchy:
+for row in allClasses:
 	#['ID', 'Namespace', 'ClassName', 'IsExtensible']
 	isExtensible = row[0]
 	classes = row[1].split(' --> ')

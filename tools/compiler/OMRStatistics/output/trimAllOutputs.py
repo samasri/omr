@@ -3,18 +3,14 @@
 #Example command: python trim3Outputs.py amd64
 
 import sys
+
+outputs = ['hierarchy', 'weirdHierarchy', 'allClasses', 'overloads', 'allFunctions', 'overrides']
+
 reads = []
 writes = []
-reads.append(open(sys.argv[1] + '.hierarchy','r'))
-writes.append(open(sys.argv[1] + '.hierarchy.trimmed', 'w'))
-reads.append(open(sys.argv[1] + '.overloads','r'))
-writes.append(open(sys.argv[1] + '.overloads.trimmed', 'w'))
-reads.append(open(sys.argv[1] + '.overrides','r'))
-writes.append(open(sys.argv[1] + '.overrides.trimmed', 'w'))
-reads.append(open(sys.argv[1] + '.weirdHierarchy','r'))
-writes.append(open(sys.argv[1] + '.weirdHierarchy.trimmed', 'w'))
-reads.append(open(sys.argv[1] + '.allFunctions','r'))
-writes.append(open(sys.argv[1] + '.allFunctions.trimmed', 'w'))
+for output in outputs:
+	reads.append(open(sys.argv[1] + '.' + output,'r'))
+	writes.append(open(sys.argv[1] + '.' + output + '.trimmed', 'w'))
 
 def trim(f, r):
 	while True:
