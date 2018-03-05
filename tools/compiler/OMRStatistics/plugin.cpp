@@ -106,16 +106,22 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			size_t colonIndexNew = loc.find(':');
 			std::string oldLoc = result.first->second->location.substr(0, colonIndexOld);
 			std::string newLoc = loc.substr(0, colonIndexNew);
-			//assert(oldLoc.compare(newLoc) == 0);
+			
 			if (oldLoc.compare(newLoc) != 0) {
 				std::string extensionOld = oldLoc.substr(oldLoc.size() - 3, 3);
 				std::string extensionNew = newLoc.substr(newLoc.size() - 3, 3);
-				if((extensionOld.compare("hpp") == 0 && extensionNew.compare("hpp") == 0) || (extensionOld.compare("cpp") == 0 && extensionNew.compare("cpp") == 0)) {
+				bool oldIsHPP = extensionOld.compare("hpp") == 0;
+				bool oldIsCPP = extensionOld.compare("cpp") == 0;
+				bool newIsHPP = extensionNew.compare("hpp") == 0;
+				bool newIsCPP = extensionNew.compare("cpp") == 0;
+				assert((oldIsHPP && newIsCPP) || (oldIsCPP && newIsHPP));
+				if(oldIsCPP && newIsHPP) result.first->second->location = loc;
+				/*If assert fails: (There are more than 2 declarations of a unique function)
 					llvm::outs() << className << "::" << *function << "\n";
-					llvm::outs() << "\t" << extensionOld << " -- " << extensionNew << "\n";
 					llvm::outs() << "\tExisting Location: " << result.first->second->location << "\n";
 					llvm::outs() << "\tNew Location: " << loc << "\n";
-				}
+				*/
+				
 			}
 		}
 		
@@ -599,6 +605,14 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 	}
 }
 
+void OMRStatistics::HMConsumer::printFunctionLocations(HMRecorder& recorder, llvm::raw_ostream* out) {
+	*out << "FunctionQualifiedName; Location;\n";
+	std::map<std::string, FunctionDeclInfo*> functionDeclInfo = recorder.getFunctionDeclInfo();
+	for(auto itr : functionDeclInfo) {
+		*out << itr.first << ";" << itr.second->location << "\n";
+	}
+}
+
 void OMRStatistics::HMConsumer::printHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
 	*out << "isExtensible; Hierarchy\n";
 	for(Hierarchy* h : hierarchies) {
@@ -642,15 +656,10 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
 	
-	std::vector<std::string> outputFiles = {".hierarchy", ".weirdHierarchy", ".allClasses", ".overloads", ".allFunctions", ".functionLocationOutput", ".overrides"};
+	std::vector<std::string> outputFiles = {".hierarchy", ".weirdHierarchy", ".allClasses", ".overloads", ".allFunctions", ".functionLocation", ".overrides"};
 	std::vector<llvm::raw_ostream*>* outputs = new std::vector<llvm::raw_ostream*>();
 	
 	bool useLLVMOuts = true;
-	
-	/*for(auto itr : recorder.getFunctionDeclInfo()) {
-		llvm::outs() << itr.first << "\n";
-		llvm::outs() << "\t" << itr.second->location << "\n";
-	}*/
 	
 	if(conf.outputDir.compare("-1") != 0) {
 		useLLVMOuts = false;
@@ -672,7 +681,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		printOverloads(outputs->at(3)/*overloadOutput*/, false);
 		printOverloads(outputs->at(4)/*allFunctionsOutput*/, true);
 	}
-	/*printFunctionLocations(outputs->at(5));*/
+	printFunctionLocations(recorder, outputs->at(5));
 	printOverrides(outputs->at(6));
 	
 	//Flush all outputs to their respective files
