@@ -17,13 +17,14 @@ namespace OMRStatistics {
 	struct FunctionDeclInfo {
 		bool isImplicit;
 		bool isVirtual;
-		FunctionDeclInfo(bool isImplicit, bool isVirtual);
+		std::string location;
+		FunctionDeclInfo(bool isImplicit, bool isVirtual, std::string location);
 	};
 	
 	class HMRecorder : public RecursiveASTVisitor<HMRecorder> {
 	private:
 		//Mapping between each class and all its methods
-		std::map<std::string, std::unordered_set<std::string*>> Class2Methods;
+		std::map<std::string, std::unordered_set<std::string*>> class2Methods;
 		//Mapping between each class and whether its extensible or not
 		std::map<std::string, bool> isExtensible;
 		//Mapping between each function signature and if its implicit or not
@@ -37,8 +38,8 @@ namespace OMRStatistics {
 		void setClass2Methods(std::map<std::string, std::unordered_set<std::string*>>);
 		std::map<std::string, std::vector<std::string>*> getClassHierarchy();
 		void setClassHierarchy(std::map<std::string, std::vector<std::string>*>);
-		std::map<std::string, FunctionDeclInfo*> getfunctionDeclInfo();
-		void setfunctionDeclInfo(std::map<std::string, FunctionDeclInfo*>);
+		std::map<std::string, FunctionDeclInfo*> getFunctionDeclInfo();
+		void setFunctionDeclInfo(std::map<std::string, FunctionDeclInfo*>);
 		std::map<std::string, bool> getIsExtensible();
 		void setIsExtensible(std::map<std::string, bool>);
 		
@@ -56,6 +57,8 @@ namespace OMRStatistics {
 		bool VisitCXXRecordDecl(const CXXRecordDecl *decl);
 		//Prints the location of a specific declaration
 		static std::string printLoc(const clang::CXXRecordDecl*);
+		static std::string printLoc(const CXXMethodDecl*);
+		size_t findLastStringIn(std::string input, char key);
 		std::string printLoc(clang::CXXMethodDecl*);
 	};
 	
@@ -160,8 +163,8 @@ namespace OMRStatistics {
 		//Printing the method information
 		
 		//Judges whether we should ignore this namespace (if its not related to the project, like std classes)
-		static bool shouldIgnoreNamespace(std::string nameSpace);
-		static bool shouldIgnoreClassName(std::string nameSpace);
+		static bool shouldIgnoreNamespace(std::string);
+		static bool shouldIgnoreClassName(std::string);
 		
 		std::vector<std::string>* seperateClassNameSpace(std::string input);
 		size_t findLastStringIn(std::string input, std::string key);

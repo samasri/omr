@@ -34,14 +34,15 @@ clean:
 sample: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/codegen/OMRCodeGenerator.cpp
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/CodeGenOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/codegen/OMRCodeGenerator.cpp
 #-Xclang -plugin-arg-$(PL) -Xclang "./tests/CodeGenOut"
 #Add above between CC1_MAINARG and DEFINES
 
 sample2: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./i386CodeGenOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/x/i386/codegen/OMRCodeGenerator.cpp
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./i386CodeGenOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/optimizer/BitVectorAnalysis.cpp
+	
 
 # Running test cases
 include tests.mk
@@ -135,23 +136,23 @@ moveOutputToVisualization:
 executeAMD64: $(SO)
 	@for file in $(TARGETS_AMD64) ; do \
 	echo "(Arch: amd64)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/amd64"  $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $$file ;\
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/amd64"  $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $$file >> out ;\
 	done
 
 executeI386: $(SO)
 	@for file in $(TARGETS_I386) ; do \
 	echo "(Arch: i386)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/i386"  $(DEFINES_I386) $(PLUGIN_INCLUDES_I386) -c $$file ;\
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/i386"  $(DEFINES_I386) $(PLUGIN_INCLUDES_I386) -c $$file >> out ;\
 	done
 
 executeP: $(SO)
 	@for file in $(TARGETS_P) ; do \
 	echo "(Arch: Power)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/p"  $(DEFINES_P) $(PLUGIN_INCLUDES_P) -c $$file ;\
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/p"  $(DEFINES_P) $(PLUGIN_INCLUDES_P) -c $$file >> out ;\
 	done
 
 executeZ: $(SO)
 	@for file in $(TARGETS_Z) ; do \
 	echo "(Arch: Z)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/z"  $(DEFINES_Z) $(PLUGIN_INCLUDES_Z) -c $$file ;\
+	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/z"  $(DEFINES_Z) $(PLUGIN_INCLUDES_Z) -c $$file >> out ;\
 	done

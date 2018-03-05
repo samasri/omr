@@ -36,24 +36,25 @@
 #include "plugin.hpp"
 #include <sstream>
 
-OMRStatistics::FunctionDeclInfo::FunctionDeclInfo(bool isImplicit, bool isVirtual) {
+OMRStatistics::FunctionDeclInfo::FunctionDeclInfo(bool isImplicit, bool isVirtual, std::string location) {
 	this->isImplicit = isImplicit;
 	this->isVirtual = isVirtual;
+	this->location = location;
 }
 
-std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::HMRecorder::getClass2Methods() {return Class2Methods;}
+std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::HMRecorder::getClass2Methods() {return class2Methods;}
 
-void OMRStatistics::HMRecorder::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> Class2Methods) {this->Class2Methods = Class2Methods;}
+void OMRStatistics::HMRecorder::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> class2Methods) {this->class2Methods = class2Methods;}
 
 std::map<std::string, std::vector<std::string>*> OMRStatistics::HMRecorder::getClassHierarchy() {return classHierarchy;}
 
 void OMRStatistics::HMRecorder::setClassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {this->classHierarchy = classHierarchy;}
 
-std::map<std::string, OMRStatistics::FunctionDeclInfo*> OMRStatistics::HMRecorder::getfunctionDeclInfo() {
+std::map<std::string, OMRStatistics::FunctionDeclInfo*> OMRStatistics::HMRecorder::getFunctionDeclInfo() {
 	return functionDeclInfo;
 }
 
-void OMRStatistics::HMRecorder::setfunctionDeclInfo(std::map<std::string, FunctionDeclInfo*>) {
+void OMRStatistics::HMRecorder::setFunctionDeclInfo(std::map<std::string, FunctionDeclInfo*>) {
 	this->functionDeclInfo = functionDeclInfo;
 }
 
@@ -81,6 +82,7 @@ bool OMRStatistics::HMRecorder::checkExtensibility(const CXXRecordDecl* declIn) 
 	   
 void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
+	if(HMConsumer::shouldIgnoreClassName(className)) return;
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
 		//Get function name with parameter types (AKA: recreate function signature)
@@ -95,18 +97,37 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			function->replace(function->end()-1, function->end(), "");
 			*function += ")";
 		}
-		FunctionDeclInfo* info = new FunctionDeclInfo((*A)->isImplicit(), (*A)->isVirtual());
-		functionDeclInfo.emplace(*function, info);
+		//Save function information
+		FunctionDeclInfo* info = new FunctionDeclInfo((*A)->isImplicit(), (*A)->isVirtual(), printLoc(*A));
+		auto result = functionDeclInfo.emplace(className + "::" + *function, info);
+		if(!result.second) { //If function already exists, assert that it is the same declaration (same location) visited more than once
+			std::string loc = printLoc(*A);
+			size_t colonIndexOld = result.first->second->location.find(':');
+			size_t colonIndexNew = loc.find(':');
+			std::string oldLoc = result.first->second->location.substr(0, colonIndexOld);
+			std::string newLoc = loc.substr(0, colonIndexNew);
+			//assert(oldLoc.compare(newLoc) == 0);
+			if (oldLoc.compare(newLoc) != 0) {
+				std::string extensionOld = oldLoc.substr(oldLoc.size() - 3, 3);
+				std::string extensionNew = newLoc.substr(newLoc.size() - 3, 3);
+				if((extensionOld.compare("hpp") == 0 && extensionNew.compare("hpp") == 0) || (extensionOld.compare("cpp") == 0 && extensionNew.compare("cpp") == 0)) {
+					llvm::outs() << className << "::" << *function << "\n";
+					llvm::outs() << "\t" << extensionOld << " -- " << extensionNew << "\n";
+					llvm::outs() << "\tExisting Location: " << result.first->second->location << "\n";
+					llvm::outs() << "\tNew Location: " << loc << "\n";
+				}
+			}
+		}
 		
-		auto iterator = Class2Methods.find(className);
-		if(iterator != Class2Methods.end()) { //If the class was already encountered before, pull methods vector from Class2Methods
+		auto iterator = class2Methods.find(className);
+		if(iterator != class2Methods.end()) { //If the class was already encountered before, pull methods vector from class2Methods
 			std::unordered_set<std::string*>* methods = &(iterator->second);
 			methods->insert(function);
 		}
 		else { //If the class in new
 			std::unordered_set<std::string*> methods;
 			methods.insert(function);
-			Class2Methods.emplace(className, methods);
+			class2Methods.emplace(className, methods);
 		}
 	}
 }
@@ -145,15 +166,33 @@ std::string OMRStatistics::HMRecorder::printLoc(const clang::CXXRecordDecl* d) {
 	return result;
 }
 
+std::string OMRStatistics::HMRecorder::printLoc(const CXXMethodDecl* d) {
+	std::string result;
+	result = d->getLocStart().printToString(d->getASTContext().getSourceManager());
+	return result;
+}
+
 std::string OMRStatistics::HMRecorder::printLoc(clang::CXXMethodDecl* d) {
 	std::string result;
-	result = d->getLocStart().printToString(d->getASTContext().getSourceManager()) + "\n";
+	result = d->getLocStart().printToString(d->getASTContext().getSourceManager());
 	return result;
+}
+
+size_t OMRStatistics::HMRecorder::findLastStringIn(std::string input, char key) {
+	size_t pos = input.size();
+	for(size_t i = 0; i < input.size(); i++) {
+		char c = input.at(i);
+		if(c == key) pos = i - 1;
+	}
+	
+	assert((pos != input.size()) && "No key in input");
+	return pos;
 }
 
 void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	if(!decl) return;
 	std::string currentClassName = decl->getQualifiedNameAsString();
+	if(HMConsumer::shouldIgnoreClassName(currentClassName)) return;
 	
 	//Record extensibility of the declaration
 	bool currentIsExtensible =  checkExtensibility(decl);
@@ -162,7 +201,6 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	else if(isExtensible[currentClassName] == false) 
 		isExtensible[currentClassName] = currentIsExtensible;
 	
-	if(HMConsumer::shouldIgnoreClassName(currentClassName)) return;
 	CXXRecordDecl::base_class_const_iterator BI, BE, BC;
 	
 	BI = decl->bases_begin();
@@ -173,6 +211,7 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 		
 		std::string parentClassName = (parentDecl) ? parentDecl->getQualifiedNameAsString() : parentClassType.getAsString(); //Prioritize having the name of the CXX record over general QualTypes
 		if(!parentDecl) continue;
+		
 		if(HMConsumer::shouldIgnoreClassName(parentClassName) || HMConsumer::shouldIgnoreClassName(currentClassName)) continue;
 		recordParents(currentClassName, parentClassName);
 		if(parentDecl) recordParents(parentDecl);
@@ -358,7 +397,7 @@ std::string OMRStatistics::HMConsumer::getName(std::string methodSignature) {
 
 void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 	auto map = recorder.getClass2Methods();
-	std::map<std::string, FunctionDeclInfo*> functionDeclInfo = recorder.getfunctionDeclInfo();
+	std::map<std::string, FunctionDeclInfo*> functionDeclInfo = recorder.getFunctionDeclInfo();
 	for(auto hierarchy : hierarchies) {
 		//iterate hierarchy from top to base
 		
@@ -395,7 +434,7 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 							trackers = new std::vector<MethodTracker>();
 							methodName2MethodTracker->emplace(methodName, trackers);
 						}
-						MethodTracker newTracker(className, method, isFirstOccurence, functionDeclInfo[method]->isImplicit, functionDeclInfo[method]->isVirtual);
+						MethodTracker newTracker(className, method, isFirstOccurence, functionDeclInfo[className + "::" + method]->isImplicit, functionDeclInfo[className + "::" + method]->isVirtual);
 						trackers->emplace_back(newTracker);
 					}
 				}
@@ -599,79 +638,49 @@ void OMRStatistics::HMConsumer::printAllClasses(HMRecorder& recorder, llvm::raw_
 void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	HMRecorder recorder(&Context);
 	recorder.TraverseDecl(Context.getTranslationUnitDecl());
-	
 	std::map<std::string, std::vector<std::string>*> classHierarchy = recorder.getClassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
 	
-	llvm::raw_ostream* hierarchyOutput = nullptr;
-	llvm::raw_ostream* weirdHierarchyOutput = nullptr;
-	llvm::raw_ostream* allClassesOutput = nullptr;
-	llvm::raw_ostream* overloadOutput = nullptr;
-	llvm::raw_ostream* allFunctionsOutput = nullptr;
-	llvm::raw_ostream* overrideOutput = nullptr;
+	std::vector<std::string> outputFiles = {".hierarchy", ".weirdHierarchy", ".allClasses", ".overloads", ".allFunctions", ".functionLocationOutput", ".overrides"};
+	std::vector<llvm::raw_ostream*>* outputs = new std::vector<llvm::raw_ostream*>();
+	
 	bool useLLVMOuts = true;
+	
+	/*for(auto itr : recorder.getFunctionDeclInfo()) {
+		llvm::outs() << itr.first << "\n";
+		llvm::outs() << "\t" << itr.second->location << "\n";
+	}*/
 	
 	if(conf.outputDir.compare("-1") != 0) {
 		useLLVMOuts = false;
 		//Open files to output (if file does not exist, create file in given directory)
 		std::error_code EC;
-		
-		hierarchyOutput = new llvm::raw_fd_ostream(conf.outputDir + ".hierarchy", EC, llvm::sys::fs::F_Append);
-		assert(!EC);
-		
-		weirdHierarchyOutput = new llvm::raw_fd_ostream(conf.outputDir + ".weirdHierarchy", EC, llvm::sys::fs::F_Append);
-		assert(!EC);
-		
-		allClassesOutput = new llvm::raw_fd_ostream(conf.outputDir + ".allClasses", EC, llvm::sys::fs::F_Append);
-		assert(!EC);
-		
-		overloadOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overloads", EC, llvm::sys::fs::F_Append);
-		assert(!EC);
-		
-		allFunctionsOutput = new llvm::raw_fd_ostream(conf.outputDir + ".allFunctions", EC, llvm::sys::fs::F_Append);
-		assert(!EC);
-		
-		overrideOutput = new llvm::raw_fd_ostream(conf.outputDir + ".overrides", EC, llvm::sys::fs::F_Append);
-		assert(!EC);
+		for(std::string fileExt : outputFiles) {
+			outputs->emplace_back(new llvm::raw_fd_ostream(conf.outputDir + fileExt, EC, llvm::sys::fs::F_Append));
+			assert(!EC);
+		}
 	}
-	else {
-		hierarchyOutput = &(llvm::outs());
-		weirdHierarchyOutput = &(llvm::outs());
-		allClassesOutput = &(llvm::outs());
-		overloadOutput = &(llvm::outs());
-		allFunctionsOutput = &(llvm::outs());
-		overrideOutput = &(llvm::outs());
-	}
+	else for(std::string fileExt : outputFiles) outputs->emplace_back(&(llvm::outs()));
 	
 	if(conf.hierarchy)  {
-		printHierarchies(recorder, hierarchyOutput);
-		printWeirdHierarchies(recorder, weirdHierarchyOutput);
-		printAllClasses(recorder, allClassesOutput);
+		printHierarchies(recorder, outputs->at(0)/*hierarchyOutput*/);
+		printWeirdHierarchies(recorder, outputs->at(1)/*weirdHierarchyOutput*/);
+		printAllClasses(recorder, outputs->at(2)/*allClassesOutput*/);
 	}
 	if(conf.overloading) {
-		printOverloads(overloadOutput, false);
-		printOverloads(allFunctionsOutput, true);
+		printOverloads(outputs->at(3)/*overloadOutput*/, false);
+		printOverloads(outputs->at(4)/*allFunctionsOutput*/, true);
 	}
-	printOverrides(overrideOutput);
+	/*printFunctionLocations(outputs->at(5));*/
+	printOverrides(outputs->at(6));
 	
 	//Flush all outputs to their respective files
-	hierarchyOutput->flush();
-	weirdHierarchyOutput->flush();
-	allClassesOutput ->flush();
-	overloadOutput->flush();
-	allFunctionsOutput->flush();
-	overrideOutput->flush();
+	for(llvm::raw_ostream* output : *outputs) output->flush();
 	
 	//Free memory
-	if(conf.outputDir.compare("-1") != 0) {
-		delete hierarchyOutput;
-		delete weirdHierarchyOutput;
-		delete allClassesOutput;
-		delete overloadOutput;
-		delete allFunctionsOutput;
-		delete overrideOutput;
-	}
+	if(conf.outputDir.compare("-1") != 0) 
+		for(size_t i = 0; i < outputs->size(); i++) delete outputs->at(i);
 	 
 }
 
