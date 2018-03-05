@@ -49,7 +49,7 @@ include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
-OUTPUTS = hierarchy weirdHierarchy allClasses overloads allFunctions overrides
+OUTPUTS = hierarchy weirdHierarchy allClasses overloads allFunctions overrides functionLocation
 
 include sources/common_amd64.mk
 include sources/common_i386.mk
