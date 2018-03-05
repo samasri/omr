@@ -125,18 +125,11 @@ overridesTable = OverrideTable()
 polymorphism = PolymorphismTable()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 
-# Print create table queries
-#print createTable(functions)
-#print createTable(files)
-#print createTable(overloadsTable)
-#print createTable(overridesTable)
-#print createTable(polymorphism)
-#print createTable(classes)
-
 # Fill tables
 classToIDMap = {}
 functionToIDMap = {}
 # Fill Class Table
+print createTable(classes)
 id = 1
 for row in allClasses:
 	#['ID', 'Namespace', 'ClassName', 'IsExtensible']
@@ -149,6 +142,7 @@ for row in allClasses:
 	id += 1
 
 # Fill Functions table
+print createTable(functions)
 id = 0
 for row in allFunctions2:
 	#['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
@@ -163,6 +157,7 @@ for row in allFunctions2:
 	id += 1
 
 # Fill Overload table
+print createTable(overloadsTable)
 id = 0
 for row in overloads:
 	#self.columns = ['FunctionID', 'IsFirstOccurrence']
@@ -174,6 +169,7 @@ for row in overloads:
 	print insertTo('Overload', [functionID, row[2]])
 	
 # Fill Override table
+print createTable(overridesTable)
 id = 0
 for row in overrides:
 	#['FunctionID', 'BaseClassID', 'OverridingClassID']
@@ -193,6 +189,7 @@ for row in overrides:
 	print insertTo('Override', [functionID, baseClassID, overridingClassID])
 	
 # Fill Polymorphism table
+print createTable(polymorphism)
 id = 0
 for row in hierarchies:
 	# ['RecordID', 'ChildClassID', 'ParentClassID']
@@ -202,7 +199,6 @@ for row in hierarchies:
 	hierarchy = row[1]
 	previousClassID = ''
 	for clas in hierarchy.split(' --> '):
-		# Class Names in allClasses and hierarchy files are outputted using different methods, need to synch
 		if 'TR_' in clas and '::' not in clas: clas = clas.replace('TR_', 'TR::')
 		if 'TRPersistentMemoryAllocator' == clas: clas = 'TR::PersistentMemoryAllocator'
 		if previousClassID == '':
@@ -212,3 +208,6 @@ for row in hierarchies:
 		print insertTo('Polymorphism', [id, previousClassID, currentClassID])
 		previousClassID = currentClassID
 	id += 1
+
+# Fill Files table
+print createTable(files)
