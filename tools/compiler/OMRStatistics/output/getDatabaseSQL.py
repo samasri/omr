@@ -35,7 +35,7 @@ class OverloadTable:
 class OverrideTable:
 	def __init__(self):
 		self.tableName = 'Override'
-		self.primaryKey = 'FunctionID'
+		self.primaryKey = 'FunctionID, BaseClassID, OverridingClassID'
 		self.columns = ['FunctionID', 'BaseClassID', 'OverridingClassID']
 		self.FunctionID = 'INT'
 		self.BaseClassID = 'INT'
@@ -72,16 +72,13 @@ def createTable(table):
 	result +=  ');'
 	return result
 
-def getOMRLongestPath():
-	path = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
-	pathToOMR = path[:path.index('/omr/tools/compiler/') + 5] #get path for omr directory
+def getOMRLongestPath(pathToOMR):
 	maxPathLength = -1
 	for root, subdirs, files in os.walk(pathToOMR):
 		maxFileLength = -1
 		for currentFile in files:
 			if maxFileLength < len(str(currentFile)): maxFileLength = len(str(currentFile))
-		
-		pathLength = len(str(root)) + maxFileLength
+		pathLength = len(str(root)) + maxFileLength + 1
 		if maxPathLength < pathLength: maxPathLength = pathLength
 	return maxPathLength
 
@@ -90,36 +87,53 @@ def insertTo(table, vector):
 	result += 'INSERT INTO ' + table + ' VALUES('
 	for value in vector: 
 		result += "'" + str(value) + "',"
-	result = result[:len(result)-2]
-	result += ')'
+	result = result[:len(result)-1]
+	result += ');'
 	return result
 
+def getSignature(qualifiedName):
+	parenIndex = qualifiedName.find('(')
+	inputTrimmed = qualifiedName[:parenIndex]
+	lastColonIndex = inputTrimmed.rfind('::')
+	signature = qualifiedName[lastColonIndex + 2:]
+	return signature
 
+debug = 0
+# Get path from OMRStatistics directory to the python script
 path = sys.argv[0]
 nameIndex = path.index('getDatabaseSQL.py')
 path = path[:nameIndex]
+# Get the absolute path to the OMR directory
+pathToOMR = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
+pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5] #get path for omr directory
 
 allFunctions = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
-allFunctions2 = csv.reader(open(path + 'allFunctions','r'), delimiter=";") #Can iterate only once on one variable, need to iterate through this file twice
 allClasses = csv.reader(open(path + 'allClasses','r'), delimiter=";")
 overloads = csv.reader(open(path + '../visualization/Overloads/overloads','r'), delimiter=";")
 overrides = csv.reader(open(path + '../visualization/Overrides/overrides','r'), delimiter=";")
 hierarchies = csv.reader(open(path + '../visualization/Hierarchy/hierarchy','r'), delimiter=";")
+functionLocations = csv.reader(open(path + 'functionLocation','r'), delimiter=";")
+#Can iterate only once on one variable, need to iterate through these file twice
+allFunctions2 = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
+allClasses2 = csv.reader(open(path + 'allClasses','r'), delimiter=";")
 
 
 maxFunctionNameLength = -1
 maxSignatureLength = -1
-maxNamespaceLength = -1
-maxClassNameLength = -1
 for row in allFunctions:
 	if maxFunctionNameLength < len(row[0]): maxFunctionNameLength = len(row[0])
 	if maxSignatureLength < len(row[1]): maxSignatureLength = len(row[1])
-	if maxNamespaceLength < len(row[3]) : maxNamespaceLength = len(row[3])
-	if maxClassNameLength < len(row[4]) : maxClassNameLength = len(row[4])
+
+maxNamespaceLength = -1
+maxClassNameLength = -1
+for row in allClasses2:
+	if maxNamespaceLength < len(row[0]) : maxNamespaceLength = len(row[0])
+	if maxClassNameLength < len(row[1]) : maxClassNameLength = len(row[1])
+	
 
 # Create tables
 functions = functionTable(maxFunctionNameLength, maxSignatureLength)
-files = FileTable(getOMRLongestPath())
+files = FileTable(getOMRLongestPath(pathToOMR))
 overloadsTable = OverloadTable()
 overridesTable = OverrideTable()
 polymorphism = PolymorphismTable()
@@ -128,21 +142,64 @@ classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 # Fill tables
 classToIDMap = {}
 functionToIDMap = {}
+fileToIDMap = {}
+functionToFileIDMap = {}
+ignoredFunctionSignatures = []
+
+# Fill Files table
+id = 0
+if not debug: print createTable(files)
+for root, subdirs, files in os.walk(pathToOMR):
+	for currentFile in files:
+		id += 1
+		filePath = root + '/' + currentFile
+		filePath = filePath.replace('//', '/')
+		if not debug: print insertTo('File', [id, filePath])
+		fileToIDMap[filePath] = id
+
+		
 # Fill Class Table
-print createTable(classes)
-id = 1
+if not debug: print createTable(classes)
+id = 0
 for row in allClasses:
 	#['ID', 'Namespace', 'ClassName', 'IsExtensible']
+	if id == 0:
+		id += 1
+		continue
+	id += 1
 	isExtensible = row[2]
 	namespace = row[0]
 	className = row[1]
 	qualifiedName = namespace + '::' + className if namespace != '' else className;
 	classToIDMap[qualifiedName] =  id #Fill classToIDMap from allClasses CSV File
-	print insertTo('Class', [id, namespace, className, isExtensible])
+	if not debug: print insertTo('Class', [id, namespace, className, isExtensible])
+
+# Link functions to their file ID
+id = 0
+for row in functionLocations:
+	# ['ID', 'Location']
+	if id == 0:
+		id += 1
+		continue
+	functionQualifiedName = row[0]
+	functionLocation = row[1]
+	
+	#Ignore cases where declaration is outside the OMR directory
+	if functionLocation[:9] != "../../../":
+		signature = getSignature(functionQualifiedName)
+		ignoredFunctionSignatures.append(signature)
+		continue
+	#Get absolute file location
+	functionLocation = functionLocation.replace("../../../", pathToOMR);
+	functionLocation = functionLocation.replace("//", "/");
+	
+	colonIndex = functionLocation.find(':')
+	functionLocation = functionLocation[:colonIndex]
+	functionToFileIDMap[functionQualifiedName] = id
 	id += 1
 
 # Fill Functions table
-print createTable(functions)
+if not debug: print createTable(functions)
 id = 0
 for row in allFunctions2:
 	#['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
@@ -150,26 +207,43 @@ for row in allFunctions2:
 		id += 1
 		continue
 	
-	qualifiedName = row[3] + '::' + row[4] if row[3] != '' else row[4]
-	classID = classToIDMap[qualifiedName]
+	classQualifiedName = row[3] + '::' + row[4] if row[3] != '' else row[4]
+	functionQualifiedName = classQualifiedName + '::' + row[1]
+	
+	if row[1] in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
+	try: fileID = functionToFileIDMap[functionQualifiedName]
+	except KeyError: #Exceptions (check issue #26)
+		if classQualifiedName == 'TR::PersistentMemoryAllocator':
+			functionQualifiedName = functionQualifiedName.replace('::', '')
+		else:
+			#NameSpace and className are connected with _ instead of ::, check issue #26
+			classQualifiedName2 = row[3] + '_' + row[4] if row[3] != '' else row[4] 
+			fileID = functionToFileIDMap[classQualifiedName2 + '::' + row[1]]
+	
+	classID = classToIDMap[classQualifiedName]
 	functionToIDMap[row[1]] = id
-	print insertTo('Function', [id, row[0], row[1], classID, row[6], row[5], -1])
+	if not debug: print insertTo('Function', [id, row[0], row[1], classID, row[6], row[5], fileID])
 	id += 1
 
 # Fill Overload table
-print createTable(overloadsTable)
+if not debug: print createTable(overloadsTable)
 id = 0
+S = set()
 for row in overloads:
 	#self.columns = ['FunctionID', 'IsFirstOccurrence']
 	if id == 0: 
 		id += 1
 		continue
+	
 	signature = row[1]
+	if signature in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
 	functionID = functionToIDMap[signature]
-	print insertTo('Overload', [functionID, row[2]])
+	#if signature in S: print signature
+	#else: S.add(signature)
+	if not debug: print insertTo('Overload', [functionID, row[2]])
 	
 # Fill Override table
-print createTable(overridesTable)
+if not debug: print createTable(overridesTable)
 id = 0
 for row in overrides:
 	#['FunctionID', 'BaseClassID', 'OverridingClassID']
@@ -178,18 +252,20 @@ for row in overrides:
 		continue
 	
 	signature = row[2]
-	functionID = functionToIDMap[signature]
+	try: functionID = functionToIDMap[signature]
+	except KeyError: # This case is when functions are located outside OMR directory, they will not have an entry in the functionToIDMap
+		continue
 	
-	#Reconstruct qualfied names of classes & get IDs
+	#Reconstruct qualified names of classes & get IDs
 	qualifiedBaseName = row[0] + '::' + row[1] if row[0] != '' else row[1]
 	qualifiedOverridingName = row[3] + '::' + row[4] if row[3] != '' else row[4]
 	baseClassID = classToIDMap[qualifiedBaseName]
 	overridingClassID = classToIDMap[qualifiedOverridingName]
 	
-	print insertTo('Override', [functionID, baseClassID, overridingClassID])
+	if not debug: print insertTo('Override', [functionID, baseClassID, overridingClassID])
 	
 # Fill Polymorphism table
-print createTable(polymorphism)
+if not debug: print createTable(polymorphism)
 id = 0
 for row in hierarchies:
 	# ['RecordID', 'ChildClassID', 'ParentClassID']
@@ -199,15 +275,14 @@ for row in hierarchies:
 	hierarchy = row[1]
 	previousClassID = ''
 	for clas in hierarchy.split(' --> '):
+		#Exceptions (check issue #26)
 		if 'TR_' in clas and '::' not in clas: clas = clas.replace('TR_', 'TR::')
 		if 'TRPersistentMemoryAllocator' == clas: clas = 'TR::PersistentMemoryAllocator'
+		
 		if previousClassID == '':
 			previousClassID = classToIDMap[clas]
 			continue
 		currentClassID = classToIDMap[clas]
-		print insertTo('Polymorphism', [id, previousClassID, currentClassID])
+		if not debug: print insertTo('Polymorphism', [id, previousClassID, currentClassID])
 		previousClassID = currentClassID
-	id += 1
-
-# Fill Files table
-print createTable(files)
+		id += 1
