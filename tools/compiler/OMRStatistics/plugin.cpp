@@ -100,7 +100,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 		//Save function information
 		FunctionDeclInfo* info = new FunctionDeclInfo((*A)->isImplicit(), (*A)->isVirtual(), printLoc(*A));
 		auto result = functionDeclInfo.emplace(className + "::" + *function, info);
-		if(!result.second) { //If function already exists, assert that it is the same declaration (same location) visited more than once
+		if(!result.second) { //Assert that the function is not declared more than twice (once in the header and once in the cpp file)
 			std::string loc = printLoc(*A);
 			size_t colonIndexOld = result.first->second->location.find(':');
 			size_t colonIndexNew = loc.find(':');
@@ -121,7 +121,6 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 					llvm::outs() << "\tExisting Location: " << result.first->second->location << "\n";
 					llvm::outs() << "\tNew Location: " << loc << "\n";
 				*/
-				
 			}
 		}
 		
