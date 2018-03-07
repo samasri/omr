@@ -537,6 +537,7 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 
 void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool printAll) {
 	*out << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit; isVirtual\n";
+	std::map<std::string, bool> isFirstOccurenceMap;
 	for(auto hierarchy : hierarchies) {
 		auto trackerMapVec = hierarchy->methodName2MethodTrackerVec;
 		for(auto trackerMap : trackerMapVec) { //Go through the map of each subHierarchy
@@ -547,13 +548,14 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool prin
 			while(itr != e) {
 				auto hierarchyTrackers = *(itr->second);
 				if(!printAll && hierarchyTrackers.size() < 2) { 
-				//If methodname has only one signature, then it is not overloaded
+				//If methodName has only one signature, then it is not overloaded
 					itr++;
 					continue;
 				}
 				//Go through each tracker (signature) for a specific method name and report the overloads
 				for(auto tracker : hierarchyTrackers) {
 					std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
+					std::string fullName = tuple->at(0) + "::" + tuple->at(1) + "::" + tracker.methodSignature;
 					if(!shouldIgnoreNamespace(tuple->at(0))) {
 						*out << tracker.methodName << ";";
 						*out << tracker.methodSignature << ";";
