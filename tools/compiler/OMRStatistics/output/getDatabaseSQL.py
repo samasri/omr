@@ -44,9 +44,8 @@ class OverrideTable:
 class PolymorphismTable:
 	def __init__(self):
 		self.tableName = 'Polymorphism'
-		self.primaryKey = 'RecordID'
-		self.columns = ['RecordID', 'ChildClassID', 'ParentClassID']
-		self.RecordID = 'INT'
+		self.primaryKey = 'ChildClassID, ParentClassID'
+		self.columns = ['ChildClassID', 'ParentClassID']
 		self.ChildClassID = 'INT'
 		self.ParentClassID = 'INT'
 
@@ -130,7 +129,8 @@ for row in allClasses2:
 	if maxNamespaceLength < len(row[0]) : maxNamespaceLength = len(row[0])
 	if maxClassNameLength < len(row[1]) : maxClassNameLength = len(row[1])
 	
-
+# Create Database
+if not debug: print 'CREATE DATABASE IF NOT EXISTS omrstatisticsdb;'
 # Create tables
 functions = functionTable(maxFunctionNameLength, maxSignatureLength)
 files = FileTable(getOMRLongestPath(pathToOMR))
@@ -138,6 +138,14 @@ overloadsTable = OverloadTable()
 overridesTable = OverrideTable()
 polymorphism = PolymorphismTable()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
+
+# Drop tables if they already existed
+if not debug:
+	print 'DROP TABLE IF EXISTS Function;'
+	print 'DROP TABLE IF EXISTS File;'
+	print 'DROP TABLE IF EXISTS Class;'
+	print 'DROP TABLE IF EXISTS Override;'
+	print 'DROP TABLE IF EXISTS Polymorphism;'
 
 # Fill tables
 classToIDMap = {}
@@ -154,6 +162,7 @@ for root, subdirs, files in os.walk(pathToOMR):
 		id += 1
 		filePath = root + '/' + currentFile
 		filePath = filePath.replace('//', '/')
+		filePath = filePath[len(pathToOMR) - 4:] # Get relative path
 		if not debug: print insertTo('File', [id, filePath])
 		fileToIDMap[filePath] = id
 
@@ -177,10 +186,6 @@ for row in allClasses:
 # Link functions to their file ID
 id = 0
 for row in functionLocations:
-	# ['ID', 'Location']
-	if id == 0:
-		id += 1
-		continue
 	functionQualifiedName = row[0]
 	functionLocation = row[1]
 	
@@ -189,14 +194,15 @@ for row in functionLocations:
 		signature = getSignature(functionQualifiedName)
 		ignoredFunctionSignatures.append(signature)
 		continue
-	#Get absolute file location
+	#Get relative source location path
 	functionLocation = functionLocation.replace("../../../", pathToOMR);
 	functionLocation = functionLocation.replace("//", "/");
+	functionLocation = functionLocation[len(pathToOMR)-4:]
 	
 	colonIndex = functionLocation.find(':')
 	functionLocation = functionLocation[:colonIndex]
-	functionToFileIDMap[functionQualifiedName] = id
-	id += 1
+	fileID = fileToIDMap[functionLocation]
+	functionToFileIDMap[functionQualifiedName] = fileID
 
 # Fill Functions table
 if not debug: print createTable(functions)
@@ -225,23 +231,6 @@ for row in allFunctions2:
 	if not debug: print insertTo('Function', [id, row[0], row[1], classID, row[6], row[5], fileID])
 	id += 1
 
-# Fill Overload table
-if not debug: print createTable(overloadsTable)
-id = 0
-S = set()
-for row in overloads:
-	#self.columns = ['FunctionID', 'IsFirstOccurrence']
-	if id == 0: 
-		id += 1
-		continue
-	
-	signature = row[1]
-	if signature in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
-	functionID = functionToIDMap[signature]
-	#if signature in S: print signature
-	#else: S.add(signature)
-	if not debug: print insertTo('Overload', [functionID, row[2]])
-	
 # Fill Override table
 if not debug: print createTable(overridesTable)
 id = 0
@@ -267,6 +256,7 @@ for row in overrides:
 # Fill Polymorphism table
 if not debug: print createTable(polymorphism)
 id = 0
+duplicateEntries = set()
 for row in hierarchies:
 	# ['RecordID', 'ChildClassID', 'ParentClassID']
 	if id == 0:
@@ -283,6 +273,15 @@ for row in hierarchies:
 			previousClassID = classToIDMap[clas]
 			continue
 		currentClassID = classToIDMap[clas]
-		if not debug: print insertTo('Polymorphism', [id, previousClassID, currentClassID])
+		
+		# Duplicate entries will generate in cases of 2 hierarchies with different bases but merge at some point, we remove them here
+		key = str(previousClassID) + ':' + str(currentClassID)
+		if key not in duplicateEntries:
+			duplicateEntries.add(key)
+			if not debug: print insertTo('Polymorphism', [previousClassID, currentClassID])
+		else:
+			pass
+		
 		previousClassID = currentClassID
+		previousClas = clas
 		id += 1
