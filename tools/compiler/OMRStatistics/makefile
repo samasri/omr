@@ -41,7 +41,7 @@ sample: $(SO)
 sample2: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./i386CodeGenOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/optimizer/BitVectorAnalysis.cpp
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/BitVecAnalOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/optimizer/BitVectorAnalysis.cpp
 	
 
 # Running test cases
@@ -92,6 +92,8 @@ output/lastCreated: $(SO)
 	@make moveOutputToVisualization
 	
 	@python visualization/Overloads/makeHTML.py visualization/Overloads/overloads
+	@python visualization/Hierarchy/makeDot.py
+	@dot -Tpdf visualization/Hierarchy/graph.dot -o visualization/Hierarchy/graph.pdf
 	
 	@touch output/lastCreated
 	@echo "------------Visualizations are ready------------"
