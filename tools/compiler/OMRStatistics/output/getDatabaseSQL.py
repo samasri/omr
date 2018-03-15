@@ -44,8 +44,9 @@ class OverrideTable:
 class PolymorphismTable:
 	def __init__(self):
 		self.tableName = 'Polymorphism'
-		self.primaryKey = 'ChildClassID, ParentClassID'
-		self.columns = ['ChildClassID', 'ParentClassID']
+		self.primaryKey = 'HierarchyID, ChildClassID, ParentClassID'
+		self.columns = ['HierarchyID', 'ChildClassID', 'ParentClassID']
+		self.HierarchyID = 'INT'
 		self.ChildClassID = 'INT'
 		self.ParentClassID = 'INT'
 
@@ -258,7 +259,7 @@ if not debug: print createTable(polymorphism)
 id = 0
 duplicateEntries = set()
 for row in hierarchies:
-	# ['RecordID', 'ChildClassID', 'ParentClassID']
+	# ['HierarchyID', 'ChildClassID', 'ParentClassID']
 	if id == 0:
 		id += 1
 		continue
@@ -278,10 +279,10 @@ for row in hierarchies:
 		key = str(previousClassID) + ':' + str(currentClassID)
 		if key not in duplicateEntries:
 			duplicateEntries.add(key)
-			if not debug: print insertTo('Polymorphism', [previousClassID, currentClassID])
+			if not debug: print insertTo('Polymorphism', [id, previousClassID, currentClassID])
 		else:
 			pass
 		
 		previousClassID = currentClassID
 		previousClas = clas
-		id += 1
+	id += 1
