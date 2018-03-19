@@ -50,6 +50,14 @@ class PolymorphismTable:
 		self.ChildClassID = 'INT'
 		self.ParentClassID = 'INT'
 
+class HierarchiesBase:
+	def __init__(self):
+		self.tableName = 'HierarchiesBase'
+		self.primaryKey = 'HierarchyID'
+		self.columns = ['HierarchyID', 'BaseClassID']
+		self.HierarchyID = 'INT'
+		self.BaseClassID = 'INT'
+
 class ClassTable:
 	def __init__(self, maxNamespaceLength, maxClassNameLength):
 		self.tableName = 'Class'
@@ -138,6 +146,7 @@ files = FileTable(getOMRLongestPath(pathToOMR))
 overloadsTable = OverloadTable()
 overridesTable = OverrideTable()
 polymorphism = PolymorphismTable()
+hierarchiesBase = HierarchiesBase()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 
 # Drop tables if they already existed
@@ -254,14 +263,15 @@ for row in overrides:
 	
 	if not debug: print insertTo('Override', [functionID, baseClassID, overridingClassID])
 	
-# Fill Polymorphism table
+# Fill Polymorphism and HierarchiesBase tables
 if not debug: print createTable(polymorphism)
-id = 0
+if not debug: print createTable(hierarchiesBase)
+hierarchyID = 0
 duplicateEntries = set()
 for row in hierarchies:
 	# ['HierarchyID', 'ChildClassID', 'ParentClassID']
-	if id == 0:
-		id += 1
+	if hierarchyID == 0:
+		hierarchyID += 1
 		continue
 	hierarchy = row[1]
 	previousClassID = ''
@@ -269,20 +279,25 @@ for row in hierarchies:
 		#Exceptions (check issue #26)
 		if 'TR_' in clas and '::' not in clas: clas = clas.replace('TR_', 'TR::')
 		if 'TRPersistentMemoryAllocator' == clas: clas = 'TR::PersistentMemoryAllocator'
+			
 		
-		if previousClassID == '':
+		if previousClassID == '': # This is the first class in this hierarchy
 			previousClassID = classToIDMap[clas]
+			# Record the base class of this hierarchy in the HierarchiesBase table
+			baseClass = clas
+			if not debug: print insertTo('HierarchiesBase', [hierarchyID, previousClassID])
+			
 			continue
 		currentClassID = classToIDMap[clas]
 		
-		# Duplicate entries will generate in cases of 2 hierarchies with different bases but merge at some point, we remove them here
-		key = str(previousClassID) + ':' + str(currentClassID)
+		# Duplicate entries will generate in cases of 2 hierarchies that have different bases but merge at some point (so they would have the same top), we remove them here
+		key = str(hierarchyID) + ':' + str(previousClassID) + ':' + str(currentClassID)
 		if key not in duplicateEntries:
 			duplicateEntries.add(key)
-			if not debug: print insertTo('Polymorphism', [id, previousClassID, currentClassID])
-		else:
+			if not debug: print insertTo('Polymorphism', [hierarchyID, previousClassID, currentClassID])
+		else: # Based on my testing, no case passed here
 			pass
 		
 		previousClassID = currentClassID
 		previousClas = clas
-	id += 1
+	hierarchyID += 1
