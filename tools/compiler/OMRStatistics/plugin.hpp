@@ -54,7 +54,7 @@ namespace OMRStatistics {
 		//Loop through all parents of the given class, recording their relationships in classHierarchy
 		void recordParents(const CXXRecordDecl *decl);
 		//Called by clang for every class declaration
-		bool VisitCXXRecordDecl(const CXXRecordDecl *decl);
+		bool VisitCXXRecordDecl(const CXXRecordDecl*);
 		//Prints the location of a specific declaration
 		static std::string printLoc(const clang::CXXRecordDecl*);
 		static std::string printLoc(const CXXMethodDecl*);

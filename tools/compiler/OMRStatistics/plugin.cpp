@@ -67,15 +67,12 @@ void OMRStatistics::HMRecorder::setIsExtensible(std::map<std::string, bool> isEx
 bool OMRStatistics::HMRecorder::checkExtensibility(const CXXRecordDecl* declIn) {
 	const CXXRecordDecl* decl = declIn;
   
-	//while (decl) {
 	for (Decl::attr_iterator A = decl->attr_begin(), E = decl->attr_end(); A != E; ++A) {
 		if (isa<AnnotateAttr>(*A)) {
 			AnnotateAttr *annotation = dyn_cast<AnnotateAttr>(*A);
 			if (annotation->getAnnotation() == "OMR_Extensible") return true;
 		}
 	}
-	//decl = decl->getPreviousDecl();
-	// }
   
   return false;
 }
@@ -85,8 +82,9 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 	if(HMConsumer::shouldIgnoreClassName(className)) return;
 	//Iterate through every method in the class
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
+		CXXMethodDecl* currentDecl = *A;
 		//Get function name with parameter types (AKA: recreate function signature)
-		std::string* function = new std::string((*A)->getNameAsString());
+		std::string* function = new std::string(currentDecl->getNameAsString());
 		ArrayRef<clang::ParmVarDecl*> functions = A->parameters();
 		if(functions.size() == 0) *function += "()";
 		else {
@@ -98,10 +96,10 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			*function += ")";
 		}
 		//Save function information
-		FunctionDeclInfo* info = new FunctionDeclInfo((*A)->isImplicit(), (*A)->isVirtual(), printLoc(*A));
+		FunctionDeclInfo* info = new FunctionDeclInfo(currentDecl->isImplicit(), currentDecl->isVirtual(), printLoc(currentDecl));
 		auto result = functionDeclInfo.emplace(className + "::" + *function, info);
 		if(!result.second) { //Assert that the function is not declared more than twice (once in the header and once in the cpp file)
-			std::string loc = printLoc(*A);
+			std::string loc = printLoc(currentDecl);
 			size_t colonIndexOld = result.first->second->location.find(':');
 			size_t colonIndexNew = loc.find(':');
 			std::string oldLoc = result.first->second->location.substr(0, colonIndexOld);
@@ -129,11 +127,29 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			std::unordered_set<std::string*>* methods = &(iterator->second);
 			methods->insert(function);
 		}
-		else { //If the class in new
+		else { //If the class is new
 			std::unordered_set<std::string*> methods;
 			methods.insert(function);
 			class2Methods.emplace(className, methods);
 		}
+		
+		//Check for stuff
+		llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
+		Stmt* stmt = currentDecl->getBody();
+		CompoundStmt* stmtC = (CompoundStmt*) stmt;
+		unsigned size = stmtC->size();
+		Stmt** bodyItr = stmtC->body_begin();
+		for(unsigned i = 0; i < size; i++) {
+			Stmt* currentStmt = bodyItr[i];
+			std::string stmtType = currentStmt->getStmtClassName();
+			CXXMemberCallExpr* call = NULL;
+			if(stmtType.compare("CXXMemberCallExpr") == 0) call = (CXXMemberCallExpr*) currentStmt;
+			if(call != NULL) {
+				std::string methodName = call->getMethodDecl()->getQualifiedNameAsString();
+				llvm::outs() << "\tMethod Name: " << methodName << "\n";
+			}
+		}
+		
 	}
 }
 
