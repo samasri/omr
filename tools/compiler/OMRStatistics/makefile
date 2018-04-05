@@ -49,25 +49,46 @@ include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
-OUTPUTS = hierarchy weirdHierarchy allClasses overloads allFunctions overrides functionLocation
+OUTPUTS = hierarchy weirdHierarchy allClasses overloads allFunctions overrides functionLocation avg
 
-include sources/common_amd64.mk
-include sources/common_i386.mk
-include sources/common_p.mk
-include sources/common_z.mk
-include sources/common_arm.mk
+# include sources/common_amd64.mk
+# include sources/common_i386.mk
+# include sources/common_p.mk
+# include sources/common_z.mk
+# include sources/common_arm.mk
 
-LIST_AMD64 = $(JIT_PRODUCT_BACKEND_SOURCES_AMD64) $(JIT_PRODUCT_SOURCE_FILES_AMD64) 
-LIST_I386 = $(JIT_PRODUCT_BACKEND_SOURCES_I386) $(JIT_PRODUCT_SOURCE_FILES_I386) 
-LIST_P = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_P) 
-LIST_Z = $(JIT_PRODUCT_BACKEND_SOURCES_Z) $(JIT_PRODUCT_SOURCE_FILES_Z) 
-LIST_ARM = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_ARM) 
+# LIST_AMD64 = $(JIT_PRODUCT_BACKEND_SOURCES_AMD64) $(JIT_PRODUCT_SOURCE_FILES_AMD64) 
+# LIST_I386 = $(JIT_PRODUCT_BACKEND_SOURCES_I386) $(JIT_PRODUCT_SOURCE_FILES_I386) 
+# LIST_P = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_P) 
+# LIST_Z = $(JIT_PRODUCT_BACKEND_SOURCES_Z) $(JIT_PRODUCT_SOURCE_FILES_Z) 
+# LIST_ARM = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_ARM) 
 
+# TARGETS_AMD64 = $(addprefix , $(LIST_AMD64))
+# TARGETS_I386 = $(addprefix , $(LIST_I386))
+# TARGETS_P = $(addprefix , $(LIST_P))
+# TARGETS_Z = $(addprefix , $(LIST_Z))
+# TARGETS_ARM = $(addprefix , $(LIST_ARM))
+
+JIT_OMR_DIRTY_DIR = ../../../compiler
+JIT_PRODUCT_DIR = ../../../fvtest/compilertest
+JIT_MAKE_DIR = $(JIT_PRODUCT_DIR)/build
+HOST_ARCH = x
+TARGET_ARCH = amd64
+
+include $(JIT_PRODUCT_DIR)/build/files/common.mk
+LIST_AMD64 = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES) 
 TARGETS_AMD64 = $(addprefix , $(LIST_AMD64))
-TARGETS_I386 = $(addprefix , $(LIST_I386))
-TARGETS_P = $(addprefix , $(LIST_P))
-TARGETS_Z = $(addprefix , $(LIST_Z))
-TARGETS_ARM = $(addprefix , $(LIST_ARM))
+
+JIT_PRODUCT_BACKEND_SOURCES = ''
+JIT_PRODUCT_SOURCE_FILES = ''
+# TARGET_ARCH = i386
+# include $(JIT_PRODUCT_DIR)/build/files/common.mk
+# LIST_I386 = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES) 
+# TARGETS_I386 = $(addprefix , $(LIST_AMD64))
+
+
+changing:
+	@python sources/temp.py z
 
 produceVisualizations: $(SO)
 	@make output/lastCreated --no-print-directory
@@ -78,8 +99,10 @@ output/lastCreated: $(SO)
 	@rm -f output/p.*
 	@rm -f output/z.*
 	@rm -f output/allFunctions
+	@rm -f output/allClasses
 	@rm -f output/weirdHierarchy
 	@rm -f output/sanityCheck
+	@rm -f output/functionLocation
 
 	@make executeAMD64
 	@make executeI386

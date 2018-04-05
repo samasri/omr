@@ -75,10 +75,10 @@ namespace OMRStatistics {
 	struct Hierarchy {
 		LinkedNode* base; //Base class of hierarchy
 		std::string name; //Base name, to identify the class
-		//Maps every method to the array of hierarchy classes where it occurred
+		
+		//Vector of maps: Each map in the vector represents a unique subhierarchy
+		//The Map connects every method to the array of hierarchy classes where it occurred
 		std::vector<std::map<std::string, std::vector<MethodTracker>*>*> methodName2MethodTrackerVec;
-		//Stores the names of each methodTracker in the hierarchy for faster searching
-		//std::unordered_set<std::string>* methodNames = new std::unordered_set<std::string>; 
 		
 		//overriding operators for faster comparisons
 		bool operator==(const Hierarchy& other);
@@ -170,6 +170,7 @@ namespace OMRStatistics {
 		size_t findLastStringIn(std::string input, std::string key);
 		void printOverloads(llvm::raw_ostream*, bool printAll);
 		void printOverrides(llvm::raw_ostream*);
+		void printAverageOverrides(HMRecorder&, llvm::raw_ostream*);
 		void printFunctionLocations(HMRecorder&, llvm::raw_ostream*);
 		
 		virtual void HandleTranslationUnit(ASTContext &Context);

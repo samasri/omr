@@ -134,7 +134,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 		}
 		
 		//Check for stuff
-		llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
+		/*llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
 		Stmt* stmt = currentDecl->getBody();
 		CompoundStmt* stmtC = (CompoundStmt*) stmt;
 		unsigned size = stmtC->size();
@@ -148,7 +148,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 				std::string methodName = call->getMethodDecl()->getQualifiedNameAsString();
 				llvm::outs() << "\tMethod Name: " << methodName << "\n";
 			}
-		}
+		}*/
 		
 	}
 }
@@ -622,6 +622,39 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 	}
 }
 
+void OMRStatistics::HMConsumer::printAverageOverrides(HMRecorder& recorder, llvm::raw_ostream* out) {
+	auto isExtensible = recorder.getIsExtensible();
+	float averagePercentage = 0;
+	int counter = 0;
+	for(Hierarchy* h : hierarchies) {
+		
+		//Only count extensible hierarchies
+		std::string baseName = h->base->name;
+		if(!isExtensible[baseName]) continue;
+		
+		auto maps = h->methodName2MethodTrackerVec;
+		for(auto map : maps) { //iterating through sub-hierarchies
+			int functionCounter = 0;
+			int overrideCounter = 0;
+			for(auto itr : *map) { //iterating through different function names
+				std::string methodName = itr.first;
+				for(MethodTracker tracker : *itr.second) { //iterating through methodTrackers of one method name
+					functionCounter++;
+					if(tracker.nbOfOccurences > 1) overrideCounter++;
+				}
+			}
+			
+			float percentage = (float)overrideCounter/(float)functionCounter * 100;
+			
+			averagePercentage += percentage;
+			counter++;
+		}
+	}
+	float avg = averagePercentage/counter;
+	std::string avgStr = std::to_string(avg);
+	*out << avgStr << "\n";
+}
+
 void OMRStatistics::HMConsumer::printFunctionLocations(HMRecorder& recorder, llvm::raw_ostream* out) {
 	*out << "FunctionQualifiedName; Location;\n";
 	std::map<std::string, FunctionDeclInfo*> functionDeclInfo = recorder.getFunctionDeclInfo();
@@ -673,7 +706,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
 	
-	std::vector<std::string> outputFiles = {".hierarchy", ".weirdHierarchy", ".allClasses", ".overloads", ".allFunctions", ".functionLocation", ".overrides"};
+	std::vector<std::string> outputFiles = {".hierarchy", ".weirdHierarchy", ".allClasses", ".overloads", ".allFunctions", ".functionLocation", ".overrides", ".avg"};
 	std::vector<llvm::raw_ostream*>* outputs = new std::vector<llvm::raw_ostream*>();
 	
 	bool useLLVMOuts = true;
@@ -700,6 +733,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	}
 	printFunctionLocations(recorder, outputs->at(5));
 	printOverrides(outputs->at(6));
+	printAverageOverrides(recorder, outputs->at(7));
 	
 	//Flush all outputs to their respective files
 	for(llvm::raw_ostream* output : *outputs) output->flush();
