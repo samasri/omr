@@ -5,7 +5,7 @@ path = sys.argv[0][:-10]
 
 f = csv.reader(open(path + 'hierarchy', 'r'), delimiter=";")
 o = open(path + 'graph.dot', 'w')
-print 'hello'
+
 o.write('digraph {\n')
 o.write('\tnode [shape=box];\n')
 o.write('\trankdir=BT;\n')
@@ -14,7 +14,6 @@ uniqueLines = set()
 length = []
 for row in f:
 	row = row[1]
-	print row
 	row = row.strip().split(" --> ")
 	length.append(len(row))
 	prevClas = -1
