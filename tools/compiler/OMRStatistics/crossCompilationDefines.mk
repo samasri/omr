@@ -112,3 +112,12 @@ PLUGIN_INCLUDES_Z = -I $(OMR)/include_core \
 -I $(OMR) \
 -I $(OMR)/third_party/gtest-1.8.0 \
 -I $(OMR)/third_party/gtest-1.8.0/include
+
+export DEFINES_AMD64
+export PLUGIN_INCLUDES_AMD64
+export DEFINES_I386
+export PLUGIN_INCLUDES_I386
+export DEFINES_P
+export PLUGIN_INCLUDES_P
+export DEFINES_Z
+export PLUGIN_INCLUDES_Z

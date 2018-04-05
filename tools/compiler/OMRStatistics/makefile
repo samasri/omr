@@ -9,7 +9,7 @@ GXX = clang++-3.8
 include crossCompilationDefines.mk
 COMPILATION_INCLUDES = -I/home/se-team/Desktop/llvm-clang/3.8-llvm/tools/clang/include/ -I/home/se-team/Desktop/llvm-clang/3.8-build/tools/clang/include/
 
-# Path to shared object file. NOTE: when adding this to plugin always remember to put ./ before the path. Failing to do so will give you a 'shared object not found' error which will drive you crazy!!
+# Path to shared object file. NOTE: when adding this to plugin always remember to put ./ before the path.
 SO = ./plugin.so
 # Path to source file of the plugin
 CPP = plugin.cpp
@@ -44,51 +44,25 @@ sample2: $(SO)
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/BitVecAnalOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/optimizer/BitVectorAnalysis.cpp
 	
 
-# Running test cases
+# Test cases targets
 include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
 OUTPUTS = hierarchy weirdHierarchy allClasses overloads allFunctions overrides functionLocation avg
 
-# include sources/common_amd64.mk
-# include sources/common_i386.mk
-# include sources/common_p.mk
-# include sources/common_z.mk
-# include sources/common_arm.mk
+# JIT_OMR_DIRTY_DIR: path to 'compiler' dir starting from where clang is going to compile the files, that is: from OMRStatistics/sources
+JIT_OMR_DIRTY_DIR = ../../../../compiler
+JIT_PRODUCT_DIR = ../../../../fvtest/compilertest
 
-# LIST_AMD64 = $(JIT_PRODUCT_BACKEND_SOURCES_AMD64) $(JIT_PRODUCT_SOURCE_FILES_AMD64) 
-# LIST_I386 = $(JIT_PRODUCT_BACKEND_SOURCES_I386) $(JIT_PRODUCT_SOURCE_FILES_I386) 
-# LIST_P = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_P) 
-# LIST_Z = $(JIT_PRODUCT_BACKEND_SOURCES_Z) $(JIT_PRODUCT_SOURCE_FILES_Z) 
-# LIST_ARM = $(JIT_PRODUCT_BACKEND_SOURCES_P) $(JIT_PRODUCT_SOURCE_FILES_ARM) 
-
-# TARGETS_AMD64 = $(addprefix , $(LIST_AMD64))
-# TARGETS_I386 = $(addprefix , $(LIST_I386))
-# TARGETS_P = $(addprefix , $(LIST_P))
-# TARGETS_Z = $(addprefix , $(LIST_Z))
-# TARGETS_ARM = $(addprefix , $(LIST_ARM))
-
-JIT_OMR_DIRTY_DIR = ../../../compiler
-JIT_PRODUCT_DIR = ../../../fvtest/compilertest
-JIT_MAKE_DIR = $(JIT_PRODUCT_DIR)/build
-HOST_ARCH = x
-TARGET_ARCH = amd64
-
-include $(JIT_PRODUCT_DIR)/build/files/common.mk
-LIST_AMD64 = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES) 
-TARGETS_AMD64 = $(addprefix , $(LIST_AMD64))
-
-JIT_PRODUCT_BACKEND_SOURCES = ''
-JIT_PRODUCT_SOURCE_FILES = ''
-# TARGET_ARCH = i386
-# include $(JIT_PRODUCT_DIR)/build/files/common.mk
-# LIST_I386 = $(JIT_PRODUCT_BACKEND_SOURCES) $(JIT_PRODUCT_SOURCE_FILES) 
-# TARGETS_I386 = $(addprefix , $(LIST_AMD64))
-
-
-changing:
-	@python sources/temp.py z
+# Exporting variables so that other makefiles (trigerred by execute.py in output/lastCreated)
+export SO
+export CXX
+export CC1_MAINARG
+export PL
+export ARCHS
+export JIT_OMR_DIRTY_DIR
+export JIT_PRODUCT_DIR
 
 produceVisualizations: $(SO)
 	@make output/lastCreated --no-print-directory
@@ -103,11 +77,11 @@ output/lastCreated: $(SO)
 	@rm -f output/weirdHierarchy
 	@rm -f output/sanityCheck
 	@rm -f output/functionLocation
-
-	@make executeAMD64
-	@make executeI386
-	@make executeP
-	@make executeZ
+	
+	@python sources/execute.py amd64
+	@python sources/execute.py i386
+	@python sources/execute.py p
+	@python sources/execute.py z
 	
 	@make copyOriginal
 	@make trimOutput
