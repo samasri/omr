@@ -498,12 +498,6 @@ void OMRStatistics::HMConsumer::getTopToBaseAsArray(LinkedNode* node, std::vecto
 	return;
 }
 
-bool OMRStatistics::HMConsumer::shouldIgnoreNamespace(std::string nameSpace) {
-	if(nameSpace.compare("std") == 0) return true;
-	if(nameSpace.compare("__gnu_cxx") == 0) return true;
-	return false;
-}
-
 bool OMRStatistics::HMConsumer::shouldIgnoreClassName(std::string className) {
 	if(className.find("std::") != std::string::npos) return true;
 	if(className.find("__gnu_cxx::") != std::string::npos) return true;
@@ -519,7 +513,7 @@ std::vector<std::string>* OMRStatistics::HMConsumer::seperateClassNameSpace(std:
 		int classNameSize = input.length() - pos - 2;
 		className = input.substr(pos+2, classNameSize);
 	}
-	else if(input.find("TR_") != std::string::npos) {
+	/*else if(input.find("TR_") != std::string::npos) {
 		nameSpace = "TR";
 		int classNameSize = input.length() - 3;
 		className = input.substr(3, classNameSize);
@@ -527,7 +521,7 @@ std::vector<std::string>* OMRStatistics::HMConsumer::seperateClassNameSpace(std:
 	else if(input.find("TRPersistentMemoryAllocator") != std::string::npos) {
 		nameSpace = "TR";
 		className = "PersistentMemoryAllocator";
-	}
+	}*/
 	else className = input;
 	std::vector<std::string>* tuple = new std::vector<std::string>();
 	tuple->push_back(nameSpace);
@@ -571,8 +565,7 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool prin
 				//Go through each tracker (signature) for a specific method name and report the overloads
 				for(auto tracker : hierarchyTrackers) {
 					std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
-					std::string fullName = tuple->at(0) + "::" + tuple->at(1) + "::" + tracker.methodSignature;
-					if(!shouldIgnoreNamespace(tuple->at(0))) {
+					if(!shouldIgnoreClassName(tracker.baseClassName)) {
 						*out << tracker.methodName << ";";
 						*out << tracker.methodSignature << ";";
 						*out << tracker.firstOccurence << ";";
@@ -604,7 +597,7 @@ void OMRStatistics::HMConsumer::printOverrides(llvm::raw_ostream* out) {
 					for(std::string className : *tracker.classesOverriden) {
 						std::vector<std::string>* baseClassNameTuple = seperateClassNameSpace(baseClassName);
 						std::vector<std::string>* classNameTuple = seperateClassNameSpace(className);
-						if(!shouldIgnoreNamespace(baseClassNameTuple->at(0)) || !shouldIgnoreNamespace(classNameTuple->at(0))) {
+						if(!shouldIgnoreClassName(baseClassName) || !shouldIgnoreClassName(className)) {
 							*out << baseClassNameTuple->at(0) << ";"; //namespace
 							*out << baseClassNameTuple->at(1) << ";";//className
 							*out << tracker.methodSignature << ";";

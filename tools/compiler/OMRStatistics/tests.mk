@@ -29,6 +29,10 @@ testHierarchy5: $(SO)
 testHierarchy6: $(SO)
 	@echo Executing Hierarchy Test 6...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/Hierarchy6" $(DEFINES) $(PLUGIN_INCLUDES) -c "tests/input/Hierarchy6 - Multiple Parents.cpp"
+
+testMemberFunctions: $(SO)
+	@echo Executing Member Functions Test...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/MemberFunc" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/MemberFunc.cpp
 	
 testTemplates: $(SO)
 	@echo Executing Template Test...
