@@ -162,8 +162,7 @@ namespace OMRStatistics {
 		
 		//Printing the method information
 		
-		//Judges whether we should ignore this namespace (if its not related to the project, like std classes)
-		static bool shouldIgnoreNamespace(std::string);
+		//Judges whether we should ignore this class qualified name (if its not related to the project, like std classes)
 		static bool shouldIgnoreClassName(std::string);
 		
 		std::vector<std::string>* seperateClassNameSpace(std::string input);
