@@ -205,7 +205,7 @@ for row in functionLocations:
 		ignoredFunctionSignatures.append(signature)
 		continue
 	#Get relative source location path
-	functionLocation = functionLocation.replace("../../../", pathToOMR);
+	functionLocation = functionLocation.replace("../../../../", pathToOMR);
 	functionLocation = functionLocation.replace("//", "/");
 	functionLocation = functionLocation[len(pathToOMR)-4:]
 	
@@ -227,14 +227,7 @@ for row in allFunctions2:
 	functionQualifiedName = classQualifiedName + '::' + row[1]
 	
 	if row[1] in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
-	try: fileID = functionToFileIDMap[functionQualifiedName]
-	except KeyError: #Exceptions (check issue #26)
-		if classQualifiedName == 'TR::PersistentMemoryAllocator':
-			functionQualifiedName = functionQualifiedName.replace('::', '')
-		else:
-			#NameSpace and className are connected with _ instead of ::, check issue #26
-			classQualifiedName2 = row[3] + '_' + row[4] if row[3] != '' else row[4] 
-			fileID = functionToFileIDMap[classQualifiedName2 + '::' + row[1]]
+	fileID = functionToFileIDMap[functionQualifiedName]
 	
 	classID = classToIDMap[classQualifiedName]
 	functionToIDMap[row[1]] = id
@@ -276,11 +269,6 @@ for row in hierarchies:
 	hierarchy = row[1]
 	previousClassID = ''
 	for clas in hierarchy.split(' --> '):
-		#Exceptions (check issue #26)
-		if 'TR_' in clas and '::' not in clas: clas = clas.replace('TR_', 'TR::')
-		if 'TRPersistentMemoryAllocator' == clas: clas = 'TR::PersistentMemoryAllocator'
-			
-		
 		if previousClassID == '': # This is the first class in this hierarchy
 			previousClassID = classToIDMap[clas]
 			# Record the base class of this hierarchy in the HierarchiesBase table

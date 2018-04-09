@@ -41,7 +41,7 @@ sample: $(SO)
 sample2: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/BitVecAnalOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/optimizer/BitVectorAnalysis.cpp
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/BitVecAnalOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)compiler/compile/OSRData.cpp
 	
 
 # Test cases targets
@@ -72,11 +72,14 @@ output/lastCreated: $(SO)
 	@rm -f output/i386.*
 	@rm -f output/p.*
 	@rm -f output/z.*
-	@rm -f output/allFunctions
-	@rm -f output/allClasses
-	@rm -f output/weirdHierarchy
-	@rm -f output/sanityCheck
-	@rm -f output/functionLocation
+	@for output in $(OUTPUTS) ; do \
+		rm -f output/$$output ; \
+	done \
+# @rm -f output/allFunctions
+# @rm -f output/allClasses
+# @rm -f output/weirdHierarchy
+# @rm -f output/sanityCheck
+# @rm -f output/functionLocation
 	
 	@python sources/execute.py amd64
 	@python sources/execute.py i386
