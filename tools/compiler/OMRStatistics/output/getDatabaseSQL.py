@@ -3,12 +3,14 @@ import sys
 import os
 
 # ------------------------------------------Define Tables------------------------------------------
-class functionTable:
+class FunctionTable:
 	def __init__(self, functionNameLength, signatureLength):
 		self.tableName = 'Function'
-		self.primaryKey = 'ID'
-		self.columns = ['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
-		self.ID = 'INT';
+		self.primaryKey = 'Signature, ClassID'
+		self.foreignKeys = {}
+		self.foreignKeys['ClassID'] = [ClassTable(-1,-1), 'ID']
+		self.foreignKeys['FileID'] = [FileTable(-1), 'ID']
+		self.columns = ['FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 		self.FunctionName = 'VARCHAR(' + str(functionNameLength) + ')'
 		self.Signature = 'VARCHAR(' + str(signatureLength) + ')'
 		self.ClassID = 'INT'
@@ -19,31 +21,32 @@ class functionTable:
 class FileTable:
 	def __init__(self, maxLocationLength):
 		self.tableName = 'File'
+		self.foreignKeys = {}
 		self.primaryKey = 'ID'
 		self.columns = ['ID', 'Location']
 		self.ID = 'INT'
 		self.Location = 'VARCHAR(' + str(maxLocationLength) + ')'
 
-class OverloadTable:
-	def __init__(self):
-		self.tableName = 'Overload'
-		self.primaryKey = 'FunctionID'
-		self.columns = ['FunctionID', 'IsFirstOccurrence']
-		self.FunctionID = 'INT'
-		self.IsFirstOccurrence = 'INT'
-
 class OverrideTable:
-	def __init__(self):
+	def __init__(self, maxSigLen):
 		self.tableName = 'Override'
+		self.foreignKeys = {}
+		self.foreignKeys['FunctionSig'] = [FunctionTable(-1,-1), 'signature']
+		self.foreignKeys['BaseClassID'] = [ClassTable(-1,-1), 'ID']
+		self.foreignKeys['OverridingClassID'] = [ClassTable(-1,-1), 'ID']
 		self.primaryKey = 'FunctionID, BaseClassID, OverridingClassID'
-		self.columns = ['FunctionID', 'BaseClassID', 'OverridingClassID']
-		self.FunctionID = 'INT'
+		self.columns = ['FunctionSig', 'BaseClassID', 'OverridingClassID']
+		self.FunctionSig = 'VARCHAR(' + str(maxSigLen) + ')'
 		self.BaseClassID = 'INT'
 		self.OverridingClassID = 'INT'
 
 class PolymorphismTable:
 	def __init__(self):
 		self.tableName = 'Polymorphism'
+		self.foreignKeys = {}
+		self.foreignKeys['HierarchyID'] = [HierarchiesBase(), 'HierarchyID']
+		self.foreignKeys['ChildClassID'] = [ClassTable(-1,-1), 'ID']
+		self.foreignKeys['ParentClassID'] = [ClassTable(-1,-1), 'ID']
 		self.primaryKey = 'HierarchyID, ChildClassID, ParentClassID'
 		self.columns = ['HierarchyID', 'ChildClassID', 'ParentClassID']
 		self.HierarchyID = 'INT'
@@ -53,6 +56,8 @@ class PolymorphismTable:
 class HierarchiesBase:
 	def __init__(self):
 		self.tableName = 'HierarchiesBase'
+		self.foreignKeys = {}
+		self.foreignKeys['BaseClassID'] = [ClassTable(-1,-1), 'ID']
 		self.primaryKey = 'HierarchyID'
 		self.columns = ['HierarchyID', 'BaseClassID']
 		self.HierarchyID = 'INT'
@@ -61,6 +66,7 @@ class HierarchiesBase:
 class ClassTable:
 	def __init__(self, maxNamespaceLength, maxClassNameLength):
 		self.tableName = 'Class'
+		self.foreignKeys = {}
 		self.primaryKey = 'ID'
 		self.columns = ['ID', 'Namespace', 'ClassName', 'IsExtensible']
 		self.ID = 'INT'
@@ -76,8 +82,13 @@ def createTable(table):
 	result += 'CREATE TABLE ' + table.tableName + ' (\n'
 	for column in table.columns:
 		result += '\t' + column + ' ' + tableColumns[column] + ',\n'
-	result += '\tPRIMARY KEY(' + table.primaryKey + ')\n'
-	result +=  ');'
+	result += '\tPRIMARY KEY(' + table.primaryKey + '),\n'
+	for fk in table.foreignKeys: 
+		result += '\tFOREIGN KEY(' + fk + ') '
+		fkTable = table.foreignKeys[fk][0]
+		result += 'REFERENCES ' + fkTable.tableName + '(' + table.foreignKeys[fk][1]+'),\n'
+	result = result[:-2] + '\n);\n' #remove last coma
+	result += 'ALTER TABLE ' + table.tableName + ' CONVERT TO CHARACTER SET latin1 COLLATE latin1_general_cs;' #Make case-sensitive
 	return result
 
 def getOMRLongestPath(pathToOMR):
@@ -106,7 +117,8 @@ def getSignature(qualifiedName):
 	signature = qualifiedName[lastColonIndex + 2:]
 	return signature
 
-debug = 0
+if len(sys.argv) > 1 and sys.argv[1] == 'd': debug = 1
+else: debug = 0
 # Get path from OMRStatistics directory to the python script
 path = sys.argv[0]
 nameIndex = path.index('getDatabaseSQL.py')
@@ -117,7 +129,6 @@ pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5] #get path fo
 
 allFunctions = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
 allClasses = csv.reader(open(path + 'allClasses','r'), delimiter=";")
-overloads = csv.reader(open(path + '../visualization/Overloads/overloads','r'), delimiter=";")
 overrides = csv.reader(open(path + '../visualization/Overrides/overrides','r'), delimiter=";")
 hierarchies = csv.reader(open(path + '../visualization/Hierarchy/hierarchy','r'), delimiter=";")
 functionLocations = csv.reader(open(path + 'functionLocation','r'), delimiter=";")
@@ -138,13 +149,14 @@ for row in allClasses2:
 	if maxNamespaceLength < len(row[0]) : maxNamespaceLength = len(row[0])
 	if maxClassNameLength < len(row[1]) : maxClassNameLength = len(row[1])
 	
-# Create Database
-if not debug: print 'CREATE DATABASE IF NOT EXISTS omrstatisticsdb;'
+# Create and use database
+if not debug: 
+	print 'CREATE DATABASE IF NOT EXISTS omrstatisticsdb;'
+	print 'USE omrstatisticsdb;'
 # Create tables
-functions = functionTable(maxFunctionNameLength, maxSignatureLength)
+functions = FunctionTable(maxFunctionNameLength, maxSignatureLength)
 files = FileTable(getOMRLongestPath(pathToOMR))
-overloadsTable = OverloadTable()
-overridesTable = OverrideTable()
+overridesTable = OverrideTable(maxSignatureLength)
 polymorphism = PolymorphismTable()
 hierarchiesBase = HierarchiesBase()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
@@ -217,6 +229,7 @@ for row in functionLocations:
 # Fill Functions table
 if not debug: print createTable(functions)
 id = 0
+visitedFunctions = set()
 for row in allFunctions2:
 	#['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 	if id == 0:
@@ -226,26 +239,28 @@ for row in allFunctions2:
 	classQualifiedName = row[3] + '::' + row[4] if row[3] != '' else row[4]
 	functionQualifiedName = classQualifiedName + '::' + row[1]
 	
+	if functionQualifiedName in visitedFunctions:
+		id += 1
+		continue
+	
+	visitedFunctions.add(functionQualifiedName)
+	
 	if row[1] in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
 	fileID = functionToFileIDMap[functionQualifiedName]
 	
 	classID = classToIDMap[classQualifiedName]
-	functionToIDMap[row[1]] = id
-	if not debug: print insertTo('Function', [id, row[0], row[1], classID, row[6], row[5], fileID])
+	functionToIDMap[row[1]] = [row[2],row[3]]
+	if not debug:
+		print insertTo('Function', [row[0], row[1], classID, row[6], row[5], fileID])
 	id += 1
 
 # Fill Override table
 if not debug: print createTable(overridesTable)
 id = 0
 for row in overrides:
-	#['FunctionID', 'BaseClassID', 'OverridingClassID']
+	#['FunctionSignature', 'FunctionClassID', 'BaseClassID', 'OverridingClassID']
 	if id == 0: 
 		id += 1
-		continue
-	
-	signature = row[2]
-	try: functionID = functionToIDMap[signature]
-	except KeyError: # This case is when functions are located outside OMR directory, they will not have an entry in the functionToIDMap
 		continue
 	
 	#Reconstruct qualified names of classes & get IDs
@@ -254,7 +269,12 @@ for row in overrides:
 	baseClassID = classToIDMap[qualifiedBaseName]
 	overridingClassID = classToIDMap[qualifiedOverridingName]
 	
-	if not debug: print insertTo('Override', [functionID, baseClassID, overridingClassID])
+	#Ignore functions outside omr
+	sig = row[2]
+	funcQualifiedName = qualifiedBaseName + '::' + sig
+	if sig in ignoredFunctionSignatures: continue	
+	
+	if not debug: print insertTo('Override', [sig, baseClassID, overridingClassID])
 	
 # Fill Polymorphism and HierarchiesBase tables
 if not debug: print createTable(polymorphism)
