@@ -24,8 +24,8 @@ PLUGIN_INCLUDES_AMD64 = -I $(OMR)/include_core \
 -I $(OMR)/compiler/x \
 -I $(OMR)/compiler \
 -I $(OMR)/ \
--I $(OMR)/third_party/gtest-1.7.0 \
--I $(OMR)/third_party/gtest-1.7.0/include \
+-I $(OMR)/third_party/gtest-1.8.0 \
+-I $(OMR)/third_party/gtest-1.8.0/include \
 -I $(OMR)/compiler/
 
 DEFINES_I386 = '-D__sync()=' '-D__lwsync()=' '-D__isync()=' \
