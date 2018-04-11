@@ -32,9 +32,9 @@ class OverrideTable:
 		self.tableName = 'Override'
 		self.foreignKeys = {}
 		self.foreignKeys['FunctionSig'] = [FunctionTable(-1,-1), 'signature']
-		self.foreignKeys['BaseClassID'] = [ClassTable(-1,-1), 'ID']
+		self.foreignKeys['BaseClassID'] = [FunctionTable(-1,-1), 'ClassID']
 		self.foreignKeys['OverridingClassID'] = [ClassTable(-1,-1), 'ID']
-		self.primaryKey = 'FunctionID, BaseClassID, OverridingClassID'
+		self.primaryKey = 'FunctionSig, BaseClassID, OverridingClassID'
 		self.columns = ['FunctionSig', 'BaseClassID', 'OverridingClassID']
 		self.FunctionSig = 'VARCHAR(' + str(maxSigLen) + ')'
 		self.BaseClassID = 'INT'
@@ -163,11 +163,12 @@ classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 
 # Drop tables if they already existed
 if not debug:
+	print 'DROP TABLE IF EXISTS Polymorphism;'
+	print 'DROP TABLE IF EXISTS HierarchiesBase;'
+	print 'DROP TABLE IF EXISTS Override;'
 	print 'DROP TABLE IF EXISTS Function;'
 	print 'DROP TABLE IF EXISTS File;'
 	print 'DROP TABLE IF EXISTS Class;'
-	print 'DROP TABLE IF EXISTS Override;'
-	print 'DROP TABLE IF EXISTS Polymorphism;'
 
 # Fill tables
 classToIDMap = {}
@@ -277,8 +278,8 @@ for row in overrides:
 	if not debug: print insertTo('Override', [sig, baseClassID, overridingClassID])
 	
 # Fill Polymorphism and HierarchiesBase tables
-if not debug: print createTable(polymorphism)
 if not debug: print createTable(hierarchiesBase)
+if not debug: print createTable(polymorphism)
 hierarchyID = 0
 duplicateEntries = set()
 for row in hierarchies:
