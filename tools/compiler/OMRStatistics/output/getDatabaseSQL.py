@@ -7,11 +7,12 @@ import warnings
 class FunctionTable:
 	def __init__(self, functionNameLength, signatureLength):
 		self.tableName = 'Function'
+		self.columns = ['FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 		self.primaryKey = 'Signature, ClassID'
 		self.foreignKeys = {}
 		self.foreignKeys['ClassID'] = [ClassTable(-1,-1), 'ID']
 		self.foreignKeys['FileID'] = [FileTable(-1), 'ID']
-		self.columns = ['FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
+		# Columns
 		self.FunctionName = 'VARCHAR(' + str(functionNameLength) + ')'
 		self.Signature = 'VARCHAR(' + str(signatureLength) + ')'
 		self.ClassID = 'INT'
@@ -22,21 +23,22 @@ class FunctionTable:
 class FileTable:
 	def __init__(self, maxLocationLength):
 		self.tableName = 'File'
-		self.foreignKeys = {}
-		self.primaryKey = 'ID'
 		self.columns = ['ID', 'Location']
+		self.primaryKey = 'ID'
+		# Columns
 		self.ID = 'INT'
 		self.Location = 'VARCHAR(' + str(maxLocationLength) + ')'
 
 class OverrideTable:
 	def __init__(self, maxSigLen):
 		self.tableName = 'Override'
+		self.columns = ['FunctionSig', 'BaseClassID', 'OverridingClassID']
+		self.primaryKey = 'FunctionSig, BaseClassID, OverridingClassID'
 		self.foreignKeys = {}
 		self.foreignKeys['FunctionSig'] = [FunctionTable(-1,-1), 'signature']
 		self.foreignKeys['BaseClassID'] = [FunctionTable(-1,-1), 'ClassID']
 		self.foreignKeys['OverridingClassID'] = [ClassTable(-1,-1), 'ID']
-		self.primaryKey = 'FunctionSig, BaseClassID, OverridingClassID'
-		self.columns = ['FunctionSig', 'BaseClassID', 'OverridingClassID']
+		# Columns
 		self.FunctionSig = 'VARCHAR(' + str(maxSigLen) + ')'
 		self.BaseClassID = 'INT'
 		self.OverridingClassID = 'INT'
@@ -44,12 +46,13 @@ class OverrideTable:
 class PolymorphismTable:
 	def __init__(self):
 		self.tableName = 'Polymorphism'
+		self.columns = ['HierarchyID', 'ChildClassID', 'ParentClassID']
+		self.primaryKey = 'HierarchyID, ChildClassID, ParentClassID'
 		self.foreignKeys = {}
 		self.foreignKeys['HierarchyID'] = [HierarchiesBase(), 'HierarchyID']
 		self.foreignKeys['ChildClassID'] = [ClassTable(-1,-1), 'ID']
 		self.foreignKeys['ParentClassID'] = [ClassTable(-1,-1), 'ID']
-		self.primaryKey = 'HierarchyID, ChildClassID, ParentClassID'
-		self.columns = ['HierarchyID', 'ChildClassID', 'ParentClassID']
+		# Columns
 		self.HierarchyID = 'INT'
 		self.ChildClassID = 'INT'
 		self.ParentClassID = 'INT'
@@ -67,9 +70,10 @@ class HierarchiesBase:
 class ClassTable:
 	def __init__(self, maxNamespaceLength, maxClassNameLength):
 		self.tableName = 'Class'
-		self.foreignKeys = {}
-		self.primaryKey = 'ID'
 		self.columns = ['ID', 'Namespace', 'ClassName', 'IsExtensible']
+		self.primaryKey = 'ID'
+		self.unique = 'Namespace, ClassName'
+		# Columns
 		self.ID = 'INT'
 		self.Namespace = 'VARCHAR(' + str(maxNamespaceLength) + ')'
 		self.ClassName = 'VARCHAR(' + str(maxClassNameLength) + ')'
@@ -83,11 +87,18 @@ def createTable(table):
 	result += 'CREATE TABLE ' + table.tableName + ' (\n'
 	for column in table.columns:
 		result += '\t' + column + ' ' + tableColumns[column] + ',\n'
+	# Adding Primary key
 	result += '\tPRIMARY KEY(' + table.primaryKey + '),\n'
-	for fk in table.foreignKeys: 
-		result += '\tFOREIGN KEY(' + fk + ') '
-		fkTable = table.foreignKeys[fk][0]
-		result += 'REFERENCES ' + fkTable.tableName + '(' + table.foreignKeys[fk][1]+'),\n'
+	# Adding Foreing keys
+	if 'foreignKeys' in tableColumns:
+		for fk in table.foreignKeys: 
+			result += '\tFOREIGN KEY(' + fk + ') '
+			fkTable = table.foreignKeys[fk][0]
+			result += 'REFERENCES ' + fkTable.tableName + '(' + table.foreignKeys[fk][1]+'),\n'
+	# Adding UNIQUE constraints
+	if 'unique' in tableColumns:
+		result += '\tUNIQUE (' + (table.unique) + '),\n'
+	# Final Edits
 	result = result[:-2] + '\n);\n' #remove last coma
 	result += 'ALTER TABLE ' + table.tableName + ' CONVERT TO CHARACTER SET latin1 COLLATE latin1_general_cs;' #Make case-sensitive
 	return result
@@ -246,13 +257,12 @@ for row in allFunctions2:
 	# Record duplicates and dont add them to the database
 	if functionQualifiedName not in f2r:
 		f2r[functionQualifiedName] = []
-	
-	f2r[functionQualifiedName].append(row)
-	
-	if functionQualifiedName in f2r:
+	else:
 		dupKeys.add(functionQualifiedName)
 		id += 1
 		continue
+	
+	f2r[functionQualifiedName].append(row)
 	
 	if row[1] in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
 	fileID = functionToFileIDMap[functionQualifiedName]
