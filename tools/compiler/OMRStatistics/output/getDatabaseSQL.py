@@ -1,6 +1,7 @@
 import csv
 import sys
 import os
+import warnings
 
 # ------------------------------------------Define Tables------------------------------------------
 class FunctionTable:
@@ -140,6 +141,7 @@ allClasses2 = csv.reader(open(path + 'allClasses','r'), delimiter=";")
 maxFunctionNameLength = -1
 maxSignatureLength = -1
 for row in allFunctions:
+	if 'Arch:' in row[0]: continue
 	if maxFunctionNameLength < len(row[0]): maxFunctionNameLength = len(row[0])
 	if maxSignatureLength < len(row[1]): maxSignatureLength = len(row[1])
 
@@ -230,21 +232,27 @@ for row in functionLocations:
 # Fill Functions table
 if not debug: print createTable(functions)
 id = 0
-visitedFunctions = set()
+f2r = {} # Function --> row
+dupKeys = set() # Functions in visitedFunctions that have more than one value
 for row in allFunctions2:
+	if 'Arch:' in row[0]: continue
 	#['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 	if id == 0:
 		id += 1
 		continue
-	
 	classQualifiedName = row[3] + '::' + row[4] if row[3] != '' else row[4]
 	functionQualifiedName = classQualifiedName + '::' + row[1]
 	
-	if functionQualifiedName in visitedFunctions:
+	# Record duplicates and dont add them to the database
+	if functionQualifiedName not in f2r:
+		f2r[functionQualifiedName] = []
+	
+	f2r[functionQualifiedName].append(row)
+	
+	if functionQualifiedName in f2r:
+		dupKeys.add(functionQualifiedName)
 		id += 1
 		continue
-	
-	visitedFunctions.add(functionQualifiedName)
 	
 	if row[1] in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
 	fileID = functionToFileIDMap[functionQualifiedName]
@@ -254,6 +262,17 @@ for row in allFunctions2:
 	if not debug:
 		print insertTo('Function', [row[0], row[1], classID, row[6], row[5], fileID])
 	id += 1
+
+# Report to the user about the ignored functions
+warning = "In allFunctions output, the following lines were ignored due to having previous contradicting records:\n"
+printWarning = 0
+for k in dupKeys:
+	iSig = f2r[k][0]
+	for sig in f2r[k]:
+		if sig[6] != iSig[6]:
+			warning += str(sig) + "\n"
+			printWarning = 1
+if printWarning: warnings.warn(warning)
 
 # Fill Override table
 if not debug: print createTable(overridesTable)
