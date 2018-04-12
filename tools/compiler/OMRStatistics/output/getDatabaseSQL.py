@@ -2,6 +2,7 @@ import csv
 import sys
 import os
 import warnings
+import random
 
 # ------------------------------------------Define Tables------------------------------------------
 class FunctionTable:
@@ -32,13 +33,14 @@ class FileTable:
 class OverrideTable:
 	def __init__(self, maxSigLen):
 		self.tableName = 'Override'
-		self.columns = ['FunctionSig', 'BaseClassID', 'OverridingClassID']
-		self.primaryKey = 'FunctionSig, BaseClassID, OverridingClassID'
+		self.columns = ['FirstClassID', 'FunctionSig', 'BaseClassID', 'OverridingClassID']
+		self.primaryKey = 'FirstClassID, FunctionSig, BaseClassID, OverridingClassID'
 		self.foreignKeys = {}
-		self.foreignKeys['FunctionSig'] = [FunctionTable(-1,-1), 'signature']
+		self.foreignKeys['FirstClassID, FunctionSig'] = [FunctionTable(-1,-1), 'ClassID, Signature']
 		self.foreignKeys['BaseClassID'] = [FunctionTable(-1,-1), 'ClassID']
 		self.foreignKeys['OverridingClassID'] = [ClassTable(-1,-1), 'ID']
 		# Columns
+		self.FirstClassID = 'INT'
 		self.FunctionSig = 'VARCHAR(' + str(maxSigLen) + ')'
 		self.BaseClassID = 'INT'
 		self.OverridingClassID = 'INT'
@@ -183,9 +185,8 @@ if not debug:
 	print 'DROP TABLE IF EXISTS File;'
 	print 'DROP TABLE IF EXISTS Class;'
 
-# Fill tables
+# Global data structures
 classToIDMap = {}
-functionToIDMap = {}
 fileToIDMap = {}
 functionToFileIDMap = {}
 ignoredFunctionSignatures = []
@@ -268,7 +269,7 @@ for row in allFunctions2:
 	fileID = functionToFileIDMap[functionQualifiedName]
 	
 	classID = classToIDMap[classQualifiedName]
-	functionToIDMap[row[1]] = [row[2],row[3]]
+	
 	if not debug:
 		print insertTo('Function', [row[0], row[1], classID, row[6], row[5], fileID])
 	id += 1
@@ -287,25 +288,43 @@ if printWarning: warnings.warn(warning)
 # Fill Override table
 if not debug: print createTable(overridesTable)
 id = 0
+firstClassMap = {}
+firstClassID = -1
 for row in overrides:
-	#['FunctionSignature', 'FunctionClassID', 'BaseClassID', 'OverridingClassID']
+	# ['FirstClassID', 'FunctionSignature', 'FunctionClassID', 'BaseClassID', 'OverridingClassID']
 	if id == 0: 
 		id += 1
 		continue
+	id += 1
 	
-	#Reconstruct qualified names of classes & get IDs
+	# Reconstruct qualified names of classes & get IDs
 	qualifiedBaseName = row[0] + '::' + row[1] if row[0] != '' else row[1]
 	qualifiedOverridingName = row[3] + '::' + row[4] if row[3] != '' else row[4]
 	baseClassID = classToIDMap[qualifiedBaseName]
 	overridingClassID = classToIDMap[qualifiedOverridingName]
 	
-	#Ignore functions outside omr
 	sig = row[2]
+	
+	# If first line, store info in variables and move on
+	if id == 1:
+		continue
+	
+	# Ignore functions outside omr
 	funcQualifiedName = qualifiedBaseName + '::' + sig
 	if sig in ignoredFunctionSignatures: continue	
 	
-	if not debug: print insertTo('Override', [sig, baseClassID, overridingClassID])
+	# Get the correct FirstClassID and signature
+	baseClassQualSig = str(baseClassID) + "::" + sig
+	overridingClassQualSig = str(overridingClassID) + "::" + sig
+	if baseClassQualSig in firstClassMap:
+		firstClassMap[overridingClassQualSig] = firstClassMap[baseClassQualSig]
+	else:
+		firstClassMap[overridingClassQualSig] = baseClassID
 	
+	firstClassID = firstClassMap[overridingClassQualSig]
+	
+	if not debug: print insertTo('Override', [firstClassID, sig, baseClassID, overridingClassID])
+
 # Fill Polymorphism and HierarchiesBase tables
 if not debug: print createTable(hierarchiesBase)
 if not debug: print createTable(polymorphism)
