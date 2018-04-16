@@ -133,3 +133,12 @@ moveOutputToVisualization:
 #@mv output/overloads visualization/Overloads/overloads
 	@mv output/overrides visualization/Overrides/overrides
 	@mv output/hierarchy visualization/Hierarchy/hierarchy
+
+FILETARGET = tests/input/MemberFunc.cpp
+FILETARGET2 = ../../../compiler/codegen/OMRCodeGenerator.cpp
+getCallGraph:
+	@clang++ -std=c++0x -ferror-limit=0 $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -S -emit-llvm $(FILETARGET2) -o - | opt -analyze -dot-callgraph
+	@mv callgraph.dot tests/callGraph.dot
+	@cat tests/callGraph.dot | c++filt | sed 's,>,\\>,g; s,-\\>,->,g; s,<,\\<,g' | gawk '/external node/{id=$$1} $$1 != id' > tests/callgraph.dot
+	@rm tests/callGraph.dot
+	@dot -Tpng -otests/callgraph.png tests/callgraph.dot
