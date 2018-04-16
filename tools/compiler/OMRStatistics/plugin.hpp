@@ -153,24 +153,23 @@ namespace OMRStatistics {
 		std::vector<std::vector<LinkedNode*>*>* getTopToBaseAsArray(OMRStatistics::Hierarchy* hierarchy);
 		void getTopToBaseAsArray(LinkedNode* node, std::vector<LinkedNode*>* array, std::vector<std::vector<LinkedNode*>*>* subHierarchies);
 		
-		//Printing methods to check the results
-		//Print the class hierarchies collected previously, this method works on the hierarchies vector, hence fillHierarchies should be called before it
-		void printHierarchy(std::string, LinkedNode*, llvm::raw_ostream*);
+		//Printing output files
 		void printHierarchies(HMRecorder&, llvm::raw_ostream*);
 		void printWeirdHierarchies(HMRecorder&, llvm::raw_ostream*);
 		void printAllClasses(HMRecorder&, llvm::raw_ostream*);
-		
-		//Printing the method information
-		
-		//Judges whether we should ignore this class qualified name (if its not related to the project, like std classes)
-		static bool shouldIgnoreClassName(std::string);
-		
-		std::vector<std::string>* seperateClassNameSpace(std::string input);
-		size_t findLastStringIn(std::string input, std::string key);
-		void printOverloads(llvm::raw_ostream*, bool printAll);
+		void printAllFunctions(llvm::raw_ostream*);
 		void printOverrides(llvm::raw_ostream*);
 		void printAverageOverrides(HMRecorder&, llvm::raw_ostream*);
 		void printFunctionLocations(HMRecorder&, llvm::raw_ostream*);
+		
+		//Helper printing functions
+		void printHierarchy(std::string, LinkedNode*, llvm::raw_ostream*);
+		static bool shouldIgnoreClassName(std::string);
+		std::vector<std::string>* seperateClassNameSpace(std::string input);
+		size_t findLastStringIn(std::string input, std::string key);
+		void printTracker(llvm::raw_ostream*, MethodTracker&);
+		void printTracker(llvm::raw_ostream*, std::string, std::string, std::string, std::string, bool, bool);
+		
 		
 		virtual void HandleTranslationUnit(ASTContext &Context);
 	};

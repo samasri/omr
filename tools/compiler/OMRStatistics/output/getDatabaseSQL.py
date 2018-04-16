@@ -114,7 +114,6 @@ def createTable(table, ):
 	# Get MySQL instruction
 	result = ''
 	tableColumns = table.__dict__
-	result += 'DROP TABLE IF EXISTS ' + table.tableName + ';\n'
 	result += 'CREATE TABLE ' + table.tableName + ' (\n'
 	for column in table.columns:
 		result += '\t' + column + ' ' + tableColumns[column] + ',\n'
@@ -206,6 +205,14 @@ if not debug:
 	createDBQuery += 'USE omrstatisticsdb;\n'
 	initFile.write(createDBQuery)
 	allSQLQueries.write(createDBQuery)
+	dropQueries = 'DROP TABLE IF EXISTS Polymorphism;\n'
+	dropQueries += 'DROP TABLE IF EXISTS HierarchiesBase;\n'
+	dropQueries += 'DROP TABLE IF EXISTS Override;\n'
+	dropQueries += 'DROP TABLE IF EXISTS Function;\n'
+	dropQueries += 'DROP TABLE IF EXISTS File;\n'
+	dropQueries += 'DROP TABLE IF EXISTS Class;\n'
+	initFile.write(dropQueries)
+	allSQLQueries.write(dropQueries)
 
 # Create tables
 functions = FunctionTable(maxFunctionNameLength, maxSignatureLength)
@@ -315,6 +322,7 @@ id = 0
 firstClassMap = {}
 firstClassID = -1
 for row in overrides:
+	if 'Arch:' in row[0]: continue
 	# ['FirstClassID', 'FunctionSignature', 'FunctionClassID', 'BaseClassID', 'OverridingClassID']
 	if id == 0: 
 		id += 1
