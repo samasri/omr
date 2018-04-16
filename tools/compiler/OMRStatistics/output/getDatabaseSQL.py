@@ -41,6 +41,7 @@ class OverrideTable:
 		self.primaryKey = 'FirstClassID, FunctionSig, BaseClassID, OverridingClassID'
 		self.foreignKeys = {}
 		self.foreignKeys['FirstClassID, FunctionSig'] = [FunctionTable(-1,-1), 'ClassID, Signature']
+		self.foreignKeys['BaseClassID, FunctionSig'] = [FunctionTable(-1,-1), 'ClassID, Signature']
 		self.foreignKeys['BaseClassID'] = [FunctionTable(-1,-1), 'ClassID']
 		self.foreignKeys['OverridingClassID'] = [ClassTable(-1,-1), 'ID']
 		# Columns
@@ -113,6 +114,7 @@ def createTable(table, ):
 	# Get MySQL instruction
 	result = ''
 	tableColumns = table.__dict__
+	result += 'DROP TABLE IF EXISTS ' + table.tableName + ';\n'
 	result += 'CREATE TABLE ' + table.tableName + ' (\n'
 	for column in table.columns:
 		result += '\t' + column + ' ' + tableColumns[column] + ',\n'
@@ -213,17 +215,6 @@ polymorphism = PolymorphismTable()
 hierarchiesBase = HierarchiesBase()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 
-# Drop tables if they already existed
-if not debug:
-	dropTablesQuery = 'DROP TABLE IF EXISTS Polymorphism;\n'
-	dropTablesQuery += 'DROP TABLE IF EXISTS HierarchiesBase;\n'
-	dropTablesQuery += 'DROP TABLE IF EXISTS Override;\n'
-	dropTablesQuery += 'DROP TABLE IF EXISTS Function;\n'
-	dropTablesQuery += 'DROP TABLE IF EXISTS File;\n'
-	dropTablesQuery += 'DROP TABLE IF EXISTS Class;\n'
-	initFile.write(dropTablesQuery)
-	allSQLQueries.write(dropTablesQuery)
-
 # Fill Files table
 id = 0
 if not debug: FileFile = createTable(files)
@@ -280,12 +271,12 @@ id = 0
 f2r = {} # Function --> row
 dupKeys = set() # Functions in visitedFunctions that have more than one value
 for row in allFunctions2:
+	#Function table: ['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 	if 'Arch:' in row[0]: continue
-	#['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 	if id == 0:
 		id += 1
 		continue
-	classQualifiedName = row[3] + '::' + row[4] if row[3] != '' else row[4]
+	classQualifiedName = row[2] + '::' + row[3] if row[2] != '' else row[3]
 	functionQualifiedName = classQualifiedName + '::' + row[1]
 	
 	# Record duplicates and dont add them to the database
@@ -304,7 +295,7 @@ for row in allFunctions2:
 	classID = classToIDMap[classQualifiedName]
 	
 	if not debug:
-		FunctionFile.write(insertTo('Function', [row[0], row[1], classID, row[6], row[5], fileID]))
+		FunctionFile.write(insertTo('Function', [row[0], row[1], classID, row[5], row[4], fileID]))
 	id += 1
 
 # Report to the user about the ignored functions
@@ -313,7 +304,7 @@ printWarning = 0
 for k in dupKeys:
 	iSig = f2r[k][0]
 	for sig in f2r[k]:
-		if sig[6] != iSig[6]:
+		if sig[5] != iSig[5]:
 			warning += str(sig) + "\n"
 			printWarning = 1
 if printWarning: warnings.warn(warning)
