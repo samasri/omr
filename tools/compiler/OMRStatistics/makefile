@@ -50,7 +50,7 @@ include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
-OUTPUTS = hierarchy weirdHierarchy allClasses overloads allFunctions overrides functionLocation avg
+OUTPUTS = hierarchy weirdHierarchy allClasses allFunctions overrides functionLocation avg
 
 # JIT_OMR_DIRTY_DIR: path to 'compiler' dir starting from where clang is going to compile the files, that is: from OMRStatistics/sources
 JIT_OMR_DIRTY_DIR = ../../../../compiler
@@ -88,7 +88,7 @@ output/lastCreated: $(SO)
 	@make createTotalOutput
 	@make moveOutputToVisualization
 	
-	@python visualization/Overloads/makeHTML.py visualization/Overloads/overloads
+#@python visualization/Overloads/makeHTML.py visualization/Overloads/overloads
 	@python visualization/Hierarchy/makeDot.py
 	@dot -Tpdf visualization/Hierarchy/graph.dot -o visualization/Hierarchy/graph.pdf
 	
@@ -130,6 +130,6 @@ createTotalOutput:
 
 moveOutputToVisualization:
 	@echo "Moving output to the right directory for visualization..."
-	@mv output/overloads visualization/Overloads/overloads
+#@mv output/overloads visualization/Overloads/overloads
 	@mv output/overrides visualization/Overrides/overrides
 	@mv output/hierarchy visualization/Hierarchy/hierarchy

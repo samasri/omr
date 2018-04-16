@@ -133,22 +133,25 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			class2Methods.emplace(className, methods);
 		}
 		
-		//Check for stuff
-		/*llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
-		Stmt* stmt = currentDecl->getBody();
-		CompoundStmt* stmtC = (CompoundStmt*) stmt;
-		unsigned size = stmtC->size();
-		Stmt** bodyItr = stmtC->body_begin();
-		for(unsigned i = 0; i < size; i++) {
-			Stmt* currentStmt = bodyItr[i];
-			std::string stmtType = currentStmt->getStmtClassName();
-			CXXMemberCallExpr* call = NULL;
-			if(stmtType.compare("CXXMemberCallExpr") == 0) call = (CXXMemberCallExpr*) currentStmt;
-			if(call != NULL) {
-				std::string methodName = call->getMethodDecl()->getQualifiedNameAsString();
-				llvm::outs() << "\tMethod Name: " << methodName << "\n";
+		//Check for function calls
+		//llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
+		if(currentDecl->hasBody()) {
+			Stmt* stmt = currentDecl->getBody();
+			CompoundStmt* stmtC = (CompoundStmt*) stmt;
+			unsigned size = stmtC->size();
+			Stmt** bodyItr = stmtC->body_begin();
+			for(unsigned i = 0; i < size; i++) {
+				Stmt* currentStmt = bodyItr[i];
+				std::string stmtType = currentStmt->getStmtClassName();
+				CXXMemberCallExpr* call = NULL;
+				if(stmtType.compare("CXXMemberCallExpr") == 0) call = (CXXMemberCallExpr*) currentStmt;
+				if(call != NULL) {
+					std::string methodName = call->getMethodDecl()->getQualifiedNameAsString();
+					//llvm::outs() << "\tMethod Name: " << methodName << "\n";
+				}
 			}
-		}*/
+		}
+		
 		
 	}
 }
@@ -419,6 +422,7 @@ std::string OMRStatistics::HMConsumer::getName(std::string methodSignature) {
 void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 	auto map = recorder.getClass2Methods();
 	std::map<std::string, FunctionDeclInfo*> functionDeclInfo = recorder.getFunctionDeclInfo();
+	
 	for(auto hierarchy : hierarchies) {
 		//iterate hierarchy from top to base
 		
@@ -441,7 +445,7 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 					std::string method = *methodPtr;
 					bool sameName = false;
 					MethodTracker* tracker = searchForTracker(methodName2MethodTracker, method, &sameName);
-					if(tracker)  //This is an override
+					if(tracker) //This is an override
 						tracker->addOccurence(className);
 					else {
 						std::string methodName = getName(method);
@@ -513,15 +517,6 @@ std::vector<std::string>* OMRStatistics::HMConsumer::seperateClassNameSpace(std:
 		int classNameSize = input.length() - pos - 2;
 		className = input.substr(pos+2, classNameSize);
 	}
-	/*else if(input.find("TR_") != std::string::npos) {
-		nameSpace = "TR";
-		int classNameSize = input.length() - 3;
-		className = input.substr(3, classNameSize);
-	}
-	else if(input.find("TRPersistentMemoryAllocator") != std::string::npos) {
-		nameSpace = "TR";
-		className = "PersistentMemoryAllocator";
-	}*/
 	else className = input;
 	std::vector<std::string>* tuple = new std::vector<std::string>();
 	tuple->push_back(nameSpace);
@@ -546,7 +541,7 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 }
 
 void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool printAll) {
-	*out << "FunctionName; FunctionSignature; IsFirstOccurence; Namespace; ClassName; isImplicit; isVirtual\n";
+	*out << "FunctionName; FunctionSignature; Namespace; ClassName; isImplicit; isVirtual\n";
 	std::map<std::string, bool> isFirstOccurenceMap;
 	for(auto hierarchy : hierarchies) {
 		auto trackerMapVec = hierarchy->methodName2MethodTrackerVec;
@@ -568,7 +563,6 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool prin
 					if(!shouldIgnoreClassName(tracker.baseClassName)) {
 						*out << tracker.methodName << ";";
 						*out << tracker.methodSignature << ";";
-						*out << tracker.firstOccurence << ";";
 						*out << tuple->at(0) << ";"; //namespace
 						*out << tuple->at(1) << ";";//className
 						*out << tracker.isImplicit << ";";
@@ -721,12 +715,16 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		printAllClasses(recorder, outputs->at(2)/*allClassesOutput*/);
 	}
 	if(conf.overloading) {
-		printOverloads(outputs->at(3)/*overloadOutput*/, false);
+		//printOverloads(outputs->at(3)/*overloadOutput*/, false);
 		printOverloads(outputs->at(4)/*allFunctionsOutput*/, true);
 	}
 	printFunctionLocations(recorder, outputs->at(5));
 	printOverrides(outputs->at(6));
 	printAverageOverrides(recorder, outputs->at(7));
+	
+	//Testing call graphs
+	
+	
 	
 	//Flush all outputs to their respective files
 	for(llvm::raw_ostream* output : *outputs) output->flush();
