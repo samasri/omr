@@ -34,6 +34,7 @@ def printErrors(f):
 	list = []
 	for row in f:
 		if not row: continue
+		if 'Arch:' in row[0]: continue
 		baseClassName = row[1]
 		functionSignature = row[2]
 		if row[3] == 'TR' and not isConstructor(baseClassName, functionSignature):

@@ -540,7 +540,27 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 	return pos;
 }
 
-void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool printAll) {
+void OMRStatistics::HMConsumer::printTracker(llvm::raw_ostream* out, std::string methodName, std::string methodSig, std::string nameSpace, std::string className, bool isImplicit, bool isVirtual) {
+	*out << methodName << ";";
+	*out << methodSig << ";";
+	*out << nameSpace << ";"; 
+	*out << className << ";";
+	*out << isImplicit << ";";
+	*out << isVirtual << "\n";
+}
+
+void OMRStatistics::HMConsumer::printTracker(llvm::raw_ostream* out, OMRStatistics::MethodTracker &tracker) {
+	if(!shouldIgnoreClassName(tracker.baseClassName)) {
+		std::vector<std::string>* baseClass = seperateClassNameSpace(tracker.baseClassName);
+		printTracker(out, tracker.methodName, tracker.methodSignature, baseClass->at(0), baseClass->at(1), tracker.isImplicit, tracker.isVirtual);
+		for(std::string classOccurrenceQualName : *tracker.classesOverriden) {
+			std::vector<std::string>* classOccurrence = seperateClassNameSpace(classOccurrenceQualName);
+			printTracker(out, tracker.methodName, tracker.methodSignature, classOccurrence->at(0), classOccurrence->at(1), tracker.isImplicit, tracker.isVirtual);
+		}
+	}
+}
+
+void OMRStatistics::HMConsumer::printAllFunctions(llvm::raw_ostream* out) {
 	*out << "FunctionName; FunctionSignature; Namespace; ClassName; isImplicit; isVirtual\n";
 	std::map<std::string, bool> isFirstOccurenceMap;
 	for(auto hierarchy : hierarchies) {
@@ -552,22 +572,9 @@ void OMRStatistics::HMConsumer::printOverloads(llvm::raw_ostream* out, bool prin
 			auto itr = b;
 			while(itr != e) {
 				auto hierarchyTrackers = *(itr->second);
-				if(!printAll && hierarchyTrackers.size() < 2) { 
-				//If methodName has only one signature, then it is not overloaded
-					itr++;
-					continue;
-				}
 				//Go through each tracker (signature) for a specific method name and report the overloads
 				for(auto tracker : hierarchyTrackers) {
-					std::vector<std::string>* tuple = seperateClassNameSpace(tracker.baseClassName);
-					if(!shouldIgnoreClassName(tracker.baseClassName)) {
-						*out << tracker.methodName << ";";
-						*out << tracker.methodSignature << ";";
-						*out << tuple->at(0) << ";"; //namespace
-						*out << tuple->at(1) << ";";//className
-						*out << tracker.isImplicit << ";";
-						*out << tracker.isVirtual << "\n";
-					}
+					printTracker(out, tracker);
 				}
 				itr++;
 			}
@@ -715,8 +722,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 		printAllClasses(recorder, outputs->at(2)/*allClassesOutput*/);
 	}
 	if(conf.overloading) {
-		//printOverloads(outputs->at(3)/*overloadOutput*/, false);
-		printOverloads(outputs->at(4)/*allFunctionsOutput*/, true);
+		printAllFunctions(outputs->at(4)/*allFunctionsOutput*/);
 	}
 	printFunctionLocations(recorder, outputs->at(5));
 	printOverrides(outputs->at(6));

@@ -18,7 +18,8 @@ def trim(f, r):
 		x = x.rstrip()
 		if not x: break
 		if "std::" in x: continue
-		if not x in S: list.append(x)
+		if 'Arch:' in x: list.append(x)
+		elif not x in S: list.append(x)
 		S.add(x)
 
 	for line in list:
