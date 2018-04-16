@@ -1,7 +1,7 @@
 # This python script creates SQL files containing queries that create the database. The script does not support more than one argument. 
 # Passing no arguments for the script creates the SQL files in the same directory as the python file. 
 # Passing 'd' to the script will run it in debug mode (no output generated). 
-# Passing anything else to the script will be considered as the path to the directory for the output to be placed in
+# Passing anything else to the script will be considered as the path to the directory for the output to be placed in. The passed path relative to where the python file is. For example passing 'foo' to the script means the files will be placed in omrstatistics/output/foo
 import csv
 import sys
 import os
@@ -95,8 +95,6 @@ nameIndex = path.index('getDatabaseSQL.py')
 path = path[:nameIndex]
 fileWritePath = path + sys.argv[1] + '/' if len(sys.argv) == 2 and sys.argv[1] != 'd' else path + './'
 
-print fileWritePath
-
 # Get the absolute path to the OMR directory
 pathToOMR = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
 pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5] #get path for omr directory
@@ -108,7 +106,7 @@ else: debug = 0
 # --------------------------------------End of Configurations--------------------------------------
 
 # ---------------------------------------Defining Functions----------------------------------------
-def createTable(table):
+def createTable(table, ):
 	# Create file
 	file = open(fileWritePath + table.tableName + '.sql', 'w')
 	
@@ -133,7 +131,9 @@ def createTable(table):
 	result = result[:-2] + '\n);\n' # Remove last coma
 	result += 'ALTER TABLE ' + table.tableName + ' CONVERT TO CHARACTER SET latin1 COLLATE latin1_general_cs;\n' # Make case-sensitive
 	
-	# Write instruction on file and return file
+	# Write queries on file and return file
+	global allSQLQueries
+	allSQLQueries.write(result)
 	file.write(result)
 	return file
 
@@ -154,6 +154,9 @@ def insertTo(table, vector):
 		result += "'" + str(value) + "',"
 	result = result[:len(result)-1]
 	result += ');\n'
+	
+	global allSQLQueries
+	allSQLQueries.write(result)
 	return result
 
 def getSignature(qualifiedName):
@@ -164,6 +167,14 @@ def getSignature(qualifiedName):
 	return signature
 # -----------------------------------End of Defining Functions-------------------------------------
 
+# Global data structures
+classToIDMap = {}
+fileToIDMap = {}
+functionToFileIDMap = {}
+ignoredFunctionSignatures = []
+allSQLQueries = open(fileWritePath + 'all.sql', 'w') # Write all queries in one file
+
+# Import CSV files for reading and processing
 allFunctions = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
 allClasses = csv.reader(open(path + 'allClasses','r'), delimiter=";")
 overrides = csv.reader(open(path + '../visualization/Overrides/overrides','r'), delimiter=";")
@@ -173,7 +184,7 @@ functionLocations = csv.reader(open(path + 'functionLocation','r'), delimiter=";
 allFunctions2 = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
 allClasses2 = csv.reader(open(path + 'allClasses','r'), delimiter=";")
 
-
+# Create and use database
 maxFunctionNameLength = -1
 maxSignatureLength = -1
 for row in allFunctions:
@@ -187,11 +198,13 @@ for row in allClasses2:
 	if maxNamespaceLength < len(row[0]) : maxNamespaceLength = len(row[0])
 	if maxClassNameLength < len(row[1]) : maxClassNameLength = len(row[1])
 	
-# Create and use database
 if not debug: 
 	initFile = open(fileWritePath + 'init.sql', 'w')
-	initFile.write('CREATE DATABASE IF NOT EXISTS omrstatisticsdb;')
-	initFile.write('USE omrstatisticsdb;')
+	createDBQuery = 'CREATE DATABASE IF NOT EXISTS omrstatisticsdb;\n'
+	createDBQuery += 'USE omrstatisticsdb;\n'
+	initFile.write(createDBQuery)
+	allSQLQueries.write(createDBQuery)
+
 # Create tables
 functions = FunctionTable(maxFunctionNameLength, maxSignatureLength)
 files = FileTable(getOMRLongestPath(pathToOMR))
@@ -202,18 +215,14 @@ classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 
 # Drop tables if they already existed
 if not debug:
-	initFile.write('DROP TABLE IF EXISTS Polymorphism;')
-	initFile.write('DROP TABLE IF EXISTS HierarchiesBase;')
-	initFile.write('DROP TABLE IF EXISTS Override;')
-	initFile.write('DROP TABLE IF EXISTS Function;')
-	initFile.write('DROP TABLE IF EXISTS File;')
-	initFile.write('DROP TABLE IF EXISTS Class;')
-
-# Global data structures
-classToIDMap = {}
-fileToIDMap = {}
-functionToFileIDMap = {}
-ignoredFunctionSignatures = []
+	dropTablesQuery = 'DROP TABLE IF EXISTS Polymorphism;\n'
+	dropTablesQuery += 'DROP TABLE IF EXISTS HierarchiesBase;\n'
+	dropTablesQuery += 'DROP TABLE IF EXISTS Override;\n'
+	dropTablesQuery += 'DROP TABLE IF EXISTS Function;\n'
+	dropTablesQuery += 'DROP TABLE IF EXISTS File;\n'
+	dropTablesQuery += 'DROP TABLE IF EXISTS Class;\n'
+	initFile.write(dropTablesQuery)
+	allSQLQueries.write(dropTablesQuery)
 
 # Fill Files table
 id = 0
