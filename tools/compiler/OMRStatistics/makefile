@@ -41,7 +41,8 @@ sample: $(SO)
 sample2: $(SO)
 	@echo Executing with OMRStatistics...
 	@echo "-----------------------------------------"
-	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/BitVecAnalOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)compiler/compile/OSRData.cpp
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/t1" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)compiler/il/symbol/OMRParameterSymbol.cpp
+#@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/t2" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)compiler/ras/Debug.cpp
 	
 
 # Test cases targets
@@ -75,16 +76,12 @@ output/lastCreated: $(SO)
 	@for output in $(OUTPUTS) ; do \
 		rm -f output/$$output ; \
 	done \
-# @rm -f output/allFunctions
-# @rm -f output/allClasses
-# @rm -f output/weirdHierarchy
-# @rm -f output/sanityCheck
-# @rm -f output/functionLocation
 	
 	@python sources/execute.py amd64
 	@python sources/execute.py i386
 	@python sources/execute.py p
 	@python sources/execute.py z
+	@touch output/lastCreated
 	
 	@make copyOriginal
 	@make trimOutput
@@ -95,8 +92,10 @@ output/lastCreated: $(SO)
 	@python visualization/Hierarchy/makeDot.py
 	@dot -Tpdf visualization/Hierarchy/graph.dot -o visualization/Hierarchy/graph.pdf
 	
-	@touch output/lastCreated
-	@echo "------------Visualizations are ready------------"
+	@mkdir -p output/sql
+	@python output/getDatabaseSQL.py sql
+	
+	@echo "------------Visualizations and Database are ready------------"
 
 copyOriginal:
 	@echo "Copying original files..."
@@ -134,27 +133,3 @@ moveOutputToVisualization:
 	@mv output/overloads visualization/Overloads/overloads
 	@mv output/overrides visualization/Overrides/overrides
 	@mv output/hierarchy visualization/Hierarchy/hierarchy
-
-executeAMD64: $(SO)
-	@for file in $(TARGETS_AMD64) ; do \
-	echo "(Arch: amd64)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/amd64"  $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $$file ;\
-	done
-
-executeI386: $(SO)
-	@for file in $(TARGETS_I386) ; do \
-	echo "(Arch: i386)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/i386"  $(DEFINES_I386) $(PLUGIN_INCLUDES_I386) -c $$file ;\
-	done
-
-executeP: $(SO)
-	@for file in $(TARGETS_P) ; do \
-	echo "(Arch: Power)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/p"  $(DEFINES_P) $(PLUGIN_INCLUDES_P) -c $$file ;\
-	done
-
-executeZ: $(SO)
-	@for file in $(TARGETS_Z) ; do \
-	echo "(Arch: Z)": Compiling $$file; \
-	$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "output/z"  $(DEFINES_Z) $(PLUGIN_INCLUDES_Z) -c $$file ;\
-	done
