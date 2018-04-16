@@ -1,3 +1,7 @@
+# This python script creates SQL files containing queries that create the database. The script does not support more than one argument. 
+# Passing no arguments for the script creates the SQL files in the same directory as the python file. 
+# Passing 'd' to the script will run it in debug mode (no output generated). 
+# Passing anything else to the script will be considered as the path to the directory for the output to be placed in
 import csv
 import sys
 import os
@@ -83,7 +87,32 @@ class ClassTable:
 	
 # -------------------------------------End of Defining Tables--------------------------------------
 
+# ------------------------------------------Configurations-----------------------------------------
+
+# Get path from OMRStatistics directory to the python script
+path = sys.argv[0]
+nameIndex = path.index('getDatabaseSQL.py')
+path = path[:nameIndex]
+fileWritePath = path + sys.argv[1] + '/' if len(sys.argv) == 2 and sys.argv[1] != 'd' else path + './'
+
+print fileWritePath
+
+# Get the absolute path to the OMR directory
+pathToOMR = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
+pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5] #get path for omr directory
+
+# Setting debug
+if len(sys.argv) == 2 and sys.argv[1] == 'd': debug = 1
+else: debug = 0
+
+# --------------------------------------End of Configurations--------------------------------------
+
+# ---------------------------------------Defining Functions----------------------------------------
 def createTable(table):
+	# Create file
+	file = open(fileWritePath + table.tableName + '.sql', 'w')
+	
+	# Get MySQL instruction
 	result = ''
 	tableColumns = table.__dict__
 	result += 'CREATE TABLE ' + table.tableName + ' (\n'
@@ -91,7 +120,7 @@ def createTable(table):
 		result += '\t' + column + ' ' + tableColumns[column] + ',\n'
 	# Adding Primary key
 	result += '\tPRIMARY KEY(' + table.primaryKey + '),\n'
-	# Adding Foreing keys
+	# Adding Foreign keys
 	if 'foreignKeys' in tableColumns:
 		for fk in table.foreignKeys: 
 			result += '\tFOREIGN KEY(' + fk + ') '
@@ -101,9 +130,12 @@ def createTable(table):
 	if 'unique' in tableColumns:
 		result += '\tUNIQUE (' + (table.unique) + '),\n'
 	# Final Edits
-	result = result[:-2] + '\n);\n' #remove last coma
-	result += 'ALTER TABLE ' + table.tableName + ' CONVERT TO CHARACTER SET latin1 COLLATE latin1_general_cs;' #Make case-sensitive
-	return result
+	result = result[:-2] + '\n);\n' # Remove last coma
+	result += 'ALTER TABLE ' + table.tableName + ' CONVERT TO CHARACTER SET latin1 COLLATE latin1_general_cs;\n' # Make case-sensitive
+	
+	# Write instruction on file and return file
+	file.write(result)
+	return file
 
 def getOMRLongestPath(pathToOMR):
 	maxPathLength = -1
@@ -121,7 +153,7 @@ def insertTo(table, vector):
 	for value in vector: 
 		result += "'" + str(value) + "',"
 	result = result[:len(result)-1]
-	result += ');'
+	result += ');\n'
 	return result
 
 def getSignature(qualifiedName):
@@ -130,16 +162,7 @@ def getSignature(qualifiedName):
 	lastColonIndex = inputTrimmed.rfind('::')
 	signature = qualifiedName[lastColonIndex + 2:]
 	return signature
-
-if len(sys.argv) > 1 and sys.argv[1] == 'd': debug = 1
-else: debug = 0
-# Get path from OMRStatistics directory to the python script
-path = sys.argv[0]
-nameIndex = path.index('getDatabaseSQL.py')
-path = path[:nameIndex]
-# Get the absolute path to the OMR directory
-pathToOMR = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
-pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5] #get path for omr directory
+# -----------------------------------End of Defining Functions-------------------------------------
 
 allFunctions = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
 allClasses = csv.reader(open(path + 'allClasses','r'), delimiter=";")
@@ -166,8 +189,9 @@ for row in allClasses2:
 	
 # Create and use database
 if not debug: 
-	print 'CREATE DATABASE IF NOT EXISTS omrstatisticsdb;'
-	print 'USE omrstatisticsdb;'
+	initFile = open(fileWritePath + 'init.sql', 'w')
+	initFile.write('CREATE DATABASE IF NOT EXISTS omrstatisticsdb;')
+	initFile.write('USE omrstatisticsdb;')
 # Create tables
 functions = FunctionTable(maxFunctionNameLength, maxSignatureLength)
 files = FileTable(getOMRLongestPath(pathToOMR))
@@ -178,12 +202,12 @@ classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 
 # Drop tables if they already existed
 if not debug:
-	print 'DROP TABLE IF EXISTS Polymorphism;'
-	print 'DROP TABLE IF EXISTS HierarchiesBase;'
-	print 'DROP TABLE IF EXISTS Override;'
-	print 'DROP TABLE IF EXISTS Function;'
-	print 'DROP TABLE IF EXISTS File;'
-	print 'DROP TABLE IF EXISTS Class;'
+	initFile.write('DROP TABLE IF EXISTS Polymorphism;')
+	initFile.write('DROP TABLE IF EXISTS HierarchiesBase;')
+	initFile.write('DROP TABLE IF EXISTS Override;')
+	initFile.write('DROP TABLE IF EXISTS Function;')
+	initFile.write('DROP TABLE IF EXISTS File;')
+	initFile.write('DROP TABLE IF EXISTS Class;')
 
 # Global data structures
 classToIDMap = {}
@@ -193,19 +217,19 @@ ignoredFunctionSignatures = []
 
 # Fill Files table
 id = 0
-if not debug: print createTable(files)
+if not debug: FileFile = createTable(files)
 for root, subdirs, files in os.walk(pathToOMR):
 	for currentFile in files:
 		id += 1
 		filePath = root + '/' + currentFile
 		filePath = filePath.replace('//', '/')
 		filePath = filePath[len(pathToOMR) - 4:] # Get relative path
-		if not debug: print insertTo('File', [id, filePath])
+		if not debug: FileFile.write(insertTo('File', [id, filePath]))
 		fileToIDMap[filePath] = id
 
 		
 # Fill Class Table
-if not debug: print createTable(classes)
+if not debug: ClassFile = createTable(classes)
 id = 0
 for row in allClasses:
 	#['ID', 'Namespace', 'ClassName', 'IsExtensible']
@@ -218,7 +242,7 @@ for row in allClasses:
 	className = row[1]
 	qualifiedName = namespace + '::' + className if namespace != '' else className;
 	classToIDMap[qualifiedName] =  id #Fill classToIDMap from allClasses CSV File
-	if not debug: print insertTo('Class', [id, namespace, className, isExtensible])
+	if not debug: ClassFile.write(insertTo('Class', [id, namespace, className, isExtensible]))
 
 # Link functions to their file ID
 id = 0
@@ -242,7 +266,7 @@ for row in functionLocations:
 	functionToFileIDMap[functionQualifiedName] = fileID
 
 # Fill Functions table
-if not debug: print createTable(functions)
+if not debug: FunctionFile = createTable(functions)
 id = 0
 f2r = {} # Function --> row
 dupKeys = set() # Functions in visitedFunctions that have more than one value
@@ -271,7 +295,7 @@ for row in allFunctions2:
 	classID = classToIDMap[classQualifiedName]
 	
 	if not debug:
-		print insertTo('Function', [row[0], row[1], classID, row[6], row[5], fileID])
+		FunctionFile.write(insertTo('Function', [row[0], row[1], classID, row[6], row[5], fileID]))
 	id += 1
 
 # Report to the user about the ignored functions
@@ -286,7 +310,7 @@ for k in dupKeys:
 if printWarning: warnings.warn(warning)
 
 # Fill Override table
-if not debug: print createTable(overridesTable)
+if not debug: OverrideFile = createTable(overridesTable)
 id = 0
 firstClassMap = {}
 firstClassID = -1
@@ -323,11 +347,11 @@ for row in overrides:
 	
 	firstClassID = firstClassMap[overridingClassQualSig]
 	
-	if not debug: print insertTo('Override', [firstClassID, sig, baseClassID, overridingClassID])
+	if not debug: OverrideFile.write(insertTo('Override', [firstClassID, sig, baseClassID, overridingClassID]))
 
 # Fill Polymorphism and HierarchiesBase tables
-if not debug: print createTable(hierarchiesBase)
-if not debug: print createTable(polymorphism)
+if not debug: HierarchiesBaseFile = createTable(hierarchiesBase)
+if not debug: PolymorphismFile = createTable(polymorphism)
 hierarchyID = 0
 duplicateEntries = set()
 for row in hierarchies:
@@ -342,7 +366,7 @@ for row in hierarchies:
 			previousClassID = classToIDMap[clas]
 			# Record the base class of this hierarchy in the HierarchiesBase table
 			baseClass = clas
-			if not debug: print insertTo('HierarchiesBase', [hierarchyID, previousClassID])
+			if not debug: HierarchiesBaseFile.write(insertTo('HierarchiesBase', [hierarchyID, previousClassID]))
 			
 			continue
 		currentClassID = classToIDMap[clas]
@@ -351,7 +375,7 @@ for row in hierarchies:
 		key = str(hierarchyID) + ':' + str(previousClassID) + ':' + str(currentClassID)
 		if key not in duplicateEntries:
 			duplicateEntries.add(key)
-			if not debug: print insertTo('Polymorphism', [hierarchyID, previousClassID, currentClassID])
+			if not debug: PolymorphismFile.write(insertTo('Polymorphism', [hierarchyID, previousClassID, currentClassID]))
 		else: # Based on my testing, no case passed here
 			pass
 		
