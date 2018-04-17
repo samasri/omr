@@ -12,12 +12,14 @@ import random
 class FunctionTable:
 	def __init__(self, functionNameLength, signatureLength):
 		self.tableName = 'Function'
-		self.columns = ['FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
-		self.primaryKey = 'Signature, ClassID'
+		self.columns = ['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
+		self.primaryKey = 'ID'
 		self.foreignKeys = {}
 		self.foreignKeys['ClassID'] = [ClassTable(-1,-1), 'ID']
 		self.foreignKeys['FileID'] = [FileTable(-1), 'ID']
+		self.unique = 'Signature, ClassID'
 		# Columns
+		self.ID = 'INT'
 		self.FunctionName = 'VARCHAR(' + str(functionNameLength) + ')'
 		self.Signature = 'VARCHAR(' + str(signatureLength) + ')'
 		self.ClassID = 'INT'
@@ -35,20 +37,16 @@ class FileTable:
 		self.Location = 'VARCHAR(' + str(maxLocationLength) + ')'
 
 class OverrideTable:
-	def __init__(self, maxSigLen):
+	def __init__(self):
 		self.tableName = 'Override'
-		self.columns = ['FirstClassID', 'FunctionSig', 'BaseClassID', 'OverridingClassID']
-		self.primaryKey = 'FirstClassID, FunctionSig, BaseClassID, OverridingClassID'
+		self.columns = ['BaseFunctionID', 'OverridingFunctionID']
+		self.primaryKey = 'BaseFunctionID, OverridingFunctionID'
 		self.foreignKeys = {}
-		self.foreignKeys['FirstClassID, FunctionSig'] = [FunctionTable(-1,-1), 'ClassID, Signature']
-		self.foreignKeys['BaseClassID, FunctionSig'] = [FunctionTable(-1,-1), 'ClassID, Signature']
-		self.foreignKeys['BaseClassID'] = [FunctionTable(-1,-1), 'ClassID']
-		self.foreignKeys['OverridingClassID'] = [ClassTable(-1,-1), 'ID']
+		self.foreignKeys['BaseFunctionID'] = [FunctionTable(-1,-1), 'ID']
+		self.foreignKeys['OverridingFunctionID'] = [FunctionTable(-1,-1), 'ID']
 		# Columns
-		self.FirstClassID = 'INT'
-		self.FunctionSig = 'VARCHAR(' + str(maxSigLen) + ')'
-		self.BaseClassID = 'INT'
-		self.OverridingClassID = 'INT'
+		self.BaseFunctionID = 'INT'
+		self.OverridingFunctionID = 'INT'
 
 class PolymorphismTable:
 	def __init__(self):
@@ -56,7 +54,7 @@ class PolymorphismTable:
 		self.columns = ['HierarchyID', 'ChildClassID', 'ParentClassID']
 		self.primaryKey = 'HierarchyID, ChildClassID, ParentClassID'
 		self.foreignKeys = {}
-		self.foreignKeys['HierarchyID'] = [HierarchiesBase(), 'HierarchyID']
+		self.foreignKeys['HierarchyID'] = [Hierarchy(), 'ID']
 		self.foreignKeys['ChildClassID'] = [ClassTable(-1,-1), 'ID']
 		self.foreignKeys['ParentClassID'] = [ClassTable(-1,-1), 'ID']
 		# Columns
@@ -64,14 +62,14 @@ class PolymorphismTable:
 		self.ChildClassID = 'INT'
 		self.ParentClassID = 'INT'
 
-class HierarchiesBase:
+class Hierarchy:
 	def __init__(self):
-		self.tableName = 'HierarchiesBase'
+		self.tableName = 'Hierarchy'
 		self.foreignKeys = {}
 		self.foreignKeys['BaseClassID'] = [ClassTable(-1,-1), 'ID']
-		self.primaryKey = 'HierarchyID'
-		self.columns = ['HierarchyID', 'BaseClassID']
-		self.HierarchyID = 'INT'
+		self.primaryKey = 'ID'
+		self.columns = ['ID', 'BaseClassID']
+		self.ID = 'INT'
 		self.BaseClassID = 'INT'
 
 class ClassTable:
@@ -98,7 +96,7 @@ fileWritePath = path + sys.argv[1] + '/' if len(sys.argv) == 2 and sys.argv[1] !
 
 # Get the absolute path to the OMR directory
 pathToOMR = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
-pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5] #get path for omr directory
+pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5]
 
 # Setting debug
 if len(sys.argv) == 2 and sys.argv[1] == 'd': debug = 1
@@ -107,7 +105,7 @@ else: debug = 0
 # --------------------------------------End of Configurations--------------------------------------
 
 # ---------------------------------------Defining Functions----------------------------------------
-def createTable(table, ):
+def createTable(table):
 	# Create file
 	file = open(fileWritePath + table.tableName + '.sql', 'w')
 	
@@ -172,6 +170,7 @@ def getSignature(qualifiedName):
 classToIDMap = {}
 fileToIDMap = {}
 functionToFileIDMap = {}
+functionQualNametoID = {}
 ignoredFunctionSignatures = []
 allSQLQueries = open(fileWritePath + 'all.sql', 'w') # Write all queries in one file
 
@@ -206,7 +205,7 @@ if not debug:
 	initFile.write(createDBQuery)
 	allSQLQueries.write(createDBQuery)
 	dropQueries = 'DROP TABLE IF EXISTS Polymorphism;\n'
-	dropQueries += 'DROP TABLE IF EXISTS HierarchiesBase;\n'
+	dropQueries += 'DROP TABLE IF EXISTS Hierarchy;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Override;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Function;\n'
 	dropQueries += 'DROP TABLE IF EXISTS File;\n'
@@ -217,9 +216,9 @@ if not debug:
 # Create tables
 functions = FunctionTable(maxFunctionNameLength, maxSignatureLength)
 files = FileTable(getOMRLongestPath(pathToOMR))
-overridesTable = OverrideTable(maxSignatureLength)
+overridesTable = OverrideTable()
 polymorphism = PolymorphismTable()
-hierarchiesBase = HierarchiesBase()
+hierarchiesTable = Hierarchy()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 
 # Fill Files table
@@ -296,13 +295,15 @@ for row in allFunctions2:
 	
 	f2r[functionQualifiedName].append(row)
 	
-	if row[1] in ignoredFunctionSignatures: continue #Ignore signatures declared in a non-OMR file
-	fileID = functionToFileIDMap[functionQualifiedName]
+	# Ignore signatures declared in a non-OMR file
+	if row[1] in ignoredFunctionSignatures: continue
 	
+	fileID = functionToFileIDMap[functionQualifiedName]
 	classID = classToIDMap[classQualifiedName]
+	functionQualNametoID[str(classID) + '::' + row[1]] = id
 	
 	if not debug:
-		FunctionFile.write(insertTo('Function', [row[0], row[1], classID, row[5], row[4], fileID]))
+		FunctionFile.write(insertTo('Function', [id, row[0], row[1], classID, row[5], row[4], fileID]))
 	id += 1
 
 # Report to the user about the ignored functions
@@ -323,11 +324,16 @@ firstClassMap = {}
 firstClassID = -1
 for row in overrides:
 	if 'Arch:' in row[0]: continue
-	# ['FirstClassID', 'FunctionSignature', 'FunctionClassID', 'BaseClassID', 'OverridingClassID']
+	# ['BaseFunctionID', 'OverridingFunctionID']
 	if id == 0: 
 		id += 1
 		continue
 	id += 1
+	
+	sig = row[2]
+	
+	# Ignore signatures declared in a non-OMR file
+	if sig in ignoredFunctionSignatures: continue
 	
 	# Reconstruct qualified names of classes & get IDs
 	qualifiedBaseName = row[0] + '::' + row[1] if row[0] != '' else row[1]
@@ -335,7 +341,8 @@ for row in overrides:
 	baseClassID = classToIDMap[qualifiedBaseName]
 	overridingClassID = classToIDMap[qualifiedOverridingName]
 	
-	sig = row[2]
+	baseFunctionID = functionQualNametoID[str(baseClassID) + '::' + sig]
+	overridingFunctionID = functionQualNametoID[str(overridingClassID) + '::' + sig]
 	
 	# If first line, store info in variables and move on
 	if id == 1:
@@ -345,20 +352,10 @@ for row in overrides:
 	funcQualifiedName = qualifiedBaseName + '::' + sig
 	if sig in ignoredFunctionSignatures: continue	
 	
-	# Get the correct FirstClassID and signature
-	baseClassQualSig = str(baseClassID) + "::" + sig
-	overridingClassQualSig = str(overridingClassID) + "::" + sig
-	if baseClassQualSig in firstClassMap:
-		firstClassMap[overridingClassQualSig] = firstClassMap[baseClassQualSig]
-	else:
-		firstClassMap[overridingClassQualSig] = baseClassID
-	
-	firstClassID = firstClassMap[overridingClassQualSig]
-	
-	if not debug: OverrideFile.write(insertTo('Override', [firstClassID, sig, baseClassID, overridingClassID]))
+	if not debug: OverrideFile.write(insertTo('Override', [baseFunctionID, overridingFunctionID]))
 
-# Fill Polymorphism and HierarchiesBase tables
-if not debug: HierarchiesBaseFile = createTable(hierarchiesBase)
+# Fill Polymorphism and Hierarchy tables
+if not debug: HierarchiesFile = createTable(hierarchiesTable)
 if not debug: PolymorphismFile = createTable(polymorphism)
 hierarchyID = 0
 duplicateEntries = set()
@@ -372,9 +369,9 @@ for row in hierarchies:
 	for clas in hierarchy.split(' --> '):
 		if previousClassID == '': # This is the first class in this hierarchy
 			previousClassID = classToIDMap[clas]
-			# Record the base class of this hierarchy in the HierarchiesBase table
+			# Record the base class of this hierarchy in the Hierarchy table
 			baseClass = clas
-			if not debug: HierarchiesBaseFile.write(insertTo('HierarchiesBase', [hierarchyID, previousClassID]))
+			if not debug: HierarchiesFile.write(insertTo('Hierarchy', [hierarchyID, previousClassID]))
 			
 			continue
 		currentClassID = classToIDMap[clas]
