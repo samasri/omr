@@ -3,7 +3,7 @@ CREATE TABLE Polymorphism (
 	ChildClassID INT,
 	ParentClassID INT,
 	PRIMARY KEY(HierarchyID, ChildClassID, ParentClassID),
-	FOREIGN KEY(HierarchyID) REFERENCES HierarchiesBase(HierarchyID),
+	FOREIGN KEY(HierarchyID) REFERENCES Hierarchy(ID),
 	FOREIGN KEY(ParentClassID) REFERENCES Class(ID),
 	FOREIGN KEY(ChildClassID) REFERENCES Class(ID)
 );
