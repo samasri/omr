@@ -126,6 +126,26 @@ namespace OMRStatistics {
 		std::string outputDir = "-1";
 	};
 	
+	class FunctionCall {
+	private:
+		FunctionDecl* calleeDecl;
+		FunctionDecl* callerDecl;
+	public:
+		FunctionCall(FunctionDecl*, FunctionDecl*);
+		
+		//Getters and setters
+		void setCallee(FunctionDecl*);
+		FunctionDecl* getCallee();
+		void setCaller(FunctionDecl*);
+		FunctionDecl* getCaller();
+		
+		//Generated info
+		std::string calleeName();
+		std::string callerName();
+		std::string calleeLoc(ASTContext&);
+		std::string callerLoc(ASTContext&);
+	};
+	
 	class HMConsumer : public ASTConsumer {
 	private:
 		Config conf;
@@ -152,6 +172,7 @@ namespace OMRStatistics {
 		//Converts the hierarchy to an array of nodes, starting from the top to the base
 		std::vector<std::vector<LinkedNode*>*>* getTopToBaseAsArray(OMRStatistics::Hierarchy* hierarchy);
 		void getTopToBaseAsArray(LinkedNode* node, std::vector<LinkedNode*>* array, std::vector<std::vector<LinkedNode*>*>* subHierarchies);
+		std::vector<FunctionCall*>* getFunctionCalls(ASTContext&);
 		
 		//Printing output files
 		void printHierarchies(HMRecorder&, llvm::raw_ostream*);

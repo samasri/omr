@@ -28,9 +28,10 @@
 #include "clang/AST/AST.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTTypeTraits.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Attr.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/Analysis/CallGraph.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include "plugin.hpp"
@@ -133,7 +134,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			class2Methods.emplace(className, methods);
 		}
 		
-		//Check for function calls
+		//Check for function calls # Call Graph
 		//llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
 		if(currentDecl->hasBody()) {
 			Stmt* stmt = currentDecl->getBody();
@@ -296,6 +297,45 @@ bool OMRStatistics::MethodTracker::operator==(const MethodTracker& other) {
 
 bool OMRStatistics::MethodTracker::operator==(const std::string other) {
 	return (methodSignature.compare(other) == 0);
+}
+
+OMRStatistics::FunctionCall::FunctionCall(FunctionDecl* callee, FunctionDecl* caller) {
+	this->calleeDecl = callee;
+	this->callerDecl = caller;
+}
+
+void OMRStatistics::FunctionCall::setCallee(FunctionDecl* cd) {
+	this->calleeDecl = cd;
+}
+
+FunctionDecl* OMRStatistics::FunctionCall::getCallee() {
+	return this->calleeDecl;
+}
+
+void OMRStatistics::FunctionCall::setCaller(FunctionDecl* cd) {
+	this->callerDecl = cd;
+}
+
+FunctionDecl* OMRStatistics::FunctionCall::getCaller() {
+	return this->callerDecl;
+}
+
+std::string OMRStatistics::FunctionCall::calleeName() {
+	return calleeDecl->getQualifiedNameAsString();
+}
+
+std::string OMRStatistics::FunctionCall::calleeLoc(ASTContext& Context) {
+	SourceManager &manager = Context.getSourceManager();
+	return calleeDecl->getSourceRange().getBegin().printToString(manager);
+}
+
+std::string OMRStatistics::FunctionCall::callerName() {
+	return callerDecl->getQualifiedNameAsString();
+}
+
+std::string OMRStatistics::FunctionCall::callerLoc(ASTContext& Context) {
+	SourceManager &manager = Context.getSourceManager();
+	return callerDecl->getSourceRange().getBegin().printToString(manager);
 }
 
 OMRStatistics::HMConsumer::HMConsumer(llvm::StringRef filename, Config conf) {
@@ -540,6 +580,31 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 	return pos;
 }
 
+std::vector<OMRStatistics::FunctionCall*>* OMRStatistics::HMConsumer::getFunctionCalls(ASTContext& Context) {
+	CallGraph cg;
+	cg.addToCallGraph(Context.getTranslationUnitDecl());
+	std::vector<FunctionCall*>* callerCalleeMap = new std::vector<FunctionCall*>();
+	for (auto itr : cg) {
+		//itr type:
+		//	llvm::detail::DenseMapPair<const clang::Decl *, clang::CallGraphNode *>
+		if(itr.first == NULL) continue;
+		
+		clang::CallGraphNode * callerNode = itr.second;
+		FunctionDecl* callerDecl = cast<FunctionDecl> (callerNode->getDecl());
+		std::string callerName = callerDecl->getQualifiedNameAsString();
+		for(CallGraphNode* calleeNode : *callerNode) {
+			FunctionDecl* calleeDecl = cast<FunctionDecl> (calleeNode->getDecl());
+			std::string calleeName = calleeDecl->getQualifiedNameAsString();
+			
+			FunctionCall* fi = new FunctionCall(calleeDecl, callerDecl);
+			
+			callerCalleeMap->push_back(fi);
+		}
+		
+	}
+	return callerCalleeMap;
+}
+
 void OMRStatistics::HMConsumer::printTracker(llvm::raw_ostream* out, std::string methodName, std::string methodSig, std::string nameSpace, std::string className, bool isImplicit, bool isVirtual) {
 	*out << methodName << ";";
 	*out << methodSig << ";";
@@ -700,6 +765,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
 	
+	
 	std::vector<std::string> outputFiles = {".hierarchy", ".weirdHierarchy", ".allClasses", ".overloads", ".allFunctions", ".functionLocation", ".overrides", ".avg"};
 	std::vector<llvm::raw_ostream*>* outputs = new std::vector<llvm::raw_ostream*>();
 	
@@ -729,8 +795,11 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	printAverageOverrides(recorder, outputs->at(7));
 	
 	//Testing call graphs
-	
-	
+	std::vector<FunctionCall*>* functionCalls = getFunctionCalls(Context);
+	for(FunctionCall* fc : *functionCalls) {
+		llvm::outs() << fc->calleeName() << " --> " << fc->callerName() << "\n";
+		llvm::outs() << "\t" << fc->calleeLoc(Context) << "\n\t" << fc->callerLoc(Context) << "\n";
+	}
 	
 	//Flush all outputs to their respective files
 	for(llvm::raw_ostream* output : *outputs) output->flush();
