@@ -33,6 +33,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Analysis/CallGraph.h"
 #include "llvm/Support/raw_ostream.h"
+#include "clang/Lex/Lexer.h"
 
 #include "plugin.hpp"
 #include <sstream>
@@ -43,13 +44,19 @@ OMRStatistics::FunctionDeclInfo::FunctionDeclInfo(bool isImplicit, bool isVirtua
 	this->location = location;
 }
 
-std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::HMRecorder::getClass2Methods() {return class2Methods;}
+std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::HMRecorder::getClass2Methods() {
+	return class2Methods;
+	}
 
-void OMRStatistics::HMRecorder::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> class2Methods) {this->class2Methods = class2Methods;}
+void OMRStatistics::HMRecorder::setClass2Methods(std::map<std::string, std::unordered_set<std::string*>> class2Methods) {
+	this->class2Methods = class2Methods;
+	}
 
 std::map<std::string, std::vector<std::string>*> OMRStatistics::HMRecorder::getClassHierarchy() {return classHierarchy;}
 
-void OMRStatistics::HMRecorder::setClassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {this->classHierarchy = classHierarchy;}
+void OMRStatistics::HMRecorder::setClassHierarchy(std::map<std::string, std::vector<std::string>*> classHierarchy) {
+	this->classHierarchy = classHierarchy;
+}
 
 std::map<std::string, OMRStatistics::FunctionDeclInfo*> OMRStatistics::HMRecorder::getFunctionDeclInfo() {
 	return functionDeclInfo;
@@ -63,7 +70,9 @@ std::map<std::string, bool> OMRStatistics::HMRecorder::getIsExtensible() {
 	return isExtensible;
 }
 
-void OMRStatistics::HMRecorder::setIsExtensible(std::map<std::string, bool> isExtensible) {this->isExtensible = isExtensible;}
+void OMRStatistics::HMRecorder::setIsExtensible(std::map<std::string, bool> isExtensible) {
+	this->isExtensible = isExtensible;
+	}
 
 bool OMRStatistics::HMRecorder::checkExtensibility(const CXXRecordDecl* declIn) {
 	const CXXRecordDecl* decl = declIn;
@@ -77,7 +86,71 @@ bool OMRStatistics::HMRecorder::checkExtensibility(const CXXRecordDecl* declIn) 
   
   return false;
 }
-	   
+
+std::string* OMRStatistics::HMRecorder::getFuncSig(CXXMethodDecl* currentDecl) {
+	std::string* funcSig = new std::string(currentDecl->getNameAsString());
+	ArrayRef<clang::ParmVarDecl*> functions = currentDecl->parameters();
+	if(functions.size() == 0) *funcSig += "()";
+	else {
+		*funcSig += "(";
+		for(clang::ParmVarDecl* param : functions) {
+			*funcSig += param->getOriginalType().getAsString() + ",";
+		}
+		funcSig->replace(funcSig->end()-1, funcSig->end(), "");
+		*funcSig += ")";
+	}
+	return funcSig;
+}
+
+void OMRStatistics::HMRecorder::handleFailedAssert(std::string className, std::string funcSig, std::pair<std::map<std::string, FunctionDeclInfo*>::iterator, bool> result, std::string loc) {
+	//If assert fails: (There are more than 2 declarations of a unique function)
+		llvm::outs() << className << "::" << funcSig << "\n";
+		llvm::outs() << "\tExisting Location: " << result.first->second->location << "\n";
+		llvm::outs() << "\tNew Location: " << loc << "\n";
+}
+
+void OMRStatistics::HMRecorder::assertFuncDeclNb(std::string className, std::string funcSig, std::pair<std::map<std::string, FunctionDeclInfo*>::iterator, bool> searchItr, CXXMethodDecl* currentDecl) {
+	if(!searchItr.second) {
+		std::string loc = printLoc(currentDecl);
+		size_t colonIndexOld = searchItr.first->second->location.find(':');
+		size_t colonIndexNew = loc.find(':');
+		std::string oldLoc = searchItr.first->second->location.substr(0, colonIndexOld);
+		std::string newLoc = loc.substr(0, colonIndexNew);
+		
+		if (oldLoc.compare(newLoc) != 0) {
+			std::string extensionOld = oldLoc.substr(oldLoc.size() - 3, 3);
+			std::string extensionNew = newLoc.substr(newLoc.size() - 3, 3);
+			bool oldIsHPP = extensionOld.compare("hpp") == 0;
+			bool oldIsCPP = extensionOld.compare("cpp") == 0;
+			bool newIsHPP = extensionNew.compare("hpp") == 0;
+			bool newIsCPP = extensionNew.compare("cpp") == 0;
+			assert((oldIsHPP && newIsCPP) || (oldIsCPP && newIsHPP));
+			handleFailedAssert(className, funcSig, searchItr, loc);
+			if(oldIsCPP && newIsHPP) searchItr.first->second->location = loc;
+		}
+	}
+}
+
+void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDecl) {
+	llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
+	if(currentDecl->hasBody()) {
+		Stmt* stmt = currentDecl->getBody();
+		CompoundStmt* stmtC = (CompoundStmt*) stmt;
+		unsigned size = stmtC->size();
+		Stmt** bodyItr = stmtC->body_begin();
+		for(unsigned i = 0; i < size; i++) {
+			Stmt* currentStmt = bodyItr[i];
+			std::string stmtType = currentStmt->getStmtClassName();
+			CXXMemberCallExpr* call = NULL;
+			if(stmtType.compare("CXXMemberCallExpr") == 0) call = (CXXMemberCallExpr*) currentStmt;
+			if(call != NULL) {
+				std::string methodName = call->getMethodDecl()->getQualifiedNameAsString();
+				llvm::outs() << "\tMethod Name: " << methodName << "\n";
+			}
+		}
+	}
+}
+
 void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
 	if(HMConsumer::shouldIgnoreClassName(className)) return;
@@ -85,75 +158,27 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 	for(auto A = inputClass->method_begin(), E = inputClass->method_end(); A != E; ++A) {
 		CXXMethodDecl* currentDecl = *A;
 		//Get function name with parameter types (AKA: recreate function signature)
-		std::string* function = new std::string(currentDecl->getNameAsString());
-		ArrayRef<clang::ParmVarDecl*> functions = A->parameters();
-		if(functions.size() == 0) *function += "()";
-		else {
-			*function += "(";
-			for(clang::ParmVarDecl* param : functions) {
-				*function += param->getOriginalType().getAsString() + ",";
-			}
-			function->replace(function->end()-1, function->end(), "");
-			*function += ")";
-		}
+		std::string* funcSig = getFuncSig(currentDecl);
+		
 		//Save function information
 		FunctionDeclInfo* info = new FunctionDeclInfo(currentDecl->isImplicit(), currentDecl->isVirtual(), printLoc(currentDecl));
-		auto result = functionDeclInfo.emplace(className + "::" + *function, info);
-		if(!result.second) { //Assert that the function is not declared more than twice (once in the header and once in the cpp file)
-			std::string loc = printLoc(currentDecl);
-			size_t colonIndexOld = result.first->second->location.find(':');
-			size_t colonIndexNew = loc.find(':');
-			std::string oldLoc = result.first->second->location.substr(0, colonIndexOld);
-			std::string newLoc = loc.substr(0, colonIndexNew);
-			
-			if (oldLoc.compare(newLoc) != 0) {
-				std::string extensionOld = oldLoc.substr(oldLoc.size() - 3, 3);
-				std::string extensionNew = newLoc.substr(newLoc.size() - 3, 3);
-				bool oldIsHPP = extensionOld.compare("hpp") == 0;
-				bool oldIsCPP = extensionOld.compare("cpp") == 0;
-				bool newIsHPP = extensionNew.compare("hpp") == 0;
-				bool newIsCPP = extensionNew.compare("cpp") == 0;
-				assert((oldIsHPP && newIsCPP) || (oldIsCPP && newIsHPP));
-				if(oldIsCPP && newIsHPP) result.first->second->location = loc;
-				/*If assert fails: (There are more than 2 declarations of a unique function)
-					llvm::outs() << className << "::" << *function << "\n";
-					llvm::outs() << "\tExisting Location: " << result.first->second->location << "\n";
-					llvm::outs() << "\tNew Location: " << loc << "\n";
-				*/
-			}
-		}
+		//Assert only one decl of the func is found
+		auto result = functionDeclInfo.emplace(className + "::" + *funcSig, info);
+		assertFuncDeclNb(className, *funcSig, result, currentDecl);
 		
 		auto iterator = class2Methods.find(className);
 		if(iterator != class2Methods.end()) { //If the class was already encountered before, pull methods vector from class2Methods
 			std::unordered_set<std::string*>* methods = &(iterator->second);
-			methods->insert(function);
+			methods->insert(funcSig);
 		}
 		else { //If the class is new
 			std::unordered_set<std::string*> methods;
-			methods.insert(function);
+			methods.insert(funcSig);
 			class2Methods.emplace(className, methods);
 		}
 		
 		//Check for function calls # Call Graph
-		//llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
-		if(currentDecl->hasBody()) {
-			Stmt* stmt = currentDecl->getBody();
-			CompoundStmt* stmtC = (CompoundStmt*) stmt;
-			unsigned size = stmtC->size();
-			Stmt** bodyItr = stmtC->body_begin();
-			for(unsigned i = 0; i < size; i++) {
-				Stmt* currentStmt = bodyItr[i];
-				std::string stmtType = currentStmt->getStmtClassName();
-				CXXMemberCallExpr* call = NULL;
-				if(stmtType.compare("CXXMemberCallExpr") == 0) call = (CXXMemberCallExpr*) currentStmt;
-				if(call != NULL) {
-					std::string methodName = call->getMethodDecl()->getQualifiedNameAsString();
-					//llvm::outs() << "\tMethod Name: " << methodName << "\n";
-				}
-			}
-		}
-		
-		
+		processCallExpressions(currentDecl);
 	}
 }
 
@@ -336,6 +361,20 @@ std::string OMRStatistics::FunctionCall::callerName() {
 std::string OMRStatistics::FunctionCall::callerLoc(ASTContext& Context) {
 	SourceManager &manager = Context.getSourceManager();
 	return callerDecl->getSourceRange().getBegin().printToString(manager);
+}
+
+std::string OMRStatistics::FunctionCall::calleeSig(ASTContext& ctx) {
+	SourceManager &mgr = ctx.getSourceManager();
+	clang::SourceRange range = clang::SourceRange(calleeDecl->getSourceRange().getBegin(), calleeDecl->getBody()->getSourceRange().getBegin());
+	StringRef s = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(range), mgr, ctx.getLangOpts());
+	return s;
+}
+
+std::string OMRStatistics::FunctionCall::callerSig(ASTContext& ctx) {
+	SourceManager &mgr = ctx.getSourceManager();
+	clang::SourceRange range = clang::SourceRange(callerDecl->getSourceRange().getBegin(), callerDecl->getBody()->getSourceRange().getBegin());
+	StringRef s = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(range), mgr, ctx.getLangOpts());
+	return s;
 }
 
 OMRStatistics::HMConsumer::HMConsumer(llvm::StringRef filename, Config conf) {
@@ -581,27 +620,34 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 }
 
 std::vector<OMRStatistics::FunctionCall*>* OMRStatistics::HMConsumer::getFunctionCalls(ASTContext& Context) {
+	//This function is inspired from the the following github project: https://github.com/maximesong/program-analysis
+	//More specifically the following code block: https://github.com/maximesong/program-analysis/blob/b1d228e0fd0abb196939a0503c6326dc4ebbf692/src/consumers.cpp#L74-L108
 	CallGraph cg;
 	cg.addToCallGraph(Context.getTranslationUnitDecl());
 	std::vector<FunctionCall*>* callerCalleeMap = new std::vector<FunctionCall*>();
+	
 	for (auto itr : cg) {
 		//itr type:
 		//	llvm::detail::DenseMapPair<const clang::Decl *, clang::CallGraphNode *>
-		if(itr.first == NULL) continue;
-		
-		clang::CallGraphNode * callerNode = itr.second;
+		if(itr.first == NULL) {
+			clang::CallGraphNode* callerNode = itr.second;
+			//callerNode->dump();
+			continue;
+		}
+		clang::CallGraphNode* callerNode = itr.second;
 		FunctionDecl* callerDecl = cast<FunctionDecl> (callerNode->getDecl());
 		std::string callerName = callerDecl->getQualifiedNameAsString();
+		llvm::outs() << "Caller: " << callerName << "\n";
 		for(CallGraphNode* calleeNode : *callerNode) {
 			FunctionDecl* calleeDecl = cast<FunctionDecl> (calleeNode->getDecl());
 			std::string calleeName = calleeDecl->getQualifiedNameAsString();
-			
+			llvm::outs() << "\tCallee: " << calleeName << "\n";
 			FunctionCall* fi = new FunctionCall(calleeDecl, callerDecl);
-			
 			callerCalleeMap->push_back(fi);
 		}
 		
 	}
+	llvm::outs() << "--------------------\n";
 	return callerCalleeMap;
 }
 
@@ -795,11 +841,11 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	printAverageOverrides(recorder, outputs->at(7));
 	
 	//Testing call graphs
-	std::vector<FunctionCall*>* functionCalls = getFunctionCalls(Context);
+	/*std::vector<FunctionCall*>* functionCalls = getFunctionCalls(Context);
 	for(FunctionCall* fc : *functionCalls) {
-		llvm::outs() << fc->calleeName() << " --> " << fc->callerName() << "\n";
-		llvm::outs() << "\t" << fc->calleeLoc(Context) << "\n\t" << fc->callerLoc(Context) << "\n";
-	}
+		llvm::outs() << fc->callerName() << " --> " << fc->calleeName() << "\n";
+		llvm::outs() << "\t" << fc->callerLoc(Context) << "\n\t" << fc->calleeLoc(Context) << "\n";
+	}*/
 	
 	//Flush all outputs to their respective files
 	for(llvm::raw_ostream* output : *outputs) output->flush();

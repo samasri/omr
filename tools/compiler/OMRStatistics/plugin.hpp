@@ -31,6 +31,11 @@ namespace OMRStatistics {
 		std::map<std::string, FunctionDeclInfo*> functionDeclInfo;
 		//Parent-child relationship mapping (child --> parents)
 		std::map<std::string, std::vector<std::string>*> classHierarchy;
+		
+		//A debug function intended to be used if an assert failed in HMRecorder::recordFunctions
+		void handleFailedAssert(std::string, std::string, std::pair<std::map<std::string, FunctionDeclInfo*>::iterator, bool>, std::string);
+		//Asserts that a function is not declared more than twice (once in the header and once in the cpp file) 
+		void assertFuncDeclNb(std::string, std::string, std::pair<std::map<std::string, FunctionDeclInfo*>::iterator, bool>, CXXMethodDecl*);
 	
 	public:
 		//Getters and setters
@@ -47,6 +52,10 @@ namespace OMRStatistics {
 		
 		//Checks if a specific declaration contains "OMR_EXTENSIBLE" or not
 		bool checkExtensibility(const CXXRecordDecl*);
+		//Get function name with parameter types (AKA: recreate function signature)
+		std::string* getFuncSig(CXXMethodDecl*);
+		//Takes a method declaration and records all the function calls inside its body
+		void processCallExpressions(CXXMethodDecl*);
 		//Loop through the methods of the given class and input them in Class2Methods
 		void recordFunctions(const CXXRecordDecl* inputClass);
 		//Given a child and parent class names, it adds them to the classHierarchy map
@@ -58,6 +67,7 @@ namespace OMRStatistics {
 		//Prints the location of a specific declaration
 		static std::string printLoc(const clang::CXXRecordDecl*);
 		static std::string printLoc(const CXXMethodDecl*);
+		
 		size_t findLastStringIn(std::string input, char key);
 		std::string printLoc(clang::CXXMethodDecl*);
 	};
@@ -144,6 +154,8 @@ namespace OMRStatistics {
 		std::string callerName();
 		std::string calleeLoc(ASTContext&);
 		std::string callerLoc(ASTContext&);
+		std::string calleeSig(ASTContext&);
+		std::string callerSig(ASTContext&);
 	};
 	
 	class HMConsumer : public ASTConsumer {
