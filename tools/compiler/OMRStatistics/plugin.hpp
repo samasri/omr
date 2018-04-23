@@ -21,16 +21,39 @@ namespace OMRStatistics {
 		FunctionDeclInfo(bool isImplicit, bool isVirtual, std::string location);
 	};
 	
+	class FunctionCall {
+	private:
+		FunctionDecl* calleeDecl;
+		FunctionDecl* callerDecl;
+	public:
+		FunctionCall(FunctionDecl*, FunctionDecl*);
+		
+		//Getters and setters
+		void setCallee(FunctionDecl*);
+		FunctionDecl* getCallee();
+		void setCaller(FunctionDecl*);
+		FunctionDecl* getCaller();
+		
+		//Generated info
+		std::string calleeName();
+		std::string callerName();
+		std::string calleeLoc(ASTContext&);
+		std::string callerLoc(ASTContext&);
+		std::string calleeSig(ASTContext&);
+		std::string callerSig(ASTContext&);
+	};
+	
 	class HMRecorder : public RecursiveASTVisitor<HMRecorder> {
 	private:
-		//Mapping between each class and all its methods
+		//Class --> methods (set)
 		std::map<std::string, std::unordered_set<std::string*>> class2Methods;
-		//Mapping between each class and whether its extensible or not
+		//Class --> isExtensible
 		std::map<std::string, bool> isExtensible;
-		//Mapping between each function signature and if its implicit or not
+		//Function signature --> Function info (isImplicit, isVirtual...)
 		std::map<std::string, FunctionDeclInfo*> functionDeclInfo;
-		//Parent-child relationship mapping (child --> parents)
+		//child class --> parent classes (vector)
 		std::map<std::string, std::vector<std::string>*> classHierarchy;
+		std::vector<FunctionCall*> functionCalls;
 		
 		//A debug function intended to be used if an assert failed in HMRecorder::recordFunctions
 		void handleFailedAssert(std::string, std::string, std::pair<std::map<std::string, FunctionDeclInfo*>::iterator, bool>, std::string);
@@ -47,6 +70,8 @@ namespace OMRStatistics {
 		void setFunctionDeclInfo(std::map<std::string, FunctionDeclInfo*>);
 		std::map<std::string, bool> getIsExtensible();
 		void setIsExtensible(std::map<std::string, bool>);
+		std::vector<FunctionCall*> getFunctionCalls();
+		void setFunctionCalls(std::vector<FunctionCall*>);
 		
 		explicit HMRecorder(ASTContext *Context) { }
 		
@@ -134,28 +159,6 @@ namespace OMRStatistics {
 		bool hierarchy = false;
 		bool overloading = false;
 		std::string outputDir = "-1";
-	};
-	
-	class FunctionCall {
-	private:
-		FunctionDecl* calleeDecl;
-		FunctionDecl* callerDecl;
-	public:
-		FunctionCall(FunctionDecl*, FunctionDecl*);
-		
-		//Getters and setters
-		void setCallee(FunctionDecl*);
-		FunctionDecl* getCallee();
-		void setCaller(FunctionDecl*);
-		FunctionDecl* getCaller();
-		
-		//Generated info
-		std::string calleeName();
-		std::string callerName();
-		std::string calleeLoc(ASTContext&);
-		std::string callerLoc(ASTContext&);
-		std::string calleeSig(ASTContext&);
-		std::string callerSig(ASTContext&);
 	};
 	
 	class HMConsumer : public ASTConsumer {
