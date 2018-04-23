@@ -1,0 +1,37 @@
+# Path to OMR main directory
+OMR = ../../../
+# Path to clang bin (if using Ubuntu, use the clang that is provided by Ubuntu packages, rebuilding clang from source code and running it doesn't work for some reason)
+CXX = clang++-3.8
+# Path to compiler that compiles the plugin
+GXX = clang++-3.8
+
+# Get defines and includes for all architectures
+include crossCompilationDefines.mk
+COMPILATION_INCLUDES = -I/home/se-team/Desktop/llvm-clang/3.8-llvm/tools/clang/include/ -I/home/se-team/Desktop/llvm-clang/3.8-build/tools/clang/include/
+
+# Path to shared object file. NOTE: when adding this to plugin always remember to put ./ before the path.
+SO = ./plugin.so
+# Path to source file of the plugin
+CPP = plugin.cpp
+# Path to object file (temporary)
+O = plugin.o
+# Plugin name (in the source code)
+PL = omr-statistics
+# Variables & rules to test the plugin on OMR files
+CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_HIERARCHY -Xclang -plugin-arg-$(PL) -Xclang OMR_STAT_PRINT_OVERLOADS -Xclang -add-plugin -Xclang $(PL)
+
+
+$(SO): $(CPP) $(CPP:.cpp=.hpp)
+	@echo "Building my plugin..."
+	@$(GXX) `llvm-config-3.8 --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
+	@$(GXX) -shared `llvm-config-3.8 --ldflags` -o $(SO) $(O)
+	@rm $(O)
+
+clean: 
+	- rm $(SO)
+
+# Test my plugin on the CodeGenerator classes
+sample: $(SO)
+	@echo Executing with OMRStatistics...
+	@echo "-----------------------------------------"
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/CodeGenOut" $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -c $(OMR)/compiler/codegen/OMRCodeGenerator.cpp
