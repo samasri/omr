@@ -74,6 +74,14 @@ void OMRStatistics::HMRecorder::setIsExtensible(std::map<std::string, bool> isEx
 	this->isExtensible = isExtensible;
 	}
 
+std::vector<OMRStatistics::FunctionCall*> OMRStatistics::HMRecorder::getFunctionCalls() {
+	return functionCalls;
+}
+
+void OMRStatistics::HMRecorder::setFunctionCalls(std::vector<FunctionCall*> calls) {
+	functionCalls = calls;
+}
+
 bool OMRStatistics::HMRecorder::checkExtensibility(const CXXRecordDecl* declIn) {
 	const CXXRecordDecl* decl = declIn;
   
@@ -132,20 +140,21 @@ void OMRStatistics::HMRecorder::assertFuncDeclNb(std::string className, std::str
 }
 
 void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDecl) {
-	llvm::outs() << currentDecl->getQualifiedNameAsString() << "\n";
 	if(currentDecl->hasBody()) {
-		Stmt* stmt = currentDecl->getBody();
-		CompoundStmt* stmtC = (CompoundStmt*) stmt;
-		unsigned size = stmtC->size();
-		Stmt** bodyItr = stmtC->body_begin();
-		for(unsigned i = 0; i < size; i++) {
+		std::string caller = currentDecl->getQualifiedNameAsString();
+		//llvm::outs() << caller << ":\n";
+		CompoundStmt* stmt = (CompoundStmt*) (currentDecl->getBody());
+		Stmt** bodyItr = stmt->body_begin();
+		for(unsigned i = 0; i < stmt->size(); i++) { //iterate all statements in the function body
 			Stmt* currentStmt = bodyItr[i];
 			std::string stmtType = currentStmt->getStmtClassName();
-			CXXMemberCallExpr* call = NULL;
-			if(stmtType.compare("CXXMemberCallExpr") == 0) call = (CXXMemberCallExpr*) currentStmt;
-			if(call != NULL) {
-				std::string methodName = call->getMethodDecl()->getQualifiedNameAsString();
-				llvm::outs() << "\tMethod Name: " << methodName << "\n";
+			if(stmtType.compare("CXXMemberCallExpr") == 0) {
+				CXXMemberCallExpr* callExpr = (CXXMemberCallExpr*) currentStmt;
+				std::string receiver = callExpr->getMethodDecl()->getQualifiedNameAsString();
+				//llvm::outs() << "\t" << receiver << "\n";
+				
+				FunctionCall* call = new FunctionCall(currentDecl, callExpr->getMethodDecl());
+				functionCalls.emplace_back(call);
 			}
 		}
 	}
@@ -177,7 +186,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			class2Methods.emplace(className, methods);
 		}
 		
-		//Check for function calls # Call Graph
+		//Check for function calls
 		processCallExpressions(currentDecl);
 	}
 }
@@ -630,7 +639,7 @@ std::vector<OMRStatistics::FunctionCall*>* OMRStatistics::HMConsumer::getFunctio
 		//itr type:
 		//	llvm::detail::DenseMapPair<const clang::Decl *, clang::CallGraphNode *>
 		if(itr.first == NULL) {
-			clang::CallGraphNode* callerNode = itr.second;
+			//clang::CallGraphNode* callerNode = itr.second;
 			//callerNode->dump();
 			continue;
 		}
@@ -841,11 +850,11 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	printAverageOverrides(recorder, outputs->at(7));
 	
 	//Testing call graphs
-	/*std::vector<FunctionCall*>* functionCalls = getFunctionCalls(Context);
-	for(FunctionCall* fc : *functionCalls) {
+	//std::vector<FunctionCall*>* functionCalls = getFunctionCalls(Context);
+	for(FunctionCall* fc : recorder.getFunctionCalls()) {
 		llvm::outs() << fc->callerName() << " --> " << fc->calleeName() << "\n";
 		llvm::outs() << "\t" << fc->callerLoc(Context) << "\n\t" << fc->calleeLoc(Context) << "\n";
-	}*/
+	}
 	
 	//Flush all outputs to their respective files
 	for(llvm::raw_ostream* output : *outputs) output->flush();
