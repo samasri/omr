@@ -17,28 +17,28 @@ OMR;AliasBuilder;~AliasBuilder();TR;AliasBuilder;1;0
 OMR;ArithEnv;~ArithEnv();TR;ArithEnv;1;0
 ;TR_Link;jitPersistentAlloc(size_t);TR;CFGEdge;0;0
 ;TR_Link;jitPersistentFree(void *);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete(void *,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 OMR;ClassEnv;~ClassEnv();TR;ClassEnv;1;0
 OMR;CodeGenPhase;~CodeGenPhase();TR;CodeGenPhase;1;0
 TestCompiler;CodeGenerator;~CodeGenerator();TR;CodeGenerator;1;0
@@ -765,28 +765,28 @@ OMR;AliasBuilder;~AliasBuilder();TR;AliasBuilder;1;0
 OMR;ArithEnv;~ArithEnv();TR;ArithEnv;1;0
 ;TR_Link;jitPersistentAlloc(size_t);TR;CFGEdge;0;0
 ;TR_Link;jitPersistentFree(void *);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete(void *,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 OMR;ClassEnv;~ClassEnv();TR;ClassEnv;1;0
 OMR;CodeGenPhase;~CodeGenPhase();TR;CodeGenPhase;1;0
 TestCompiler;CodeGenerator;~CodeGenerator();TR;CodeGenerator;1;0
@@ -1508,28 +1508,28 @@ OMR;AliasBuilder;~AliasBuilder();TR;AliasBuilder;1;0
 OMR;ArithEnv;~ArithEnv();TR;ArithEnv;1;0
 ;TR_Link;jitPersistentAlloc(size_t);TR;CFGEdge;0;0
 ;TR_Link;jitPersistentFree(void *);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
 ;TR_Link;operator delete(void *,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
 ;TR_Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,TR::Region &);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,TR::Region &);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 OMR;ClassEnv;~ClassEnv();TR;ClassEnv;1;0
 OMR;CodeGenPhase;~CodeGenPhase();TR;CodeGenPhase;1;0
 TestCompiler;CodeGenerator;~CodeGenerator();TR;CodeGenerator;1;0
@@ -2160,8 +2160,8 @@ TestCompiler;CodeCacheManager;~CodeCacheManager();TR;CodeCacheManager;1;0
 ;TR_FrontEnd;allocateCodeMemory(TR::Compilation *,uint32_t,uint32_t,uint8_t **,_Bool);TR;FEBase;0;1
 ;TR_FrontEnd;allocateRelocationData(TR::Compilation *,uint32_t);TR;FEBase;0;1
 ;TR_FrontEnd;createDebug(TR::Compilation *);TR;FECommon;0;1
-;TR_FrontEnd;getClassFromSignature(const char *,int32_t,class TR_OpaqueMethodBlock *,_Bool);TR;FECommon;0;1
 ;TR_FrontEnd;getClassFromSignature(const char *,int32_t,class TR_ResolvedMethod *,_Bool);TR;FECommon;0;1
+;TR_FrontEnd;getClassFromSignature(const char *,int32_t,class TR_OpaqueMethodBlock *,_Bool);TR;FECommon;0;1
 ;TR_FrontEnd;getDesignatedCodeCache(TR::Compilation *);TR;FEBase;0;1
 ;TR_FrontEnd;getOffsetOfIndexableSizeField();TR;FECommon;0;1
 ;TR_FrontEnd;getPersistentInfo();TR;FEBase;0;1
@@ -2205,28 +2205,28 @@ TR;Relocation;getUpdateLocation();TR;BeforeBinaryEncodingExternalRelocation;0;1
 TR;Relocation;trace(TR::Compilation *);TR;ExternalRelocation;0;1
 ;TR_Link;jitPersistentAlloc(size_t);TR;CFGEdge;0;0
 ;TR_Link;jitPersistentFree(void *);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,TR::Region &);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
 ;TR_Link;operator delete(void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,size_t);TR;CFGEdge;0;0
 ;TR_Link;operator delete(void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator delete(void *,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator delete[](void *,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR::Region &);TR;CFGEdge;0;0
-;TR_Link;operator new(size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR_ArenaAllocator *);TR;CFGEdge;0;0
 ;TR_Link;operator new(size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new(size_t,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,TR::Region &);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_PersistentMemory *);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
-;TR_Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 ;TR_Link;operator new[](size_t,class TR_Memory *,enum TR_AllocationKind);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,TR::Internal::PersistentNewType);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_HeapMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
+;TR_Link;operator new[](size_t,class TR_StackMemory,class TR_MemoryBase::ObjectType);TR;CFGEdge;0;0
 OMR;ClassEnv;~ClassEnv();TR;ClassEnv;1;0
 TestCompiler::Z;CodeGenerator;~CodeGenerator();TR;CodeGenerator;1;0
 OMR;Compilation;~Compilation();TR;Compilation;0;0
@@ -2357,8 +2357,8 @@ TR;VPConstraint;mustBeLessThan();TR;VPEqual;0;1
 TR;VPConstraint;mustBeLessThanOrEqual();TR;VPEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPEqual;0;1
 TR;VPConstraint;name();TR;VPEqual;0;1
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPEqual;0;1
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPEqual;0;1
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPEqual;0;1
 TR;VPConstraint;asGreaterThanOrEqual();TR;VPGreaterThanOrEqual;0;1
@@ -2369,8 +2369,8 @@ TR;VPConstraint;mustBeGreaterThan();TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;mustBeGreaterThanOrEqual();TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;name();TR;VPGreaterThanOrEqual;0;1
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPGreaterThanOrEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPGreaterThanOrEqual;0;1
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPGreaterThanOrEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPGreaterThanOrEqual;0;1
 TR;VPConstraint;add(TR::VPConstraint *,TR::DataType,OMR::ValuePropagation *);TR;VPIntConstraint;0;1
@@ -2415,8 +2415,8 @@ TR;VPConstraint;mustBeLessThan();TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;mustBeLessThanOrEqual();TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;name();TR;VPLessThanOrEqual;0;1
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPLessThanOrEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPLessThanOrEqual;0;1
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPLessThanOrEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPLessThanOrEqual;0;1
 TR;VPConstraint;add(TR::VPConstraint *,TR::DataType,OMR::ValuePropagation *);TR;VPLongConstraint;0;1
@@ -2471,8 +2471,8 @@ TR;VPRelation;getComplement(OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPConstraint;intersect1(TR::VPConstraint *,OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPConstraint;mustBeNotEqual();TR;VPNotEqual;0;1
 TR;VPConstraint;name();TR;VPNotEqual;0;1
-TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPNotEqual;0;1
 TR;VPConstraint;print(TR::Compilation *,TR::FILE *);TR;VPNotEqual;0;1
+TR;VPConstraint;print(TR::Compilation *,TR::FILE *,int32_t);TR;VPNotEqual;0;1
 TR;VPRelation;propagateAbsoluteConstraint(TR::VPConstraint *,int32_t,OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPRelation;propagateRelativeConstraint(TR::VPRelation *,int32_t,int32_t,OMR::ValuePropagation *);TR;VPNotEqual;0;1
 TR;VPConstraint;asNullObject();TR;VPNullObject;0;1
