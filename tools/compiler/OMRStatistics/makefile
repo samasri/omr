@@ -50,7 +50,7 @@ include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
-OUTPUTS = hierarchy weirdHierarchy allClasses allFunctions overrides functionLocation avg
+OUTPUTS = hierarchy weirdHierarchy allClasses allFunctions overrides functionLocation avg functionCalls
 
 # JIT_OMR_DIRTY_DIR: path to 'compiler' dir starting from where clang is going to compile the files, that is: from OMRStatistics/sources
 JIT_OMR_DIRTY_DIR = ../../../../compiler
@@ -69,10 +69,6 @@ produceVisualizations: $(SO)
 	@make output/lastCreated --no-print-directory
 
 output/lastCreated: $(SO)
-	@rm -f output/amd64.*
-	@rm -f output/i386.*
-	@rm -f output/p.*
-	@rm -f output/z.*
 	@for output in $(OUTPUTS) ; do \
 		rm -f output/$$output ; \
 	done \
@@ -87,6 +83,11 @@ output/lastCreated: $(SO)
 	@make trimOutput
 	@make createTotalOutput
 	@make moveOutputToVisualization
+	
+	mv -f output/amd64.* output/"original (trimmed) result"/
+	mv -f output/i386.* output/"original (trimmed) result"/
+	mv -f output/p.* output/"original (trimmed) result"/
+	mv -f output/z.* output/"original (trimmed) result"/
 	
 #@python visualization/Overloads/makeHTML.py visualization/Overloads/overloads
 	@python visualization/Hierarchy/makeDot.py
@@ -134,11 +135,14 @@ moveOutputToVisualization:
 	@mv output/overrides visualization/Overrides/overrides
 	@mv output/hierarchy visualization/Hierarchy/hierarchy
 
-FILETARGET = tests/input/MemberFunc.cpp
-FILETARGET2 = ../../../compiler/codegen/OMRCodeGenerator.cpp
+FILE_TARGET = tests/input/MemberFunc.cpp
+FILE_TARGET2 = ../../../compiler/codegen/OMRCodeGenerator.cpp
+GENERATE_PIC = 1
 getCallGraph:
-	@clang++ -std=c++0x -ferror-limit=0 $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -S -emit-llvm $(FILETARGET2) -o - | opt -analyze -dot-callgraph
-	@mv callgraph.dot tests/callGraph.dot
-	@cat tests/callGraph.dot | c++filt | sed 's,>,\\>,g; s,-\\>,->,g; s,<,\\<,g' | gawk '/external node/{id=$$1} $$1 != id' > tests/callgraph.dot
-	@rm tests/callGraph.dot
-	@dot -Tpng -otests/callgraph.png tests/callgraph.dot
+	@clang++ -std=c++0x -ferror-limit=0 $(DEFINES_AMD64) $(PLUGIN_INCLUDES_AMD64) -S -emit-llvm $(FILE_TARGET2) -o - | opt -analyze -dot-callgraph
+	@mv callgraph.dot callGraph/callGraph.dot
+ifeq ($(GENERATE_PIC), 1)
+	@cat callGraph/callGraph.dot | c++filt | sed 's,>,\\>,g; s,-\\>,->,g; s,<,\\<,g' | gawk '/external node/{id=$$1} $$1 != id' > callGraph/callgraph.dot
+	@rm callGraph/callGraph.dot
+	@dot -Tpng -ocallGraph/callgraph.png callGraph/callgraph.dot
+endif
