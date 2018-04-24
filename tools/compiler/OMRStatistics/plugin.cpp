@@ -142,7 +142,6 @@ void OMRStatistics::HMRecorder::assertFuncDeclNb(std::string className, std::str
 void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDecl) {
 	if(currentDecl->hasBody()) {
 		std::string caller = currentDecl->getQualifiedNameAsString();
-		//llvm::outs() << caller << ":\n";
 		CompoundStmt* stmt = (CompoundStmt*) (currentDecl->getBody());
 		Stmt** bodyItr = stmt->body_begin();
 		for(unsigned i = 0; i < stmt->size(); i++) { //iterate all statements in the function body
@@ -151,7 +150,6 @@ void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDec
 			if(stmtType.compare("CXXMemberCallExpr") == 0) {
 				CXXMemberCallExpr* callExpr = (CXXMemberCallExpr*) currentStmt;
 				std::string receiver = callExpr->getMethodDecl()->getQualifiedNameAsString();
-				//llvm::outs() << "\t" << receiver << "\n";
 				
 				FunctionCall* call = new FunctionCall(currentDecl, callExpr->getMethodDecl());
 				functionCalls.emplace_back(call);
@@ -264,6 +262,7 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	
 	BI = decl->bases_begin();
 	BE = decl->bases_end();
+	int parentCounter = 0;
 	for(BC = BI; BC != BE; BC++) { //iterate through all parents
 		clang::QualType parentClassType = BC->getType();
 		CXXRecordDecl* parentDecl = parentClassType->getAsCXXRecordDecl();
@@ -271,11 +270,13 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 		std::string parentClassName = (parentDecl) ? parentDecl->getQualifiedNameAsString() : parentClassType.getAsString(); //Prioritize having the name of the CXX record over general QualTypes
 		if(!parentDecl) continue;
 		
-		if(HMConsumer::shouldIgnoreClassName(parentClassName) || HMConsumer::shouldIgnoreClassName(currentClassName)) continue;
+		if(HMConsumer::shouldIgnoreClassName(parentClassName)) continue;
+		parentCounter++;
 		recordParents(currentClassName, parentClassName);
 		if(parentDecl) recordParents(parentDecl);
 		//TODO: recursively call this function on all classes, even if the class not a CXXDecl (even if it is a template)
 	}
+	if(parentCounter == 0) recordParents(currentClassName, "");
 }
 
 bool OMRStatistics::HMRecorder::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
@@ -309,7 +310,7 @@ bool OMRStatistics::Hierarchy::operator!=(const std::string other) {
 
 //Tracks the occurrences of each method, what classes, when overridden, and when overloaded
 OMRStatistics::MethodTracker::MethodTracker(std::string className, std::string methodSignature, bool firstOccurence, bool isImplicit, bool isVirtual) {
-	methodName = HMConsumer::getName(methodSignature);
+	methodName = HMConsumer::getFuncName(methodSignature);
 	this->methodSignature = methodSignature;
 	nbOfOccurences = 1;
 	classesOverriden = new std::vector<std::string>();
@@ -425,63 +426,77 @@ bool OMRStatistics::HMConsumer::isBase(std::string className) {
 	return false;
 }
 
+void OMRStatistics::HMConsumer::addSingleClass(std::string className, std::vector<Hierarchy*> &hierarchies) {
+	Hierarchy* newHierarchy = new Hierarchy();
+	newHierarchy->isSingle = true;
+	hierarchies.push_back(newHierarchy);
+	LinkedNode* childNode = new LinkedNode(className);
+	newHierarchy->base = childNode;
+	class2Address.emplace(childNode->name, childNode);
+}
+
 void OMRStatistics::HMConsumer::fillHierarchies(std::map<std::string, std::vector<std::string>*> &map) {
 	for(auto current : map) {
 		std::string childName = current.first;
 		std::vector<std::string>* parents = current.second;
-		for(std::string parentName : *parents) {
-			auto childItr = class2Address.find(childName);
-			auto parentItr = class2Address.find(parentName);
-			auto end = class2Address.end();
-			
-			if(childItr != end && parentItr != end) { // If both child and parent nodes are found in hierarchy list
-				LinkedNode* childNode = childItr->second;
-				LinkedNode* parentNode = parentItr->second;
-				if(isBase(parentName)) { //parent has no children
-					childNode->parents->push_back(parentNode);
-					deleteHierarchy(parentNode);
+		
+		//For classes with no parents or children, create a new hierarchy with only this class
+		if(parents->at(0).compare("") == 0) addSingleClass(childName, hierarchies);
+		else {
+			for(std::string parentName : *parents) {
+				auto childItr = class2Address.find(childName);
+				auto parentItr = class2Address.find(parentName);
+				auto end = class2Address.end();
+				
+				if(childItr != end && parentItr != end) { // If both child and parent nodes are found in hierarchy list
+					LinkedNode* childNode = childItr->second;
+					LinkedNode* parentNode = parentItr->second;
+					if(isBase(parentName)) { //parent has no children
+						childNode->parents->push_back(parentNode);
+						deleteHierarchy(parentNode);
+					}
+					else //if parent has children
+						childNode->parents->push_back(parentNode);
 				}
-				else //if parent has children
+				else if(childItr != end) { // If child node is found in hierarchy list
+					LinkedNode* childNode = childItr->second;
+					LinkedNode* parentNode = new LinkedNode(parentName);
+					class2Address.emplace(parentNode->name, parentNode);
 					childNode->parents->push_back(parentNode);
-			}
-			else if(childItr != end) { // If child node is found in hierarchy list
-				LinkedNode* childNode = childItr->second;
-				LinkedNode* parentNode = new LinkedNode(parentName);
-				class2Address.emplace(parentNode->name, parentNode);
-				childNode->parents->push_back(parentNode);
-			}
-			
-			else if(parentItr != end) { // If parent node is found in hierarchy list
-				LinkedNode* parentNode = parentItr->second;
-				LinkedNode* childNode = new LinkedNode(childName);
-				class2Address.emplace(childNode->name, childNode);
-				childNode->parents->push_back(parentNode);
-				if(isBase(parentName)) 
-					modifyBase(parentNode, childNode);
-				else { // parent has one or more children
+				}
+				
+				else if(parentItr != end) { // If parent node is found in hierarchy list
+					LinkedNode* parentNode = parentItr->second;
+					LinkedNode* childNode = new LinkedNode(childName);
+					class2Address.emplace(childNode->name, childNode);
+					childNode->parents->push_back(parentNode);
+					if(isBase(parentName)) 
+						modifyBase(parentNode, childNode);
+					else { // parent has one or more children
+						Hierarchy* newHierarchy = new Hierarchy();
+						newHierarchy->base = childNode;
+						hierarchies.push_back(newHierarchy);
+					}
+				}
+				
+				//If both nodes not found in hierarchy list
+				else /*if(childItr == end && parentItr == end)*/ {
 					Hierarchy* newHierarchy = new Hierarchy();
-					newHierarchy->base = childNode;
 					hierarchies.push_back(newHierarchy);
+					LinkedNode* childNode = new LinkedNode(childName);
+					LinkedNode* parentNode = new LinkedNode(parentName);
+					childNode->parents->push_back(parentNode);
+					newHierarchy->base = childNode;
+					class2Address.emplace(parentNode->name, parentNode);
+					class2Address.emplace(childNode->name, childNode);
 				}
-			}
-			
-			//If both nodes not found in hierarchy list
-			else /*if(childItr == end && parentItr == end)*/ {
-				Hierarchy* newHierarchy = new Hierarchy();
-				hierarchies.push_back(newHierarchy);
-				LinkedNode* childNode = new LinkedNode(childName);
-				LinkedNode* parentNode = new LinkedNode(parentName);
-				childNode->parents->push_back(parentNode);
-				newHierarchy->base = childNode;
-				class2Address.emplace(parentNode->name, parentNode);
-				class2Address.emplace(childNode->name, childNode);
 			}
 		}
 	}
 }
 
 OMRStatistics::MethodTracker* OMRStatistics::HMConsumer::searchForTracker(std::map<std::string, std::vector<MethodTracker>*>* methodName2MethodTracker, std::string method, bool* sameName) {
-	std::string methodName = getName(method);
+	std::string methodName = getFuncName(method);
 	//Search for method trackers with same name
 	auto e1 = methodName2MethodTracker->end();
 	auto itr1 = methodName2MethodTracker->find(methodName);
@@ -502,7 +517,7 @@ OMRStatistics::MethodTracker* OMRStatistics::HMConsumer::searchForTracker(std::m
 	return nullptr;
 }
 
-std::string OMRStatistics::HMConsumer::getName(std::string methodSignature) {
+std::string OMRStatistics::HMConsumer::getFuncName(std::string methodSignature) {
 	//Get method name from signature
 	std::size_t pos = methodSignature.find("(");
 	assert(pos != std::string::npos && "method name is invalid");
@@ -515,7 +530,6 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 	
 	for(auto hierarchy : hierarchies) {
 		//iterate hierarchy from top to base
-		
 		std::vector<std::vector<LinkedNode*>*>* subHierarchies = getTopToBaseAsArray(hierarchy);	
 		assert(subHierarchies && subHierarchies->size() > 0 && "Passed an empty hierarchy to getTopToBaseAsArray");
 		
@@ -528,17 +542,19 @@ void OMRStatistics::HMConsumer::collectMethodInfo(HMRecorder &recorder) {
 			//Process each method in every class of the subHierarchy
 			for(LinkedNode* current : *subHierarchy) {
 				std::string className = current->name;
+				//llvm::outs() << className << ":\n";
 				auto itr = map.find(className);
 				if(itr == map.end()) continue;
 				std::unordered_set<std::string*> methods = itr->second;
 				for(std::string* methodPtr : methods) {
 					std::string method = *methodPtr;
+					//llvm::outs() << "\t" << method << "\n";
 					bool sameName = false;
 					MethodTracker* tracker = searchForTracker(methodName2MethodTracker, method, &sameName);
 					if(tracker) //This is an override
 						tracker->addOccurence(className);
 					else {
-						std::string methodName = getName(method);
+						std::string methodName = getFuncName(method);
 						bool isFirstOccurence = true;
 						std::vector<MethodTracker>* trackers;
 						if(sameName) { //This is an overload
@@ -684,7 +700,6 @@ void OMRStatistics::HMConsumer::printTracker(llvm::raw_ostream* out, OMRStatisti
 
 void OMRStatistics::HMConsumer::printAllFunctions(llvm::raw_ostream* out) {
 	*out << "FunctionName; FunctionSignature; Namespace; ClassName; isImplicit; isVirtual\n";
-	std::map<std::string, bool> isFirstOccurenceMap;
 	for(auto hierarchy : hierarchies) {
 		auto trackerMapVec = hierarchy->methodName2MethodTrackerVec;
 		for(auto trackerMap : trackerMapVec) { //Go through the map of each subHierarchy
@@ -782,12 +797,14 @@ void OMRStatistics::HMConsumer::printFunctionLocations(HMRecorder& recorder, llv
 void OMRStatistics::HMConsumer::printHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
 	*out << "isExtensible; Hierarchy\n";
 	for(Hierarchy* h : hierarchies) {
+		if(h->isSingle) continue;
 		std::string isExtensible = (recorder.getIsExtensible()[h->base->name]) ? "1;" : "0;";
 		printHierarchy(isExtensible, h->base, out);
 	}
 }
 
 void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* node, llvm::raw_ostream* out) {
+	if(node->name.compare("") == 0) llvm::outs() << "Empty string\n";
 	history += node->name + " --> ";
 	std::vector<LinkedNode*>* parents = node->parents;
 	for(LinkedNode* parent : *parents) {
@@ -816,10 +833,12 @@ void OMRStatistics::HMConsumer::printAllClasses(HMRecorder& recorder, llvm::raw_
 }
 
 void OMRStatistics::HMConsumer::printFunctionCalls(ASTContext& ctx, HMRecorder& recorder, llvm::raw_ostream* out) {
-	*out << "CallerFunc;FunctionSignature;Receiver\n";
+	*out << "CallerNamespace;CallerClassName;CallerFuncSig;CalledFuncSignature;ReceiverNamespace;ReceiverClassName\n";
 	//std::vector<FunctionCall*>* functionCalls = getFunctionCalls(ctx);
 	for(FunctionCall* fc : recorder.getFunctionCalls()) {
-		*out << fc->callerFuncQualSig() << ";" << fc->receiverFuncSig() << ";" << fc->receiverClass() << "\n";
+		std::vector<std::string>* caller = seperateClassNameSpace(fc->callerClass());
+		std::vector<std::string>* receiver = seperateClassNameSpace(fc->receiverClass());
+		*out << caller->at(0) << ";" << caller->at(1) << ";" << fc->callerFuncSig() << ";" << fc->receiverFuncSig() << ";" << receiver->at(0) << ";" << receiver->at(1) << "\n";
 	}
 }
 

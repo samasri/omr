@@ -112,6 +112,7 @@ namespace OMRStatistics {
 	struct Hierarchy {
 		LinkedNode* base; //Base class of hierarchy
 		std::string name; //Base name, to identify the class
+		bool isSingle = false;
 		
 		//Vector of maps: Each map in the vector represents a unique subhierarchy
 		//The Map connects every method to the array of hierarchy classes where it occurred
@@ -169,27 +170,33 @@ namespace OMRStatistics {
 		//An array of linked nodes forming the class hierarchy. Every record in this array represents a class hierarchy in OMR
 		std::vector<Hierarchy*> hierarchies;
 		std::map<std::string, LinkedNode*> class2Address;
-	public:
 		
-		explicit HMConsumer(llvm::StringRef filename, Config conf);
-		//Searches all hierarchies for the one with the given base, and changes it to the new given base
+		//Printing helpers printing functions
+		void printHierarchy(std::string, LinkedNode*, llvm::raw_ostream*);
+		std::vector<std::string>* seperateClassNameSpace(std::string input);
+		size_t findLastStringIn(std::string input, std::string key);
+		void printTracker(llvm::raw_ostream*, MethodTracker&);
+		void printTracker(llvm::raw_ostream*, std::string, std::string, std::string, std::string, bool, bool);
+		
+		//Hierarchy building helpers
 		Hierarchy* modifyBase(LinkedNode* oldBase, LinkedNode* newBase);
-		// Deletes the hierarchy that has the given base (if found)
 		void deleteHierarchy(LinkedNode* base);
-		//Checks if the given class name is a base of any hierarchies
 		bool isBase(std::string className);
-		//Process the classHierarchy map from HMRecorder to fill the hierarchies map.
-		void fillHierarchies(std::map<std::string, std::vector<std::string>*> &map);
-		//Get method name from its signature
-		static std::string getName(std::string methodSignature);
-		//Search for the MethodTracker with the inputted function name in the inputted hierarchy
 		MethodTracker* searchForTracker(std::map<std::string, std::vector<MethodTracker>*>* methodName2MethodTracker, std::string method, bool* sameName);
-		//Iterates through the entries of Class2Methods in the HMRecorder and creates MethodTrackers out of them
-		void collectMethodInfo(HMRecorder &visitor);
 		//Converts the hierarchy to an array of nodes, starting from the top to the base
 		std::vector<std::vector<LinkedNode*>*>* getTopToBaseAsArray(OMRStatistics::Hierarchy* hierarchy);
 		void getTopToBaseAsArray(LinkedNode* node, std::vector<LinkedNode*>* array, std::vector<std::vector<LinkedNode*>*>* subHierarchies);
+		void addSingleClass(std::string className, std::vector<Hierarchy*>& hierarchies);
 		std::vector<FunctionCall*>* getFunctionCalls(ASTContext&);
+		
+	public:
+		
+		explicit HMConsumer(llvm::StringRef filename, Config conf);
+		
+		//Process the classHierarchy map from HMRecorder to fill the hierarchies map.
+		void fillHierarchies(std::map<std::string, std::vector<std::string>*> &map);
+		//Iterates through the entries of Class2Methods in the HMRecorder and creates MethodTrackers out of them
+		void collectMethodInfo(HMRecorder &visitor);
 		
 		//Printing output files
 		void printHierarchies(HMRecorder&, llvm::raw_ostream*);
@@ -201,14 +208,9 @@ namespace OMRStatistics {
 		void printFunctionLocations(HMRecorder&, llvm::raw_ostream*);
 		void printFunctionCalls(ASTContext&, HMRecorder&, llvm::raw_ostream*);
 		
-		//Helper printing functions
-		void printHierarchy(std::string, LinkedNode*, llvm::raw_ostream*);
+		//Static helpers
 		static bool shouldIgnoreClassName(std::string);
-		std::vector<std::string>* seperateClassNameSpace(std::string input);
-		size_t findLastStringIn(std::string input, std::string key);
-		void printTracker(llvm::raw_ostream*, MethodTracker&);
-		void printTracker(llvm::raw_ostream*, std::string, std::string, std::string, std::string, bool, bool);
-		
+		static std::string getFuncName(std::string methodSignature);
 		
 		virtual void HandleTranslationUnit(ASTContext &Context);
 	};
