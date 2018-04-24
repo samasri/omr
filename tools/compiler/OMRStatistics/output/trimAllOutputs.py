@@ -4,7 +4,7 @@
 
 import sys
 
-outputs = ['hierarchy', 'weirdHierarchy', 'allClasses', 'overloads', 'allFunctions', 'overrides', 'functionLocation', 'avg']
+outputs = ['hierarchy', 'weirdHierarchy', 'allClasses', 'overloads', 'allFunctions', 'overrides', 'functionLocation', 'avg', 'functionCalls']
 
 reads = []
 writes = []

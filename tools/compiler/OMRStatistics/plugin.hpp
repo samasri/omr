@@ -23,24 +23,26 @@ namespace OMRStatistics {
 	
 	class FunctionCall {
 	private:
-		FunctionDecl* calleeDecl;
-		FunctionDecl* callerDecl;
+		CXXMethodDecl* receiverDecl;
+		CXXMethodDecl* callerDecl;
 	public:
-		FunctionCall(FunctionDecl*, FunctionDecl*);
+		FunctionCall(CXXMethodDecl*, CXXMethodDecl*);
 		
 		//Getters and setters
-		void setCallee(FunctionDecl*);
-		FunctionDecl* getCallee();
-		void setCaller(FunctionDecl*);
-		FunctionDecl* getCaller();
+		void setCallee(CXXMethodDecl*);
+		CXXMethodDecl* getCallee();
+		void setCaller(CXXMethodDecl*);
+		CXXMethodDecl* getCaller();
 		
 		//Generated info
-		std::string calleeName();
-		std::string callerName();
-		std::string calleeLoc(ASTContext&);
+		std::string receiverClass();
+		std::string callerClass();
+		std::string receiverFuncQualSig();
+		std::string callerFuncQualSig();
+		std::string receiverFuncSig();
+		std::string callerFuncSig();
+		std::string receiverLoc(ASTContext&);
 		std::string callerLoc(ASTContext&);
-		std::string calleeSig(ASTContext&);
-		std::string callerSig(ASTContext&);
 	};
 	
 	class HMRecorder : public RecursiveASTVisitor<HMRecorder> {
@@ -78,7 +80,7 @@ namespace OMRStatistics {
 		//Checks if a specific declaration contains "OMR_EXTENSIBLE" or not
 		bool checkExtensibility(const CXXRecordDecl*);
 		//Get function name with parameter types (AKA: recreate function signature)
-		std::string* getFuncSig(CXXMethodDecl*);
+		static std::string getFuncSig(CXXMethodDecl*);
 		//Takes a method declaration and records all the function calls inside its body
 		void processCallExpressions(CXXMethodDecl*);
 		//Loop through the methods of the given class and input them in Class2Methods
@@ -197,6 +199,7 @@ namespace OMRStatistics {
 		void printOverrides(llvm::raw_ostream*);
 		void printAverageOverrides(HMRecorder&, llvm::raw_ostream*);
 		void printFunctionLocations(HMRecorder&, llvm::raw_ostream*);
+		void printFunctionCalls(ASTContext&, HMRecorder&, llvm::raw_ostream*);
 		
 		//Helper printing functions
 		void printHierarchy(std::string, LinkedNode*, llvm::raw_ostream*);
