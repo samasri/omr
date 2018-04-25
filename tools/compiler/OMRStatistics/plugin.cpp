@@ -150,7 +150,8 @@ void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDec
 			if(stmtType.compare("CXXMemberCallExpr") == 0) {
 				//Get location of currentStmt, which is the call location
 				CXXMemberCallExpr* callExpr = (CXXMemberCallExpr*) currentStmt;
-				std::string receiver = callExpr->getMethodDecl()->getQualifiedNameAsString();
+				CXXRecordDecl* receiverClassDecl = callExpr->getMethodDecl()->getParent();
+				if(HMConsumer::shouldIgnoreClassName(receiverClassDecl->getQualifiedNameAsString()) || receiverClassDecl->isStruct() || receiverClassDecl->isUnion()) continue;
 				
 				FunctionCall* call = new FunctionCall(currentDecl, callExpr->getMethodDecl());
 				functionCalls.emplace_back(call);
@@ -864,7 +865,6 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	std::map<std::string, std::vector<std::string>*> classHierarchy = recorder.getClassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
-	
 	
 	std::vector<std::string> outputFiles = {"hierarchy", "weirdHierarchy", "allClasses", "overloads", "allFunctions", "functionLocation", "overrides", "avg", "functionCalls"};
 	std::vector<llvm::raw_ostream*>* outputs = new std::vector<llvm::raw_ostream*>();
