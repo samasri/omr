@@ -55,6 +55,8 @@ namespace OMRStatistics {
 		std::map<std::string, FunctionDeclInfo*> functionDeclInfo;
 		//child class --> parent classes (vector)
 		std::map<std::string, std::vector<std::string>*> classHierarchy;
+		//Records all classes added to hierarchies in recordParents
+		std::unordered_set<std::string> classesAddedToHierarchy;
 		std::vector<FunctionCall*> functionCalls;
 		
 		//A debug function intended to be used if an assert failed in HMRecorder::recordFunctions
@@ -83,6 +85,8 @@ namespace OMRStatistics {
 		static std::string getFuncSig(CXXMethodDecl*);
 		//Takes a method declaration and records all the function calls inside its body
 		void processCallExpressions(CXXMethodDecl*);
+		//Add classes with no parents or children to map
+		void addNeglectedClasses();
 		//Loop through the methods of the given class and input them in Class2Methods
 		void recordFunctions(const CXXRecordDecl* inputClass);
 		//Given a child and parent class names, it adds them to the classHierarchy map

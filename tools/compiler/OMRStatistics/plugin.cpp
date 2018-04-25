@@ -148,6 +148,7 @@ void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDec
 			Stmt* currentStmt = bodyItr[i];
 			std::string stmtType = currentStmt->getStmtClassName();
 			if(stmtType.compare("CXXMemberCallExpr") == 0) {
+				//Get location of currentStmt, which is the call location
 				CXXMemberCallExpr* callExpr = (CXXMemberCallExpr*) currentStmt;
 				std::string receiver = callExpr->getMethodDecl()->getQualifiedNameAsString();
 				
@@ -189,34 +190,6 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 	}
 }
 
-bool OMRStatistics::HMRecorder::recordParents(std::string childClassName, std::string parentClassName) {
-	if(parentClassName.compare(childClassName) != 0) {
-		auto itr = classHierarchy.find(childClassName);
-		auto end = classHierarchy.end();
-		
-		std::vector<std::string>* parents;
-		
-		if(itr == end) {//classHierarchy does not have the current class, add it to classHierarchy
-			parents = new std::vector<std::string>();
-			classHierarchy.emplace(childClassName, parents);
-		}
-		
-		else {
-			parents = itr->second;
-			//Check if parent is already recorded (redeclarations in source code)
-			auto b = parents->begin();
-			auto e = parents->end();
-			if(std::find(b, e, parentClassName) != e) return false;
-		}
-		
-		parents->push_back(parentClassName);
-			
-		return true;
-	}
-	
-	return false;
-}
-
 std::string OMRStatistics::HMRecorder::printLoc(const clang::CXXRecordDecl* d) {
 	std::string result;
 	result = d->getLocStart().printToString(d->getASTContext().getSourceManager());
@@ -246,6 +219,41 @@ size_t OMRStatistics::HMRecorder::findLastStringIn(std::string input, char key) 
 	return pos;
 }
 
+void OMRStatistics::HMRecorder::addNeglectedClasses() {
+	for (auto itr : isExtensible)
+		if (classesAddedToHierarchy.find(itr.first) == classesAddedToHierarchy.end())
+			// This is an ignored class since its found in the isExtensible keyset but not in classesAddedToHierarchy
+			recordParents(itr.first,"");
+}
+
+bool OMRStatistics::HMRecorder::recordParents(std::string childClassName, std::string parentClassName) {
+	if(parentClassName.compare(childClassName) != 0) {
+		auto itr = classHierarchy.find(childClassName);
+		auto end = classHierarchy.end();
+		
+		std::vector<std::string>* parents;
+		
+		if(itr == end) {//classHierarchy does not have the current class, add it to classHierarchy
+			parents = new std::vector<std::string>();
+			classHierarchy.emplace(childClassName, parents);
+		}
+		
+		else {
+			parents = itr->second;
+			//Check if parent is already recorded (redeclarations in source code)
+			auto b = parents->begin();
+			auto e = parents->end();
+			if(std::find(b, e, parentClassName) != e) return false;
+		}
+		
+		parents->push_back(parentClassName);
+			
+		return true;
+	}
+	
+	return false;
+}
+
 void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	if(!decl) return;
 	std::string currentClassName = decl->getQualifiedNameAsString();
@@ -273,10 +281,11 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 		if(HMConsumer::shouldIgnoreClassName(parentClassName)) continue;
 		parentCounter++;
 		recordParents(currentClassName, parentClassName);
+		classesAddedToHierarchy.emplace(currentClassName);
+		classesAddedToHierarchy.emplace(parentClassName);
 		if(parentDecl) recordParents(parentDecl);
 		//TODO: recursively call this function on all classes, even if the class not a CXXDecl (even if it is a template)
 	}
-	if(parentCounter == 0) recordParents(currentClassName, "");
 }
 
 bool OMRStatistics::HMRecorder::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
@@ -441,7 +450,9 @@ void OMRStatistics::HMConsumer::fillHierarchies(std::map<std::string, std::vecto
 		std::vector<std::string>* parents = current.second;
 		
 		//For classes with no parents or children, create a new hierarchy with only this class
-		if(parents->at(0).compare("") == 0) addSingleClass(childName, hierarchies);
+		if(parents->at(0).compare("") == 0) {
+			addSingleClass(childName, hierarchies);
+		}
 		else {
 			for(std::string parentName : *parents) {
 				auto childItr = class2Address.find(childName);
@@ -797,14 +808,18 @@ void OMRStatistics::HMConsumer::printFunctionLocations(HMRecorder& recorder, llv
 void OMRStatistics::HMConsumer::printHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
 	*out << "isExtensible; Hierarchy\n";
 	for(Hierarchy* h : hierarchies) {
-		if(h->isSingle) continue;
+		if(h->isSingle) {
+			continue;
+		}
 		std::string isExtensible = (recorder.getIsExtensible()[h->base->name]) ? "1;" : "0;";
 		printHierarchy(isExtensible, h->base, out);
 	}
 }
 
 void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* node, llvm::raw_ostream* out) {
-	if(node->name.compare("") == 0) llvm::outs() << "Empty string\n";
+	if(node->name.compare("") == 0) {
+		//llvm::outs() << "Empty string\n\t" << history << "\n";
+	}
 	history += node->name + " --> ";
 	std::vector<LinkedNode*>* parents = node->parents;
 	for(LinkedNode* parent : *parents) {
@@ -845,6 +860,7 @@ void OMRStatistics::HMConsumer::printFunctionCalls(ASTContext& ctx, HMRecorder& 
 void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	HMRecorder recorder(&Context);
 	recorder.TraverseDecl(Context.getTranslationUnitDecl());
+	recorder.addNeglectedClasses();
 	std::map<std::string, std::vector<std::string>*> classHierarchy = recorder.getClassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
