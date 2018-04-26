@@ -87,14 +87,14 @@ class ClassTable:
 class FunctionCall:
 	def __init__(self, maxLocationLength):
 		self.tableName = 'FunctionCall'
-		self.columns = ['CallerFunctionID', 'ReceiverFunctionID', 'CallSite']
-		self.primaryKey = 'CallerFunctionID, ReceiverFunctionID, CallSite'
+		self.columns = ['CallerFunctionID', 'CalledFunctionID', 'CallSite']
+		self.primaryKey = 'CallerFunctionID, CalledFunctionID, CallSite'
 		self.foreignKeys = {}
 		self.foreignKeys['CallerFunctionID'] = [FunctionTable(-1,-1), 'ID']
-		self.foreignKeys['ReceiverFunctionID'] = [FunctionTable(-1,-1), 'ID']
+		self.foreignKeys['CalledFunctionID'] = [FunctionTable(-1,-1), 'ID']
 		# Columns
 		self.CallerFunctionID = 'INT'
-		self.ReceiverFunctionID = 'INT'
+		self.CalledFunctionID = 'INT'
 		self.CallSite = 'VARCHAR(' + str(maxLocationLength) + ')'
 # -------------------------------------End of Defining Tables--------------------------------------
 
@@ -435,6 +435,10 @@ for row in functionCalls:
 	receiverNamespace = row[4]
 	receiverClassName = row[5]
 	callSite = row[6]
+	# Making path relative, starting from the omr directory
+	callSite = callSite.replace("../../../../", pathToOMR);
+	callSite = callSite.replace("//", "/");
+	callSite = callSite[len(pathToOMR)-4:]
 	
 	callerQualName = callerNamespace + '::' + callerClassName if callerNamespace != '' else callerClassName
 	receiverQualName = receiverNamespace + '::' + receiverClassName if receiverNamespace != '' else receiverClassName

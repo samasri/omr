@@ -1,5 +1,6 @@
 CREATE DATABASE IF NOT EXISTS omrstatisticsdb;
 USE omrstatisticsdb;
+DROP TABLE IF EXISTS FunctionCall;
 DROP TABLE IF EXISTS Polymorphism;
 DROP TABLE IF EXISTS Hierarchy;
 DROP TABLE IF EXISTS Override;
