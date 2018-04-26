@@ -1,6 +1,6 @@
-# This python script creates SQL files containing queries that create the database. The script does not support more than one argument. 
-# Passing no arguments for the script creates the SQL files in the same directory as the python file. 
-# Passing 'd' to the script will run it in debug mode (no output generated). 
+# This python script creates SQL files containing queries that create the database. The script does not support more than one argument.
+# Passing no arguments for the script creates the SQL files in the same directory as the python file.
+# Passing 'd' to the script will run it in debug mode (no output generated).
 # Passing anything else to the script will be considered as the path to the directory for the output to be placed in. The passed path relative to where the python file is. For example passing 'foo' to the script means the files will be placed in omrstatistics/output/foo
 import csv
 import sys
@@ -83,20 +83,30 @@ class ClassTable:
 		self.Namespace = 'VARCHAR(' + str(maxNamespaceLength) + ')'
 		self.ClassName = 'VARCHAR(' + str(maxClassNameLength) + ')'
 		self.IsExtensible = 'INT'
-	
+
+class FunctionCall:
+	def __init__(self, maxLocationLength):
+		self.tableName = 'FunctionCall'
+		self.columns = ['CallerFunctionID', 'ReceiverFunctionID', 'CallSite']
+		self.primaryKey = 'CallerFunctionID, ReceiverFunctionID, CallSite'
+		self.foreignKeys = {}
+		self.foreignKeys['CallerFunctionID'] = [FunctionTable(-1,-1), 'ID']
+		self.foreignKeys['ReceiverFunctionID'] = [FunctionTable(-1,-1), 'ID']
+		# Columns
+		self.CallerFunctionID = 'INT'
+		self.ReceiverFunctionID = 'INT'
+		self.CallSite = 'VARCHAR(' + str(maxLocationLength) + ')'
 # -------------------------------------End of Defining Tables--------------------------------------
 
 # ------------------------------------------Configurations-----------------------------------------
 
-# Get path from OMRStatistics directory to the python script
-path = sys.argv[0]
-nameIndex = path.index('getDatabaseSQL.py')
-path = path[:nameIndex]
-fileWritePath = path + sys.argv[1] + '/' if len(sys.argv) == 2 and sys.argv[1] != 'd' else path + './'
-
 # Get the absolute path to the OMR directory
 pathToOMR = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
 pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5]
+
+# Get path from OMRStatistics directory to the outputDir
+path = pathToOMR + 'tools/compiler/OMRStatistics/output/'
+fileWritePath = path + sys.argv[1] + '/' if len(sys.argv) == 2 and sys.argv[1] != 'd' else path + './'
 
 # Setting debug
 if len(sys.argv) == 2 and sys.argv[1] == 'd': debug = 1
@@ -108,7 +118,7 @@ else: debug = 0
 def createTable(table):
 	# Create file
 	file = open(fileWritePath + table.tableName + '.sql', 'w')
-	
+
 	# Get MySQL instruction
 	result = ''
 	tableColumns = table.__dict__
@@ -119,7 +129,7 @@ def createTable(table):
 	result += '\tPRIMARY KEY(' + table.primaryKey + '),\n'
 	# Adding Foreign keys
 	if 'foreignKeys' in tableColumns:
-		for fk in table.foreignKeys: 
+		for fk in table.foreignKeys:
 			result += '\tFOREIGN KEY(' + fk + ') '
 			fkTable = table.foreignKeys[fk][0]
 			result += 'REFERENCES ' + fkTable.tableName + '(' + table.foreignKeys[fk][1]+'),\n'
@@ -129,7 +139,7 @@ def createTable(table):
 	# Final Edits
 	result = result[:-2] + '\n);\n' # Remove last coma
 	result += 'ALTER TABLE ' + table.tableName + ' CONVERT TO CHARACTER SET latin1 COLLATE latin1_general_cs;\n' # Make case-sensitive
-	
+
 	# Write queries on file and return file
 	global allSQLQueries
 	allSQLQueries.write(result)
@@ -149,11 +159,11 @@ def getOMRLongestPath(pathToOMR):
 def insertTo(table, vector):
 	result = ''
 	result += 'INSERT INTO ' + table + ' VALUES('
-	for value in vector: 
+	for value in vector:
 		result += "'" + str(value) + "',"
 	result = result[:len(result)-1]
 	result += ');\n'
-	
+
 	global allSQLQueries
 	allSQLQueries.write(result)
 	return result
@@ -172,7 +182,7 @@ fileToIDMap = {}
 functionToFileIDMap = {}
 functionQualNametoID = {}
 ignoredFunctionSignatures = []
-allSQLQueries = open(fileWritePath + 'all.sql', 'w') # Write all queries in one file
+if not debug: allSQLQueries = open(fileWritePath + 'all.sql', 'w') # Write all queries in one file
 
 # Import CSV files for reading and processing
 allFunctions = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
@@ -180,14 +190,16 @@ allClasses = csv.reader(open(path + 'allClasses','r'), delimiter=";")
 overrides = csv.reader(open(path + '../visualization/Overrides/overrides','r'), delimiter=";")
 hierarchies = csv.reader(open(path + '../visualization/Hierarchy/hierarchy','r'), delimiter=";")
 functionLocations = csv.reader(open(path + 'functionLocation','r'), delimiter=";")
+functionCalls = csv.reader(open(path + 'functionCalls','r'), delimiter=";")
 #Can iterate only once on one variable, need to iterate through these file twice
 allFunctions2 = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
+functionCalls2 = csv.reader(open(path + 'functionCalls','r'), delimiter=";")
 allClasses2 = csv.reader(open(path + 'allClasses','r'), delimiter=";")
 
-# Create and use database
+# Find max fields length to create database
 maxFunctionNameLength = -1
-maxSignatureLength = -1
-for row in allFunctions:
+maxSignatureLength = -1 # For Function table
+for row in allFunctions2:
 	if 'Arch:' in row[0]: continue
 	if maxFunctionNameLength < len(row[0]): maxFunctionNameLength = len(row[0])
 	if maxSignatureLength < len(row[1]): maxSignatureLength = len(row[1])
@@ -197,14 +209,20 @@ maxClassNameLength = -1
 for row in allClasses2:
 	if maxNamespaceLength < len(row[0]) : maxNamespaceLength = len(row[0])
 	if maxClassNameLength < len(row[1]) : maxClassNameLength = len(row[1])
-	
-if not debug: 
+
+maxLocationLength = -1 # For FunctionCall table, this shouldn't be different however we have a bug in the plugin
+for row in functionCalls2:
+	if maxLocationLength < len(row[6]): maxLocationLength = len(row[6])
+
+# Create database and drop any existing tables
+if not debug:
 	initFile = open(fileWritePath + 'init.sql', 'w')
 	createDBQuery = 'CREATE DATABASE IF NOT EXISTS omrstatisticsdb;\n'
 	createDBQuery += 'USE omrstatisticsdb;\n'
 	initFile.write(createDBQuery)
 	allSQLQueries.write(createDBQuery)
-	dropQueries = 'DROP TABLE IF EXISTS Polymorphism;\n'
+	dropQueries = 'DROP TABLE IF EXISTS FunctionCall;\n'
+	dropQueries += 'DROP TABLE IF EXISTS Polymorphism;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Hierarchy;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Override;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Function;\n'
@@ -220,6 +238,7 @@ overridesTable = OverrideTable()
 polymorphism = PolymorphismTable()
 hierarchiesTable = Hierarchy()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
+functionCallsTable = FunctionCall(maxLocationLength)
 
 # Fill Files table
 id = 0
@@ -233,7 +252,7 @@ for root, subdirs, files in os.walk(pathToOMR):
 		if not debug: FileFile.write(insertTo('File', [id, filePath]))
 		fileToIDMap[filePath] = id
 
-		
+
 # Fill Class Table
 if not debug: ClassFile = createTable(classes)
 id = 0
@@ -248,6 +267,7 @@ for row in allClasses:
 	className = row[1]
 	qualifiedName = namespace + '::' + className if namespace != '' else className;
 	classToIDMap[qualifiedName] =  id #Fill classToIDMap from allClasses CSV File
+	
 	if not debug: ClassFile.write(insertTo('Class', [id, namespace, className, isExtensible]))
 
 # Link functions to their file ID
@@ -255,7 +275,7 @@ id = 0
 for row in functionLocations:
 	functionQualifiedName = row[0]
 	functionLocation = row[1]
-	
+
 	#Ignore cases where declaration is outside the OMR directory
 	if functionLocation[:9] != "../../../":
 		signature = getSignature(functionQualifiedName)
@@ -265,7 +285,7 @@ for row in functionLocations:
 	functionLocation = functionLocation.replace("../../../../", pathToOMR);
 	functionLocation = functionLocation.replace("//", "/");
 	functionLocation = functionLocation[len(pathToOMR)-4:]
-	
+
 	colonIndex = functionLocation.find(':')
 	functionLocation = functionLocation[:colonIndex]
 	fileID = fileToIDMap[functionLocation]
@@ -276,7 +296,7 @@ if not debug: FunctionFile = createTable(functions)
 id = 0
 f2r = {} # Function --> row
 dupKeys = set() # Functions in visitedFunctions that have more than one value
-for row in allFunctions2:
+for row in allFunctions:
 	#Function table: ['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 	if 'Arch:' in row[0]: continue
 	if id == 0:
@@ -292,12 +312,12 @@ for row in allFunctions2:
 		dupKeys.add(functionQualifiedName)
 		id += 1
 		continue
-	
+
 	f2r[functionQualifiedName].append(row)
-	
+
 	# Ignore signatures declared in a non-OMR file
 	if row[1] in ignoredFunctionSignatures: continue
-	
+
 	fileID = functionToFileIDMap[functionQualifiedName]
 	classID = classToIDMap[classQualifiedName]
 	functionQualNametoID[str(classID) + '::' + row[1]] = id
@@ -325,33 +345,32 @@ firstClassID = -1
 for row in overrides:
 	if 'Arch:' in row[0]: continue
 	# ['BaseFunctionID', 'OverridingFunctionID']
-	if id == 0: 
+	if id == 0:
 		id += 1
 		continue
 	id += 1
-	
+
 	sig = row[2]
-	
+
 	# Ignore signatures declared in a non-OMR file
 	if sig in ignoredFunctionSignatures: continue
-	
+
 	# Reconstruct qualified names of classes & get IDs
 	qualifiedBaseName = row[0] + '::' + row[1] if row[0] != '' else row[1]
 	qualifiedOverridingName = row[3] + '::' + row[4] if row[3] != '' else row[4]
 	baseClassID = classToIDMap[qualifiedBaseName]
 	overridingClassID = classToIDMap[qualifiedOverridingName]
-	
 	baseFunctionID = functionQualNametoID[str(baseClassID) + '::' + sig]
 	overridingFunctionID = functionQualNametoID[str(overridingClassID) + '::' + sig]
-	
+
 	# If first line, store info in variables and move on
 	if id == 1:
 		continue
-	
+
 	# Ignore functions outside omr
 	funcQualifiedName = qualifiedBaseName + '::' + sig
-	if sig in ignoredFunctionSignatures: continue	
-	
+	if sig in ignoredFunctionSignatures: continue
+
 	if not debug: OverrideFile.write(insertTo('Override', [baseFunctionID, overridingFunctionID]))
 
 # Fill Polymorphism and Hierarchy tables
@@ -372,10 +391,10 @@ for row in hierarchies:
 			# Record the base class of this hierarchy in the Hierarchy table
 			baseClass = clas
 			if not debug: HierarchiesFile.write(insertTo('Hierarchy', [hierarchyID, previousClassID]))
-			
+
 			continue
 		currentClassID = classToIDMap[clas]
-		
+
 		# Duplicate entries will generate in cases of 2 hierarchies that have different bases but merge at some point (so they would have the same top), we remove them here
 		key = str(hierarchyID) + ':' + str(previousClassID) + ':' + str(currentClassID)
 		if key not in duplicateEntries:
@@ -383,7 +402,52 @@ for row in hierarchies:
 			if not debug: PolymorphismFile.write(insertTo('Polymorphism', [hierarchyID, previousClassID, currentClassID]))
 		else: # Based on my testing, no case passed here
 			pass
-		
+
 		previousClassID = currentClassID
 		previousClas = clas
 	hierarchyID += 1
+
+def insertTo2(table, vector):
+	result = ''
+	result += 'INSERT INTO ' + table + ' VALUES('
+	for value in vector:
+		result += "'" + str(value) + "',"
+	result = result[:len(result)-1]
+	result += ');' +  + '\n'
+
+	global allSQLQueries
+	allSQLQueries.write(result)
+	return result
+
+id = 0
+inconsistentIgnoredFunctions = set()
+dupSet = set()
+if not debug: FunctionCallFile = createTable(functionCallsTable)
+for row in functionCalls:
+	if id == 0:
+		id += 1
+		continue
+	
+	callerNamespace = row[0]
+	callerClassName = row[1]
+	callerFuncSig = row[2]
+	calledFuncSignature = row[3]
+	receiverNamespace = row[4]
+	receiverClassName = row[5]
+	callSite = row[6]
+	
+	callerQualName = callerNamespace + '::' + callerClassName if callerNamespace != '' else callerClassName
+	receiverQualName = receiverNamespace + '::' + receiverClassName if receiverNamespace != '' else receiverClassName
+	
+	callerID = classToIDMap[callerQualName]
+	callerID = functionQualNametoID[str(callerID) + '::' + callerFuncSig]
+	try: receiverID = classToIDMap[receiverQualName]
+	except:
+		#inconsistentIgnoredFunctions.add(receiverQualName) #Issue 
+		continue
+	try: receiverID = functionQualNametoID[str(receiverID) + '::' + calledFuncSignature]
+	except:
+		#inconsistentIgnoredFunctions.add(receiverQualName + '::' + calledFuncSignature) #Issue
+		continue
+	
+	if not debug: FunctionCallFile.write(insertTo('FunctionCall', [callerID, receiverID, callSite]))
