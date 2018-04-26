@@ -25,8 +25,9 @@ namespace OMRStatistics {
 	private:
 		CXXMethodDecl* receiverDecl;
 		CXXMethodDecl* callerDecl;
+		SourceRange range;
 	public:
-		FunctionCall(CXXMethodDecl*, CXXMethodDecl*);
+		FunctionCall(CXXMethodDecl*, CXXMethodDecl*, SourceRange);
 		
 		//Getters and setters
 		void setCallee(CXXMethodDecl*);
@@ -43,6 +44,7 @@ namespace OMRStatistics {
 		std::string callerFuncSig();
 		std::string receiverLoc(ASTContext&);
 		std::string callerLoc(ASTContext&);
+		std::string getLocation(SourceManager&);
 	};
 	
 	class HMRecorder : public RecursiveASTVisitor<HMRecorder> {

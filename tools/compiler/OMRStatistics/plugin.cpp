@@ -148,12 +148,15 @@ void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDec
 			Stmt* currentStmt = bodyItr[i];
 			std::string stmtType = currentStmt->getStmtClassName();
 			if(stmtType.compare("CXXMemberCallExpr") == 0) {
-				//Get location of currentStmt, which is the call location
+				SourceRange rng = currentStmt->getSourceRange();
+				
 				CXXMemberCallExpr* callExpr = (CXXMemberCallExpr*) currentStmt;
 				CXXRecordDecl* receiverClassDecl = callExpr->getMethodDecl()->getParent();
-				if(HMConsumer::shouldIgnoreClassName(receiverClassDecl->getQualifiedNameAsString()) || receiverClassDecl->isStruct() || receiverClassDecl->isUnion()) continue;
 				
-				FunctionCall* call = new FunctionCall(currentDecl, callExpr->getMethodDecl());
+				//Ignore non-target structures
+				if(HMConsumer::shouldIgnoreClassName(receiverClassDecl->getQualifiedNameAsString()) || !receiverClassDecl->hasDefinition() || !receiverClassDecl->isClass()) continue;
+				
+				FunctionCall* call = new FunctionCall(currentDecl, callExpr->getMethodDecl(), rng);
 				functionCalls.emplace_back(call);
 			}
 		}
@@ -168,7 +171,7 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 		CXXMethodDecl* currentDecl = *A;
 		//Get function name with parameter types (AKA: recreate function signature)
 		std::string* funcSig = new std::string(HMRecorder::getFuncSig(currentDecl));
-		
+		//if(className.compare("TestCompiler::OpCodesTest") == 0) llvm::outs() << *funcSig << "\n";
 		//Save function information
 		FunctionDeclInfo* info = new FunctionDeclInfo(currentDecl->isImplicit(), currentDecl->isVirtual(), printLoc(currentDecl));
 		//Assert only one decl of the func is found
@@ -271,21 +274,20 @@ void OMRStatistics::HMRecorder::recordParents(const CXXRecordDecl *decl) {
 	
 	BI = decl->bases_begin();
 	BE = decl->bases_end();
-	int parentCounter = 0;
 	for(BC = BI; BC != BE; BC++) { //iterate through all parents
 		clang::QualType parentClassType = BC->getType();
 		CXXRecordDecl* parentDecl = parentClassType->getAsCXXRecordDecl();
 		
-		std::string parentClassName = (parentDecl) ? parentDecl->getQualifiedNameAsString() : parentClassType.getAsString(); //Prioritize having the name of the CXX record over general QualTypes
 		if(!parentDecl) continue;
 		
+		std::string parentClassName = parentDecl->getQualifiedNameAsString();
+		
 		if(HMConsumer::shouldIgnoreClassName(parentClassName)) continue;
-		parentCounter++;
+		
 		recordParents(currentClassName, parentClassName);
 		classesAddedToHierarchy.emplace(currentClassName);
 		classesAddedToHierarchy.emplace(parentClassName);
-		if(parentDecl) recordParents(parentDecl);
-		//TODO: recursively call this function on all classes, even if the class not a CXXDecl (even if it is a template)
+		recordParents(parentDecl);
 	}
 }
 
@@ -344,9 +346,10 @@ bool OMRStatistics::MethodTracker::operator==(const std::string other) {
 	return (methodSignature.compare(other) == 0);
 }
 
-OMRStatistics::FunctionCall::FunctionCall(CXXMethodDecl* caller, CXXMethodDecl* receiver) {
+OMRStatistics::FunctionCall::FunctionCall(CXXMethodDecl* caller, CXXMethodDecl* receiver, SourceRange rng) {
 	this->receiverDecl = receiver;
 	this->callerDecl = caller;
+	range = rng;
 }
 
 void OMRStatistics::FunctionCall::setCallee(CXXMethodDecl* cd) {
@@ -397,6 +400,12 @@ std::string OMRStatistics::FunctionCall::receiverLoc(ASTContext& Context) {
 std::string OMRStatistics::FunctionCall::callerLoc(ASTContext& Context) {
 	SourceManager &manager = Context.getSourceManager();
 	return callerDecl->getSourceRange().getBegin().printToString(manager);
+}
+
+std::string OMRStatistics::FunctionCall::getLocation(SourceManager& mng) {
+	SourceLocation b = range.getBegin();
+	//SourceLocation e = range.getEnd();
+	return b.printToString(mng);
 }
 
 OMRStatistics::HMConsumer::HMConsumer(llvm::StringRef filename, Config conf) {
@@ -818,9 +827,6 @@ void OMRStatistics::HMConsumer::printHierarchies(HMRecorder& recorder, llvm::raw
 }
 
 void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* node, llvm::raw_ostream* out) {
-	if(node->name.compare("") == 0) {
-		//llvm::outs() << "Empty string\n\t" << history << "\n";
-	}
 	history += node->name + " --> ";
 	std::vector<LinkedNode*>* parents = node->parents;
 	for(LinkedNode* parent : *parents) {
@@ -849,12 +855,12 @@ void OMRStatistics::HMConsumer::printAllClasses(HMRecorder& recorder, llvm::raw_
 }
 
 void OMRStatistics::HMConsumer::printFunctionCalls(ASTContext& ctx, HMRecorder& recorder, llvm::raw_ostream* out) {
-	*out << "CallerNamespace;CallerClassName;CallerFuncSig;CalledFuncSignature;ReceiverNamespace;ReceiverClassName\n";
+	*out << "CallerNamespace;CallerClassName;CallerFuncSig;CalledFuncSignature;ReceiverNamespace;ReceiverClassName;CallSite\n";
 	//std::vector<FunctionCall*>* functionCalls = getFunctionCalls(ctx);
 	for(FunctionCall* fc : recorder.getFunctionCalls()) {
 		std::vector<std::string>* caller = seperateClassNameSpace(fc->callerClass());
 		std::vector<std::string>* receiver = seperateClassNameSpace(fc->receiverClass());
-		*out << caller->at(0) << ";" << caller->at(1) << ";" << fc->callerFuncSig() << ";" << fc->receiverFuncSig() << ";" << receiver->at(0) << ";" << receiver->at(1) << "\n";
+		*out << caller->at(0) << ";" << caller->at(1) << ";" << fc->callerFuncSig() << ";" << fc->receiverFuncSig() << ";" << receiver->at(0) << ";" << receiver->at(1) << ";" << fc->getLocation(ctx.getSourceManager()) << "\n";
 	}
 }
 
