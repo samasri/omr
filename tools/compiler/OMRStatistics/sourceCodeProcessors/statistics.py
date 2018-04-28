@@ -5,7 +5,7 @@ import sys
 import os
 
 
-path = os.path.dirname(os.path.abspath(__file__))[:-6] #Assuming this file is in a directory named output
+path = os.path.dirname(os.path.abspath(__file__))[:-20] #Assuming this file is in a directory named output
 
 # Get number of hierarchies
 f = open(path + 'visualization/Hierarchy/hierarchy', 'r')

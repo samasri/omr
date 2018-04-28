@@ -106,7 +106,7 @@ pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5]
 
 # Get path from OMRStatistics directory to the outputDir
 path = pathToOMR + 'tools/compiler/OMRStatistics/output/'
-fileWritePath = path + sys.argv[1] + '/' if len(sys.argv) == 2 and sys.argv[1] != 'd' else path + './'
+fileWritePath = pathToOMR  + 'tools/compiler/OMRStatistics/database/'
 
 # Setting debug
 if len(sys.argv) == 2 and sys.argv[1] == 'd': debug = 1
