@@ -33,6 +33,10 @@ testHierarchy6: $(SO)
 testMemberFunctions: $(SO)
 	@echo Executing Member Functions Test...
 	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/MemberFunc" $(DEFINES) $(PLUGIN_INCLUDES) -c tests/input/MemberFunc.cpp
+
+testMemberFunctions2: $(SO)
+	@echo Executing Nested Function Calls Test...
+	@$(CXX) -std=c++0x -w -fsyntax-only -ferror-limit=0 $(CC1_MAINARG) -Xclang -plugin-arg-$(PL) -Xclang "./tests/MemberFunc2" $(DEFINES) $(PLUGIN_INCLUDES) -c "tests/input/MemberFunc2 - Nested Calls.cpp"
 	
 testTemplates: $(SO)
 	@echo Executing Template Test...
