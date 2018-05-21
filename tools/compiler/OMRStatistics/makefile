@@ -84,17 +84,18 @@ output/lastCreated: $(SO)
 	@make createTotalOutput
 	@make moveOutputToVisualization
 	
-	mv -f output/amd64.* output/"original (trimmed) result"/
-	mv -f output/i386.* output/"original (trimmed) result"/
-	mv -f output/p.* output/"original (trimmed) result"/
-	mv -f output/z.* output/"original (trimmed) result"/
+	@mkdir -p output/"original (trimmed) result"
+	@mv -f output/amd64.* output/"original (trimmed) result"/
+	@mv -f output/i386.* output/"original (trimmed) result"/
+	@mv -f output/p.* output/"original (trimmed) result"/
+	@mv -f output/z.* output/"original (trimmed) result"/
 	
 #@python visualization/Overloads/makeHTML.py visualization/Overloads/overloads
 	@python visualization/Hierarchy/makeDot.py
 	@dot -Tpdf visualization/Hierarchy/graph.dot -o visualization/Hierarchy/graph.pdf
 	
 	@mkdir -p output/sql
-	@python output/getDatabaseSQL.py sql
+	@python database/getDatabaseSQL.py sql
 	
 	@echo "------------Visualizations and Database are ready------------"
 
@@ -119,7 +120,6 @@ trimOutput:
 
 createTotalOutput:
 	@echo "Producing output from all archs..."
-	@python output/sanityCheck.py output > output/sanityCheck
 	@rm -f hierarchy weirdHierarchy overloads allFunctions overrides
 	@for file in $(ARCHS) ; do \
 		for output in $(OUTPUTS); do \
