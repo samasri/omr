@@ -1,6 +1,0 @@
-- [x] Run OMRCHECKER and make sure it works at least on AMD64
-- [ ] Find function called minimum number of times
-- [x] Go to class of this function, remove OMR_EXTENSIBLE, and remove all `self` calls
-- [ ] Document issue on Github
-- [ ] Run OMR on new clang
-- [ ] Run OMR on OpenJ9
