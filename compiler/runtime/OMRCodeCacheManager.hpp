@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_CODECACHEMANAGER_INCL
@@ -27,6 +30,7 @@
 #include "runtime/MethodExceptionData.hpp"     // for MethodExceptionData
 #include "runtime/Runtime.hpp"                 // for TR_CCPreLoadedCode, etc
 #include "runtime/CodeCacheTypes.hpp"
+#include "env/RawAllocator.hpp"
 
 class TR_FrontEnd;
 class TR_OpaqueMethodBlock;
@@ -39,12 +43,13 @@ namespace OMR { class CodeCacheHashEntrySlab; }
 namespace OMR { class FaintCacheBlock; }
 namespace OMR { typedef void CodeCacheTrampolineCode; }
 namespace OMR { class CodeCacheManager; }
+namespace TR { class StaticRelocation; }
 namespace OMR { typedef CodeCacheManager CodeCacheManagerConnector; }
 
 #if (HOST_OS == OMR_LINUX)
 
 #include <elf.h>                            // for ELF64_ST_INFO, etc
-
+namespace TR { class ELFObjectFileGenerator; }
 #if defined(TR_HOST_64BIT)
 typedef Elf64_Ehdr ELFHeader;
 typedef Elf64_Shdr ELFSectionHeader;
@@ -117,10 +122,7 @@ protected:
 public:
    enum ErrorCode { };
 
-   CodeCacheManager(TR_FrontEnd *fe) : _fe(fe)
-      {
-      _initialized = false;
-      }
+   CodeCacheManager(TR::RawAllocator rawAllocator);
 
    class CacheListCriticalSection : public CriticalSection
       {
@@ -135,7 +137,8 @@ public:
       };
 
    TR::CodeCacheConfig & codeCacheConfig() { return _config; }
-   TR_FrontEnd *fe()                       { return _fe; }
+   bool codeCacheIsFull() { return _codeCacheIsFull; }
+   void setCodeCacheIsFull(bool codeCacheIsFull) { _codeCacheIsFull = codeCacheIsFull; }
 
    TR::CodeCache *initialize(bool useConsolidatedCache, uint32_t numberOfCodeCachesToCreateAtStartup);
    void lateInitialization();
@@ -237,14 +240,15 @@ public:
 
    void repositoryCodeCacheCreated();
    void registerCompiledMethod(const char *sig, uint8_t *startPC, uint32_t codeSize);
+   void registerStaticRelocation(const TR::StaticRelocation &relocation);
 
 protected:
 
    void printRemainingSpaceInCodeCaches();
    void printOccupancyStats();
 
+   TR::RawAllocator               _rawAllocator;
    TR::CodeCacheConfig            _config;
-   TR_FrontEnd                   *_fe;
    TR::CodeCache                 *_lastCache;                         /*!< last code cache round robined through */
    CodeCacheList                  _codeCacheList;                     /*!< list of allocated code caches */
    int32_t                        _curNumberOfCodeCaches;
@@ -256,14 +260,17 @@ protected:
 
    bool                           _initialized;                       /*!< flag to indicate if code cache manager has been initialized or not */
    bool                           _lowCodeCacheSpaceThresholdReached; /*!< true if close to exhausting available code cache */
+   bool                           _codeCacheIsFull;
 
 #if (HOST_OS == OMR_LINUX)
    public:
+   void initializeObjectFileGenerator();
    void initializeELFHeader();
    void initializeELFTrailer();
    void initializeELFHeaderForPlatform(ELFCodeCacheHeader *hdr);
 
    protected:
+   TR::ELFObjectFileGenerator    *_objectFileGenerator;
    struct ELFCodeCacheHeader     *_elfHeader;
    struct ELFCodeCacheTrailer    *_elfTrailer;
    uint32_t                       _elfTrailerSize;

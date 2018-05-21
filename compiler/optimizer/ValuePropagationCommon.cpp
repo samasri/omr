@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 // ***************************************************************************
@@ -64,7 +67,7 @@
 #include "infra/List.hpp"                          // for List, ListElement, etc
 #include "infra/Stack.hpp"                         // for TR_Stack
 #include "infra/Statistics.hpp"                    // for TR_Stats
-#include "infra/TRCfgEdge.hpp"                     // for CFGEdge
+#include "infra/CfgEdge.hpp"                       // for CFGEdge
 #include "infra/Timer.hpp"                         // for TR_SingleTimer
 #include "optimizer/Inliner.hpp"                   // for TR_InlineCall
 #include "optimizer/Optimization.hpp"              // for Optimization
@@ -2189,7 +2192,8 @@ void OMR::ValuePropagation::generateArrayTranslateNode(TR::TreeTop *callTree,TR:
    const TR::RecognizedMethod rm = symbol->getRecognizedMethod();
    TR_ResolvedMethod *m = symbol->getResolvedMethodSymbol()->getResolvedMethod();
 
-   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray);
+   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray
+                             || rm == TR::java_lang_StringCoding_implEncodeISOArray);
    bool isISO88591Decoder = (rm == TR::sun_nio_cs_ISO_8859_1_Decoder_decodeISO8859_1);
    bool isSBCSEncoder = (rm == TR::sun_nio_cs_ext_SBCS_Encoder_encodeSBCS)? true:false;
    bool isSBCSDecoder = (rm == TR::sun_nio_cs_ext_SBCS_Decoder_decodeSBCS)? true:false;
@@ -2447,7 +2451,8 @@ TR::TreeTop* OMR::ValuePropagation::createConverterCallNodeAfterStores(
    TR_ResolvedMethod *m = symbol->getResolvedMethodSymbol()->getResolvedMethod();
 
 #ifdef J9_PROJECT_SPECIFIC
-   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray);
+   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray
+                             || rm == TR::java_lang_StringCoding_implEncodeISOArray);
 #else
    bool isISO88591Encoder = false;
 #endif
@@ -2753,7 +2758,8 @@ TR::TreeTop *createStoresForConverterCallChildren(TR::Compilation *comp, TR::Tre
    TR::RecognizedMethod rm = symbol->getRecognizedMethod();
    TR_ResolvedMethod *m = symbol->getResolvedMethodSymbol()->getResolvedMethod();
 #ifdef J9_PROJECT_SPECIFIC
-   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray);
+   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray
+                             || rm == TR::java_lang_StringCoding_implEncodeISOArray);
 #else
    bool isISO88591Encoder = false;
 #endif
@@ -3694,7 +3700,8 @@ void OMR::ValuePropagation::transformConverterCall(TR::TreeTop *callTree)
    bool hasTable = false;
 
    TR_ResolvedMethod *m = symbol->getResolvedMethodSymbol()->getResolvedMethod();
-   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray);
+   bool isISO88591Encoder = (rm == TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray
+                             || rm == TR::java_lang_StringCoding_implEncodeISOArray);
    int32_t childId = callNode->getFirstArgumentIndex();
    bool hasReciever = symbol->isStatic() ? false : true;
    if (hasReciever)
@@ -3727,6 +3734,10 @@ void OMR::ValuePropagation::transformConverterCall(TR::TreeTop *callTree)
 
    TR::Node *child1 = TR::Node::create(TR::iadd, 2, srcOff, len);
    TR::Node *child2 = TR::Node::create(TR::arraylength, 1, srcObjNode);
+   // the source for the decompressed string version of this in StringCoding takes a byte array
+   // used as a char array so convert the size appropriately for the check >> 1
+   if (rm == TR::java_lang_StringCoding_implEncodeISOArray)
+      child2 = TR::Node::create(TR::ishr, 2, child2, TR::Node::iconst(child2, 1));
 
    TR::TreeTop *ifTree = TR::TreeTop::create(comp());
    TR::Node *ifNode = TR::Node::createif(TR::ificmpgt, child1, child2);
@@ -3773,7 +3784,7 @@ void OMR::ValuePropagation::transformConverterCall(TR::TreeTop *callTree)
    dupCallTree->insertAfter(TR::TreeTop::create(comp(), storeCall, NULL, NULL));
 
    //The async check is inserted because the converter call might have been the only
-   //yield point in a loop due to asyn check removel. 
+   //yield point in a loop due to asyn check removel.
    if (comp()->getOSRMode() != TR::involuntaryOSR && comp()->getHCRMode() != TR::osr)
       {
       TR::TreeTop *actt = TR::TreeTop::create(comp(), TR::Node::createWithSymRef(callNode, TR::asynccheck, 0,
@@ -3826,6 +3837,7 @@ void OMR::ValuePropagation::transformConverterCall(TR::TreeTop *callTree)
       switch (rm)
          {
          case TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray:  threshold = 0; break;
+         case TR::java_lang_StringCoding_implEncodeISOArray:  threshold = 0; break;
          case TR::sun_nio_cs_ISO_8859_1_Decoder_decodeISO8859_1: threshold = 0; break;
 
          case TR::sun_nio_cs_US_ASCII_Encoder_encodeASCII: threshold = 0; break;

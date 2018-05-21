@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #if !defined(GCEXTENSIONSBASE_HPP_)
 #define GCEXTENSIONSBASE_HPP_
@@ -39,11 +43,12 @@
 #include "OMRVMThreadListIterator.hpp"
 #include "ObjectModel.hpp"
 #include "ScavengerCopyScanRatio.hpp"
-#if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
-#include "ScavengerHotFieldStats.hpp"
-#endif /* defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC) */
 #include "ScavengerStats.hpp"
 #include "SublistPool.hpp"
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+#include <set>
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 
 class MM_CardTable;
 class MM_ClassLoaderRememberedSet;
@@ -183,7 +188,8 @@ private:
 
 	bool _isRememberedSetInOverflow;
 
-	BackOutState _backOutState; /**< set if a thread is unable to copy an object due to lack of free space in both Survivor and Tenure */
+	volatile BackOutState _backOutState; /**< set if a thread is unable to copy an object due to lack of free space in both Survivor and Tenure */
+	volatile bool _concurrentGlobalGCInProgress; /**< set to true if concurrent Global GC is in progress */
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
 	bool debugConcurrentScavengerPageAlignment; /**< if true allows debug output prints for Concurrent Scavenger Page Alignment logic */
 	uintptr_t concurrentScavengerPageSectionSize; /**< selected section size for Concurrent Scavenger Page */
@@ -193,7 +199,7 @@ private:
 
 protected:
 	OMR_VM* _omrVM;
-	MM_Forge _forge;
+	OMR::GC::Forge _forge;
 	MM_Collector* _globalCollector; /**< The global collector for the system */
 #if defined(OMR_GC_OBJECT_MAP)
 	MM_ObjectMap *_objectMap;
@@ -213,6 +219,8 @@ public:
 
 #if defined(OMR_GC_MODRON_SCAVENGER)
 	MM_Scavenger *scavenger;
+	void *_masterThreadTenureTLHRemainderBase;  /**< base and top pointers of the last unused tenure TLH copy cache, that will be loaded to thread env during master setup */
+	void *_masterThreadTenureTLHRemainderTop;
 #endif /* OMR_GC_MODRON_SCAVENGER */
 
 	J9Pool* environments;
@@ -221,7 +229,8 @@ public:
 	MM_GlobalGCStats globalGCStats;
 #endif /* OMR_GC_MODRON_STANDARD || OMR_GC_REALTIME */
 #if defined(OMR_GC_MODRON_SCAVENGER)
-	MM_ScavengerStats scavengerStats;
+	MM_ScavengerStats incrementScavengerStats; /**< scavengerStats for the current phase/increment; typically just used for reporting purposes */
+	MM_ScavengerStats scavengerStats; /**< cumulative scavengerStats for all phases/increments (STW and concurrent) within a single cycle; typically used for various heursitics at the end of GC */
 	MM_ScavengerCopyScanRatio copyScanRatio; /* Most recent estimate of ratio of aggregate slots copied to slots scanned in completeScan() */
 #endif /* OMR_GC_MODRON_SCAVENGER */
 #if defined(OMR_GC_VLHGC)
@@ -396,8 +405,6 @@ public:
 		OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL,
 	};
 	ScavengerScanOrdering scavengerScanOrdering; /**< scan ordering in Scavenger */
-	bool scavengerTraceHotFields; /**< whether tracing hot fields in Scavenger is enabled */
-	MM_ScavengerHotFieldStats scavengerHotFieldStats; /**< hot field stats accumulated over all GC threads */
 #if defined(OMR_GC_MODRON_SCAVENGER)
 	uintptr_t scvTenureRatioHigh;
 	uintptr_t scvTenureRatioLow;
@@ -411,9 +418,11 @@ public:
 	bool scavengerEnabled;
 	bool scavengerRsoScanUnsafe;
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
+	bool softwareEvacuateReadBarrier; /**< enable software read barrier instead of hardware guarded loads when running with CS */
 	bool concurrentScavenger; /**< CS enabled/disabled flag */
-	bool concurrentScavengerRequested; /**< set to true if CS is requested (by cmdline option), but there are more checks to do before deciding whether the request is to be obeyed */
+	bool concurrentScavengerForced; /**< set to true if CS is requested (by cmdline option), but there are more checks to do before deciding whether the request is to be obeyed */
 	uintptr_t concurrentScavengerBackgroundThreads; /**< number of background GC threads during concurrent phase of Scavenge */
+	bool concurrentScavengerBackgroundThreadsForced; /**< true if concurrentScavengerBackgroundThreads set via command line option */
 	uintptr_t concurrentScavengerSlack; /**< amount of bytes added on top of avearge allocated bytes during concurrent cycle, in calcualtion for survivor size */
 #endif	/* OMR_GC_CONCURRENT_SCAVENGER */
 	uintptr_t scavengerFailedTenureThreshold;
@@ -502,12 +511,10 @@ public:
 	UDATA fvtest_forceConcurrentTLHMarkMapDecommitFailureCounter; /**< Force failure at Concurrent TLH Mark Map decommit operation  counter */
 #endif /* OMR_GC_MODRON_CONCURRENT_MARK */
 
-#if defined (OMR_GC_HEAP_CARD_TABLE)
 	UDATA fvtest_forceCardTableCommitFailure; /**< Force failure at Card Table commit operation */
 	UDATA fvtest_forceCardTableCommitFailureCounter; /**< Force failure at Card Table commit operation  counter */
 	UDATA fvtest_forceCardTableDecommitFailure; /**< Force failure at Card Table decommit operation */
 	UDATA fvtest_forceCardTableDecommitFailureCounter; /**< Force failure at Card Table decommit operation  counter */
-#endif /* OMR_GC_HEAP_CARD_TABLE */
 
 	MM_Dispatcher* dispatcher;
 
@@ -528,11 +535,11 @@ public:
 	uintptr_t allowMergedSpaces;
 	uintptr_t maxSizeDefaultMemorySpace;
 	bool allocationIncrementSetByUser;
-
-	uintptr_t heapTailPadding; /** < Minimum amount of readable space past the end of the heap. See Jazz 31620. */
 	/* End command line options temporary home */
 
 	uintptr_t overflowSafeAllocSize;
+
+	uint64_t usablePhysicalMemory; /**< Physical memory available to the process */
 
 #if defined(OMR_GC_REALTIME)
 	/* Parameters */
@@ -724,6 +731,11 @@ public:
 	bool compactOnIdle; /**< Forces compaction if global GC executed while VM Runtime State set to IDLE, default is false */
 #endif
 
+#if defined(OMR_VALGRIND_MEMCHECK)
+	uintptr_t valgrindMempoolAddr; /** <Memory pool's address for valgrind> **/
+	std::set<uintptr_t> _allocatedObjects;
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+
 	/* Function Members */
 private:
 
@@ -746,6 +758,7 @@ private:
 protected:
 	virtual bool initialize(MM_EnvironmentBase* env);
 	virtual void tearDown(MM_EnvironmentBase* env);
+	virtual void computeDefaultMaxHeap(MM_EnvironmentBase* env);
 
 public:
 	static MM_GCExtensionsBase* newInstance(MM_EnvironmentBase* env);
@@ -764,7 +777,7 @@ public:
 	 * Gets a pointer to the memory forge
 	 * @return Pointer to the memory forge
 	 */
-	MMINLINE MM_Forge* getForge() { return &_forge; }
+	MMINLINE OMR::GC::Forge* getForge() { return &_forge; }
 
 	MMINLINE uintptr_t getRememberedCount()
 	{
@@ -796,6 +809,18 @@ public:
 		return false;
 #endif /* defined(OMR_GC_CONCURRENT_SCAVENGER) */
 	}
+	
+   MMINLINE bool
+   isSoftwareEvacuateReadBarrierEnabled()
+   {
+#if defined(OMR_GC_CONCURRENT_SCAVENGER)
+      return softwareEvacuateReadBarrier;
+#else
+      return false;
+#endif /* defined(OMR_GC_CONCURRENT_SCAVENGER) */
+   }
+
+	bool isConcurrentScavengerInProgress();
 	
 	MMINLINE bool
 	isScavengerEnabled()
@@ -936,6 +961,9 @@ public:
 	MMINLINE void setScavengerBackOutState(BackOutState backOutState) { _backOutState = backOutState; }
 	MMINLINE BackOutState getScavengerBackOutState() { return _backOutState; }
 	MMINLINE bool isScavengerBackOutFlagRaised() { return backOutFlagCleared < _backOutState; }
+	
+	MMINLINE bool shouldScavengeNotifyGlobalGCOfOldToOldReference() { return _concurrentGlobalGCInProgress; }
+	MMINLINE void setConcurrentGlobalGCInProgress(bool inProgress) { _concurrentGlobalGCInProgress = inProgress; }
 #endif /* OMR_GC_MODRON_SCAVENGER */
 
 	/**
@@ -1011,7 +1039,6 @@ public:
 	}
 #endif /* OMR_GC_MODRON_CONCURRENT_MARK */
 
-#if defined (OMR_GC_HEAP_CARD_TABLE)
 	MMINLINE bool
 	isFvtestForceCardTableCommitFailure()
 	{
@@ -1023,7 +1050,6 @@ public:
 	{
 		return isFvtestForce(&fvtest_forceCardTableDecommitFailure, &fvtest_forceCardTableDecommitFailureCounter);
 	}
-#endif /* OMR_GC_HEAP_CARD_TABLE */
 
 	/**
 	 * Get run-time object alignment in bytes
@@ -1172,6 +1198,7 @@ public:
 		, _guaranteedNurseryEnd(NULL)
 		, _isRememberedSetInOverflow(false)
 		, _backOutState(backOutFlagCleared)
+		, _concurrentGlobalGCInProgress(false)
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
 		, debugConcurrentScavengerPageAlignment(false)
 		, concurrentScavengerPageSectionSize(0)
@@ -1190,6 +1217,8 @@ public:
 		, _tenureSize(0)
 #if defined(OMR_GC_MODRON_SCAVENGER)
 		, scavenger(NULL)
+		, _masterThreadTenureTLHRemainderBase(NULL)
+		, _masterThreadTenureTLHRemainderTop(NULL)
 #endif /* OMR_GC_MODRON_SCAVENGER */
 		, environments(NULL)
 #if defined(OMR_GC_CONCURRENT_SWEEP)
@@ -1308,7 +1337,6 @@ public:
 		, gcThreadCountForced(false)
 #if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
 		, scavengerScanOrdering(OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL)
-		, scavengerTraceHotFields(false)
 #endif /* OMR_GC_MODRON_SCAVENGER || OMR_GC_VLHGC */
 #if defined(OMR_GC_MODRON_SCAVENGER)
 		, scvTenureRatioHigh(J9_SCV_TENURE_RATIO_HIGH)
@@ -1322,9 +1350,11 @@ public:
 		, scvTenureStrategyHistory(true)
 		, scavengerEnabled(false)
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
+		, softwareEvacuateReadBarrier(false)
 		, concurrentScavenger(false)
-		, concurrentScavengerRequested(false)
-		, concurrentScavengerBackgroundThreads(0)
+		, concurrentScavengerForced(false)
+		, concurrentScavengerBackgroundThreads(1)
+		, concurrentScavengerBackgroundThreadsForced(false)
 		, concurrentScavengerSlack(0)
 #endif /* defined(OMR_GC_CONCURRENT_SCAVENGER) */
 		, scavengerFailedTenureThreshold(0)
@@ -1400,12 +1430,10 @@ public:
 		, fvtest_forceConcurrentTLHMarkMapDecommitFailure(0)
 		, fvtest_forceConcurrentTLHMarkMapDecommitFailureCounter(0)
 #endif /* OMR_GC_MODRON_CONCURRENT_MARK */
-#if defined (OMR_GC_HEAP_CARD_TABLE)
 		, fvtest_forceCardTableCommitFailure(0)
 		, fvtest_forceCardTableCommitFailureCounter(0)
 		, fvtest_forceCardTableDecommitFailure(0)
 		, fvtest_forceCardTableDecommitFailureCounter(0)
-#endif /* OMR_GC_HEAP_CARD_TABLE */
 		, dispatcher(NULL)
 		, cardTable(NULL)
 		, memoryMax(0)
@@ -1422,11 +1450,6 @@ public:
 		, allowMergedSpaces(1)
 		, maxSizeDefaultMemorySpace(0)
 		, allocationIncrementSetByUser(0)
-#if defined(J9_GC_OBJECT_HEAP_TAIL_PADDING)
-		, heapTailPadding(J9_GC_OBJECT_HEAP_TAIL_PADDING)  /* Minimum amount of readable space past the end of the heap. See Jazz 31620. */
-#else /* J9_GC_OBJECT_HEAP_TAIL_PADDING */
-		, heapTailPadding(0)
-#endif /* J9_GC_OBJECT_HEAP_TAIL_PADDING */
 		, overflowSafeAllocSize(0)
 #if defined(OMR_GC_REALTIME)
 		, RTC_Frequency(2048) // must be power of 2 - translates to ~488us delay

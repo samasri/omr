@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2014, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2014, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stdio.h>
@@ -174,6 +177,7 @@ typedef struct wait_testdata_t {
 	omrthread_monitor_t exitSync;
 	omrthread_monitor_t waitSync;
 	volatile int waiting;
+	volatile int aborted;
 	volatile intptr_t rc;
 } wait_testdata_t;
 
@@ -185,6 +189,7 @@ TEST(ThreadAbortTest, Waiting)
 	omrthread_monitor_init(&testdata.exitSync, 0);
 	omrthread_monitor_init(&testdata.waitSync, 0);
 	testdata.waiting = 0;
+	testdata.aborted = 0;
 
 	omrthread_monitor_enter(testdata.exitSync);
 
@@ -192,7 +197,7 @@ TEST(ThreadAbortTest, Waiting)
 	while (1) {
 		omrthread_sleep(START_DELAY);
 		omrthread_monitor_enter(testdata.waitSync);
-		if (testdata.waiting == 1) {
+		if (1 == testdata.waiting) {
 			omrthread_monitor_exit(testdata.waitSync);
 			break;
 		}
@@ -201,15 +206,17 @@ TEST(ThreadAbortTest, Waiting)
 
 	omrthread_abort(t);
 
-	omrthread_monitor_wait(testdata.exitSync);
+	if (0 == testdata.aborted) {
+		omrthread_monitor_wait(testdata.exitSync);
+	}
 	omrthread_monitor_exit(testdata.exitSync);
 
 	{
 		J9ThreadAbstractMonitor *mon = (J9ThreadAbstractMonitor *)testdata.waitSync;
-		assert(mon->waiting == NULL);
-		assert(mon->blocking == NULL);
-		assert(mon->count == 0);
-		assert(mon->owner == NULL);
+		EXPECT_TRUE(NULL == mon->waiting);
+		EXPECT_TRUE(NULL == mon->blocking);
+		EXPECT_TRUE(0 == mon->count);
+		EXPECT_TRUE(NULL == mon->owner);
 	}
 
 	omrthread_monitor_destroy(testdata.exitSync);
@@ -227,27 +234,29 @@ waitingMain(void *arg)
 	testdata->waiting = 1;
 	testdata->rc = omrthread_monitor_wait_interruptable(testdata->waitSync, 0, 0);
 
-	if (J9THREAD_INTERRUPTED_MONITOR_ENTER == testdata->rc) {
-		J9AbstractThread *self = (J9AbstractThread *)omrthread_self();
-		J9ThreadAbstractMonitor *mon = (J9ThreadAbstractMonitor *)testdata->waitSync;
+	/* This test assumes that the thread will be Aborted.  If it is not there is a timing hole
+	 * which needs to be resolved.
+	 */
+	EXPECT_EQ(J9THREAD_INTERRUPTED_MONITOR_ENTER, testdata->rc);
 
-		assert(!(self->flags & J9THREAD_FLAG_INTERRUPTABLE));
-		assert(!(self->flags & J9THREAD_FLAG_INTERRUPTED));
-		assert(!(self->flags & J9THREAD_FLAG_PRIORITY_INTERRUPTED));
-		assert(!(self->flags & J9THREAD_FLAG_BLOCKED));
-		assert(!(self->flags & J9THREAD_FLAG_WAITING));
-		assert(self->monitor == NULL);
+	J9AbstractThread *self = (J9AbstractThread *)omrthread_self();
+	J9ThreadAbstractMonitor *mon = (J9ThreadAbstractMonitor *)testdata->waitSync;
 
-		assert(mon->waiting == NULL);
-		/*assert((J9AbstractThread *)mon->owner == self);*/
-		assert(mon->blocking == NULL);
-		/*assert(mon->count == 1);*/
-	} else {
-		omrthread_monitor_exit(testdata->waitSync);
-	}
+	EXPECT_EQ(0u, (self->flags & J9THREAD_FLAG_INTERRUPTABLE));
+	EXPECT_EQ(0u, (self->flags & J9THREAD_FLAG_INTERRUPTED));
+	EXPECT_EQ(0u, (self->flags & J9THREAD_FLAG_PRIORITY_INTERRUPTED));
+	EXPECT_EQ(0u, (self->flags & J9THREAD_FLAG_BLOCKED));
+	EXPECT_EQ(0u, (self->flags & J9THREAD_FLAG_WAITING));
+	EXPECT_TRUE(J9THREAD_FLAG_ABORTED == (self->flags & J9THREAD_FLAG_ABORTED));
+	EXPECT_TRUE(NULL == self->monitor);
+	EXPECT_TRUE(NULL == mon->waiting);
+	/*assert((J9AbstractThread *)mon->owner == self);*/
+	EXPECT_TRUE(NULL == mon->blocking);
+	/*assert(mon->count == 1);*/
 
-	omrthread_monitor_enter(testdata->exitSync);
-	omrthread_monitor_notify(testdata->exitSync);
+	EXPECT_EQ(0, omrthread_monitor_enter(testdata->exitSync));
+	testdata->aborted = 1;
+	EXPECT_EQ(0, omrthread_monitor_notify(testdata->exitSync));
 	omrthread_monitor_exit(testdata->exitSync);
 
 	return 0;

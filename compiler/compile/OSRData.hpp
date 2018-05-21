@@ -1,29 +1,36 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OSRDATA_INCL
 #define OSRDATA_INCL
 
 #include <stdint.h>                         // for int32_t, uint32_t, etc
+#include <map>
 #include "cs2/hashtab.h"                    // for HashTable
 #include "env/TRMemory.hpp"                 // for TR_Memory, etc
 #include "env/jittypes.h"                   // for TR_ByteCodeInfo
 #include "infra/Array.hpp"                  // for TR_Array
+#include "infra/deque.hpp"                  // for TR_Array
+#include "infra/Checklist.hpp"              // for TR::NodeCheckList
+#include "infra/vector.hpp"                 // for TR::vector
 
 class TR_BitVector;
 class TR_OSRMethodData;
@@ -34,6 +41,7 @@ namespace TR { class Instruction; }
 namespace TR { class Node; }
 namespace TR { class ResolvedMethodSymbol; }
 namespace TR { class SymbolReference; }
+namespace TR { class TreeTop; }
 template <class T> class List;
 
 namespace TR
@@ -82,6 +90,36 @@ namespace TR
       involuntaryOSR
       };
    }
+
+typedef TR::typed_allocator<std::pair<const int32_t, TR_BitVector*>, TR::Region&> DefiningMapAllocator;
+typedef std::less<int32_t> DefiningMapComparator;
+typedef std::map<int32_t, TR_BitVector*, DefiningMapComparator, DefiningMapAllocator> DefiningMap;
+
+typedef TR::vector<DefiningMap *, TR::Region&> DefiningMaps;
+class TR_OSRSlotSharingInfo
+   {
+public:
+   TR_ALLOC(TR_Memory::OSR);
+   TR_OSRSlotSharingInfo(TR::Compilation* _comp);
+   void addSlotInfo(int32_t slot, int32_t symRefNum, int32_t symRefOrder, int32_t symSize, bool takesTwoSlots);
+   class TR_SlotInfo
+      {
+      public:
+      TR_SlotInfo(int32_t _slot, int32_t _symRefNum, int32_t _symRefOrder, int32_t _symSize, bool _takesTwoSlots) :
+         slot(_slot), symRefNum(_symRefNum), symRefOrder(_symRefOrder), symSize(_symSize),
+         takesTwoSlots(_takesTwoSlots) {};
+      int32_t slot;
+      int32_t symRefNum;
+      int32_t symRefOrder;
+      int32_t symSize;
+      bool takesTwoSlots;
+      };
+   TR_Array<TR_SlotInfo>& getSlotInfos() {return slotInfos;}
+   friend TR::Compilation& operator<< (TR::Compilation& out, const TR_OSRSlotSharingInfo*);
+private:
+   TR_Array<TR_SlotInfo> slotInfos;
+   TR::Compilation* comp;
+   };
 
 /**
  * \page OSR On Stack Replacement (OSR)
@@ -180,7 +218,17 @@ class TR_OSRCompilationData
    int32_t getNumOfSymsThatShareSlot() {return numOfSymsThatShareSlot;}
    void updateNumOfSymsThatShareSlot(int32_t value) {numOfSymsThatShareSlot += value;}
    void buildSymRefOrderMap();
+      
    int32_t getSymRefOrder(int32_t symRefNumber);
+   TR_OSRSlotSharingInfo* getSlotsInfo(const TR_ByteCodeInfo &bcInfo);
+
+   void buildDefiningMap();
+   void buildFinalMap(int32_t callerIndex,
+                      DefiningMap *finalMap,
+                      DefiningMap *workingCatchBlockMap,
+                      DefiningMaps &definingSymRefsMapAtOSRCodeBlocks, 
+                      DefiningMaps &symRefNumberMapForPrepareForOSRCalls
+                      );
 
    class TR_ScratchBufferInfo
       {
@@ -230,7 +278,7 @@ class TR_OSRCompilationData
    friend TR::Compilation& operator<< (TR::Compilation&, const TR_OSRCompilationData&);
 
    private:
-   typedef TR_Array<TR_Instruction2SharedSlotMapEntry> TR_Instruction2SharedSlotMap;
+   typedef TR::deque<TR_Instruction2SharedSlotMapEntry, TR::Region&> TR_Instruction2SharedSlotMap;
 
    /// a mapping from the symref's reference number to symRefOrder
    /// (see above for the definition of symRefOrder)
@@ -254,7 +302,6 @@ class TR_OSRCompilationData
    bool                              _classPreventingInducedOSRSeen;
 };
 
-
 class TR_OSRMethodData
    {
    public:
@@ -274,7 +321,7 @@ class TR_OSRMethodData
    void addSlotSharingInfo(int32_t byteCodeIndex,
                            int32_t slot, int32_t symRefNum, int32_t symRefOrder, int32_t symSize, bool takesTwoSlots);
    void ensureSlotSharingInfoAt(int32_t byteCodeIndex);
-   bool hasSlotSharingInfo();
+   bool hasSlotSharingOrDeadSlotsInfo();
    void addInstruction(int32_t instructionPC, int32_t byteCodeIndex);
 
    int32_t getHeaderSize() const;
@@ -291,12 +338,24 @@ class TR_OSRMethodData
    void addLiveRangeInfo(int32_t byteCodeIndex, TR_BitVector *liveRangeInfo);
    TR_BitVector *getLiveRangeInfo(int32_t byteCodeIndex);
 
+   void addPendingPushLivenessInfo(int32_t byteCodeIndex, TR_BitVector *livenessInfo);
+   TR_BitVector *getPendingPushLivenessInfo(int32_t byteCodeIndex);
+
    void ensureArgInfoAt(int32_t byteCodeIndex, int32_t argNum);
    void addArgInfo(int32_t byteCodeIndex, int32_t argIndex, int32_t argSymRef);
    TR_Array<int32_t>* getArgInfo(int32_t byteCodeIndex);
 
    bool linkedToCaller() { return _linkedToCaller; }
    void setLinkedToCaller(bool b) { _linkedToCaller = b; }
+
+   void buildDefiningMap(TR::Block *block, DefiningMap *blockDefiningMap, DefiningMap *prepareForOSRCallMap = NULL);
+   void buildDefiningMapForBlock(TR::Block *block, DefiningMap *blockMap);
+   void buildDefiningMapForOSRCodeBlockAndPrepareForOSRCall(TR::Block *block, DefiningMap *osrCodeBlockMap, DefiningMap *prepareForOSRCallMap);
+   DefiningMap* getDefiningMap();
+   void collectSubTreeSymRefs(TR::Node *node, TR_BitVector *subTreeSymRefs, TR::NodeChecklist &checklist);
+   void setSymRefs(TR_BitVector *symRefs) { _symRefs = symRefs; }
+   TR_BitVector *getSymRefs() { return _symRefs; }
+   TR_OSRSlotSharingInfo* getSlotsInfo(int32_t byteCodeIndex);
 
    friend TR::Compilation& operator<< (TR::Compilation& out, const TR_OSRMethodData& osrMethodData);
 
@@ -307,7 +366,6 @@ class TR_OSRMethodData
    typedef CS2::HashTable<int32_t, TR_OSRSlotSharingInfo*, TR::Allocator> TR_BCInfoHashTable;
    typedef CS2::HashTable<int32_t, TR_Array<int32_t>*, TR::Allocator> TR_ArgInfoHashTable;
    typedef CS2::HashTable<int32_t, TR_Array<int32_t>, TR::Allocator> TR_Slot2ScratchBufferOffset;
-
 
    /// method symbol corresponding to this method
    TR::ResolvedMethodSymbol       *methodSymbol; // NOTE: This field must appear first, because its comp() is used to initialize other fields
@@ -321,6 +379,9 @@ class TR_OSRMethodData
    TR_BCInfoHashTable           bcInfoHashTab;
 
    TR_BCLiveRangeInfoHashTable  bcLiveRangeInfoHashTab;
+   TR_BCLiveRangeInfoHashTable  bcPendingPushLivenessInfoHashTab;
+   DefiningMap                  *_symRefDefiningMap; 
+   TR_BitVector                 *_symRefs;
 
    TR_ArgInfoHashTable argInfoHashTab;
 
@@ -363,31 +424,6 @@ class TR_OSRPoint
    TR_ByteCodeInfo                     _bcInfo;
    };
 
-
-class TR_OSRSlotSharingInfo
-   {
-public:
-   TR_ALLOC(TR_Memory::OSR);
-   TR_OSRSlotSharingInfo(TR::Compilation* _comp);
-   void addSlotInfo(int32_t slot, int32_t symRefNum, int32_t symRefOrder, int32_t symSize, bool takesTwoSlots);
-   class TR_SlotInfo
-      {
-      public:
-      TR_SlotInfo(int32_t _slot, int32_t _symRefNum, int32_t _symRefOrder, int32_t _symSize, bool _takesTwoSlots) :
-         slot(_slot), symRefNum(_symRefNum), symRefOrder(_symRefOrder), symSize(_symSize),
-         takesTwoSlots(_takesTwoSlots) {};
-      int32_t slot;
-      int32_t symRefNum;
-      int32_t symRefOrder;
-      int32_t symSize;
-      bool takesTwoSlots;
-      };
-   const TR_Array<TR_SlotInfo>& getSlotInfos() {return slotInfos;}
-   friend TR::Compilation& operator<< (TR::Compilation& out, const TR_OSRSlotSharingInfo*);
-private:
-   TR_Array<TR_SlotInfo> slotInfos;
-   TR::Compilation* comp;
-   };
 
 TR::Compilation& operator<< (TR::Compilation& out, const TR_OSRCompilationData& osrData);
 

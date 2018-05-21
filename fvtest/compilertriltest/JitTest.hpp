@@ -1,31 +1,40 @@
 /*******************************************************************************
+ * Copyright (c) 2017, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2017, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef JITTEST_HPP
 #define JITTEST_HPP
 
 #include <gtest/gtest.h>
+#include <vector>
+#include <stdexcept> 
 #include "Jit.hpp"
+#include "control/Options.hpp"
+#include "optimizer/Optimizer.hpp"
 
-#define ASSERT_NULL(pointer) ASSERT_EQ(nullptr, (pointer))
-#define ASSERT_NOTNULL(pointer) ASSERT_TRUE(nullptr != (pointer))
-#define EXPECT_NULL(pointer) EXPECT_EQ(nullptr, (pointer))
-#define EXPECT_NOTNULL(pointer) EXPECT_TRUE(nullptr != (pointer))
+#define ASSERT_NULL(pointer) ASSERT_EQ(NULL, (pointer))
+#define ASSERT_NOTNULL(pointer) ASSERT_TRUE(NULL != (pointer))
+#define EXPECT_NULL(pointer) EXPECT_EQ(NULL, (pointer))
+#define EXPECT_NOTNULL(pointer) EXPECT_TRUE(NULL != (pointer))
+
+#define TRIL(code) #code
 
 extern "C" bool initializeJitWithOptions(char *options);
 
@@ -45,16 +54,103 @@ class JitTest : public ::testing::Test
    {
    public:
 
-   static void SetUpTestCase()
+   JitTest()
       {
-      auto initSuccess = initializeJitWithOptions((char*)"-Xjit:acceptHugeMethods,enableBasicBlockHoisting,omitFramePointer,useIlValidator,paranoidoptcheck");
-      ASSERT_TRUE(initSuccess) << "Failed to initialize the JIT.";
+      auto initSuccess = initializeJitWithOptions((char*)"-Xjit:acceptHugeMethods,enableBasicBlockHoisting,omitFramePointer,useILValidator,paranoidoptcheck");
+      if (!initSuccess) 
+         throw std::runtime_error("Failed to initialize jit");
       }
 
-   static void TearDownTestCase()
+   ~JitTest()
       {
       shutdownJit();
       }
+   };
+
+/**
+ * @brief A fixture for testing with a customized optimization strategy. 
+ *
+ * The design of this is such that it is expected sublasses will 
+ * call addOptimization inside their constructor, so that SetUp will
+ * know what opts to use.
+ */
+class JitOptTest : public JitTest 
+   {
+   public:
+
+   JitOptTest() :
+      JitTest(), _optimizations(), _strategy(NULL)
+      {
+      } 
+
+   virtual void SetUp()
+      {
+      JitTest::SetUp();
+
+      // This is an allocated pointer because the strategy needs to 
+      // live as long as this fixture
+      _strategy = new OptimizationStrategy[_optimizations.size() + 1];
+
+      makeOptimizationStrategyArray(_strategy);
+      TR::Optimizer::setMockStrategy(_strategy);
+      }
+
+
+   ~JitOptTest() 
+      {
+      TR::Optimizer::setMockStrategy(NULL);
+      delete[] _strategy;
+      }
+
+   /**
+    * Append a single optimization to the list of optimizations to perform.
+    * The optimization is marked as `MustBeDone`.
+    *
+    * @param opt The optimization to perform.
+    */
+   void addOptimization(OMR::Optimizations opt)
+      {
+      OptimizationStrategy strategy = {opt, OMR::MustBeDone};
+      _optimizations.push_back(strategy);
+      }
+
+   /**
+    * Append an optimization strategy to the list of optimizations to perform.
+    *
+    * @param opts An array of optimizations to perform. The last item in this
+    * array must be `endOpts` or `endGroup`.
+    */
+   void addOptimizations(const OptimizationStrategy *opts)
+      {
+      const OptimizationStrategy *end = opts;
+      while(end->_num != OMR::endOpts && end->_num != OMR::endGroup)
+         ++end;
+
+      _optimizations.insert(_optimizations.end(), opts, end);
+      }
+
+
+   private:
+   /**
+    * Fill the array \p strategy with optimizations.
+    *
+    * @param[out] strategy An array with at least
+    * `_optimization.size() + 1` elements.
+    */
+   void makeOptimizationStrategyArray(OptimizationStrategy *strat)
+      {
+      for(unsigned int i = 0; i < _optimizations.size(); ++i)
+         {
+         strat[i]._num = _optimizations[i]._num;
+         strat[i]._options = _optimizations[i]._options;
+         }
+
+      strat[_optimizations.size()]._num = OMR::endOpts;
+      strat[_optimizations.size()]._options = 0;
+      }
+
+   OptimizationStrategy*             _strategy;
+   std::vector<OptimizationStrategy> _optimizations;
    };
 
 /**
@@ -118,6 +214,44 @@ C filter(C range, Predicate pred) {
     range.erase(end, range.end());
     return range;
 }
+
+/**
+ * @brief A family of functions returning constants of the specified type
+ */
+template <typename T> const T zero_value() { return static_cast<T>(0); }
+template <typename T> const T one_value() { return static_cast<T>(1); }
+template <typename T> const T negative_one_value() { return static_cast<T>(-1); }
+template <typename T> const T positive_value() { return static_cast<T>(42); }
+template <typename T> const T negative_value() { return static_cast<T>(-42); }
+
+/**
+ * @brief Convenience function returning possible test inputs of the specified type
+ */
+template <typename T>
+std::vector<T> const_values()
+   {
+   T inputArray[] = { zero_value<T>(),
+                      one_value<T>(),
+                      negative_one_value<T>(),
+                      positive_value<T>(),
+                      negative_value<T>(),
+                      std::numeric_limits<T>::min(),
+                      std::numeric_limits<T>::max(),
+                      static_cast<T>(std::numeric_limits<T>::min() + 1),
+                      static_cast<T>(std::numeric_limits<T>::max() - 1)
+                    };
+   
+   return std::vector<T>(inputArray, inputArray + sizeof(inputArray) / sizeof(T));
+   }
+
+/**
+ * @brief Convenience function returning pairs of possible test inputs of the specified types
+ */
+template <typename L, typename R>
+std::vector<std::tuple<L,R>> const_value_pairs()
+   {
+   return TRTest::combine(const_values<L>(), const_values<R>());
+   }
 
 } // namespace CompTest
 

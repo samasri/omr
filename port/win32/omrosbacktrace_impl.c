@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2015 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -132,9 +136,9 @@ load_dbg_functions(struct OMRPortLibrary *portLibrary)
 
 	if (NULL == PPG_dbgHlpLibraryFunctions->hDbgHelpLib) {
 		/* see if the debug help library is already loaded, if not try to load it */
-		PPG_dbgHlpLibraryFunctions->hDbgHelpLib = (HMODULE) j9getdbghelp_getDLL();
+		PPG_dbgHlpLibraryFunctions->hDbgHelpLib = (HMODULE) omrgetdbghelp_getDLL();
 		if (NULL == PPG_dbgHlpLibraryFunctions->hDbgHelpLib) {
-			PPG_dbgHlpLibraryFunctions->hDbgHelpLib = (HINSTANCE) j9getdbghelp_loadDLL();
+			PPG_dbgHlpLibraryFunctions->hDbgHelpLib = (HINSTANCE) omrgetdbghelp_loadDLL();
 		}
 
 		if (NULL == PPG_dbgHlpLibraryFunctions->hDbgHelpLib) {
@@ -250,7 +254,7 @@ omrintrospect_backtrace_thread_raw(struct OMRPortLibrary *portLibrary, J9Platfor
 	HANDLE process = NULL;
 	HANDLE thread = NULL;
 	CONTEXT threadContext = {0};
-	STACKFRAME64 stackFrame = {0};
+	STACKFRAME64 stackFrame;
 	J9PlatformStackFrame **nextFrame;
 	struct J9Win32SignalInfo *sigInfo = (struct J9Win32SignalInfo *)signalInfo;
 
@@ -295,6 +299,7 @@ omrintrospect_backtrace_thread_raw(struct OMRPortLibrary *portLibrary, J9Platfor
 		memcpy(&threadContext, threadInfo->context, sizeof(CONTEXT));
 	}
 
+	ZeroMemory(&stackFrame, sizeof(STACKFRAME64));
 	/* check that we have loaded the dbg help library functions and symbols */
 	if (0 == load_dbg_functions(portLibrary) && 0 == load_dbg_symbols(portLibrary)) {
 		/* initialize the stackframe */

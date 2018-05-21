@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef INDUCTIONVAR_INCL
@@ -186,7 +189,7 @@ class TR_LoopStrider : public TR_LoopTransformer
 
    // Maps are keyed by a node's global index, because a node's address could
    // be reused after its reference count decreases to zero.
-   typedef TR::typed_allocator<std::pair<ncount_t, SignExtEntry>, TR::Allocator> SignExtMemoAllocator;
+   typedef TR::typed_allocator<std::pair<ncount_t const, SignExtEntry>, TR::Allocator> SignExtMemoAllocator;
    typedef std::map<ncount_t, SignExtEntry, std::less<ncount_t>, SignExtMemoAllocator> SignExtMemo;
 
    void morphExpressionsLinearInInductionVariable(TR_Structure *, vcount_t);
@@ -301,14 +304,28 @@ class TR_LoopStrider : public TR_LoopTransformer
 
    int64_t **_linearEquations;
    TR::Node **_loadUsedInNewLoopIncrement;
-   TR::SymbolReference **_reassociatedAutos;
+
+   typedef TR::typed_allocator<std::pair<uint32_t const, TR::SymbolReference*>, TR::Region&> SymRefMapAllocator;
+   typedef std::less<uint32_t> SymRefMapComparator;
+   typedef std::map<uint32_t, TR::SymbolReference*, SymRefMapComparator, SymRefMapAllocator> SymRefMap;
+   SymRefMap *_reassociatedAutos;
+
    List<TR::Node> _reassociatedNodes;
 
-   List<TR_StoreTreeInfo> **_storeTreesList;
+   typedef TR::typed_allocator<std::pair<uint32_t const, List<TR_StoreTreeInfo> *>, TR::Region&> StoreTreeMapAllocator;
+   typedef std::less<uint32_t> StoreTreeMapComparator;
+   typedef std::map<uint32_t, List<TR_StoreTreeInfo>*, StoreTreeMapComparator, StoreTreeMapAllocator> StoreTreeMap;
+   StoreTreeMap  _storeTreesSingleton;
+   StoreTreeMap *_storeTreesList;
    //List<TR::Node> **_loadUsedInNewLoopIncrementList;
 
    int32_t _numSymRefs;
-   SymRefPair **_hoistedAutos;
+
+   typedef TR::typed_allocator<std::pair<uint32_t const, SymRefPair*>, TR::Region&> SymRefPairMapAllocator;
+   typedef std::less<uint32_t> SymRefPairMapComparator;
+   typedef std::map<uint32_t, SymRefPair*, SymRefPairMapComparator, SymRefPairMapAllocator> SymRefPairMap;
+   SymRefPairMap *_hoistedAutos;
+
    SymRefPair *_parmAutoPairs;
    int32_t _count;
    int32_t _numberOfLinearExprs, _numInternalPointers;

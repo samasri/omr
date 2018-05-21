@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <windows.h>
@@ -192,7 +196,7 @@ omrsig_protect(struct OMRPortLibrary *portLibrary, omrsig_protected_fn fn, void 
 	omrthread_tls_set(thisThread, tlsKey, &thisRecord);
 
 	/* We can not use setjmp/longjmp to jump out of a VectoredExceptionHandler (CMVC 175576), so use _try/_except semantics instead */
-	if (J9_ARE_ALL_BITS_SET(flags, OMRPORT_SIG_FLAG_MAY_RETURN)) {
+	if (OMR_ARE_ALL_BITS_SET(flags, OMRPORT_SIG_FLAG_MAY_RETURN)) {
 
 		J9CurrentSignal *currentSignal = omrthread_tls_get(thisThread, tlsKeyCurrentSignal);
 		int32_t exceptionStatus = OMRPORT_SIG_NO_EXCEPTION;
@@ -224,16 +228,16 @@ omrsig_protect(struct OMRPortLibrary *portLibrary, omrsig_protected_fn fn, void 
 	return 0;
 }
 
-uint32_t
+int32_t
 omrsig_set_async_signal_handler(struct OMRPortLibrary *portLibrary, omrsig_handler_fn handler, void *handler_arg, uint32_t flags)
 {
-	uint32_t rc = 0;
+	int32_t rc = 0;
 	J9WinAMD64AsyncHandlerRecord *cursor;
 	J9WinAMD64AsyncHandlerRecord **previousLink;
 
 	if (OMRPORT_SIG_OPTIONS_REDUCED_SIGNALS_ASYNCHRONOUS & signalOptions) {
 		/* -Xrs was set, do not install any handlers */
-		return 1;
+		return OMRPORT_SIG_ERROR;
 	}
 
 	omrthread_monitor_enter(asyncMonitor);
@@ -271,7 +275,7 @@ omrsig_set_async_signal_handler(struct OMRPortLibrary *portLibrary, omrsig_handl
 			J9WinAMD64AsyncHandlerRecord *record = portLibrary->mem_allocate_memory(portLibrary, sizeof(*record), OMR_GET_CALLSITE(), OMRMEM_CATEGORY_PORT_LIBRARY);
 
 			if (record == NULL) {
-				rc = 1;
+				rc = OMRPORT_SIG_ERROR;
 			} else {
 				record->portLib = portLibrary;
 				record->handler = handler;
@@ -293,6 +297,30 @@ omrsig_set_async_signal_handler(struct OMRPortLibrary *portLibrary, omrsig_handl
 	omrthread_monitor_exit(asyncMonitor);
 
 	return rc;
+}
+
+int32_t
+omrsig_set_single_async_signal_handler(struct OMRPortLibrary *portLibrary, omrsig_handler_fn handler, void *handler_arg, uint32_t portlibSignalFlag, void **oldOSHandler)
+{
+	return OMRPORT_SIG_ERROR;
+}
+
+uint32_t
+omrsig_map_os_signal_to_portlib_signal(struct OMRPortLibrary *portLibrary, uint32_t osSignalValue)
+{
+	return 0;
+}
+
+int32_t
+omrsig_map_portlib_signal_to_os_signal(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag)
+{
+	return OMRPORT_SIG_ERROR;
+}
+
+int32_t
+omrsig_register_os_handler(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag, void *newOSHandler, void **oldOSHandler)
+{
+	return OMRPORT_SIG_ERROR;
 }
 
 int32_t
@@ -1206,7 +1234,6 @@ consoleCtrlHandler(DWORD dwCtrlType)
 
 	if (0 == omrthread_attach_ex(NULL, J9THREAD_ATTR_DEFAULT)) {
 		J9WinAMD64AsyncHandlerRecord *cursor;
-		uint32_t handlerCount = 0;
 
 		/* incrementing the asyncThreadCount will prevent the list from being modified while we use it */
 		omrthread_monitor_enter(asyncMonitor);

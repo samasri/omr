@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
- *    Multiple authors (IBM Corp.) - z/TPF platform initial port to OMR environment
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -213,6 +216,7 @@ reenter:
 	rtnv->argv.sii = &(rtnv->siginfo);
 	rtnv->argv.uct = &(rtnv->ucontext);
 	rtnv->argv.sct = &(rtnv->sigcontext);
+	rtnv->sigcontext.sregs = &(rtnv->_sregs); /* point to actual _sigregs struct */
 	rtnv->argv.wkspcSize = PATH_MAX;
 	rtnv->argv.wkSpace = &(rtnv->workbuffer[0]);
 	rtnv->argv.OSFilename = &(rtnv->filename[0]);
@@ -225,7 +229,7 @@ ztpfDeriveSiginfo( siginfo_t *build ) {
    uint16_t	ilc;
    uint8_t dxc;
    sigvpair_t *translated = NULL;
-   char *lowcore = NULL;
+   void *lowcore = NULL;
    DIB *pDib = ecbp2()->ce2dib;
    DBFHDR *pDbf = (DBFHDR *)(pDib->dibjdb);
    DBFITEM *pDbi;
@@ -241,8 +245,8 @@ ztpfDeriveSiginfo( siginfo_t *build ) {
    if( pDbf && pDbf->ijavcnt ) {	/* We have the full Error Recording Info, use it.	*/
 	  pDbi = (DBFITEM *)pDbf+1;					/* We have a bunch of void ptrs			*/
 	  pEri = (struct cderi *)(pDbi->ijavsbuf);	/*	to cast through ... ugh...			*/
-	  lowcore = (uint8_t *)pEri;					/* And struct cderi is incomplete ...	*/
-	  lowcore += 0x310;							/*	ai yi yi Lucy.						*/
+	  lowcore = pEri;							/* And struct cderi is incomplete ...	*/
+	  lowcore += (unsigned long int)0x310;		/*	ai yi yi Lucy.						*/
    }
    else {							/* All we have is the DIB, so use it instead.		*/
 	  lowcore = pDib->dilow;					/* Fixup low core pointer				*/
@@ -295,8 +299,8 @@ ztpfDeriveSiginfo( siginfo_t *build ) {
    case SIGSEGV:
 	  if( build->si_code == SEGV_MAPERR && pEri ) { 
 		 uint64_t *address;
-		 lowcore = (char *)pEri;		/* The failing vaddr is at ISVTRXAD */
-		 address = (uint64_t *)lowcore+0x1b8;	/*	at offset 0x1B8 into the ERI*/
+		 lowcore = pEri;			/* The failing vaddr is at ISVTRXAD */
+		 address = lowcore+(unsigned long int)0x1b8;	/*	at offset 0x1B8 into the ERI*/
 		 build->si_addr = (void *)*address; /* Move the failed address.		*/
 	  }									/* Otherwise leave it zero.			*/
 	  break;
@@ -323,13 +327,12 @@ ztpfDeriveSiginfo( siginfo_t *build ) {
 
 static void
 ztpfDeriveSigcontext( struct sigcontext *sigcPtr, ucontext_t *uctPtr ) {
-        memset( sigcPtr, 0, sizeof(*sigcPtr) );         /* Set it all to zeros, then fill it all in.     */
 
         sigcPtr->sregs->regs.psw.mask  = uctPtr->uc_mcontext.psw.mask;
         sigcPtr->sregs->regs.psw.addr  = uctPtr->uc_mcontext.psw.addr;
 
-        memcpy(&(sigcPtr->sregs->regs.gprs), &(uctPtr->uc_mcontext.gregs),sizeof(sigcPtr->sregs->regs.gprs));
-        memcpy(&(sigcPtr->sregs->regs.acrs), &(uctPtr->uc_mcontext.aregs),sizeof(sigcPtr->sregs->regs.acrs));
+        memcpy(&(sigcPtr->sregs->regs.gprs), &(uctPtr->uc_mcontext.gregs),sizeof(uctPtr->uc_mcontext.gregs));
+        memcpy(&(sigcPtr->sregs->regs.acrs), &(uctPtr->uc_mcontext.aregs),sizeof(uctPtr->uc_mcontext.aregs));
 
         memcpy(&(sigcPtr->sregs->fpregs), &(uctPtr->uc_mcontext.fpregs), sizeof(fpregset_t));
 
@@ -340,16 +343,15 @@ ztpfDeriveSigcontext( struct sigcontext *sigcPtr, ucontext_t *uctPtr ) {
 
 static void
 ztpfDeriveUcontext( ucontext_t *uscPtr ) { 
-   DIB *pDib = ecbp2()->ce2dib;	 
-   DBFHDR *pJdb = (DBFHDR *)(pDib->dibjdb);
-   DBFITEM *pDbi = NULL;
-   uint8_t*	lowcore = NULL;
+   DIB * pDib = ecbp2()->ce2dib;
+   DBFHDR * pJdb = (DBFHDR *)(pDib->dibjdb);
+   DBFITEM * pDbi = NULL;
+   void * lowcore = NULL;
 
-   memset( uscPtr, 0, sizeof(*uscPtr) );	/* Zeroize everything		*/
    if( pJdb ) {					 /* If JDB contents are for this thread */
 	  if( pJdb->ijavcnt ) {		 /*  and the JDB is unlocked			*/
 		 pDbi = (DBFITEM *)(pJdb+1);		 /* Point at the JDB base	*/
-		 lowcore = (uint8_t *)(pDbi->ijavsbuf);  /*  and its low core copy. */
+		 lowcore = (pDbi->ijavsbuf);		/*  and its low core copy. */
 	  }
 	  else {					 /* Otherwise use what's in the DIB		*/
 		 lowcore = pDib->dilow;  /* Use the low core pointer from DIB	*/
@@ -395,20 +397,20 @@ translateInterruptContexts( args *argv ) {
 
 
 /**
- * \brief Store signal information in the J9UnixSignalInfo struct.
+ * \brief Store signal information in the OMRUnixSignalInfo struct.
  *
  * This routine is <em>supposed</em> to store the context information provided
- * to it by its caller in a J9UnixSignalInfo structure. We have no idea where 
+ * to it by its caller in a OMRUnixSignalInfo structure. We have no idea where 
  * that struct is stored, the caller must provide it.
  *
  * \param[in]	portLibrary		Pointer to the OMRPortLibrary in use
  * \param[in]	contextInfo		Pointer to context information
- * \param[out]	j9info			Pointer to a J9UnixSignalInfo structure
+ * \param[out]	j9info			Pointer to a OMRUnixSignalInfo structure
  *
  * \returns		Not a thing.
  */
 void
-fillInUnixSignalInfo(struct OMRPortLibrary *portLibrary, void *contextInfo, struct J9UnixSignalInfo *j9Info)
+fillInUnixSignalInfo(struct OMRPortLibrary *portLibrary, void *contextInfo, struct OMRUnixSignalInfo *j9Info)
 {
 	j9Info->platformSignalInfo.context = (ucontext_t *)contextInfo;		/* module info is filled on demand */
 }
@@ -418,12 +420,12 @@ fillInUnixSignalInfo(struct OMRPortLibrary *portLibrary, void *contextInfo, stru
  * \brief Return specific signal information to the caller.
  *
  * This routine stores the name and value attributes of a given signal 
- * described in a J9UnixSignalInfo structure whose address is passed 
+ * described in a OMRUnixSignalInfo structure whose address is passed 
  * by the caller. The <TT>index</TT> parameter is the artificial J9
  * signal value (or 'class type'?) associated with the kind of signal.
  *
  * \param[in]	portLibrary		The OMRPortLibrary in use
- * \param[in]	info			A pointer to the J9UnixSignalInfo from which the information
+ * \param[in]	info			A pointer to the OMRUnixSignalInfo from which the information
  *								is taken
  * \param[in]	index			The J9 signal value assigned to the 'signal type'
  * \param[out]	name			The name of the signal type class, double pointer to type char
@@ -433,7 +435,7 @@ fillInUnixSignalInfo(struct OMRPortLibrary *portLibrary, void *contextInfo, stru
  *				an address. Also can return an error indicator.
  */
 U_32
-infoForSignal(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, int32_t index, const char **name, void **value)
+infoForSignal(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo *info, int32_t index, const char **name, void **value)
 {
 	*name = "";
 
@@ -498,7 +500,7 @@ infoForSignal(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info,
  * the register * content from context information.
  *
  * \param[in]	portLibrary		Pointer to the OMRPortLibrary in use
- * \param[in]	info			Pointer to applicable J9UnixSignalInfo structure.
+ * \param[in]	info			Pointer to applicable OMRUnixSignalInfo structure.
  * \param[in]	index			Number of the floating point register sought.
  * \param[out]	name			Double pointer to type char, name of the register
  * \param[out]	value			Double pointer to type void, likely to be last known
@@ -506,7 +508,7 @@ infoForSignal(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info,
  *								pointer of type <TT>double</TT>.
  */
 uint32_t
-infoForFPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, int32_t index, const char **name, void **value)
+infoForFPR(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo *info, int32_t index, const char **name, void **value)
 {
 	const char *n_fpr[NUM_REGS] = {
 									"fpr0", 
@@ -541,7 +543,7 @@ infoForFPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, in
  * general registers instead of FPRs.
  *
  * \param[in]	portLibrary		Pointer to the OMRPortLibrary in use
- * \param[in]	info			Pointer to applicable J9UnixSignalInfo structure.
+ * \param[in]	info			Pointer to applicable OMRUnixSignalInfo structure.
  * \param[in]	index			Number of the general register sought.
  * \param[out]	name			Double pointer to type char, name of the register
  * \param[out]	value			Double pointer to type void, last known value
@@ -558,7 +560,7 @@ infoForFPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, in
  *			hardware (even if we do grudgingly support AMODE=31).
  */
 U_32
-infoForGPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, int32_t index, const char **name, void **value)
+infoForGPR(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo *info, int32_t index, const char **name, void **value)
 {
 	const char *n_gpr[NUM_REGS] = {
 									"gpr0", 
@@ -592,7 +594,7 @@ infoForGPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, in
  * \fn	Return miscellaneous h/w control words from signal/dump contexts.
  *
  * \param[in]	portLibrary		Pointer to the portability library in use
- * \param[in]	info			Pointer to J9UnixSignalInfo block
+ * \param[in]	info			Pointer to OMRUnixSignalInfo block
  * \param[in]	index			The J9 'type class' of the signal associated with this dump
  * \param[out]	name			Dbl pointer to a buffer large enough to hold an object name
  * \param[out]	value			Dbl pointer to a buffer large enough to hold an object value
@@ -602,7 +604,7 @@ infoForGPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, in
  *
  */
 U_32
-infoForControl(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, int32_t index, const char **name, void **value)
+infoForControl(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo *info, int32_t index, const char **name, void **value)
 {
 	uint8_t *eip;
 	mcontext_t *mcontext = (mcontext_t *)&info->platformSignalInfo.context->uc_mcontext;
@@ -635,7 +637,7 @@ infoForControl(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info
 }
 
 U_32
-infoForModule(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo *info, int32_t index, const char **name, void **value)
+infoForModule(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo *info, int32_t index, const char **name, void **value)
 {
 	Dl_info		*dl_info = &(info->platformSignalInfo.dl_info);
 	void*		address;

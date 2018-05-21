@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/Inliner.hpp"
@@ -84,8 +87,8 @@
 #include "infra/Random.hpp"
 #include "infra/SimpleRegex.hpp"
 #include "infra/Stack.hpp"                                // for TR_Stack
-#include "infra/TRCfgEdge.hpp"                            // for CFGEdge
-#include "infra/TRCfgNode.hpp"                            // for CFGNode
+#include "infra/CfgEdge.hpp"                              // for CFGEdge
+#include "infra/CfgNode.hpp"                              // for CFGNode
 #include "optimizer/CallInfo.hpp"                         // for TR_CallTarget, etc
 #include "optimizer/InlinerFailureReason.hpp"
 #include "optimizer/Optimization.hpp"                     // for Optimization
@@ -484,14 +487,6 @@ TR_InlinerBase::cleanup(TR::ResolvedMethodSymbol * callerSymbol, bool inlinedSit
       }
 
    }
-
-//check if the interface implementation we found meet certain requirements
-bool
-OMR_InlinerUtil::validateInterfaceImplementation(TR_ResolvedMethod *interfaceMethod)
-   {
-   return true;
-   }
-
 
 bool
 OMR_InlinerPolicy::mustBeInlinedEvenInDebug(TR_ResolvedMethod * calleeMethod, TR::TreeTop *callNodeTreeTop)
@@ -1587,7 +1582,7 @@ void TR_InlinerBase::rematerializeCallArguments(TR_TransformInlinedFunction & ti
    block1 = block1->startOfExtendedBlock();
    static char *disableProfiledGuardRemat = feGetEnv("TR_DisableProfiledGuardRemat");
 
-   bool suitableForRemat = !comp()->getOption(TR_DisableGuardedCallArgumentRemat) && !comp()->isProfilingCompilation();
+   bool suitableForRemat = !comp()->getOption(TR_DisableGuardedCallArgumentRemat) && comp()->getProfilingMode() != JitProfiling;
    if (suitableForRemat)
       {
       if (guard->_kind == TR_NoGuard)
@@ -1650,8 +1645,8 @@ void TR_InlinerBase::rematerializeCallArguments(TR_TransformInlinedFunction & ti
       // makes these for us
       if (failedArgs.size() > 0)
          {
-         RematTools::walkTreeTopsCalculatingRematFailureAlternatives(comp(), 
-            block1->getFirstRealTreeTop(), 
+         RematTools::walkTreeTopsCalculatingRematFailureAlternatives(comp(),
+            block1->getFirstRealTreeTop(),
             tif.getParameterMapper().firstTempTreeTop()->getNextTreeTop(),
             failedArgs, scanTargets, argSafetyInfo, tracer()->debugLevel());
 
@@ -1675,8 +1670,8 @@ void TR_InlinerBase::rematerializeCallArguments(TR_TransformInlinedFunction & ti
       TR::SparseBitVector unsafeSymRefs(comp()->allocator());
       if (!scanTargets.IsZero())
          {
-         RematTools::walkTreesCalculatingRematSafety(comp(), block1->getFirstRealTreeTop(), 
-            tif.getParameterMapper().lastTempTreeTop()->getNextTreeTop(), 
+         RematTools::walkTreesCalculatingRematSafety(comp(), block1->getFirstRealTreeTop(),
+            tif.getParameterMapper().lastTempTreeTop()->getNextTreeTop(),
             scanTargets, unsafeSymRefs, tracer()->debugLevel());
          }
 
@@ -1842,7 +1837,6 @@ TR_InlinerBase::addGuardForVirtual(
       // when using OSR to implement HCR we keep the HCR guards distinct since they
       // will undergo special processing later in the compilation
       if (virtualGuard &&
-          comp()->getHCRMode() != TR::osr &&
           comp()->cg()->supportsMergingGuards())
          {
          TR::Node *guardNode = virtualGuard->getNode();
@@ -2041,7 +2035,12 @@ TR_InlinerBase::addGuardForVirtual(
            createdHCRGuard ||
            (osrForNonHCRGuards && shouldAttemptOSR)))
          {
-         TR::TreeTop *induceTree = callerSymbol->genInduceOSRCall(guardedCallNodeTreeTop, callNode->getByteCodeInfo().getCallerIndex(), (callNode->getNumChildren() - callNode->getFirstArgumentIndex()), false, false, callerSymbol->getFlowGraph());
+         // Late inlining may result in callerSymbol not being the resolved method that actually calls the inlined method
+         // This is problematic for linking OSR blocks
+         TR::ResolvedMethodSymbol *callingMethod = callNode->getByteCodeInfo().getCallerIndex() == -1 ?
+            comp()->getMethodSymbol() : comp()->getInlinedResolvedMethodSymbol(callNode->getByteCodeInfo().getCallerIndex());
+
+         TR::TreeTop *induceTree = callingMethod->genInduceOSRCall(guardedCallNodeTreeTop, callNode->getByteCodeInfo().getCallerIndex(), (callNode->getNumChildren() - callNode->getFirstArgumentIndex()), false, false, callerSymbol->getFlowGraph());
          if (induceOSRCallTree)
             *induceOSRCallTree = induceTree;
          }
@@ -3101,14 +3100,6 @@ TR_HandleInjectedBasicBlock::createTemps(bool replaceAllReferences)
          {
          ref->_isConst = true;
          }
-      else if (opcode.getOpCodeValue() == TR::aload && comp()->cg()->getLinkage()->isAddressOfStaticSymRef(ref->_node->getSymbolReference()))
-         {
-         ref->_isConst = true;
-         }
-      else if (opcode.getOpCodeValue() == TR::aload && comp()->cg()->getLinkage()->isAddressOfPrivateStaticSymRef(ref->_node->getSymbolReference()))
-         {
-         ref->_isConst = true;
-         }
       else
          {
          TR::SymbolReference * symRef = 0;
@@ -3140,7 +3131,7 @@ TR_HandleInjectedBasicBlock::createTemps(bool replaceAllReferences)
             if (tt->getNode()->getOpCode().isBranch() || tt->getNode()->getOpCode().isSwitch())
                tt = tt->getPrevTreeTop();
 
-            // If this treetop is an OSR point, a store cannot be placed between it and the 
+            // If this treetop is an OSR point, a store cannot be placed between it and the
             // transition treetop in postExecutionOSR
             if (comp()->isPotentialOSRPoint(tt->getNode()))
                tt = comp()->getMethodSymbol()->getOSRTransitionTreeTop(tt);
@@ -3330,7 +3321,7 @@ TR::TreeTop * OMR_InlinerUtil::storeValueInATemp(
              value->getSymbolReference()->getSymbol()->castToAutoSymbol()->isInternalPointer()))
          isInternalPointer = true;
 
-      if ((value->isNotCollected() && dataType != TR::Aggregate) || isIndirect)
+      if ((value->isNotCollected() && dataType == TR::Address) || isIndirect)
          {
          TR::SymbolReference *valueRef;
          if (tempSymRef!=NULL)
@@ -3747,15 +3738,15 @@ bool TR_IndirectCallSite::hasFixedTypeArgInfo()
 bool TR_IndirectCallSite::hasResolvedTypeArgInfo()
    {
    return _ecsPrexArgInfo && _ecsPrexArgInfo->get(0) &&
-      _ecsPrexArgInfo->get(0)->classIsPreexistent() && _ecsPrexArgInfo->get(0)->getFixedClass();
+      _ecsPrexArgInfo->get(0)->classIsPreexistent() && _ecsPrexArgInfo->get(0)->getClass();
    }
 
 TR_OpaqueClassBlock* TR_IndirectCallSite::getClassFromArgInfo()
    {
    TR_ASSERT(_ecsPrexArgInfo && _ecsPrexArgInfo->get(0) &&
-         _ecsPrexArgInfo->get(0)->getFixedClass(), "getClassFromArgInfo is NOT guarded by hasFixedTypeArgInfo,hasResolvedTypeArgInfo");
+         _ecsPrexArgInfo->get(0)->getClass(), "getClassFromArgInfo is NOT guarded by hasFixedTypeArgInfo,hasResolvedTypeArgInfo");
 
-   return _ecsPrexArgInfo->get(0)->getFixedClass();
+   return _ecsPrexArgInfo->get(0)->getClass();
    }
 
 bool TR_IndirectCallSite::tryToRefineReceiverClassBasedOnResolvedTypeArgInfo(TR_InlinerBase* inliner)
@@ -5069,7 +5060,7 @@ bool TR_InlinerBase::inlineCallTarget2(TR_CallStack * callStack, TR_CallTarget *
       //
 
       TR::CFGNode * n;
-      while (n = calleeCFG->getNodes().pop())
+      while ((n = calleeCFG->getNodes().pop()))
          {
          int32_t calleeNodeNumber = n->getNumber();
          callerCFG->addNode(n);
@@ -5126,7 +5117,7 @@ bool TR_InlinerBase::inlineCallTarget2(TR_CallStack * callStack, TR_CallTarget *
        && (tif->resultNode() == NULL || tif->resultNode()->getReferenceCount() == 0))
       {
       /**
-       * In OSR, we need to split block even for cases without virtual guard. This is 
+       * In OSR, we need to split block even for cases without virtual guard. This is
        * because in OSR a block with OSR point must have an exception edge to the osrCatchBlock
        * of correct callerIndex. Split the block here so that the OSR points from callee
        * and from caller are separated.
@@ -5424,17 +5415,11 @@ bool TR_InlinerBase::inlineCallTarget2(TR_CallStack * callStack, TR_CallTarget *
    updateCallersFlags(callerSymbol, calleeSymbol, _optimizer);
 
 
-   if (calleeSymbol->getMethod()->isArchetypeSpecimen() || calleeSymbol->hasMethodHandleInvokes())
+   if (getUtil()->needTargetedInlining(calleeSymbol))
       {
-      // Trees from archetype specimens may not match the archetype method's bytecodes,
-      // so there may be some calls things that inliner missed.
-      //
-      // Tactically, we also inline again based on hasMethodHandleInvokes because EstimateCodeSize
-      // doesn't yet cope with invokeHandle, invokeHandleGeneric, and invokeDynamic (but it should).
-      //
       _optimizer->setRequestOptimization(OMR::methodHandleInvokeInliningGroup);
       if (comp()->trace(OMR::inlining))
-         heuristicTrace(tracer(),"Requesting another pass of MethodHandle invoke inlining due to %s\n", tracer()->traceSignature(calleeSymbol));
+         heuristicTrace(tracer(),"Requesting another pass of targeted inlining due to %s\n", tracer()->traceSignature(calleeSymbol));
       }
 
    // Append the callee's catch block to the end of the caller
@@ -6292,11 +6277,11 @@ void TR_InlinerTracer::dumpPrexArgInfo(TR_PrexArgInfo* argInfo)
 
       {
       TR_PrexArgument* arg = argInfo->get(i);
-      if (arg && arg->getFixedClass())
+      if (arg && arg->getClass())
          {
-         char* className = TR::Compiler->cls.classSignature(comp(), arg->getFixedClass(), trMemory());
+         char* className = TR::Compiler->cls.classSignature(comp(), arg->getClass(), trMemory());
          traceMsg( comp(),  "<Argument no=%d address=%p classIsFixed=%d classIsPreexistent=%d class=%p className= %s/>\n",
-         i, arg, arg->classIsFixed(), arg->classIsPreexistent(), arg->getFixedClass(), className);
+         i, arg, arg->classIsFixed(), arg->classIsPreexistent(), arg->getClass(), className);
          }
       else
          {
@@ -6376,6 +6361,12 @@ TR_PrexArgInfo *
 OMR_InlinerUtil::computePrexInfo(TR_CallTarget *target)
    {
    return NULL;
+   }
+
+bool
+OMR_InlinerUtil::needTargetedInlining(TR::ResolvedMethodSymbol *callee)
+   {
+   return false;
    }
 
 void

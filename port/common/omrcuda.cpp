@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2013, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2013, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "omrcuda.h"
@@ -995,6 +999,10 @@ const J9CudaLibraryDescriptor runtimeLibraries[] = {
 /*
  * Include forward-compatible support for runtime libraries.
  */
+#if CUDA_VERSION <= 9000
+	OMRCUDA_LIBRARY_ENTRY(9, 0),
+#endif /* CUDA_VERSION <= 9000 */
+
 #if CUDA_VERSION <= 8000
 	OMRCUDA_LIBRARY_ENTRY(8, 0),
 #endif /* CUDA_VERSION <= 8000 */
@@ -3053,16 +3061,16 @@ struct EventCreate : public InitializedAfter {
 
 		cudaError_t error = cudaErrorInvalidValue;
 
-		if (J9_ARE_NO_BITS_SET(flags, ~allFlags)) {
+		if (OMR_ARE_NO_BITS_SET(flags, ~allFlags)) {
 			unsigned int eventFlags = 0;
 
-			if (J9_ARE_ANY_BITS_SET(flags, J9CUDA_EVENT_FLAG_BLOCKING_SYNC)) {
+			if (OMR_ARE_ANY_BITS_SET(flags, J9CUDA_EVENT_FLAG_BLOCKING_SYNC)) {
 				eventFlags |= cudaEventBlockingSync;
 			}
-			if (J9_ARE_ANY_BITS_SET(flags, J9CUDA_EVENT_FLAG_DISABLE_TIMING)) {
+			if (OMR_ARE_ANY_BITS_SET(flags, J9CUDA_EVENT_FLAG_DISABLE_TIMING)) {
 				eventFlags |= cudaEventDisableTiming;
 			}
-			if (J9_ARE_ANY_BITS_SET(flags, J9CUDA_EVENT_FLAG_INTERPROCESS)) {
+			if (OMR_ARE_ANY_BITS_SET(flags, J9CUDA_EVENT_FLAG_INTERPROCESS)) {
 				eventFlags |= cudaEventInterprocess;
 			}
 
@@ -3974,18 +3982,18 @@ omrcuda_hostAlloc(OMRPortLibrary *portLibrary, uintptr_t size, uint32_t flags, v
 	cudaError_t result = cudaErrorNoDevice;
 
 	if (NULL != functions->HostAlloc) {
-		if (J9_ARE_ANY_BITS_SET(flags, ~allFlags)) {
+		if (OMR_ARE_ANY_BITS_SET(flags, ~allFlags)) {
 			result = cudaErrorInvalidValue;
 		} else {
 			unsigned int cudaFlags = cudaHostAllocDefault;
 
-			if (J9_ARE_ANY_BITS_SET(flags, J9CUDA_HOST_ALLOC_MAPPED)) {
+			if (OMR_ARE_ANY_BITS_SET(flags, J9CUDA_HOST_ALLOC_MAPPED)) {
 				cudaFlags |= cudaHostAllocMapped;
 			}
-			if (J9_ARE_ANY_BITS_SET(flags, J9CUDA_HOST_ALLOC_PORTABLE)) {
+			if (OMR_ARE_ANY_BITS_SET(flags, J9CUDA_HOST_ALLOC_PORTABLE)) {
 				cudaFlags |= cudaHostAllocPortable;
 			}
-			if (J9_ARE_ANY_BITS_SET(flags, J9CUDA_HOST_ALLOC_WRITE_COMBINED)) {
+			if (OMR_ARE_ANY_BITS_SET(flags, J9CUDA_HOST_ALLOC_WRITE_COMBINED)) {
 				cudaFlags |= cudaHostAllocWriteCombined;
 			}
 
@@ -4304,12 +4312,13 @@ JitOptions::set(J9CudaJitOptions *j9options)
 		}
 
 		if (0 != j9options->target) {
-			CUjit_target target = CU_TARGET_COMPUTE_10;
+			uint32_t target = j9options->target;
 
-			switch (j9options->target) {
+			/* In CUDA 6.0 and later, values of CU_TARGET_* don't need translation. */
+#if CUDA_VERSION < 6000
+			switch (target) {
 			default:
 				goto invalid;
-
 			case 10:
 				target = CU_TARGET_COMPUTE_10;
 				break;
@@ -4331,28 +4340,14 @@ JitOptions::set(J9CudaJitOptions *j9options)
 			case 30:
 				target = CU_TARGET_COMPUTE_30;
 				break;
-#if CUDA_VERSION >= 6000
-			case 32:
-				target = CU_TARGET_COMPUTE_32;
-				break;
-#endif
 			case 35:
 				target = CU_TARGET_COMPUTE_35;
 				break;
-#if CUDA_VERSION >= 6050
-			case 37:
-				target = CU_TARGET_COMPUTE_37;
-				break;
-#endif
-#if CUDA_VERSION >= 6000
-			case 50:
-				target = CU_TARGET_COMPUTE_50;
-				break;
-#endif
 			}
+#endif /* CUDA_VERSION < 6000 */
 
 			keys[index] = CU_JIT_TARGET;
-			values[index] = (void *)target;
+			values[index] = (void *)(uintptr_t)target;
 			index += 1;
 		}
 
@@ -6113,10 +6108,10 @@ struct StreamCreateEx : public InitializedAfter {
 
 		cudaError_t error = cudaErrorInvalidValue;
 
-		if (J9_ARE_NO_BITS_SET(flags, ~allFlags)) {
+		if (OMR_ARE_NO_BITS_SET(flags, ~allFlags)) {
 			unsigned int streamFlags = 0;
 
-			if (J9_ARE_ANY_BITS_SET(flags, J9CUDA_STREAM_FLAG_NON_BLOCKING)) {
+			if (OMR_ARE_ANY_BITS_SET(flags, J9CUDA_STREAM_FLAG_NON_BLOCKING)) {
 				streamFlags |= cudaStreamNonBlocking;
 			}
 

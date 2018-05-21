@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <ctype.h>                            // for isdigit
@@ -377,20 +380,39 @@ TR_Debug::scanInlineFilters(FILE * inlineFile, int32_t & lineNumber, TR::Compila
    return !inlineFileError;
    }
 
+/** \brief
+ *     This function opens the inlinefile and adds its entries to a TR::CompilationFilters.
+ *
+ *     An inlinefile is a file containing a list of methods, one per line, which the inliner will limit itself to
+ *     when trying to perform inlining. In other words, only methods from the file can be inlined, but there is no
+ *     guarantee that any of them will be inlined. The format for entry is:
+ *
+ *     + signature
+ *
+ *  \param option
+ *     Points to the first char after inlinefile=
+ *
+ *  \param base
+ *     Unused variable needed for downstream projects.
+ *
+ *  \param entry
+ *     The option table entry for this option.
+ *
+ *  \param cmdLineOptions
+ *     Unused variable needed for downstream projects.
+ *
+ *  \return
+ *     The unmodified parameter option if there is a problem with the file, aborting JIT initialization.
+ *     Otherwise a pointer to the next comma or NULL.
+ */
 char *
 TR_Debug::inlinefileOption(char *option, void *base, TR::OptionTable *entry, TR::Options * cmdLineOptions)
    {
    char *endOpt = option;
    char *name = option;
+   char *fail = option;
 
-   bool range = false;
-   if (*endOpt == '(')
-      {
-      ++endOpt;
-      ++name;
-      range = true;
-      }
-
+   // move to the end of this option
    for (; *endOpt && *endOpt != ','; endOpt++)
       {}
 
@@ -400,55 +422,79 @@ TR_Debug::inlinefileOption(char *option, void *base, TR::OptionTable *entry, TR:
 
    char *inlineFileName = (char *)(TR::Compiler->regionAllocator.allocate(len+1));
    memcpy(inlineFileName, name, len);
-   inlineFileName[len] = 0;
+   inlineFileName[len] = 0; // NULL terminate the copied string
    entry->msgInfo = (intptrj_t)inlineFileName;
 
-   int32_t firstLine = 1, lastLine = INT_MAX;
-
-   if (range)
-      {
-      if (!*endOpt)
-         return option;
-      firstLine = TR::Options::getNumericValue(++endOpt);
-      if (*endOpt == ',')
-         lastLine = TR::Options::getNumericValue(++endOpt);
-      if (*endOpt != ')')
-         return option;
-      ++endOpt;
-      }
-
    FILE *inlineFile = fopen(inlineFileName, "r");
+   bool success = false;
 
    if (inlineFile)
       {
       // initializing _inlineFilters using the new interface
-      //
       _inlineFilters = findOrCreateFilters(_inlineFilters);
       TR::CompilationFilters * filters = _inlineFilters;
 
       filters->setDefaultExclude(true);
 
-      char          limitReadBuffer[1024];
-      bool          inlineFileError = false;
-      int32_t       lineNumber = 0;
+      int32_t lineNumber = 0;
 
-      inlineFileError = !scanInlineFilters(inlineFile, lineNumber, filters);
+      success = scanInlineFilters(inlineFile, lineNumber, filters);
 
       fclose(inlineFile);
       }
-   else
+
+   if (!success)
       {
-      TR_VerboseLog::write("<JIT: warning: unable to read inline file --> '%s' will be ignored>\n", inlineFileName);
+      TR_VerboseLog::write("<JIT: fatal: unable to read inline file --> '%s'>\n", inlineFileName);
+      return fail; // We want to fail if we can't read the file because it is too easy to miss that the file wasn't picked up
       }
    return endOpt;
    }
 
-
+/** \brief
+ *     Processes a limitfile= option, parses and applies the limitfile to compilation control.
+ *
+ *     A limitfile is a compiler verbose log, produced by the option -Xjit:verbose,vlog=filename
+ *     When a verbose log is used as a limitfile, only the methods contained within the file
+ *     will be compiled if they are queued for compilation. The format of the method entries in
+ *     the file must match that of a verbose log.
+ *
+ *     The option can be used in 2 ways:
+ *     limitfile=filename
+ *     limitfile=(filename,xx,yy)
+ *
+ *     The when the latter is used, xx-yy denotes a line number range (starting at zero and ignoring # comments)
+ *     to restrict the limiting to. This is commonly used in debugging to narrow down a problem to a specific
+ *     method by doing a binary search on the limitfile.
+ *
+ *  \param option
+ *     Points to the first char after inlinefile=
+ *
+ *  \param base
+ *     Unused variable needed for downstream projects.
+ *
+ *  \param entry
+ *     The option table entry for this option.
+ *
+ *  \param cmdLineOptions
+ *     The command line options.
+ *
+ *  \param loadLimit
+ *     The load limit.
+ *
+ *  \param pseudoRandomListHeadPtr
+ *     A list of pseudo random numbers.
+ *
+ *  \return
+ *     The unmodified parameter option if there is a problem with the file, aborting JIT initialization.
+ *     Otherwise a pointer to the next comma or NULL.
+ */
 char *
 TR_Debug::limitfileOption(char *option, void *base, TR::OptionTable *entry, TR::Options * cmdLineOptions, bool loadLimit, TR_PseudoRandomNumbersListElement **pseudoRandomListHeadPtr)
    {
    char *endOpt = option;
    char *name = option;
+   char *fail = option;
 
    bool range = false;
    if (*endOpt == '(')
@@ -640,12 +686,16 @@ TR_Debug::limitfileOption(char *option, void *base, TR::OptionTable *entry, TR::
             }
          }
       if (limitFileError)
-         TR_VerboseLog::write("<JIT: bad limit file entry --> '%s'>\n", limitReadBuffer);
+         {
+         TR_VerboseLog::write("<JIT: fatal: bad limit file entry --> '%s'>\n", limitReadBuffer);
+         return fail;
+         }
       fclose(limitFile);
       }
    else
       {
-      TR_VerboseLog::write("<JIT: warning: unable to read limit file --> '%s' will be ignored>\n", limitFileName);
+      TR_VerboseLog::write("<JIT: fatal: unable to read limit file --> '%s'>\n", limitFileName);
+      return fail; //We want to fail if we can't read the file because it is too easy to miss that the file wasn't picked up
       }
    return endOpt;
    }

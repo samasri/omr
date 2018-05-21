@@ -1,19 +1,23 @@
 ###############################################################################
+# Copyright (c) 2015, 2018 IBM Corp. and others
 #
-# (c) Copyright IBM Corp. 2015, 2016
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
 #
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
 # This configure.ac has been confirmed to work with Autoconf v2.63,
@@ -41,7 +45,7 @@ AC_ARG_VAR([OMRGLUE_INCLUDES], [Extra include directories to be passed to the C 
 AC_ARG_VAR([lib_output_dir], [The output directory for libraries. (Default: $top_srcdir/lib)])
 AC_ARG_VAR([exe_output_dir], [The output directory for executables. (Default: $top_srcdir)])
 AC_ARG_VAR([OMR_HOST_OS], [The operating system where the package will run. One of: aix,linux,osx,win,zos])
-AC_ARG_VAR([OMR_HOST_ARCH], [The architecture of the CPU where the package will run. One of: arm,ppc,s390,x86])
+AC_ARG_VAR([OMR_HOST_ARCH], [The architecture of the CPU where the package will run. One of: aarch64,arm,ppc,s390,x86])
 AC_ARG_VAR([OMR_TARGET_DATASIZE], [Specifies whether the package will run in 32- or 64-bit mode. One of: 31,32,64])
 AC_ARG_VAR([OMR_TOOLCHAIN], [The toolchain used to build the package. One of: gcc,xlc,msvc])
 AC_ARG_VAR([OMR_CROSS_CONFIGURE],
@@ -128,7 +132,6 @@ AC_ARG_ENABLE([tracegen],
 	[enable_tracegen=yes]
 )
 
-
 ###
 ### Build environment configuration
 ###
@@ -191,7 +194,7 @@ AS_IF([test "x$OMR_TARGET_DATASIZE" != "x"],
 		[OMR_TARGET_DATASIZE=64],
 		[OMR_TARGET_DATASIZE=32]
 	)]
-) 
+)
 AC_MSG_RESULT([$OMR_TARGET_DATASIZE])
 
 AC_MSG_CHECKING([OMR_TOOLCHAIN])
@@ -207,7 +210,6 @@ AC_MSG_RESULT([$OMR_TOOLCHAIN])
 
 # Default OMRGLUE to example/glue if it was not specified
 OMRGLUE=${OMRGLUE:-"./example/glue"}
-
 
 ## Default Variables
 
@@ -261,7 +263,7 @@ exe_output_dir=${exe_output_dir:-"\$(top_srcdir)"}
 
 ############### Enable/Disable auto-build-flag
 # auto-build-flag command line argument controls the setting of build flags
-# that are not explicitly enabled or disabled. 
+# that are not explicitly enabled or disabled.
 #
 # When auto-build-flag is enabled, build flags that are not explicitly enabled
 # or disabled will be set according to the outcome of the <default action>
@@ -277,7 +279,7 @@ exe_output_dir=${exe_output_dir:-"\$(top_srcdir)"}
 AC_ARG_ENABLE([auto-build-flag],
 	AS_HELP_STRING([--enable-auto-build-flag],
 		[Automatically detect the value of build flags that are not explicitly
-     enabled or disabled. (Default: yes)]),
+		enabled or disabled. (Default: yes)]),
 	[],
 	[enable_auto_build_flag=yes]
 )
@@ -328,7 +330,6 @@ AC_DEFUN([OMRCFG_DEFINE_FLAG],
 # --disable-<flag name> is passed to configure. If --disable-<flag-name> is not
 # passed to configure, then the flag is enabled.
 # $3 is an optional help message.
-#
 AC_DEFUN([OMRCFG_DEFINE_FLAG_ON],
 	[AC_ARG_ENABLE([$1], [AS_HELP_STRING([--disable-$1], [$3])],
 		[AS_IF([test "x${enableval}" = xyes],
@@ -343,7 +344,7 @@ AC_DEFUN([OMRCFG_DEFINE_FLAG_ON],
 # OMRCFG_DEFINE_FLAG_OFF(<flag name>, [<value>], [<help message>])
 # where <flag name> is the name of the flag that will be defined in omrcfg.h if
 # --enable-<flag name> is passed to configure. If --enable-<flag-name> is not
-# passed to configure,the the flag is disabled. 
+# passed to configure,the the flag is disabled.
 # $3 is an optional help message.
 #
 AC_DEFUN([OMRCFG_DEFINE_FLAG_OFF],
@@ -413,6 +414,7 @@ OMRCFG_DEFINE_FLAG_OFF([OMR_GC_VLHGC])
 OMRCFG_DEFINE_FLAG_OFF([OMR_PORT_ASYNC_HANDLER])
 OMRCFG_DEFINE_FLAG_OFF([OMR_ARCH_POWER])
 OMRCFG_DEFINE_FLAG_OFF([OMR_ARCH_ARM])
+OMRCFG_DEFINE_FLAG_OFF([OMR_ARCH_AARCH64])
 OMRCFG_DEFINE_FLAG_OFF([OMR_ARCH_X86])
 OMRCFG_DEFINE_FLAG_OFF([OMR_ARCH_S390])
 
@@ -468,7 +470,7 @@ OMRCFG_DEFINE_FLAG([OMR_PORT_NUMA_SUPPORT],[],
 	)]
 )
 
-AS_IF([[test "$OMR_CROSS_CONFIGURE" != yes] && [test "$OMR_PORT_NUMA_SUPPORT" = 1] && [test "$OMR_HOST_OS" = linux]],
+AS_IF([test "$OMR_CROSS_CONFIGURE" != yes -a "$OMR_PORT_NUMA_SUPPORT" = 1 -a "$OMR_HOST_OS" = linux],
 	[AC_CHECK_HEADERS_ONCE([numa.h],
 		[],
 		[AC_MSG_ERROR([numa.h was not found. Please install numa-dev])]
@@ -505,21 +507,61 @@ OMRCFG_DEFINE_FLAG([OMRTHREAD_LIB_UNIX],[1],
 	)]
 )
 
-AS_IF([[test "$cross_compiling" != "yes"] && [test "$OMR_HOST_OS" != osx] && [test "$OMR_HOST_OS" != aix]],
-	[# Look for libdwarf.h
-	AC_CHECK_HEADER([libdwarf.h], [],
-		[AC_CHECK_HEADER([/usr/include/libdwarf/libdwarf.h],
-			[OMR_LIBDWARF_IPATH="/usr/include/libdwarf"])])
+AC_ARG_VAR([OMR_DIASDK_HOME],
+	[The directory where the DIA SDK can be found.] (Default: ))
 
-	# Look for libdwarf.so
-	# If the shared lib isn't found, assume we're linking the static lib,
-	# so elf must be linked explicitly.
-	AC_CHECK_FILE([/usr/lib/libdwarf.so],
-		[OMR_LIBDWARF_SHARED_LIBS="dwarf"],
-		[OMR_LIBDWARF_STATIC_LIBS="dwarf elf"])]
+AS_IF([test "$enable_DDR" = yes -a "$cross_compiling" != "yes"],
+	[AS_CASE($OMR_HOST_OS,
+		[aix],[],
+		[osx],[],
+		[win],[
+			# a user-supplied path wins
+			DIASDK_HOME="$OMR_DIASDK_HOME"
+			# otherwise if VSINSTALLDIR is set, use the DIA SDK found there
+			AS_IF([test "x$DIASDK_HOME" = "x" -a "x$VSINSTALLDIR" != "x"],
+				[DIASDK_HOME="$VSINSTALLDIR/DIA SDK"]
+			)
+			# next, look relative to the location of the Visual Studio compiler
+			AS_IF([test "x$DIASDK_HOME" = "x" -a "$OMR_TOOLCHAIN" = msvc],
+				[
+				AC_PATH_PROG([VS_CL_PATH],[cl.exe])
+				AS_IF([test "x$VS_CL_PATH" != x],
+					[
+					# this should yield .../VC/bin/cl.exe or .../VC/bin/amd64/cl.exe
+					vc_bin_dir=$(AS_DIRNAME(["$VS_CL_PATH"]))
+					diasdk_dir="$vc_bin_dir/../../DIA SDK"
+					AS_IF([test -f "$diasdk_dir/include/dia2.h"]
+						[DIASDK_HOME="$(cygpath -a -w "$diasdk_dir")"],
+						[
+						diasdk_dir="$vc_bin_dir/../../../DIA SDK"
+						AS_IF([test -f "$diasdk_dir/include/dia2.h"],
+							[DIASDK_HOME="$(cygpath -a -w "$diasdk_dir")"]
+						)
+						]
+					)
+					]
+				)
+				]
+			)
+			# fail if none of the above
+			AS_IF([test "x$DIASDK_HOME" = "x"],
+				[AC_MSG_ERROR([--enable-DDR requires the DIA SDK; set VSINSTALLDIR or OMR_DIASDK_HOME])]
+			)
+			# use forward slashes instead of backslashes; remove any duplicate slashes
+			DIASDK_HOME=$(echo "$DIASDK_HOME" | sed -e 's:\\:/:g' -e 's://:/:'g)
+		],
+		[
+			# other host types: look for DWARF support
+			AC_CHECK_HEADERS([dwarf.h libdwarf/dwarf.h libdwarf.h libdwarf/libdwarf.h])
+			AC_SEARCH_LIBS([dwarf_init], [dwarf], [], [], [])
+			AC_SEARCH_LIBS([dwarf_init], [dwarf], [], [], [-lelf])
+			AC_SEARCH_LIBS([elf_begin], [elf], [], [], [])
+		]
+	)]
 )
 
 OMRCFG_DEFINE_FLAG_OFF([OMR_GC_IDLE_HEAP_MANAGER])
+OMRCFG_DEFINE_FLAG_OFF([OMR_VALGRIND_MEMCHECK], [], [Integrate valgrind memcheck API. (Default: no)])
 
 ###
 ### Variable Substitution
@@ -566,6 +608,7 @@ AC_SUBST([enable_fvtest])
 AC_SUBST([enable_fvtest_agent])
 AC_SUBST([enable_tracegen])
 AC_SUBST([enable_DDR])
+AC_SUBST([DIASDK_HOME])
 
 AC_SUBST(exeext)
 AC_SUBST(solibext)
@@ -575,11 +618,6 @@ AC_SUBST(libprefix)
 
 AC_SUBST(lib_output_dir)
 AC_SUBST(exe_output_dir)
-
-
-AC_SUBST(OMR_LIBDWARF_IPATH)
-AC_SUBST(OMR_LIBDWARF_SHARED_LIBS)
-AC_SUBST(OMR_LIBDWARF_STATIC_LIBS)
 
 ###
 ### Version strings
@@ -642,4 +680,3 @@ AC_CONFIG_COMMANDS([toolconfigure],
 		[OMR_HOSTCONFIG_ENV="CC= CXX="])])
 
 AC_OUTPUT
-

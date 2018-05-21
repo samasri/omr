@@ -1,19 +1,23 @@
 ###############################################################################
+# Copyright (c) 2017, 2018 IBM Corp. and others
 #
-# (c) Copyright IBM Corp. 2017
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
 #
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
 include(OmrFindFiles)
@@ -21,9 +25,11 @@ include(OmrFindFiles)
 set(OBJECTS "")
 set(VPATH "")
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
 add_tracegen(common/omrport.tdf)
 
-# Logic below will set the target_includes, and supplement the 
+# Logic below will set the target_includes, and supplement the
 # target_sources
 add_library(omrport_obj OBJECT
 	ut_omrport.c
@@ -31,37 +37,34 @@ add_library(omrport_obj OBJECT
 
 
 if(OMR_HOST_OS STREQUAL "aix")
-	list(APPEND OBJECTS omrgetsp.c)
+	list(APPEND OBJECTS omrgetsp.s)
 endif()
 
 
 if(OMR_HOST_OS STREQUAL "zos")
 	list(APPEND OBJECTS
-		j9generate_ieat_dump.s
+		omrgenerate_ieat_dump.s
 		omrget_large_pageable_pages_supported.s
-		j9wto.s
-		j9pgser_release.s
+		omrwto.s
+		omrpgser_release.s
 		omrgetuserid.c
-		j9sysinfo_get_number_CPUs.s
-		j9jobname.s
-		j9userid.s
-		j9csrsi.c
-		j9csrsi_wrp.s
-		j9zfs.c
-		j9lpdat.mc
+		omrsysinfo_get_number_CPUs.s
+		omrjobname.s
+		omruserid.s
+		omrzfs.c
+		omrlpdat.mc
 	)
 	#TODO more objects here. See port_objects.mk:55
 	if(OMR_ENV_DATA64)
 		list(APPEND OBJECTS
-			omrget_userExtendedPrivateAreaMemoryType.s
 			omrget_large_pages_supported.s
 			omrget_large_2gb_pages_supported.s
 			omrvmem_support_above_bar.s
 			omrvmem_support_below_bar_64.s
-			j9ipt_ttoken64.s
+			omript_ttoken64.s
 		)
 	else()
-		list(APPEND OBJECTS omrvmem_support_below_bar_31.c)
+		list(APPEND OBJECTS omrvmem_support_below_bar_31.s)
 	endif()
 else()
 	list(APPEND OBJECTS protect_helpers.c)
@@ -76,11 +79,10 @@ list(APPEND OBJECTS
 if(OMR_ARCH_S390)
 	list(APPEND OBJECTS omrrttime.s)
 else()
-	if(OMR_ARCH_PPC)
+	if(OMR_ARCH_POWER)
 		if(OMR_ENV_DATA64)
 			if(OMR_HOST_OS STREQUAL "linux")
-				#TODO what source extension is this?
-				list(APPEND OBJECTS omrrttime)
+				list(APPEND OBJECTS omrrttime.s)
 			endif()
 		endif()
 	endif()
@@ -88,7 +90,7 @@ endif()
 
 if(OMR_ARCH_S390)
 	if(OMR_HOST_OS STREQUAL "linux")
-		list(APPEND OBJECTS omrgetstfle) #TODO: extension?
+		list(APPEND OBJECTS omrgetstfle.s)
 	else()
 		if(OMR_ENV_DATA64)
 			list(APPEND OBJECTS omrgetstfle64.s)
@@ -102,13 +104,13 @@ endif()
 #TODO another if block @port_objects.mk:89
 
 if(OMR_HOST_OS STREQUAL "aix")
-	list(APPEND OBJECTS 
-		rt_divu64.c
-		rt_time.c
+	list(APPEND OBJECTS
+		rt_divu64.s
+		rt_time.s
 	)
 endif()
 
-list(APPEND OBJECTS 
+list(APPEND OBJECTS
 	omrcpu.c
 	omrerror.c
 	omrerrorhelpers.c
@@ -133,7 +135,7 @@ if(OMR_ENV_DATA64)
 	list(APPEND OBJECTS omrmem32helpers.c)
 endif()
 
-list(APPEND OBJECTS 
+list(APPEND OBJECTS
 	omrheap.c
 	omrmem.c
 	omrmemtag.c
@@ -149,7 +151,7 @@ list(APPEND OBJECTS
 	omrosdump.c
 	omrportcontrol.c
 	omrportptb.c
-	
+
 	omrsignal.c
 )
 
@@ -170,20 +172,20 @@ endif()
 list(APPEND OBJECTS omrsyslog.c)
 
 if(OMR_HOST_OS STREQUAL win)
-    #TODO hack to compile mc files
-    enable_language(RC)
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/win32/omrsyslogmessages.rc
-        COMMAND mc  ${CMAKE_CURRENT_SOURCE_DIR}/win32/omrsyslogmessages.mc
-        DEPENDS win32/omrsyslogmessages.mc
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/win32
-    )
+	#TODO hack to compile mc files
+	enable_language(RC)
+	add_custom_command(
+		OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/win32/omrsyslogmessages.rc
+		COMMAND mc  ${CMAKE_CURRENT_SOURCE_DIR}/win32/omrsyslogmessages.mc
+		DEPENDS win32/omrsyslogmessages.mc
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/win32
+	)
 	#TODO need to handle res files properly
 	#list(APPEND OBJECTS omrsyslogmessages.res)
 endif()
 
 list(APPEND OBJECTS
-	omrtime.c 
+	omrtime.c
 	omrtlshelpers.c
 	omrtty.c
 	omrvmem.c
@@ -200,7 +202,7 @@ endif()
 
 if(OMR_HOST_OS STREQUAL zos)
 	if(NOT OMR_ENV_DATA64)
-		list(APPEND OBJECTS 
+		list(APPEND OBJECTS
 			omrsignal_ceehdlr.c
 			omrsignal_context_ceehdlr.c
 		)
@@ -245,44 +247,22 @@ if(OMR_HOST_OS STREQUAL "aix")
 	#endif
 
 	if(OMR_ENV_DATA64)
-	#vpath % $(PORT_SRCDIR)aix64
-	#MODULE_INCLUDES += $(PORT_SRCDIR)aix64
+		list(APPEND VPATH aix64)
+		target_include_directories(omrport_obj PRIVATE aix64)
 	endif()
-	#vpath % $(PORT_SRCDIR)aix
-	#MODULE_INCLUDES += $(PORT_SRCDIR)aix
+	list(APPEND VPATH aix)
+	target_include_directories(omrport_obj PRIVATE aix)
 endif()
 
-
-#endif
-#TODO other platforms port_objects:209
-
 if(OMR_HOST_OS STREQUAL "linux")
-	#TODO need to port following vpath code
-	#ifeq (ppc,$(OMR_HOST_ARCH))
-		#ifeq (1,$(OMR_ENV_DATA64))
-			#ifeq (1,$(OMR_ENV_LITTLE_ENDIAN))
-				#vpath % $(PORT_SRCDIR)linuxppc64le
-				#MODULE_INCLUDES += $(PORT_SRCDIR)linuxppc64le
-			#endif
-			#vpath % $(PORT_SRCDIR)linuxppc64
-			#MODULE_INCLUDES += $(PORT_SRCDIR)linuxppc64
-		#endif
-		#vpath % $(PORT_SRCDIR)linuxppc
-		#MODULE_INCLUDES += $(PORT_SRCDIR)linuxppc
-	#endif
-
-	#ifeq (s390,$(OMR_HOST_ARCH))
-		#ifeq (1,$(OMR_ENV_DATA64))
-			#vpath % $(PORT_SRCDIR)linuxs39064
-			#MODULE_INCLUDES += $(PORT_SRCDIR)linuxs39064
-		#endif
-		#vpath % $(PORT_SRCDIR)linuxs390
-		#MODULE_INCLUDES += $(PORT_SRCDIR)linuxs390
-	#endif
-
 	if(OMR_ARCH_ARM)
 		list(APPEND VPATH linuxarm)
 		target_include_directories(omrport_obj PRIVATE linuxarm)
+	endif()
+
+	if(OMR_ARCH_AARCH64)
+		list(APPEND VPATH linuxaarch64)
+		target_include_directories(omrport_obj PRIVATE linuxaarch64)
 	endif()
 
 	if(OMR_ARCH_X86)
@@ -294,6 +274,28 @@ if(OMR_HOST_OS STREQUAL "linux")
 			target_include_directories(omrport_obj PRIVATE linux386)
 		endif()
 
+	endif()
+
+	if(OMR_ARCH_POWER)
+		if(OMR_ENV_DATA64)
+			if(OMR_ENV_LITTLE_ENDIAN)
+				list(APPEND VPATH linuxppc64le)
+				target_include_directories(omrport_obj PRIVATE linuxppc64le)
+			endif()
+			list(APPEND VPATH linuxppc64)
+			target_include_directories(omrport_obj PRIVATE linuxppc64)
+		endif()
+		list(APPEND VPATH linuxppc)
+		target_include_directories(omrport_obj PRIVATE linuxppc)
+	endif()
+
+	if(OMR_ARCH_S390)
+		if(OMR_ENV_DATA64)
+			list(APPEND VPATH linuxs39064)
+			target_include_directories(omrport_obj PRIVATE linuxs39064)
+		endif()
+		list(APPEND VPATH linuxs390)
+		target_include_directories(omrport_obj PRIVATE linuxs390)
 	endif()
 
 	list(APPEND VPATH linux)
@@ -327,7 +329,7 @@ omr_find_files(resolvedPaths
 
 
 if(OMR_HOST_OS STREQUAL "win")
-    list(APPEND resolvedPaths win32/omrsyslogmessages.rc)
+	list(APPEND resolvedPaths win32/omrsyslogmessages.rc)
 endif()
 
 target_sources(omrport_obj PRIVATE ${resolvedPaths})
@@ -336,9 +338,20 @@ add_library(omrport STATIC
 	$<TARGET_OBJECTS:omrport_obj>
 )
 
+if(OMR_WARNINGS_AS_ERRORS)
+	target_compile_options(omrport_obj PRIVATE ${OMR_WARNING_AS_ERROR_FLAG})
+endif()
+
+if(OMR_ENHANCED_WARNINGS)
+	target_compile_options(omrport_obj PRIVATE ${OMR_ENHANCED_WARNING_FLAG})
+endif()
+
 target_link_libraries(omrport
-	j9thrstatic
+	PRIVATE
+	j9avl
 	j9hashtable
+	j9pool
+	${OMR_THREAD_LIB}
 )
 
 target_include_directories(omrport_obj PRIVATE
@@ -353,14 +366,14 @@ target_compile_definitions(omrport_obj PRIVATE -DOMRPORT_LIBRARY_DEFINE)
 #TODO hack to get to compile. Need platform checks
 if(NOT OMR_HOST_OS STREQUAL "win")
 	if(NOT OMR_HOST_OS STREQUAL "zos")
-		target_link_libraries(omrport dl)
+		target_link_libraries(omrport PRIVATE dl)
 	endif()
 endif()
 
 if(OMR_HOST_OS STREQUAL "osx")
-  target_link_libraries(omrport iconv)
+	target_link_libraries(omrport PRIVATE iconv)
 endif()
 
 if(OMR_HOST_OS STREQUAL "win")
-	target_link_libraries(omrport psapi pdh)
+	target_link_libraries(omrport PRIVATE psapi pdh)
 endif()

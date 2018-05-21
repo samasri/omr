@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 
 #include "MemoryManager.hpp"
@@ -22,11 +26,14 @@
 #include "ModronAssertions.h"
 #include "GCExtensionsBase.hpp"
 #include "NonVirtualMemory.hpp"
+#if defined(OMR_VALGRIND_MEMCHECK)
+#include "MemcheckWrapper.hpp"
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 
 MM_MemoryManager*
 MM_MemoryManager::newInstance(MM_EnvironmentBase* env)
 {
-	MM_MemoryManager* memoryManager = (MM_MemoryManager*)env->getForge()->allocate(sizeof(MM_MemoryManager), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	MM_MemoryManager* memoryManager = (MM_MemoryManager*)env->getForge()->allocate(sizeof(MM_MemoryManager), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 	if (NULL != memoryManager) {
 		new (memoryManager) MM_MemoryManager(env);
@@ -69,14 +76,16 @@ MM_MemoryManager::createVirtualMemoryForHeap(MM_EnvironmentBase* env, MM_MemoryH
 	uintptr_t allocateSize = size;
 
 	uintptr_t concurrentScavengerPageSize = 0;
-	uintptr_t concurrentScavengerPageAlignmentIncrement = 0;
 	if (extensions->isConcurrentScavengerEnabled()) {
 		OMRPORT_ACCESS_FROM_ENVIRONMENT(env);
-		/* allocate extra memory to guarantee proper alignment regardless start address location */
-		/* There is an assumption that no need to take to consideration heapAlignment or pageSize */
+		/*
+		 * Allocate extra memory to guarantee proper alignment regardless start address location
+		 * Minimum size of over-allocation should be (Concurrent_Scavenger_page_size - section size) however
+		 * Virtual Memory can return heap size shorter by a region (and here region size == section size)
+		 * So to guarantee desired heap size over-allocate it by full Concurrent_Scavenger_page_size
+		 */
 		concurrentScavengerPageSize = extensions->getConcurrentScavengerPageSectionSize() * CONCURRENT_SCAVENGER_PAGE_SECTIONS;
-		concurrentScavengerPageAlignmentIncrement = concurrentScavengerPageSize - extensions->getConcurrentScavengerPageSectionSize();
-		allocateSize += concurrentScavengerPageAlignmentIncrement;
+		allocateSize += concurrentScavengerPageSize;
 		if (extensions->isDebugConcurrentScavengerPageAlignment()) {
 			omrtty_printf("Requested heap size 0x%zx has been extended to 0x%zx for guaranteed alignment\n", size, allocateSize);
 		}
@@ -160,7 +169,7 @@ MM_MemoryManager::createVirtualMemoryForHeap(MM_EnvironmentBase* env, MM_MemoryH
 		if (extensions->isConcurrentScavengerEnabled()) {
 			void * ceilingToRequest = ceiling;
 			/* Requested top address might be higher then ceiling because of added chunk */
-			if ((requestedTopAddress > ceiling) && ((void *)((uintptr_t)requestedTopAddress - concurrentScavengerPageAlignmentIncrement) <= ceiling)) {
+			if ((requestedTopAddress > ceiling) && ((void *)((uintptr_t)requestedTopAddress - concurrentScavengerPageSize) <= ceiling)) {
 				/* ZOS 2_TO_64/2_TO_32 options would not allow memory request larger then 64G/32G so total requested size including tail padding should not exceed it */
 				allocateSize = (uintptr_t)ceiling - (uintptr_t)startAllocationAddress - tailPadding;
 
@@ -321,7 +330,7 @@ MM_MemoryManager::createVirtualMemoryForHeap(MM_EnvironmentBase* env, MM_MemoryH
 				extensions->setConcurrentScavengerPageStartAddress((void *)baseAligned);
 
 				if (extensions->isDebugConcurrentScavengerPageAlignment()) {
-					omrtty_printf("Expected Nursery start address 0x%zx\n", baseAligned);
+					omrtty_printf("Expected Nursery start address adjusted to 0x%zx\n", baseAligned);
 				}
 
 				/* Move up entire heap for proper Nursery adjustment */
@@ -329,9 +338,9 @@ MM_MemoryManager::createVirtualMemoryForHeap(MM_EnvironmentBase* env, MM_MemoryH
 				handle->setMemoryBase((void *)heapBase);
 
 				/* top of adjusted Nursery should fit reserved memory */
-				Assert_GC_true_with_message4(env, ((heapBase + size) <= ((uintptr_t)handle->getMemoryTop() - tailPadding)),
-						"End of projected heap (base 0x%zx + size 0x%zx) is larger then (Top allocated %p - tailPadding 0x%zx)",
-						heapBase, size, handle->getMemoryTop(), tailPadding);
+				Assert_GC_true_with_message3(env, ((heapBase + size) <= (uintptr_t)handle->getMemoryTop()),
+						"End of projected heap (base 0x%zx + size 0x%zx) is larger then Top allocated %p\n",
+						heapBase, size, handle->getMemoryTop());
 			}
 
 			/* adjust heap top to lowest possible address */
@@ -353,6 +362,11 @@ MM_MemoryManager::createVirtualMemoryForHeap(MM_EnvironmentBase* env, MM_MemoryH
 			}
 		}
 	}
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+	//Use handle's Memory Base to refer valgrind memory pool
+	valgrindCreateMempool(extensions, (uintptr_t)handle->getMemoryBase());
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 
 	return NULL != instance;
 }
@@ -497,6 +511,11 @@ MM_MemoryManager::destroyVirtualMemory(MM_EnvironmentBase* env, MM_MemoryHandle*
 	handle->setVirtualMemory(NULL);
 	handle->setMemoryBase(NULL);
 	handle->setMemoryTop(NULL);
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+	valgrindDestroyMempool(env->getExtensions());
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+
 }
 
 bool

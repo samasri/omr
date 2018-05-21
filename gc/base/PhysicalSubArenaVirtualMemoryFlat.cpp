@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2015 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 
@@ -31,16 +35,8 @@
 #include "PhysicalArena.hpp"
 #include "PhysicalArenaVirtualMemory.hpp"
 #include "VirtualMemory.hpp"
+#include "MemorySubSpaceFlat.hpp"
 #include "ModronAssertions.h"
-
-/**
- * Zos390 Platform dependent trickery for the ar command.  Without this definition
- * the ar command on Zos390 will fail to link this class.
- */
-#if defined(J9ZOS390)
-#include "ZOSLinkage.hpp"
-int j9zos390LinkTrickPhysicalSubArenaVirtualMemoryFlat;
-#endif /* J9ZOS390 */
 
 /**
  * Create and return a new instance of MM_PhysicalSubArenaVirtualMemoryFlat.
@@ -50,7 +46,7 @@ MM_PhysicalSubArenaVirtualMemoryFlat::newInstance(MM_EnvironmentBase *env, MM_He
 {
 	MM_PhysicalSubArenaVirtualMemoryFlat *subArena;
 
-	subArena = (MM_PhysicalSubArenaVirtualMemoryFlat *)env->getForge()->allocate(sizeof(MM_PhysicalSubArenaVirtualMemoryFlat), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	subArena = (MM_PhysicalSubArenaVirtualMemoryFlat *)env->getForge()->allocate(sizeof(MM_PhysicalSubArenaVirtualMemoryFlat), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if(subArena) {
 		new(subArena) MM_PhysicalSubArenaVirtualMemoryFlat(heap);
 		if(!subArena->initialize(env)) {
@@ -207,12 +203,18 @@ MM_PhysicalSubArenaVirtualMemoryFlat::expandNoCheck(MM_EnvironmentBase *env, uin
 	if (_highAddress != highExpandAddress) {
 		/* the area has been expanded.  Update internal values */
 		_highAddress = highExpandAddress;
-		/* Reconstruct the region at its new size */
+
+		MM_MemorySubSpace *genericSubSpace = ((MM_MemorySubSpaceFlat *)_subSpace)->getChildSubSpace();
+
+		bool result = genericSubSpace->heapAddRange(env, genericSubSpace , expandSize, lowExpandAddress, highExpandAddress);
+
 		getHeapRegionManager()->resizeAuxillaryRegion(env, _region, _lowAddress, _highAddress);
 		Assert_MM_true(NULL != _region);
 
-		/* Update the owning subspace */
-		_subSpace->expanded(env, this, expandSize, lowExpandAddress, highExpandAddress, true);
+		if(result){
+			genericSubSpace->addExistingMemory(env, this, expandSize, lowExpandAddress, highExpandAddress, true);
+		}
+
 		_subSpace->heapReconfigured(env);
 	}
 
@@ -244,7 +246,7 @@ MM_PhysicalSubArenaVirtualMemoryFlat::contract(MM_EnvironmentBase *env, uintptr_
 	MM_GCExtensionsBase *extensions = env->getExtensions();
 	uintptr_t contractSize = requestContractSize;
 	/* Get the memory subspace associated with the contract */
-	MM_MemorySubSpace *genericSubSpace = _region->getSubSpace();
+	MM_MemorySubSpace *genericSubSpace = ((MM_MemorySubSpaceFlat *) _subSpace)->getChildSubSpace();
 	void *oldLowAddress = _region->getLowAddress();
 	void *oldHighAddress = _region->getHighAddress();
 

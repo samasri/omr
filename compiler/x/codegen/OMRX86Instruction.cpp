@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "codegen/X86Instruction.hpp"
@@ -145,12 +148,8 @@ TR::RealRegister *assignGPRegister(TR::Instruction   *instr,
    assignedRegister->setState(TR::RealRegister::Assigned, virtReg->isPlaceholderReg());
    cg->traceRegAssigned(virtReg, assignedRegister);
 
-   if (assignedRegister->getRegisterNumber() == cg->getProperties().getMethodMetaDataRegister())
-      cg->processDeferredSplits(virtReg == cg->getVMThreadRegister());
-
    return assignedRegister;
    }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86LabelInstruction:: member functions
@@ -233,7 +232,6 @@ void TR::X86LabelInstruction::assignOutlinedInstructions(
       oi->assignRegisters(kindsToBeAssigned, generateVFPSaveInstruction(getPrev(), cg()));
    }
 
-
 // Take the now-assigned register dependencies from this instruction and replicate
 // them on the outlined instruction branch instruction.
 //
@@ -262,7 +260,6 @@ void TR::X86LabelInstruction::addPostDepsToOutlinedInstructionsBranch()
 #endif
       }
    }
-
 
 void TR::X86LabelInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigned)
    {
@@ -400,88 +397,6 @@ void TR::X86LabelInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigned
          if (cg()->enableBetterSpillPlacements())
             cg()->saveBetterSpillPlacements(this);
          }
-
-      if (!comp->getOption(TR_DisableLateEdgeSplitting) && cg()->getProperties().getMethodMetaDataRegister())
-         {
-         // If we find a branch instruction that doesn't have vmthread in ebp,
-         // jumping to a label that needs vmthread in ebp, then we need to insert
-         // an ebp load.  We want to insert it just before the target label, and
-         // change the offending branch so it jumps to the load instead.  We're
-         // effectively splitting the edge, with branches needing an ebp load
-         // jumping to the load instructions, and other branches jumping to the
-         // original label.
-         //
-         // This logic has three parts:
-         // 1. Identify block exits where the vmthread is not in ebp.  At that point,
-         // we'll split the edge and add a second label.
-         // 2. Identify labels where the vmthread must be in ebp.  Mark such labels
-         // with IsVMThreadLive.
-         // 3. (After register assignment, during size estimation.)  Find labels that
-         // have been split AND have IsVMThreadLive.  Insert an ebp load between the labels.
-
-         TR::RealRegister    *ebp = cg()->machine()->getX86RealRegister(cg()->getProperties().getMethodMetaDataRegister());
-         bool ebpIsVMThreadRegister = ebp->getAssignedRegister() == cg()->getVMThreadRegister();
-         bool ebpIsUnknown          = ebp->getAssignedRegister() == NULL;
-
-         if (getOpCodeValue() == LABEL && ebpIsVMThreadRegister)
-            {
-            // (This is step 2.)
-            //
-            _symbol->setVMThreadLive();
-            }
-         else if (getNode()->getOpCodeValue() == TR::BBStart && !getNode()->getBlock()->isExtensionOfPreviousBlock() && cg()->hasDeferredSplits())
-            {
-            // If we got to the top of the block without assigning ebp to
-            // anything, we have a choice.  We can either mark this label with
-            // setVMThreadLive(), making all the deferred splits unnecessary;
-            // or we can perform the splits.  The former has a decent chance of
-            // keeping ebp loads out of loops, so we do that.
-            //
-            if (cg()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-               traceMsg(comp, "O^O LATE EDGE SPLITTING: BBStart label %s needs vmthread in ebp because of deferred splits\n",
-                  cg()->getDebug()->getName(this));
-
-            _symbol->setVMThreadLive();
-            cg()->clearDeferredSplits();
-            }
-         else if (!ebpIsVMThreadRegister)
-            {
-            // (This is step 1.)
-            //
-            if (getNode()->getOpCodeValue() == TR::BBEnd)
-               {
-               // Check for a BBEnd that falls through to a different extended block
-               //
-               // Note that this logic doesn't *prove* that the BBEnd falls
-               // through -- there could be an unconditional branch (goto, table,
-               // or lookup) with the next block as a successor -- but then
-               // unnecessarily splitting this edge will, at worst, cause us to
-               // insert a useless vmthread rematerialization that is never
-               // executed.
-               //
-               TR::Block *nextBlock = getNode()->getBlock()->getNextBlock();
-               if (nextBlock && getNode()->getBlock()->hasSuccessor(nextBlock) && !nextBlock->isExtensionOfPreviousBlock())
-                  {
-                  cg()->splitLabel(nextBlock->getEntry()->getNode()->getLabel());
-                  }
-               }
-            else if (getOpCode().isBranchOp())
-               {
-               // Not split when _symbol is Outline instruction's entry label
-               if (_symbol->getInstruction() && !cg()->findOutlinedInstructionsFromLabel(_symbol))
-                  {
-                  TR::LabelSymbol *newLabelSymbol = cg()->splitLabel(_symbol, this);
-
-                  if (cg()->getTraceRAOption(TR_TraceRALateEdgeSplitting) && newLabelSymbol != _symbol)
-                     traceMsg(comp, "O^O LATE EDGE SPLITTING: Pointed branch %s at vmThread-restoring label %s\n",
-                        cg()->getDebug()->getName(this),
-                        cg()->getDebug()->getName(newLabelSymbol));
-
-                  _symbol = newLabelSymbol;
-                  }
-               }
-            }
-         }
       }
    else
       {
@@ -494,7 +409,6 @@ void TR::X86LabelInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigned
          }
       }
    }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86FenceInstruction:: member functions
@@ -510,15 +424,6 @@ TR::X86FenceInstruction::X86FenceInstruction(TR::Instruction   *precedingInstruc
                                                  TR::Node          *node,
                                                  TR::CodeGenerator *cg)
    : TR::Instruction(op, precedingInstruction, cg), _fenceNode(node)
-   {
-   }
-
-////////////////////////////////////////////////////////////////////////////////
-// TR::X86RestoreVMThreadInstruction:: member functions
-////////////////////////////////////////////////////////////////////////////////
-
-TR::X86RestoreVMThreadInstruction::X86RestoreVMThreadInstruction(TR_X86OpCodes op, TR::Node *node, TR::CodeGenerator *cg)
-   : TR::Instruction(node, op, cg)
    {
    }
 
@@ -583,7 +488,6 @@ TR::X86ImmInstruction  *TR::X86ImmInstruction::getIA32ImmInstruction()
    return this;
    }
 #endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86ImmSnippetInstruction:: member functions
@@ -747,8 +651,7 @@ TR::X86RegInstruction::X86RegInstruction(TR::Instruction                      *p
 TR::X86RegInstruction  *TR::X86RegInstruction::getIA32RegInstruction()
    {
    return this;
-}
-
+   }
 
 bool TR::X86RegInstruction::refsRegister(TR::Register *reg)
    {
@@ -854,7 +757,6 @@ void TR::X86RegInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigned)
       }
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86RegRegInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -900,7 +802,6 @@ TR::X86RegRegInstruction::X86RegRegInstruction(TR::Instruction                  
    {
    useRegister(sreg);
    }
-
 
 bool TR::X86RegRegInstruction::refsRegister(TR::Register *reg)
    {
@@ -988,7 +889,8 @@ void TR::X86RegRegInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigne
 
       bool regRegCopy = isRegRegMove();
       TR_X86OpCodes opCode = getOpCodeValue();
-      if (feGetEnv("TR_UseOutOfDatedRegRevMoveList"))
+      static char* useOutOfDateRegRegMoveList = feGetEnv("TR_UseOutOfDateRegRegMoveList");
+      if (useOutOfDateRegRegMoveList)
          {
          if (opCode == MOVAPSRegReg ||
              opCode == MOV8RegReg   ||
@@ -1076,10 +978,6 @@ void TR::X86RegRegInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigne
          assignedSecondRegister->setAssignedRegister(secondRegister);
          assignedSecondRegister->setState(TR::RealRegister::Assigned, secondRegister->isPlaceholderReg());
          cg()->traceRegAssigned(secondRegister, assignedSecondRegister);
-
-         if (toRealRegister(assignedSecondRegister)->getRegisterNumber() == cg()->getProperties().getMethodMetaDataRegister())
-            cg()->processDeferredSplits(secondRegister == cg()->getVMThreadRegister());
-
          }
       else if (secondRequestedRegSize == TR_ByteReg)
          {
@@ -1273,7 +1171,6 @@ TR::X86RegImmSymInstruction::autoSetReloKind()
       }
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86RegRegImmInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -1297,7 +1194,6 @@ TR::X86RegRegImmInstruction::X86RegRegImmInstruction(TR::Instruction   *precedin
    : TR::X86RegRegInstruction(sreg, treg, op, precedingInstruction, cg), _sourceImmediate(imm)
    {
    }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86RegRegRegInstruction:: member functions
@@ -1349,7 +1245,6 @@ TR::X86RegRegRegInstruction::X86RegRegRegInstruction(TR::Instruction            
    {
    useRegister(srreg);
    }
-
 
 bool TR::X86RegRegRegInstruction::refsRegister(TR::Register *reg)
    {
@@ -1594,13 +1489,11 @@ void TR::X86RegRegRegInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssi
       }
    }
 
-
 void padUnresolvedReferenceInstruction(TR::Instruction *instr, TR::MemoryReference *mr, TR::CodeGenerator *cg)
    {
    mr->getUnresolvedDataSnippet()->setDataReferenceInstruction(instr);
    generateBoundaryAvoidanceInstruction(TR::X86BoundaryAvoidanceInstruction::unresolvedAtomicRegions, 8, 8, instr, cg);
    }
-
 
 void insertUnresolvedReferenceInstructionMemoryBarrier(TR::CodeGenerator *cg, int32_t barrier, TR::Instruction *inst, TR::MemoryReference *mr, TR::Register *srcReg, TR::MemoryReference *anotherMr)
    {
@@ -1691,6 +1584,7 @@ void insertUnresolvedReferenceInstructionMemoryBarrier(TR::CodeGenerator *cg, in
          generateLabelInstruction(fenceInst, LABEL, doneLabel, deps, cg);
 
    }
+
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86MemInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -1772,8 +1666,6 @@ TR::X86MemInstruction::X86MemInstruction(TR_X86OpCodes                       op,
       }
 
    }
-
-
 
 bool TR::X86MemInstruction::refsRegister(TR::Register *reg)
    {
@@ -1896,35 +1788,6 @@ void TR::X86MemTableInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssig
    // Call inherited logic
    //
    TR::X86MemInstruction::assignRegisters(kindsToBeAssigned);
-
-   // Late edge splitting
-   //
-   if (cg()->getProperties().getMethodMetaDataRegister())
-      {
-      TR::RealRegister    *ebp = cg()->machine()->getX86RealRegister(cg()->getProperties().getMethodMetaDataRegister());
-      bool ebpIsVMThreadRegister = ebp->getAssignedRegister() == cg()->getVMThreadRegister();
-
-      if (!ebpIsVMThreadRegister)
-         {
-         // Split edges of tableswitch that don't have ebp dependencies
-         // Note: we don't both
-         //
-         for (ncount_t i = 0; i < getNumRelocations(); i++)
-            {
-            TR::LabelRelocation *relocation = getRelocation(i);
-            TR::LabelSymbol *targetLabel = relocation->getLabel();
-            if (targetLabel->getInstruction())
-               {
-               relocation->setLabel(cg()->splitLabel(targetLabel));
-               if (cg()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-                  traceMsg(cg()->comp(), "O^O LATE EDGE SPLITTING: Pointed jump table entry %d of %s at vmThread-restoring label %s\n",
-                     i,
-                     cg()->getDebug()->getName(this),
-                     cg()->getDebug()->getName(relocation->getLabel()));
-               }
-            }
-         }
-      }
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1957,7 +1820,6 @@ TR::X86CallMemInstruction::X86CallMemInstruction(TR_X86OpCodes                  
    {
    }
 
-
 void TR::X86CallMemInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigned)
    {
    aboutToAssignRegDeps();
@@ -1989,7 +1851,6 @@ void TR::X86CallMemInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssign
       }
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86MemImmInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -2014,7 +1875,6 @@ TR::X86MemImmInstruction::X86MemImmInstruction(TR::Instruction        *preceding
    {
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86MemImmSymInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -2038,9 +1898,6 @@ TR::X86MemImmSymInstruction::X86MemImmSymInstruction(TR::Instruction        *pre
    : TR::X86MemImmInstruction(imm, mr, op, precedingInstruction, cg), _symbolReference(sr)
    {
    }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86MemRegInstruction:: member functions
@@ -2087,7 +1944,6 @@ TR::X86MemRegInstruction::X86MemRegInstruction(TR::Instruction                  
    {
    useRegister(sreg);
    }
-
 
 bool TR::X86MemRegInstruction::refsRegister(TR::Register *reg)
    {
@@ -2284,7 +2140,6 @@ void TR::X86MemRegInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigne
       }
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86MemRegImmInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -2375,6 +2230,7 @@ bool TR::X86MemRegRegInstruction::refsRegister(TR::Register *reg)
 
    return false;
    }
+
 //check refsRegister
 bool TR::X86MemRegRegInstruction::usesRegister(TR::Register *reg)
    {
@@ -2589,7 +2445,6 @@ TR::X86RegMemInstruction::X86RegMemInstruction(TR::Instruction                  
       padUnresolvedReferenceInstruction(this, mr, cg);
       }
    }
-
 
 bool TR::X86RegMemInstruction::refsRegister(TR::Register *reg)
    {
@@ -3005,7 +2860,6 @@ void TR::X86FPST0ST1RegRegInstruction::assignRegisters(TR_RegisterKinds kindsToB
       }
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86FPSTiST0RegRegInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -3097,7 +2951,6 @@ void TR::X86FPSTiST0RegRegInstruction::assignRegisters(TR_RegisterKinds kindsToB
       }
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86FPST0STiRegRegInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -3186,7 +3039,6 @@ void TR::X86FPST0STiRegRegInstruction::assignRegisters(TR_RegisterKinds kindsToB
          }
       }
    }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86FPArithmeticRegRegInstruction:: member functions
@@ -3284,7 +3136,6 @@ void TR::X86FPArithmeticRegRegInstruction::assignRegisters(TR_RegisterKinds kind
          }
       }
    }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86FPCompareRegRegInstruction:: member functions
@@ -3530,7 +3381,6 @@ bool TR::X86FPCompareRegRegInstruction::swapOperands()
    return true;
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86FPCompareEvalInstruction:: member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -3770,8 +3620,6 @@ TR_X86OpCodes getBranchOrSetOpCodeForFPComparison(TR::ILOpCodes cmpOp, bool useF
 
    return op;
    }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::X86FPRemainderRegRegInstruction:: member functions
@@ -4046,7 +3894,6 @@ void TR::X86FPRegMemInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssig
       }
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // TR_IA32VFPxxx member functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -4117,7 +3964,6 @@ void TR::X86BoundaryAvoidanceInstruction::assignRegisters(TR_RegisterKinds kinds
       }
    }
 
-
 int32_t
 TR::X86BoundaryAvoidanceInstruction::betterPadLength(
       int32_t oldPadLength,
@@ -4126,10 +3972,6 @@ TR::X86BoundaryAvoidanceInstruction::betterPadLength(
    {
    return oldPadLength + (int32_t)cg()->alignment(unaccommodatedRegionStart, _boundarySpacing); // cast explicitly
    }
-
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TR::AMD64RegImm64SymInstruction:: member functions
@@ -4157,7 +3999,6 @@ TR::AMD64RegImm64SymInstruction::AMD64RegImm64SymInstruction(TR::Instruction    
    autoSetReloKind();
    }
 
-
 void
 TR::AMD64RegImm64SymInstruction::autoSetReloKind()
    {
@@ -4169,7 +4010,6 @@ TR::AMD64RegImm64SymInstruction::autoSetReloKind()
    else
       setReloKind(-1);
    }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Generate methods
@@ -4355,7 +4195,6 @@ generateAlignmentInstruction(TR::Instruction *precedingInstruction, uint8_t boun
    return new (cg->trHeapMemory()) TR::X86AlignmentInstruction(precedingInstruction, boundary, margin, cg);
    }
 
-
 TR::X86LabelInstruction  *
 generateLabelInstruction(TR_X86OpCodes   op,
                          TR::Node        * node,
@@ -4363,21 +4202,7 @@ generateLabelInstruction(TR_X86OpCodes   op,
                          bool             needsVMThreadRegister,
                          TR::CodeGenerator *cg)
    {
-   TR::X86LabelInstruction  *instr;
-   if (needsVMThreadRegister && cg->getLinkage()->getProperties().getMethodMetaDataRegister() != TR::RealRegister::NoReg)
-      {
-      TR::RegisterDependencyConditions  *cond = generateRegisterDependencyConditions((uint8_t)1, (uint8_t)1, cg);
-      TR::Register *vmThreadRegister = cg->getVMThreadRegister();
-      cond->addPreCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      cond->addPostCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(op, node, sym, cond, cg);
-      }
-   else
-      {
-      instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(op, node, sym, cg);
-      }
-
-   return instr;
+   return new (cg->trHeapMemory()) TR::X86LabelInstruction(op, node, sym, cg);
    }
 
 TR::X86LabelInstruction  *
@@ -4387,21 +4212,7 @@ generateLabelInstruction(TR::Instruction * pred,
                          bool             needsVMThreadRegister,
                          TR::CodeGenerator *cg)
    {
-   TR::X86LabelInstruction  *instr;
-   if (needsVMThreadRegister && cg->getLinkage()->getProperties().getMethodMetaDataRegister() != TR::RealRegister::NoReg)
-      {
-      TR::RegisterDependencyConditions  *cond = generateRegisterDependencyConditions((uint8_t)1, (uint8_t)1, cg);
-      TR::Register *vmThreadRegister = cg->getVMThreadRegister();
-      cond->addPreCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      cond->addPostCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(pred, op, sym, cond, cg);
-      }
-   else
-      {
-      instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(pred, op, sym, cg);
-      }
-
-   return instr;
+   return new (cg->trHeapMemory()) TR::X86LabelInstruction(pred, op, sym, cg);;
    }
 
 TR::X86LabelInstruction  *
@@ -4450,24 +4261,10 @@ generateLongLabelInstruction(TR_X86OpCodes     op,
                              bool              needsVMThreadRegister,
                              TR::CodeGenerator *cg)
    {
-   TR::X86LabelInstruction  *instr;
-   if (needsVMThreadRegister && cg->getLinkage()->getProperties().getMethodMetaDataRegister() != TR::RealRegister::NoReg)
-      {
-      TR::RegisterDependencyConditions  *cond = generateRegisterDependencyConditions((uint8_t)1, (uint8_t)1, cg);
-      TR::Register *vmThreadRegister = cg->getVMThreadRegister();
-      cond->addPreCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      cond->addPostCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(op, node, sym, cond, cg);
-      }
-   else
-      {
-      instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(op, node, sym, cg);
-      }
-
+   TR::X86LabelInstruction *instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(op, node, sym, cg);
    instr->prohibitShortening();
    return instr;
    }
-
 
 TR::X86LabelInstruction  *
 generateLabelInstruction(TR_X86OpCodes     opCode,
@@ -4479,39 +4276,19 @@ generateLabelInstruction(TR_X86OpCodes     opCode,
                          bool               evaluateGlRegDeps,
                          TR::CodeGenerator *cg)
    {
-   TR::X86LabelInstruction  *instr;
-
    if (evaluateGlRegDeps)
       {
       cg->evaluate(glRegDep);
       }
 
-   if (needsVMThreadRegister && cg->getLinkage()->getProperties().getMethodMetaDataRegister() != TR::RealRegister::NoReg)
-      {
-      TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions(glRegDep, cg, 1, popRegisters);
-      TR::Register *vmThreadRegister = cg->getVMThreadRegister();
-      deps->addPreCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      deps->addPostCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-      deps->stopAddingConditions();
-      instr = new (cg->trHeapMemory()) TR::X86LabelInstruction(opCode, node, label, deps, cg);
-      }
-   else
-      {
-      instr = generateLabelInstruction(opCode,
-                                       node,
-                                       label,
-                                       generateRegisterDependencyConditions(glRegDep, cg, 0, popRegisters),
-                                       cg);
-      }
+   TR::X86LabelInstruction *instr =
+      generateLabelInstruction(opCode,
+                               node,
+                               label,
+                               generateRegisterDependencyConditions(glRegDep, cg, 0, popRegisters),
+                               cg);
 
    return instr;
-   }
-
-TR::X86RestoreVMThreadInstruction  *
-generateRestoreVMThreadInstruction(TR::Node          *node,
-                                   TR::CodeGenerator *cg)
-   {
-   return new (cg->trHeapMemory()) TR::X86RestoreVMThreadInstruction(RestoreVMThread, node, cg);
    }
 
 static TR_AtomicRegion longBranchAtomicRegions[] =
@@ -4560,21 +4337,11 @@ generateConditionalJumpInstruction(
    TR::X86LabelInstruction  * inst;
    TR::LabelSymbol           * destinationLabel = ifNode->getBranchDestination()->getNode()->getLabel();
 
-   // With late edge splitting, we can ignore needsVMThreadRegister
-   //
-   if (!comp->getOption(TR_DisableLateEdgeSplitting))
-      {
-      needsVMThreadRegister =
-         needsVMThreadRegister &&
-         !performTransformation(comp, "O^O LATE EDGE SPLITTING: Omit ebp dependency for %s node %s\n",
-                                  ifNode->getOpCode().getName(), cg->getDebug()->getName(ifNode));
-      }
-
    if (ifNode->getNumChildren() == 3)
       {
       List<TR::Register> popRegisters(cg->trMemory());
       TR::Node* glRegDep = ifNode->getChild(2);
-      inst = generateLabelInstruction(opCode, ifNode, destinationLabel, glRegDep, &popRegisters, needsVMThreadRegister, cg);
+      inst = generateLabelInstruction(opCode, ifNode, destinationLabel, glRegDep, &popRegisters, false, cg);
 
       if (inst->getDependencyConditions())
          {
@@ -4596,12 +4363,11 @@ generateConditionalJumpInstruction(
       }
    else
       {
-      inst = generateLabelInstruction(opCode, ifNode, destinationLabel, needsVMThreadRegister, cg);
+      inst = generateLabelInstruction(opCode, ifNode, destinationLabel, false, cg);
       }
 
    return inst;
    }
-
 
 TR::X86FenceInstruction  *
 generateFenceInstruction(TR_X86OpCodes op, TR::Node * node, TR::Node * fenceNode, TR::CodeGenerator *cg)
@@ -4640,7 +4406,6 @@ bool TR::X86VirtualGuardNOPInstruction::usesRegister(TR::Register *reg)
 bool TR::X86VirtualGuardNOPInstruction::defsRegister(TR::Register *reg) { return usesRegister(reg); }
 bool TR::X86VirtualGuardNOPInstruction::refsRegister(TR::Register *reg) { return usesRegister(reg); }
 #endif
-
 
 TR::X86RegImmInstruction  *
 generateRegImmInstruction(TR_X86OpCodes                       op,
@@ -4824,7 +4589,6 @@ generateHelperCallInstruction(TR::Node * node, TR_RuntimeHelper index, TR::Regis
          cg);
    }
 
-
 void
 TR::X86VFPCallCleanupInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssigned)
    {
@@ -4835,7 +4599,6 @@ TR::X86VFPCallCleanupInstruction::assignRegisters(TR_RegisterKinds kindsToBeAssi
 
    OMR::X86::Instruction::assignRegisters(kindsToBeAssigned);
    }
-
 
 TR::X86VFPSaveInstruction  *generateVFPSaveInstruction(TR::Instruction *precedingInstruction, TR::CodeGenerator *cg)
    {
@@ -4896,7 +4659,6 @@ TR::X86VFPCallCleanupInstruction *generateVFPCallCleanupInstruction(int32_t adju
    {
    return new (cg->trHeapMemory()) TR::X86VFPCallCleanupInstruction(adjustment, node, cg);
    }
-
 
 TR::X86FPRegInstruction  *
 generateFPRegInstruction(TR_X86OpCodes op, TR::Node * node, TR::Register * reg, TR::CodeGenerator *cg)

@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "il/OMRBlock.hpp"
 
@@ -57,8 +60,8 @@
 #include "infra/Flags.hpp"                     // for flags32_t
 #include "infra/Link.hpp"                      // for TR_LinkHeadAndTail, etc
 #include "infra/List.hpp"                      // for ListIterator, List, etc
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
-#include "infra/TRCfgNode.hpp"                 // for CFGNode
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
+#include "infra/CfgNode.hpp"                   // for CFGNode
 #include "optimizer/Inliner.hpp"
 #include "optimizer/Optimizer.hpp"             // for Optimizer
 #include "optimizer/RegisterCandidate.hpp"     // for TR_GlobalRegister
@@ -699,13 +702,18 @@ OMR::Block::findVirtualGuardBlock(TR::CFG *cfg)
    }
 
 void
-OMR::Block::changeBranchDestination(TR::TreeTop * newDestination, TR::CFG *cfg)
+OMR::Block::changeBranchDestination(TR::TreeTop * newDestination, TR::CFG *cfg, bool callerFixesRegdeps)
    {
 
    TR::Node * branchNode = self()->getLastRealTreeTop()->getNode();
    TR_ASSERT(branchNode->getOpCode().isBranch(), "OMR::Block::changeBranchDestination: can't find the existing branch node");
 
-   TR::Block * prevDestinationBlock = branchNode->getBranchDestination()->getNode()->getBlock();
+   TR::TreeTop * prevDestinationTree = branchNode->getBranchDestination();
+   if (newDestination == prevDestinationTree)
+      return; // Nothing to do. Stop here so we don't remove the edge.
+
+   TR::Block * prevDestinationBlock = prevDestinationTree->getNode()->getBlock();
+
    branchNode->setBranchDestination(newDestination);
 
    TR::Block * newDestinationBlock = newDestination->getNode()->getBlock();
@@ -722,6 +730,9 @@ OMR::Block::changeBranchDestination(TR::TreeTop * newDestination, TR::CFG *cfg)
       }
 
    cfg->removeEdge(prevEdge);
+
+   if (callerFixesRegdeps)
+      return;
 
    int32_t numChildren = branchNode->getNumChildren();
    if (numChildren >0 &&

@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2015, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2015, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #if defined(J9ZOS390)
@@ -116,11 +120,11 @@ omrsig_handler(int sig, void *siginfo, void *uc)
 
 		if (handlerIsFunction(&handlerSlot.secondaryAction)) {
 #if defined(POSIX_SIGNAL)
-#if defined(OSX)
+#if defined(OSX) || defined(OMRZTPF)
 			sigset_t oldMask = {0};
-#else /* defined(OSX) */
+#else /* defined(OSX) || defined(OMRZTPF)  */
 			sigset_t oldMask = {{0}};
-#endif /* defined(OSX) */
+#endif /* defined(OSX) || defined(OMRZTPF)  */
 			sigset_t usedMask = handlerSlot.secondaryAction.sa_mask;
 			sigaddset(&usedMask, sig);
 			int ec = pthread_sigmask(SIG_BLOCK, &usedMask, &oldMask);
@@ -135,11 +139,11 @@ omrsig_handler(int sig, void *siginfo, void *uc)
 				|| (handlerSlot.secondaryAction.sa_flags & SA_RESETHAND)
 #endif /* (defined(AIXPPC) || defined(J9ZOS390)) */
 				)) {
-#if defined(OSX)
+#if defined(OSX) || defined(OMRZTPF)
 				sigset_t mask = {0};
-#else /* defined(OSX) */
+#else /* defined(OSX) || defined(OMRZTPF) */
 				sigset_t mask = {{0}};
-#endif /* defined(OSX) */
+#endif /* defined(OSX) || defined(OMRZTPF) */
 				sigemptyset(&mask);
 				sigaddset(&mask, sig);
 				ec = pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
@@ -193,8 +197,12 @@ omrsig_handler(int sig, void *siginfo, void *uc)
 sighandler_t
 omrsig_primary_signal(int signum, sighandler_t handler)
 {
-	struct sigaction act = {{0}};
-	struct sigaction oldact = {{0}};
+	struct sigaction act;
+	struct sigaction oldact;
+
+	memset(&act, 0, sizeof(struct sigaction));
+	memset(&oldact, 0, sizeof(struct sigaction));
+
 	act.sa_handler = handler;
 #if defined(POSIX_SIGNAL)
 	/* Add necessary flags to emulate signal() behavior using sigaction(). */
@@ -219,8 +227,13 @@ omrsig_primary_sigaction(int signum, const struct sigaction *act, struct sigacti
 #endif /* defined(POSIX_SIGNAL) */
 
 #if defined(WIN32)
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winconsistent-dllimport"
+#else
 #pragma warning(push)
 #pragma warning(disable : 4273)
+#endif /* defined (__clang__) */
 void (__cdecl * __cdecl
 signal(_In_ int signum, _In_opt_ void (__cdecl * handler)(int)))(int)
 #else /* defined(WIN32) */
@@ -231,14 +244,22 @@ signal(int signum, sighandler_t handler) __THROW
 	return omrsig_signal_internal(signum, handler);
 }
 #if defined(WIN32)
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#else
 #pragma warning(pop)
+#endif /* defined (__clang__) */
 #endif /* defined(WIN32) */
 
 static sighandler_t
 omrsig_signal_internal(int signum, sighandler_t handler)
 {
-	struct sigaction act = {{0}};
-	struct sigaction oldact = {{0}};
+	struct sigaction act;
+	struct sigaction oldact;
+
+	memset(&act, 0, sizeof(struct sigaction));
+	memset(&oldact, 0, sizeof(struct sigaction));
+
 	oldact.sa_handler = SIG_DFL;
 	act.sa_handler = handler;
 #if defined(POSIX_SIGNAL)
@@ -282,6 +303,22 @@ omrsig_signalOS_internal(int signum, const struct sigaction *act, struct sigacti
 #if defined(J9ZOS390)
 	/* zos does not seem to allow dlopen with NULL and no dll name. Use pragma map to SIGACT instead.*/
 	rc = sigactionOS(signum, act, oldact);
+#elif defined(OMRZTPF)
+	if (sigactionOS == NULL) {
+		void *handle = (char *)dlopen("CTIS", RTLD_LOCAL);
+		if (handle == NULL)  {
+			rc = -1;
+		}  else  {
+			sigactionOS = (SIGACTION)dlsym(handle, "sigaction");
+			if (sigactionOS == NULL) {
+				rc = -1;
+			} else {
+				rc = sigactionOS(signum, act, oldact);
+			}
+		}
+	}  else  {
+		rc = sigactionOS(signum, act, oldact);
+	}
 #elif defined(POSIX_SIGNAL)
 	/* Find the system implementation of sigaction on first call. */
 	if (NULL == sigactionOS) {
@@ -313,11 +350,28 @@ omrsig_signalOS_internal(int signum, const struct sigaction *act, struct sigacti
 	if (NULL == signalOS) {
 		rc = -1;
 	} else {
-		sighandler_t old = signalOS(signum, act->sa_handler);
+		sighandler_t handler = SIG_DFL;
+		/* signal() on WIN only takes SIG_IGN/SIG_DFL/function pointer as the second parameter (NULL is mapped to SIG_DFL).
+		 * If only querying the existing sighandler_t, use SIG_DFL to get the existing sighandler_t and then set it back.
+		 */
+		bool setAction = false;
+		if (NULL != act) {
+			handler = act->sa_handler;
+			setAction = true;
+		}
+		sighandler_t old = signalOS(signum, handler);
 		if (SIG_ERR == old) {
 			rc = -1;
-		} else if (NULL != oldact) {
-			oldact->sa_handler = old;
+		} else {
+			if (NULL != oldact) {
+				oldact->sa_handler = old;
+			}
+			if (!setAction) {
+				/* signal action was set to SIG_DFL, set old action back */
+				if (SIG_ERR == signalOS(signum, old)) {
+					rc = -1;
+				}
+			}
 		}
 	}
 #endif /* defined(POSIX_SIGNAL) */
@@ -342,9 +396,30 @@ omrsig_sigaction_internal(int signum, const struct sigaction *act, struct sigact
 		}
 
 		SIGLOCK(sigMutex);
-		/* Get previous handler from slot. */
 		if (NULL != oldact) {
-			*oldact = *savedAction;
+			struct sigaction oact;
+			bool returnOldAction = false;
+			memset(&oact, 0, sizeof(struct sigaction));
+			rc = omrsig_signalOS_internal(signum, NULL, &oact);
+			if (-1 != rc) {
+#if defined(POSIX_SIGNAL)
+				if (OMR_ARE_NO_BITS_SET(oact.sa_flags, SA_SIGINFO)) {
+#endif /* defined(POSIX_SIGNAL) */
+					if (((sighandler_t)SIG_DFL == oact.sa_handler)
+						|| ((sighandler_t)SIG_IGN == oact.sa_handler)
+					) {
+						returnOldAction = true;
+					}
+#if defined(POSIX_SIGNAL)
+				}
+#endif /* defined(POSIX_SIGNAL) */
+			}
+			if (returnOldAction) {
+				*oldact = oact;
+			} else {
+				/* Get previous handler from slot. */
+				*oldact = *savedAction;
+			}
 		}
 
 		if (NULL != act) {
@@ -500,13 +575,13 @@ sighandler_t
 sigset(int sig, sighandler_t disp) __THROW
 {
 	sighandler_t ret = SIG_ERR;
-#if defined(OSX)
+#if defined(OSX) || defined(OMRZTPF)
 	sigset_t mask = {0};
 	sigset_t oldmask = {0};
-#else /* defined(OSX) */
+#else /* defined(OSX) || defined(OMRZTPF) */
 	sigset_t mask = {{0}};
 	sigset_t oldmask = {{0}};
-#endif /* defined(OSX) */
+#endif /* defined(OSX) || defined(OMRZTPF) */
 	struct sigaction oldact = {{0}};
 
 	if (SIG_HOLD == disp) {

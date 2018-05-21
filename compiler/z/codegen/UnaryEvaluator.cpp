@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stddef.h>                                // for NULL, size_t
@@ -74,7 +77,7 @@ extern void PRINT_ME(char * string, TR::Node * node, TR::CodeGenerator * cg);
 TR::Register *
 lconstHelper(TR::Node * node, TR::CodeGenerator * cg)
    {
-   TR_ASSERT( TR::Compiler->target.is32Bit() || cg->evaluateNodeInRegPair(node), "lconstHelper() is for 32bit only!");
+   TR_ASSERT(TR::Compiler->target.is32Bit(), "lconstHelper() is for 32bit only!");
    TR::Register * lowRegister = cg->allocateRegister();
    TR::Register * highRegister = cg->allocateRegister();
 
@@ -151,7 +154,7 @@ OMR::Z::TreeEvaluator::lconstEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
    PRINT_ME("lconst", node, cg);
    TR::Register * longRegister;
-   if ((TR::Compiler->target.is64Bit() || cg->use64BitRegsOn32Bit()) && !cg->evaluateNodeInRegPair(node))
+   if (TR::Compiler->target.is64Bit() || cg->use64BitRegsOn32Bit())
       {
       return lconstHelper64(node, cg);
       }
@@ -169,7 +172,7 @@ OMR::Z::TreeEvaluator::bconstEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
    PRINT_ME("bconst", node, cg);
    TR::Register * tempReg = node->setRegister(cg->allocateRegister());
-   if (node->getOpCodeValue() == TR::buconst || node->isUnsignedLoad())
+   if (node->getOpCodeValue() == TR::buconst)
       generateLoad32BitConstant(cg, node, node->getByte() & 0xFF, tempReg, true);
    else
       {
@@ -187,7 +190,7 @@ OMR::Z::TreeEvaluator::sconstEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
    PRINT_ME("sconst", node, cg);
    TR::Register * tempReg = node->setRegister(cg->allocateRegister());
-   int32_t value = (node->isUnsigned() || node->isUnsignedLoad()) ? node->getConst<uint16_t>() : node->getShortInt();
+   int32_t value = node->isUnsigned() ? node->getConst<uint16_t>() : node->getShortInt();
    generateLoad32BitConstant(cg, node, value, tempReg, true);
    return tempReg;
    }

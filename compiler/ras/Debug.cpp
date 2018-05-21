@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "ras/Debug.hpp"
@@ -84,7 +87,7 @@
 #include "infra/BitVector.hpp"                        // for TR_BitVector, etc
 #include "infra/List.hpp"                             // for ListIterator, etc
 #include "infra/SimpleRegex.hpp"
-#include "infra/TRCfgNode.hpp"                        // for CFGNode
+#include "infra/CfgNode.hpp"                          // for CFGNode
 #include "optimizer/Optimizations.hpp"
 #include "optimizer/Optimizer.hpp"                    // for Optimizer
 #include "optimizer/PreExistence.hpp"
@@ -700,29 +703,6 @@ TR_Debug::printInstrDumpHeader(const char * title)
       }
    }
 
-#if defined(TR_TARGET_ARM)
-void
-TR_Debug::printAsmDumpHeader()
-   {
-   if (_file == NULL)
-      return;
-
-   int addressFieldWidth   = TR::Compiler->debug.hexAddressFieldWidthInChars();
-   int codeByteColumnWidth = TR::Compiler->debug.codeByteColumnWidth();
-
-   char* buff = (char *)_comp->trMemory()->allocateHeapMemory(addressFieldWidth);
-   memset(buff, '-', addressFieldWidth-2);
-   buff[addressFieldWidth-2] = '\0' ;
-
-   trfprintf(_file, "\n  +%s-------------------------------------- instruction address", buff);
-   trfprintf(_file, "\n  |%*s +----------------------------------------- binary representation", addressFieldWidth - 3, " ", addressFieldWidth - 1, " ");
-   trfprintf(_file, "\n  |%*s | %*s+----------------------------- opcode and operands", addressFieldWidth - 3, " ", codeByteColumnWidth + 4, " ");
-   trfprintf(_file, "\n  |%*s | %*s|\t\t\t\t    +------- additional information", addressFieldWidth - 3, " ", codeByteColumnWidth + 4, " ");
-   trfprintf(_file, "\n  |%*s | %*s|\t\t\t\t    |", addressFieldWidth - 3, " ", codeByteColumnWidth + 4, " ");
-   trfprintf(_file, "\n  V%*s V %*sV\t\t\t\t    V\n", addressFieldWidth - 3, " ", codeByteColumnWidth + 4, " ");
-   }
-#endif
-
 
 #define MAX_PREFIX_WIDTH 80
 
@@ -1060,11 +1040,8 @@ TR_Debug::nodePrintAllFlags(TR::Node *node, TR_PrettyPrinterString &output)
    output.append(format, node->printIsBackwardArrayCopy());
    output.append(format, node->printIsRarePathForwardArrayCopy());
    output.append(format, node->printIsNoArrayStoreCheckArrayCopy());
-   if (!inDebugExtension())
-      output.append(format, node->printIsReferenceArrayCopy());
-   else
-      output.append(format, node->printIsReferenceArrayCopy());
-   output.append(format, node->printIsHalfWordElementArrayCopy ());
+   output.append(format, node->printIsReferenceArrayCopy());
+   output.append(format, node->printIsHalfWordElementArrayCopy());
    output.append(format, node->printIsWordElementArrayCopy());
    output.append(format, node->printIsHeapObjectWrtBar());
    output.append(format, node->printIsNonHeapObjectWrtBar());
@@ -1074,9 +1051,10 @@ TR_Debug::nodePrintAllFlags(TR::Node *node, TR_PrettyPrinterString &output)
    output.append(format, node->printIsArrayChkPrimitiveArray2());
    output.append(format, node->printIsArrayChkReferenceArray2());
    output.append(format, node->printNeedsPrecisionAdjustment());
-   output.append(format, node->printCouldIgnoreExtend());
-   output.append(format, node->printForce64BitLoad());
-   output.append(format, node->printIsUnsignedLoad());
+   output.append(format, node->printIsSignExtendedTo32BitAtSource());
+   output.append(format, node->printIsSignExtendedTo64BitAtSource());
+   output.append(format, node->printIsZeroExtendedTo32BitAtSource());
+   output.append(format, node->printIsZeroExtendedTo64BitAtSource());
    output.append(format, node->printNeedsSignExtension());
    output.append(format, node->printSkipSignExtension());
    output.append(format, node->printSetUseSignExtensionMode());
@@ -1783,16 +1761,7 @@ TR_Debug::getAutoName(TR::SymbolReference * symRef)
 
    name[0]=0;  //initialize to empty string
 
-
-   if (symRef->getSymbol()->isRegisterSymbol())
-     {
-     TR::AutomaticSymbol *symReg=symRef->getSymbol()->castToRegisterSymbol();
-     if(symReg->isRealRegister())
-       sprintf(name,"<GlobalReg%d %s>",symReg->getGlobalRegisterNumber(),getGlobalRegisterName(symReg->getGlobalRegisterNumber()));
-     else
-       sprintf(name,"<GlobalReg%d>",symReg->getGlobalRegisterNumber());
-     }
-   else if (symRef->getSymbol()->isSpillTempAuto())
+   if (symRef->getSymbol()->isSpillTempAuto())
       {
       char * symName = (char *)_comp->trMemory()->allocateHeapMemory(20);
       if (symRef->getSymbol()->getDataType() == TR::Float || symRef->getSymbol()->getDataType() == TR::Double)
@@ -1964,10 +1933,10 @@ TR_Debug::getStaticName(TR::SymbolReference * symRef)
                                                                    TR::VMAccessCriticalSection::tryToAcquireVMAccess);
          if (!symRef->isUnresolved() && getStaticNameCriticalSection.acquiredVMAccess())
             {
-            uintptrj_t *stringLocation = (uintptrj_t*)sym->castToStaticSymbol()->getStaticAddress();
+            uintptrj_t stringLocation = (uintptrj_t)sym->castToStaticSymbol()->getStaticAddress();
             if (stringLocation)
                {
-               uintptrj_t string = *stringLocation;
+               uintptrj_t string = comp()->fej9()->getStaticReferenceFieldAtAddress(stringLocation);
                length = comp()->fej9()->getStringUTF8Length(string);
                contents = (char*)comp()->trMemory()->allocateMemory(length+1, stackAlloc, TR_MemoryBase::UnknownType);
                comp()->fej9()->getStringUTF8(string, contents, length+1);
@@ -2083,6 +2052,7 @@ static const char *commonNonhelperSymbolNames[] =
    "<componentClassAsPrimitive>",
    "<isArray>",
    "<isClassAndDepthFlags>",
+   "<initializeStatusFromClass>",
    "<isClassFlags>",
    "<vft>",
    "<currentThread>",
@@ -2159,10 +2129,16 @@ TR_Debug::getShadowName(TR::SymbolReference * symRef)
       return getOwningMethod(symRef)->fieldName(symRef->getCPIndex(), comp()->trMemory());
 
    if (symRef->getSymbol() == _comp->getSymRefTab()->findGenericIntShadowSymbol())
+      {
       if (symRef->reallySharesSymbol(_comp))
+         {
          return "<generic int shadow>";
+         }
       else
+         {
          return "<immutable generic int shadow>";
+         }
+      }
 
    if (_comp->getSymRefTab()->isVtableEntrySymbolRef(symRef))
       return "<vtable-entry-symbol>";
@@ -2175,8 +2151,11 @@ TR_Debug::getShadowName(TR::SymbolReference * symRef)
 
    if (symRef->getSymbol())
       {
-      if(symRef->getSymbol()->isArrayShadowSymbol())
+      if (comp()->getSymRefTab()->isRefinedArrayShadow(symRef))
          return "<refined-array-shadow>";
+
+      if (comp()->getSymRefTab()->isImmutableArrayShadow(symRef))
+         return "<immutable-array-shadow>";
 
       if(symRef->getSymbol()->isArrayletShadowSymbol())
          return "<arraylet-shadow>";
@@ -2532,7 +2511,7 @@ TR_Debug::dumpMethodInstrs(TR::FILE *pOutFile, const char *title, bool dumpTrees
    if (header)
       printInstrDumpHeader(title);
 
-   TR::Instruction *instr = _comp->getFirstInstruction();
+   TR::Instruction *instr = _comp->cg()->getFirstInstruction();
    if (dumpTrees)
       {
       _nodeChecklist.empty();
@@ -2707,7 +2686,7 @@ TR_Debug::dumpMixedModeDisassembly()
                  title, signature(_comp->getMethodSymbol()));
 
    TR::Node * n = 0;
-   TR::Instruction * inst = _comp->getFirstInstruction();
+   TR::Instruction * inst = _comp->cg()->getFirstInstruction();
    for (; inst; inst = inst->getNext())
       {
       if (inst->getNode()!=NULL &&
@@ -2724,12 +2703,11 @@ TR_Debug::dumpMixedModeDisassembly()
 
       print(pOutFile, inst);
       }
-   trfprintf(pOutFile,"\n");
-   trfprintf(pOutFile,"</instructions>\n");
+   trfprintf(pOutFile,"\n</instructions>\n");
 
    trfprintf(pOutFile,"<snippets>");
    print(pOutFile, _comp->cg()->getSnippetList());
-   trfprintf(pOutFile,"</snippets>\n");
+   trfprintf(pOutFile,"\n</snippets>\n");
    }
 
 
@@ -3134,7 +3112,7 @@ TR_Debug::printRegisterMask(TR::FILE *pOutFile, TR_RegisterMask mask, TR_Registe
       return;
 
    mask = mask & (TR::RealRegister::getAvailableRegistersMask(rk));
-   int32_t n = ::bitCount32(mask);
+   int32_t n = populationCount(mask);
 
    TR::RealRegister *reg;
    if (mask)
@@ -3416,16 +3394,6 @@ TR_Debug::print(TR::FILE *pOutFile, TR::RegisterMappedSymbol *localCursor, bool 
 void
 TR_Debug::print(TR::FILE *pOutFile, uint8_t* instrStart, uint8_t* instrEnd)
    {
-#if defined(TR_TARGET_ARM)
-   if (TR::Compiler->target.cpu.isARM() && pOutFile != NULL)
-      {
-      trfprintf(pOutFile, "\nAssembly:\n");
-
-      printAsmDumpHeader();
-
-      printARM(pOutFile, instrStart, instrEnd);
-      }
-#endif
    }
 
 void
@@ -3851,9 +3819,9 @@ TR_Debug::getRuntimeHelperName(int32_t index)
          case RubyHelper_vm_setconstant:         return "vm_setconstant";
          case RubyHelper_rb_vm_env_write:        return "rb_vm_env_write";
          case RubyHelper_vm_jit_stack_check:     return "vm_jit_stack_check";
-         case RubyHelper_rb_str_freeze:          return "rb_str_freeze"; 
-         case RubyHelper_rb_ivar_set:            return "rb_ivar_set"; 
-         case RubyHelper_vm_compute_case_dest:   return "vm_compute_case_dest"; 
+         case RubyHelper_rb_str_freeze:          return "rb_str_freeze";
+         case RubyHelper_rb_ivar_set:            return "rb_ivar_set";
+         case RubyHelper_vm_compute_case_dest:   return "vm_compute_case_dest";
          case RubyHelper_vm_getinstancevariable: return "vm_getinstancevariable";
          case RubyHelper_vm_setinstancevariable: return "vm_setinstancevariable";
          }
@@ -3967,7 +3935,8 @@ TR_Debug::getRuntimeHelperName(int32_t index)
          case TR_jitProfileLongValue:       return "jitProfileLongValue";
          case TR_jitProfileAddress:         return "jitProfileAddress";
          case TR_jitProfileWarmCompilePICAddress: return "jitProfileAddress for mainline code PIC's";
-         case TR_jitProfileParseBuffer:     return "jitProfileParseBuffer";
+         case TR_jProfile32BitValue:        return "jProfile32BitValue";
+         case TR_jProfile64BitValue:        return "jProfile64BitValue";
          case TR_prepareForOSR:             return "prepareForOSR";
 
          case TR_jitRetranslateCaller:      return "jitRetranslateCaller";
@@ -4047,21 +4016,6 @@ TR_Debug::getRuntimeHelperName(int32_t index)
 
             case TR_IA32jitThrowCurrentException:                     return "_jitThrowCurrentException";
             case TR_IA32jitCollapseJNIReferenceFrame:                 return "_jitCollapseJNIReferenceFrame";
-            case TR_IA32arrayCopy:                                    return "__arrayCopy";
-            case TR_IA32wordArrayCopy:                                return "__wordAarrayCopy";
-            case TR_IA32halfWordArrayCopy:                            return "__halfWordArrayCopy";
-            case TR_IA32forwardArrayCopy:                             return "__forwardArrayCopy";
-            case TR_IA32forwardWordArrayCopy:                         return "__forwardWordArrayCopy";
-            case TR_IA32forwardHalfWordArrayCopy:                     return "__forwardHalfWordArrayCopy";
-
-            case TR_IA32shortArrayCopy:                               return "__shortArrayCopy";
-            case TR_IA32forwardSSEArrayCopy:                          return "__forwardSSEArrayCopy";
-            case TR_IA32forwardSSEArrayCopyNoAlignCheck:              return "__forwardSSEArrayCopyNoAlignCheck";
-            case TR_IA32forwardArrayCopy2:                            return "__forwardArrayCopy2";
-            case TR_IA32SSEforwardArrayCopy:                          return "_SSEforwardArrayCopy";
-            case TR_IA32SSEforwardHalfWordArrayCopy:                  return "_SSEforwardHalfWordArrayCopy";
-            case TR_IA32SSEforwardArrayCopyAMDOpteron:                return "_SSEforwardArrayCopyAMDOpteron";
-            case TR_IA32SSEforwardArrayCopyAggressive:                return "_SSEforwardArrayCopyAggressive";
 
             case TR_IA32compressString:                               return "_compressString";
             case TR_IA32compressStringNoCheck:                        return "_compressStringNoCheck";
@@ -4075,11 +4029,7 @@ TR_Debug::getRuntimeHelperName(int32_t index)
             case TR_IA32countingPatchCallSite:                        return "__countingPatchCallSite";
             case TR_IA32induceRecompilation:                          return "__induceRecompilation";
 
-            case TR_IA32arrayXor:                                     return "arrayxor";
-            case TR_IA32arrayOr:                                      return "arrayor";
-            case TR_IA32arrayAnd:                                     return "arrayand";
             case TR_IA32arrayCmp:                                     return "arraycmp";
-            case TR_IA32overlapArrayCopy:                             return "overlapArrayCopy";
             case TR_IA32getTimeOfDay:                                 return "gettimeofday";
             }
          }
@@ -4097,15 +4047,6 @@ TR_Debug::getRuntimeHelperName(int32_t index)
             case TR_AMD64icallVMprJavaSendVirtualD:                   return "_icallVMprJavaSendVirtualD";
             case TR_AMD64jitThrowCurrentException:                    return "_jitThrowCurrentException";
             case TR_AMD64jitCollapseJNIReferenceFrame:                return "_jitCollapseJNIReferenceFrame";
-            case TR_AMD64arrayCopy:                                   return "__arrayCopy";
-            case TR_AMD64BCarrayCopy:                                 return "__BC_arrayCopy";
-            case TR_AMD64byteArrayCopy:                               return "__byteArrayCopy";
-            case TR_AMD64wordArrayCopy:                               return "__wordArrayCopy";
-            case TR_AMD64halfWordArrayCopy:                           return "__halfWordArrayCopy";
-            case TR_AMD64forwardArrayCopy:                            return "__forwardArrayCopy";
-            case TR_AMD64forwardWordArrayCopy:                        return "__forwardWordArrayCopy";
-            case TR_AMD64forwardHalfWordArrayCopy:                    return "__forwardHalfWordArrayCopy";
-            case TR_AMD64forwardArrayCopyAMDOpteron:                  return "_forwardArrayCopyAMDOpteron";
 
             case TR_AMD64compressString:                               return "_compressString";
             case TR_AMD64compressStringNoCheck:                        return "_compressStringNoCheck";
@@ -4118,17 +4059,7 @@ TR_Debug::getRuntimeHelperName(int32_t index)
             case TR_AMD64samplingPatchCallSite:                       return "__samplingPatchCallSite";
             case TR_AMD64countingPatchCallSite:                       return "__countingPatchCallSite";
             case TR_AMD64induceRecompilation:                         return "__induceRecompilation";
-            case TR_AMD64arrayXor:                                    return "arrayxor";
-            case TR_AMD64arrayOr:                                     return "arrayor";
-            case TR_AMD64arrayAnd:                                    return "arrayand";
-            case TR_AMD64noOverlapArrayXor:                           return "noOverlapArrayXor";
-            case TR_AMD64noOverlapArrayOr:                            return "noOverlapArrayOr";
-            case TR_AMD64noOverlapArrayAnd:                           return "noOverlapArrayAnd";
-            case TR_AMD64overlapArrayXor:                             return "overlapArrayXor";
-            case TR_AMD64overlapArrayOr:                              return "overlapArrayOr";
-            case TR_AMD64overlapArrayAnd:                             return "overlapArrayAnd";
             case TR_AMD64arrayCmp:                                    return "arraycmp";
-            case TR_AMD64overlapArrayCopy:                            return "overlapArrayCopy";
             case TR_AMD64doAESENCDecrypt:                             return "doAESDecrypt";
             case TR_AMD64doAESENCEncrypt:                             return "doAESEncrypt";
             }
@@ -5259,149 +5190,64 @@ void TR_Debug::setupDebugger(void *startaddr, void *endaddr, bool before)
    char pp[20];
    char * Argv[4];
 
-   if (::feGetEnv("DEBUG_PROG") != NULL)
+   /* Only need to start the debugger once. */
+   if (!started)
       {
-      /* Only need to start the debugger once. */
-      if (!started)
+      pid_t p;
+      pid_t ppid = getpid();
+      if ((p = fork()) == 0)
          {
-         pid_t p;
-         pid_t ppid = getpid();
-         void* handle;
-         char* error=NULL;
-         static char* ipAddress = ::feGetEnv("DER_DBG_ADDR");
-         static char* libPath   = ::feGetEnv("DER_DBG_LIBPATH");
-         static char* lib       = ::feGetEnv("DER_DBG_LIB");
-         if (!ipAddress || !libPath || !lib)
+         sprintf(cfname, "/tmp/__TRJIT_%d_", getpid());
+         sprintf(pp,"%d", ppid);
+
+         if ((Argv[0] =  ::feGetEnv("TR_DEBUGGER")) == NULL)
+            Argv[0] = "/usr/bin/gdb";
+
+         if ((cf = fopen(cfname, "wb+")) == 0)
             {
-            fprintf(stderr, "You must specify a valid TCP/IP address for the debugger to connect to\n");
-            fprintf(stderr, "You must specify a valid Library Path to get the debugger from\n");
-            fprintf(stderr, "You must specify a valid Library to load\n");
-            fprintf(stderr, "... these are DER_DBG_ADDR, DER_DBG_LIBPATH, DER_DBG_LIB respectively\n");
-            return;
+            cfname[0] = '\0';
+            printf("ERROR: Couldn't open file %s", cfname);
             }
-         char debugger[2050];
-
-         int libPathLen = strlen(libPath);
-
-         if (libPath[libPathLen-1] == '/')
-            {
-            libPath[libPathLen-1] = '\0';
-            }
-
-         sprintf(debugger, "%.1024s/%.1024s", libPath, lib);
-         handle = dlopen(debugger, RTLD_LAZY);
-         error = dlerror();
-         if (error)
-            {
-            fprintf(stderr, "Error %s opening debugger dll %s\n",
-               error, debugger);
-            return;
-            }
-         typedef int (ATTACH_FN)(int, int, unsigned int*);
-         typedef int (STOP_FN)(int, void**);
-         ATTACH_FN* attach = (ATTACH_FN*) dlsym(handle, "_debug_attach");
-         STOP_FN*   stop   = (STOP_FN*)   dlsym(handle, "_debug_stop_at");
-
-         if (!attach || !stop)
-            {
-            fprintf(stderr, "One of attach (%p) or stop (%p) could not be located in %s shared library\n",
-               attach, stop, debugger);
-            return;
-            }
-
-         unsigned int attachInfo[2];
-         attachInfo[1] = 8001;     // port number...
-         struct hostent *phostent = gethostbyname(ipAddress);
-         if (phostent)
-         {
-           // if this is a valid host name
-           attachInfo[0] = *(unsigned int *)(*(phostent->h_addr_list));
-         }
          else
-         {
-           // assumed to be an IP address
-           attachInfo[0] = inet_addr(ipAddress);
-         }
-         int language = 0; // C++ is language 0
-         int rc = 0;
-         rc = attach(language, 2, attachInfo);
-         if (rc != 0)
             {
-            fprintf(stderr, "Return code of %d (0x%x) on attach of debugger\n", rc, rc);
-            return;
-            }
+            fprintf(cf, "file /proc/%s/exe\n", pp);
+            fprintf(cf, "attach %s\n",pp);
+            fprintf(cf, "i sh\n");
 
-         void* stopInfo[] = { startaddr, 0 };
-         fprintf(stderr, "Set breakpoint at address:%p\n", startaddr);
-         rc = stop(language, stopInfo);
-         if (rc != 1)
-            {
-            fprintf(stderr, "Return code of %d (0x%x) on stop_at request of debugger\n", rc, rc);
-            return;
-            }
-         }
-      }
-   else
-      {
-      /* Only need to start the debugger once. */
-      if (!started)
-         {
-         pid_t p;
-         pid_t ppid = getpid();
-         if ((p = fork()) == 0)
-            {
-            sprintf(cfname, "/tmp/__TRJIT_%d_", getpid());
-            sprintf(pp,"%d", ppid);
-
-            if ((Argv[0] =  ::feGetEnv("TR_DEBUGGER")) == NULL)
-               Argv[0] = "/usr/bin/gdb";
-
-            if ((cf = fopen(cfname, "wb+")) == 0)
-               {
-               cfname[0] = '\0';
-               printf("ERROR: Couldn't open file %s", cfname);
-               }
+            if ( before )
+               fprintf(cf, "break *%p\n",startaddr);
             else
                {
-               fprintf(cf, "file /proc/%s/exe\n", pp);
-               fprintf(cf, "attach %s\n",pp);
-               fprintf(cf, "i sh\n");
+               printf("\n methodStartAddress = %p",startaddr);
+               printf("\n methodEndAddress = %p\n",endaddr);
+               fprintf(cf, "break *%p\n",startaddr);
 
-               if ( before )
-                  fprintf(cf, "break *%p\n",startaddr);
-               else
+               // Insert breakpoints requested by codegen
+               //
+               for (auto bpIterator = _comp->cg()->getBreakPointList().begin();
+                    bpIterator != _comp->cg()->getBreakPointList().end();
+                    ++bpIterator)
                   {
-                  printf("\n methodStartAddress = %p",startaddr);
-                  printf("\n methodEndAddress = %p\n",endaddr);
-                  fprintf(cf, "break *%p\n",startaddr);
-
-                  // Insert breakpoints requested by codegen
-                  //
-                  for (auto bpIterator = _comp->cg()->getBreakPointList().begin();
-                       bpIterator != _comp->cg()->getBreakPointList().end();
-                       ++bpIterator)
-                     {
-                     fprintf(cf, "break *%p\n",*bpIterator);
-                     }
-
-                  fprintf(cf, "disassemble %p %p\n",startaddr,endaddr);
+                  fprintf(cf, "break *%p\n",*bpIterator);
                   }
 
-               fprintf(cf, "finish\n");
-               fprintf(cf, "shell rm %s\n",cfname);
-               fprintf(cf, "");
-               fclose(cf);
-
-               Argv[1] = "-x";
-               Argv[2] = cfname;
-               Argv[3] = NULL;
+               fprintf(cf, "disassemble %p %p\n",startaddr,endaddr);
                }
-            execvp(Argv[0], Argv);
+
+            fprintf(cf, "finish\n");
+            fprintf(cf, "shell rm %s\n",cfname);
+            fprintf(cf, "");
+            fclose(cf);
+
+            Argv[1] = "-x";
+            Argv[2] = cfname;
+            Argv[3] = NULL;
             }
-         else
-            {
-            sleep(2);
-            }
+         execvp(Argv[0], Argv);
+         }
+      else
+         {
+          sleep(2);
          }
       }
 

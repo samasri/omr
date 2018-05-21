@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2015, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2015, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "CollectorLanguageInterface.hpp"
@@ -43,11 +46,11 @@ const char *gcTests[] = {"fvtest/gctest/configuration/sample_GC_config.xml",
                                 "fvtest/gctest/configuration/gencon_GC_backout_config.xml",
                                 "fvtest/gctest/configuration/scavenger_GC_config.xml",
                                 "fvtest/gctest/configuration/scavenger_GC_backout_config.xml",
-                                "fvtest/gctest/configuration/global_GC_config.xml",
-                                "fvtest/gctest/configuration/optavgpause_GC_config.xml"};
+                               	"fvtest/gctest/configuration/global_GC_config.xml",
+								"fvtest/gctest/configuration/optavgpause_GC_config.xml"};
 
 const char *perfTests[] = {"perftest/gctest/configuration/21645_core.20150126.202455.11862202.0001.xml",
-                                "perftest/gctest/configuration/24404_core.20140723.091737.5812.0002.xml"};
+								"perftest/gctest/configuration/24404_core.20140723.091737.5812.0002.xml"};
 void
 GCConfigTest::SetUp()
 {
@@ -609,8 +612,8 @@ GCConfigTest::attachChildEntry(ObjectEntry *parentEntry, ObjectEntry *childEntry
 	if ((uint32_t)parentEntry->numOfRef < slotCount) {
 		fomrobject_t *childSlot = firstSlot + parentEntry->numOfRef;
 		standardWriteBarrierStore(exampleVM->_omrVMThread, parentEntry->objPtr, childSlot, childEntry->objPtr);
-		gcTestEnv->log(LEVEL_VERBOSE, "\tadd child %s(%p[0x%llx]) to parent %s(%p[0x%llx]) slot %p[%llx].\n",
-				childEntry->name, childEntry->objPtr, *(childEntry->objPtr), parentEntry->name, parentEntry->objPtr, *(parentEntry->objPtr), childSlot, (uintptr_t)*childSlot);
+		gcTestEnv->log(LEVEL_VERBOSE, "\tadd child %s(%p[0x%llx]) to parent %s(%p[0x%llx]) slot %p[%llx].\n", 
+        			childEntry->name, childEntry->objPtr, *(childEntry->objPtr), parentEntry->name, parentEntry->objPtr, *(parentEntry->objPtr), childSlot, (uintptr_t)*childSlot);
 		parentEntry->numOfRef += 1;
 	} else {
 		gcTestEnv->log(LEVEL_ERROR, "%s:%d Invalid XML input: numOfFields %d defined for %s(%p[0x%llx]) is not enough to hold child reference for %s(%p[0x%llx]).\n",
@@ -1055,4 +1058,3 @@ INSTANTIATE_TEST_CASE_P(gcFunctionalTest,GCConfigTest,
 
 INSTANTIATE_TEST_CASE_P(perfTest,GCConfigTest,
         ::testing::ValuesIn(perfTests));
-

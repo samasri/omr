@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #if !defined(SCAVENGER_HPP_)
@@ -29,6 +33,7 @@
 
 #include "CollectionStatisticsStandard.hpp"
 #include "Collector.hpp"
+#include "ConcurrentPhaseStatsBase.hpp"
 #include "CopyScanCacheList.hpp"
 #include "CopyScanCacheStandard.hpp"
 #include "CycleState.hpp"
@@ -62,6 +67,7 @@ class MM_Scavenger : public MM_Collector
 	 * Data members
 	 */
 private:
+	MM_CollectorLanguageInterface *_cli;
 	const uintptr_t _objectAlignmentInBytes;	/**< Run-time objects alignment in bytes */
 	bool _isRememberedSetInOverflowAtTheBeginning; /**< Cached RS Overflow flag at the beginning of the scavenge */
 
@@ -103,7 +109,7 @@ private:
 	uintptr_t _cacheLineAlignment; /**< The number of bytes per cache line which is used to determine which boundaries in memory represent the beginning of a cache line */
 	volatile bool _rescanThreadsForRememberedObjects; /**< Indicates that thread-referenced objects were tenured and threads must be rescanned */
 
-	uintptr_t _backOutDoneIndex; /**< snapshot of _doneIndex, when backOut was detected */
+	volatile uintptr_t _backOutDoneIndex; /**< snapshot of _doneIndex, when backOut was detected */
 
 	void *_heapBase;  /**< Cached base pointer of heap */
 	void *_heapTop;  /**< Cached top pointer of heap */
@@ -124,6 +130,8 @@ private:
 	
 	/* TODO: put it parent Collector class and share with Balanced? */ 
 	volatile bool _forceConcurrentTermination;
+	
+	MM_ConcurrentPhaseStatsBase _concurrentPhaseStats;
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
 
 #define IS_CONCURRENT_ENABLED _extensions->isConcurrentScavengerEnabled()
@@ -137,6 +145,8 @@ public:
 	 * Function members
 	 */
 private:
+	void saveMasterThreadTenureTLHRemainders(MM_EnvironmentStandard *env);
+	void restoreMasterThreadTenureTLHRemainders(MM_EnvironmentStandard *env);
 	void setBackOutFlag(MM_EnvironmentBase *env, BackOutState value);
 	MMINLINE bool isBackOutFlagRaised() { return _extensions->isScavengerBackOutFlagRaised(); }
 	MMINLINE bool shouldAbortScanLoop() {
@@ -217,7 +227,7 @@ public:
 	 * @return Whether or not objectPtr should be remembered.
 	 */
 	MMINLINE bool scavengeObjectSlots(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard *scanCache, omrobjectptr_t objectPtr, uintptr_t flags, omrobjectptr_t *rememberedSetSlot);
-	MMINLINE void incrementalScavengeObjectSlots(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr, MM_CopyScanCacheStandard* scanCache, MM_CopyScanCacheStandard **nextScanCache);
+	MMINLINE MM_CopyScanCacheStandard *incrementalScavengeObjectSlots(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr, MM_CopyScanCacheStandard* scanCache);
 
 	MMINLINE bool scavengeRememberedObject(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
 	void scavengeRememberedSetList(MM_EnvironmentStandard *env);
@@ -249,6 +259,9 @@ public:
 	void fixupObjectScan(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
 	bool fixupSlot(GC_SlotObject *slotObject);
 	bool fixupSlotWithoutCompression(volatile omrobjectptr_t *slotPtr);
+	
+	void scavengeRememberedSetListIndirect(MM_EnvironmentStandard *env);
+	void scavengeRememberedSetListDirect(MM_EnvironmentStandard *env);
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
 
 	/**
@@ -272,21 +285,28 @@ public:
 	MMINLINE uintptr_t getFailedTenureLargestObject() { return _failedTenureLargestObject; };
 	MMINLINE bool failedTenureThresholdReached() { return _failedTenureThresholdReached; };
 
-	void completeScanCache(MM_EnvironmentStandard *env);
-	void incrementalScanCacheBySlot(MM_EnvironmentStandard *env);
+	void completeScanCache(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard* scanCache);
+	void incrementalScanCacheBySlot(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard* scanCache);
 
 	MMINLINE MM_CopyScanCacheStandard *aliasToCopyCache(MM_EnvironmentStandard *env, GC_SlotObject *scannedSlot, MM_CopyScanCacheStandard* scanCache, MM_CopyScanCacheStandard* copyCache);
 	MMINLINE uintptr_t scanCacheDistanceMetric(MM_CopyScanCacheStandard* cache, GC_SlotObject *scanSlot);
 	MMINLINE uintptr_t copyCacheDistanceMetric(MM_CopyScanCacheStandard* cache);
 
 	MMINLINE MM_CopyScanCacheStandard *getNextScanCacheFromList(MM_EnvironmentStandard *env);
-	MMINLINE MM_CopyScanCacheStandard *getSurvivorCopyCache(MM_EnvironmentStandard *env);
-	MMINLINE MM_CopyScanCacheStandard *getDeferredCopyCache(MM_EnvironmentStandard *env);
-
 	void addCopyCachesToFreeList(MM_EnvironmentStandard *env);
-
-	MMINLINE bool isWorkAvailableInCache(MM_CopyScanCacheStandard *scanCache);
 	MMINLINE void addCacheEntryToScanListAndNotify(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard *newCacheEntry);
+
+	MMINLINE bool
+	isWorkAvailableInCache(MM_CopyScanCacheStandard *cache)
+	{
+		return (cache->scanCurrent < cache->cacheAlloc);
+	}
+
+	MMINLINE bool
+	isWorkAvailableInCacheWithCheck(MM_CopyScanCacheStandard *cache)
+	{
+		return ((NULL != cache) && isWorkAvailableInCache(cache));
+	}
 
 	/**
 	 * reinitializes the cache with the given base and top addresses.
@@ -348,22 +368,15 @@ public:
 	/**
 	 * Called (typically at the end of GC) to explicitly abandon the TLH remainders (for the calling thread)
 	 */
-	void abandonTLHRemainders(MM_EnvironmentStandard *env);
 	void abandonSurvivorTLHRemainder(MM_EnvironmentStandard *env);
-	void abandonTenureTLHRemainder(MM_EnvironmentStandard *env);
+	void abandonTenureTLHRemainder(MM_EnvironmentStandard *env, bool preserveRemainders = false);
 
 	void reportGCStart(MM_EnvironmentStandard *env);
 	void reportGCEnd(MM_EnvironmentStandard *env);
 	void reportGCIncrementStart(MM_EnvironmentStandard *env);
 	void reportGCIncrementEnd(MM_EnvironmentStandard *env);
 	void reportScavengeStart(MM_EnvironmentStandard *env);
-	void reportScavengeEnd(MM_EnvironmentStandard *env);
-
-	MMINLINE MM_ScavengerHotFieldStats *getHotFieldStats(MM_EnvironmentStandard *env) { return &(env->_hotFieldStats); }
-	void masterClearHotFieldStats();
-	void masterReportHotFieldStats();
-	void clearHotFieldStats(MM_EnvironmentStandard *env);
-	void mergeHotFieldStats(MM_EnvironmentStandard *env);
+	void reportScavengeEnd(MM_EnvironmentStandard *env, bool lastIncrement);
 
 	/**
 	 * Add the specified object to the remembered set.
@@ -410,8 +423,33 @@ public:
 	 */
 	bool processRememberedThreadReference(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
 
-	void clearGCStats(MM_EnvironmentStandard *env);
-	void mergeGCStats(MM_EnvironmentStandard *env);
+	/**
+	 * Clear global (not thread local) stats for current phase/increment
+	 * @param firstIncrement true if first increment in a cycle
+	 */
+	void clearIncrementGCStats(MM_EnvironmentBase *env, bool firstIncrement);
+	/**
+	 * Clear global (not thread local) cumulative cycle stats 
+	 */
+	void clearCycleGCStats(MM_EnvironmentBase *env);
+	/**
+	 * Clear thread local stats for current phase/increment
+	 * @param firstIncrement true if first increment in a cycle
+	 */
+	void clearThreadGCStats(MM_EnvironmentBase *env, bool firstIncrement);
+	/**
+	 * Merge thread local stats for current phase/increment in to global current increment stats
+	 */	
+	void mergeThreadGCStats(MM_EnvironmentBase *env);
+	/**
+	 * Merge global current increment stats in to global cycle stats
+	 * @param firstIncrement true if last increment in a cycle
+	 */		
+	void mergeIncrementGCStats(MM_EnvironmentBase *env, bool lastIncrement);
+	/**
+	 * Common merge logic used for both thread and increment level merges.
+	 */
+	void mergeGCStatsBase(MM_EnvironmentBase *env, MM_ScavengerStats *finalGCStats, MM_ScavengerStats *scavStats);
 	bool canCalcGCStats(MM_EnvironmentStandard *env);
 	void calcGCStats(MM_EnvironmentStandard *env);
 
@@ -508,12 +546,12 @@ protected:
 	 * Perform partial initialization if Garbage Collection is called earlier then GC Master Thread is activated
 	 * @param env Master GC thread.
 	 */
-	virtual void preMasterGCThreadInitialize(MM_EnvironmentBase *env);
+	virtual MM_ConcurrentPhaseStatsBase *getConcurrentPhaseStats() { return &_concurrentPhaseStats; }
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
 	
 public:
 
-	static MM_Scavenger *newInstance(MM_EnvironmentStandard *env, MM_CollectorLanguageInterface *cli, MM_HeapRegionManager *regionManager);
+	static MM_Scavenger *newInstance(MM_EnvironmentStandard *env, MM_HeapRegionManager *regionManager);
 	virtual void kill(MM_EnvironmentBase *env);
 	
 	virtual bool collectorStartup(MM_GCExtensionsBase* extensions);
@@ -522,20 +560,28 @@ public:
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
 	/* API for interaction with MasterGCTread */
 	virtual bool isConcurrentWorkAvailable(MM_EnvironmentBase *env);
+	virtual void preConcurrentInitializeStatsAndReport(MM_EnvironmentBase *env, MM_ConcurrentPhaseStatsBase *stats);
 	virtual uintptr_t masterThreadConcurrentCollect(MM_EnvironmentBase *env);
+	virtual void postConcurrentUpdateStatsAndReport(MM_EnvironmentBase *env, MM_ConcurrentPhaseStatsBase *stats, UDATA bytesConcurrentlyScanned);
 
-	/* master thread */
-	uintptr_t scavengeConcurrent(MM_EnvironmentBase *env, UDATA totalBytesToScavenge, volatile bool *forceExit);
+	/* master thread specific methods */
 	bool scavengeIncremental(MM_EnvironmentBase *env);
-	
 	bool scavengeInit(MM_EnvironmentBase *env);
 	bool scavengeRoots(MM_EnvironmentBase *env);
 	bool scavengeScan(MM_EnvironmentBase *env);
 	bool scavengeComplete(MM_EnvironmentBase *env);
 	
-	/* mutator thread */
-	void mutatorFinalReleaseCopyCaches(MM_EnvironmentBase *env, MM_EnvironmentBase *threadEnvironment);
+	/* mutator thread specific methods */
 	void mutatorSetupForGC(MM_EnvironmentBase *env);
+	
+	/* methods used by either mutator or GC threads */
+	/**
+	 * All open copy caches (even if not full) are pushed onto scan queue. Unused memory is abondoned.
+	 * @param env Invoking thread. Could be master thread on behalf on mutator threads (threadEnvironment) for which copy caches are to be released, or could be mutator or GC thread itself.
+	 * @param threadEnvironment Thread for which copy caches are to be released. Could be either GC or mutator thread.
+	 */
+	void threadFinalReleaseCopyCaches(MM_EnvironmentBase *env, MM_EnvironmentBase *threadEnvironment);
+	
 	/**
 	 * trigger STW phase (either start or end) of a Concurrent Scavenger Cycle 
 	 */ 
@@ -566,7 +612,11 @@ public:
 	 * Enabled/disable approriate thread local resources when starting or finishing Concurrent Scavenger Cycle
 	 */ 
 	void switchConcurrentForThread(MM_EnvironmentBase *env);	
-#endif
+	
+	void reportConcurrentScavengeStart(MM_EnvironmentStandard *env);
+	void reportConcurrentScavengeEnd(MM_EnvironmentStandard *env);
+	
+#endif /* OMR_GC_CONCURRENT_SCAVENGER */
 
 	/**
 	 * Determine whether the object pointer is found within the heap proper.
@@ -687,8 +737,9 @@ public:
 
 	virtual void heapReconfigured(MM_EnvironmentBase *env);
 
-	MM_Scavenger(MM_EnvironmentBase *env, MM_CollectorLanguageInterface *cli, MM_HeapRegionManager *regionManager) :
-		MM_Collector(cli)
+	MM_Scavenger(MM_EnvironmentBase *env, MM_HeapRegionManager *regionManager) :
+		MM_Collector()
+		, _cli(env->getExtensions()->collectorLanguageInterface)
 		, _objectAlignmentInBytes(env->getObjectAlignmentInBytes())
 		, _isRememberedSetInOverflowAtTheBeginning(false)
 		, _extensions(env->getExtensions())

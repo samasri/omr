@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #pragma csect(CODE,"TRCGBase#C")
@@ -94,8 +97,8 @@
 #include "infra/List.hpp"                           // for ListIterator, etc
 #include "infra/Stack.hpp"                          // for TR_Stack
 #include "infra/Checklist.hpp"                      // for TR::NodeCheckList
-#include "infra/TRCfgEdge.hpp"                      // for CFGEdge
-#include "infra/TRCfgNode.hpp"                      // for CFGNode
+#include "infra/CfgEdge.hpp"                        // for CFGEdge
+#include "infra/CfgNode.hpp"                        // for CFGNode
 #include "optimizer/Optimizations.hpp"
 #include "optimizer/DataFlowAnalysis.hpp"
 #include "ras/Debug.hpp"                            // for TR_DebugBase
@@ -138,25 +141,6 @@ static_assert(TR::NumIlOps ==
 
 #define OPT_DETAILS "O^O CODE GENERATION: "
 
-
-
-// Utility function to count the number of bits set in an unsigned 32-bit integer.
-//
-int32_t bitCount32(uint32_t w)
-   {
-   const uint32_t all1   = ~0;
-   const uint32_t mask1h = all1 /  3  << 1;
-   const uint32_t mask2l = all1 /  5;
-   const uint32_t mask4l = all1 / 17;
-   w -= (mask1h & w) >> 1;
-   w = (w & mask2l) + ((w>>2) & mask2l);
-   w = w + (w >> 4) & mask4l;
-   w += w >> 8;
-   w += w >> 16;
-   return w & 0xff;
-   }
-
-
 TR::Node* generatePoisonNode(TR::Compilation *comp, TR::Block *currentBlock, TR::SymbolReference *liveAutoSymRef)
    {
 
@@ -189,7 +173,7 @@ OMR::CodeGenerator::generateNop(TR::Node * node, TR::Instruction *instruction, T
 
 OMR::CodeGenerator::CodeGenerator() :
       _compilation(TR::comp()),
-      _trMemory(TR::comp()->trMemory()),
+      _trMemory(_compilation->trMemory()),
       _liveLocals(0),
       _currentEvaluationTreeTop(0),
       _currentEvaluationBlock(0),
@@ -201,23 +185,18 @@ OMR::CodeGenerator::CodeGenerator() :
       _ialoadUnneeded(self()->comp()->trMemory()),
      _symRefTab(self()->comp()->getSymRefTab()),
      _vmThreadRegister(NULL),
-     _vmThreadLiveCount(0),
      _vmThreadSpillInstr(NULL),
      _stackAtlas(NULL),
      _methodStackMap(NULL),
      _binaryBufferStart(NULL),
      _binaryBufferCursor(NULL),
      _largestOutgoingArgSize(0),
-     _warmCodeEnd(NULL),
-     _coldCodeStart(NULL),
-     _estimatedWarmLength(0),
-     _estimatedColdLength(0),
+     _estimatedCodeLength(0),
      _estimatedSnippetStart(0),
      _accumulatedInstructionLengthError(0),
      _registerSaveDescription(0),
      _extendedToInt64GlobalRegisters(self()->comp()->allocator()),
      _liveButMaybeUnreferencedLocals(NULL),
-     _liveMonitors(NULL),
      _assignedGlobalRegisters(NULL),
      _aheadOfTimeCompile(NULL),
      _globalRegisterTable(NULL),
@@ -233,6 +212,8 @@ OMR::CodeGenerator::CodeGenerator() :
      _last8BitGlobalGPR(0),
      _globalGPRPartitionLimit(0),
      _globalFPRPartitionLimit(0),
+     _firstInstruction(NULL),
+     _appendInstruction(NULL),
      _firstGlobalVRF(-1),
      _lastGlobalVRF(-1),
      _firstOverlappedGlobalVRF(-1),
@@ -270,12 +251,12 @@ OMR::CodeGenerator::CodeGenerator() :
      _allSpillList(getTypedAllocator<TR_BackingStore*>(TR::comp()->allocator())),
      _relocationList(getTypedAllocator<TR::Relocation*>(TR::comp()->allocator())),
      _aotRelocationList(getTypedAllocator<TR::Relocation*>(TR::comp()->allocator())),
+     _staticRelocationList(_compilation->allocator()),
      _breakPointList(getTypedAllocator<uint8_t*>(TR::comp()->allocator())),
      _jniCallSites(getTypedAllocator<TR_Pair<TR_ResolvedMethod,TR::Instruction> *>(TR::comp()->allocator())),
      _lowestSavedReg(0),
      _preJitMethodEntrySize(0),
      _jitMethodEntryPaddingSize(0),
-     _signExtensionFlags(NULL),
      _lastInstructionBeforeCurrentEvaluationTreeTop(NULL),
      _unlatchedRegisterList(NULL),
      _indentation(2),
@@ -300,9 +281,6 @@ OMR::CodeGenerator::CodeGenerator() :
 
    uintptrj_t maxSize = TR::Compiler->vm.getOverflowSafeAllocSize(self()->comp());
    int32_t i;
-
-   for(i = 0; i < 16; i++)
-       _liveRestrictValues[i] = NULL;
 
    for (i = 0; i < NumRegisterKinds; ++i)
       {
@@ -682,7 +660,7 @@ OMR::CodeGenerator::doInstructionSelection()
 
    for (TR::TreeTop *tt = comp->getStartTree(); tt; tt = self()->getCurrentEvaluationTreeTop()->getNextTreeTop())
       {
-      TR::Instruction *prevInstr = comp->getAppendInstruction();
+      TR::Instruction *prevInstr = self()->getAppendInstruction();
       TR::Node *node = tt->getNode();
       TR::ILOpCodes opCode = node->getOpCodeValue();
 
@@ -741,8 +719,7 @@ OMR::CodeGenerator::doInstructionSelection()
          // the others
          self()->getDebug()->saveNodeChecklist(nodeChecklistBeforeDump);
          self()->getDebug()->dumpSingleTreeWithInstrs(tt, NULL, true, false, true, true);
-         trfprintf(comp->getOutFile(),"\n------------------------------\n");
-         trfflush(comp->getOutFile());
+         traceMsg(comp, "\n------------------------------\n");
          }
 
       self()->setCurrentEvaluationTreeTop(tt);
@@ -755,7 +732,7 @@ OMR::CodeGenerator::doInstructionSelection()
 
       if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
          {
-         TR::Instruction *lastInstr = comp->getAppendInstruction();
+         TR::Instruction *lastInstr = self()->getAppendInstruction();
          tt->setLastInstruction(lastInstr == prevInstr ? 0 : lastInstr);
          }
 
@@ -827,16 +804,16 @@ OMR::CodeGenerator::doInstructionSelection()
          self()->getDebug()->restoreNodeChecklist(nodeChecklistBeforeDump);
          if (tt == self()->getCurrentEvaluationTreeTop())
             {
-            trfprintf(comp->getOutFile(),"------------------------------\n");
+            traceMsg(comp, "------------------------------\n");
             self()->getDebug()->dumpSingleTreeWithInstrs(tt, prevInstr->getNext(), true, true, true, false);
             }
          else
             {
             // dump all the trees that the evaluator handled
-            trfprintf(comp->getOutFile(),"------------------------------");
+            traceMsg(comp, "------------------------------");
             for (TR::TreeTop *dumptt = tt; dumptt != self()->getCurrentEvaluationTreeTop()->getNextTreeTop(); dumptt = dumptt->getNextTreeTop())
                {
-               trfprintf(comp->getOutFile(),"\n");
+               traceMsg(comp, "\n");
                self()->getDebug()->dumpSingleTreeWithInstrs(dumptt, NULL, true, false, true, false);
                }
 
@@ -999,27 +976,6 @@ OMR::CodeGenerator::canClobberNodesRegister(
 void
 OMR::CodeGenerator::setVMThreadRequired(bool v)
    {
-   if (self()->comp()->getOption(TR_DisableLateEdgeSplitting) && _liveRegisters[TR_GPR])
-      {
-      if (v)
-         {
-         if (self()->incVMThreadLiveCount() == 1)
-            {
-            _liveRegisters[TR_GPR]->addRegister(_vmThreadRegister);
-            _flags1.set(VMThreadRequired, true);
-            }
-         }
-      else
-         {
-         TR_ASSERT(_vmThreadRegister->isLive(), "Tried to remove the vmThread from live list, but wasn't live\n");
-         TR_ASSERT(_vmThreadLiveCount != 0, "Tried to underflow the VMThread register live count\n");
-         if (self()->decVMThreadLiveCount() == 0)
-            {
-            _flags1.set(VMThreadRequired, false);
-            _liveRegisters[TR_GPR]->registerIsDead(_vmThreadRegister);
-            }
-         }
-      }
    }
 
 bool
@@ -1043,16 +999,21 @@ OMR::CodeGenerator::getSupportsIbyteswap()
    return false;
    }
 
+/**
+ * Query whether [bsil]bitpermute is supported
+ *
+ * \return True if the opcodes are supported in codegen
+ */
+bool
+OMR::CodeGenerator::getSupportsBitPermute()
+   {
+   return false;
+   }
+
 bool
 OMR::CodeGenerator::getSupportsConstantOffsetInAddressing(int64_t value)
    {
    return self()->getSupportsConstantOffsetInAddressing();
-   }
-
-bool
-OMR::CodeGenerator::getIsInWarmCodeCache()
-   {
-   return _flags2.testAny(IsInWarmCodeCache) && !self()->isOutOfLineColdPath();
    }
 
 void
@@ -1089,40 +1050,8 @@ bool OMR::CodeGenerator::terseSimulateTreeEvaluation()
    }
 
 
-
-
 TR::SymbolReference *OMR::CodeGenerator::getSymRef(TR_RuntimeHelper h) { return _symRefTab->getSymRef(h); }
 
-
-bool OMR::CodeGenerator::isMethodInAtomicLongGroup (TR::RecognizedMethod rm)
-   {
-
-   switch (rm)
-      {
-#ifdef J9_PROJECT_SPECIFIC
-      case TR::java_util_concurrent_atomic_AtomicLong_addAndGet:
-      case TR::java_util_concurrent_atomic_AtomicLongArray_addAndGet:
-      case TR::java_util_concurrent_atomic_AtomicLongArray_decrementAndGet:
-      case TR::java_util_concurrent_atomic_AtomicLongArray_getAndAdd:
-      case TR::java_util_concurrent_atomic_AtomicLongArray_getAndDecrement:
-      case TR::java_util_concurrent_atomic_AtomicLongArray_getAndIncrement:
-      case TR::java_util_concurrent_atomic_AtomicLongArray_getAndSet:
-      case TR::java_util_concurrent_atomic_AtomicLongArray_incrementAndGet:
-      case TR::java_util_concurrent_atomic_AtomicLong_decrementAndGet:
-      case TR::java_util_concurrent_atomic_AtomicLong_getAndAdd:
-      case TR::java_util_concurrent_atomic_AtomicLong_getAndDecrement:
-      case TR::java_util_concurrent_atomic_AtomicLong_getAndIncrement:
-      case TR::java_util_concurrent_atomic_AtomicLong_getAndSet:
-      case TR::java_util_concurrent_atomic_AtomicLong_incrementAndGet:
-         return true;
-#endif
-      default:
-         return false;
-      }
-
-
-   return false;
-   }
 
 TR::Linkage *
 OMR::CodeGenerator::getLinkage(TR_LinkageConventions lc)
@@ -1170,18 +1099,6 @@ OMR::CodeGenerator::getCodeStart()
    }
 
 uint32_t
-OMR::CodeGenerator::getWarmCodeLength() // cast explicitly
-   {
-   return (uint32_t)(self()->getWarmCodeEnd() - self()->getCodeStart());
-   }
-
-uint32_t
-OMR::CodeGenerator::getColdCodeLength() // cast explicitly
-   {
-   return (uint32_t)(_coldCodeStart ? self()->getCodeEnd() - self()->getColdCodeStart() : 0);
-   }
-
-uint32_t
 OMR::CodeGenerator::getCodeLength() // cast explicitly
    {
    return (uint32_t)(self()->getCodeEnd() - self()->getCodeStart());
@@ -1220,7 +1137,7 @@ bool OMR::CodeGenerator::supportsNativeLongOperations() { return (TR::Compiler->
 void
 OMR::CodeGenerator::setVMThreadSpillInstruction(TR::Instruction *i)
    {
-   if (_vmThreadSpillInstr == NULL && self()->comp()->getOption(TR_DisableLateEdgeSplitting))
+   if (_vmThreadSpillInstr == NULL)
       {
       _vmThreadSpillInstr = i;
       }
@@ -1485,629 +1402,6 @@ OMR::CodeGenerator::createOrFindClonedNode(TR::Node *node, int32_t numChildren)
    }
 
 
-
-
-int32_t TR_SetMonitorStateOnBlockEntry::addSuccessors(TR::CFGNode * cfgNode,
-                                                         TR_Stack<TR::SymbolReference *> * monitorStack,
-                                                         bool traceIt,
-                                                         bool dontPropagateMonitor,
-                                                         MonitorInBlock monitorType,
-                                                         int32_t callerIndex,
-                                                         bool walkOnlyExceptionSuccs)
-   {
-   if (traceIt)
-      traceMsg(comp(),
-       "\tIn SMSOBE::addSuccessors for cfgNode %d, monitorStack %p dontPropagateMonitor %d monitorType = %d callerIndex %d walkOlyExceptionSuccs %d\n"
-            , cfgNode->getNumber(),monitorStack,dontPropagateMonitor,monitorType,callerIndex,walkOnlyExceptionSuccs);
-
-   bool firstSuccessor = true;
-   // to reiterate:
-   // 3 cases to consider when propagating the monitorStack
-   // 1. MonitorEnter
-   // Normal Edge       -> propagate
-   // Exception Edge    ->
-   //   if syncMethodMonitor from callerIndex=-1
-   //                   -> propagate
-   //   else            -> do not propagate
-   //
-   // 2. MonitorExit (at this stage the monitor has been temporarily pushed on the monitorStack)
-   // Normal Edge       -> pop before propagate
-   // Exception Edge    ->
-   //   check if the exception successor of the current block has the same caller index or not
-   //   if same caller index, then:
-   //   a) in a synchronized method, the catch block will eventually unlock the monitor. so we assume
-   //   that if the blocks are in the same method, then the monitor will be unlocked by the catch block
-   //   b) for a synchronized block, all blocks within the region (including the block with the monexit)
-   //   will always branch to the "catch-all" block inserted by the JIT and not to a user catch block.
-   //   the catch-all block will unlock the monitor and rethrow the exception.
-   //   so in both these cases, we want to push the monitor along the exception successor because the monitor
-   //   will be unlocked eventually.
-   //
-   //   if not the same caller index, then:
-   //   a) the monexit block and the exception successor are in different methods (ie. the monexit - regardless of
-   //   sync method or sync block, came from an inlined method and the successor is in the caller).
-   //   in this case, we dont want to push the monitor along the exception successor because the exception successor
-   //   has no idea that it needs to unlock the monitor.
-   //
-   //                   -> pop before propagate / push before propagate in the case described above
-   //   else            -> propagate the monitorStack (with the monitor pushed on it temporarily) ie. do not pop
-   //
-   // 3. NoMonitor      -> propagate the monitorStack as is
-   //
-   // return value
-   // -1 : default value
-   //  1 : if the monitorStack was propagated with the monitor pushed temporarily
-   //  0 : otherwise
-   //
-   int32_t returnValue = -1;
-
-   TR_SuccessorIterator succs(cfgNode);
-   for (TR::CFGEdge *edge = succs.getFirst(); edge; edge = succs.getNext())
-      {
-      TR::Block * succBlock = toBlock(edge->getTo());
-      // skip the exception successors for now in this walk
-      // they will be processed later
-      //
-      if (walkOnlyExceptionSuccs && !succBlock->isCatchBlock())
-         continue;
-
-      if (succBlock->getEntry())
-         {
-         bool addInfo = true;
-         if (monitorType == MonitorEnter)
-            {
-            if (traceIt)
-               traceMsg(comp(), "\tIn TR_SetMonitorStateOnBlockEntry::addSuccessors monitorType = MonitorEnter  block %d\n", succBlock->getNumber());
-            if (succBlock->isCatchBlock() && dontPropagateMonitor)
-               {
-               returnValue = 0;
-               addInfo = false;
-               }
-            }
-
-         if (monitorType == MonitorExit)
-            {
-            if (walkOnlyExceptionSuccs)
-               {
-               if (callerIndex != succBlock->getEntry()->getNode()->getByteCodeInfo().getCallerIndex())
-                  {
-                  returnValue = 0;
-                  addInfo = false;
-                  }
-               else
-                  returnValue = 1; // push the monitor along this exception edge
-               }
-            else if (succBlock->isCatchBlock()) // already processed during exception successors walk
-               continue;
-            }
-
-         if (traceIt)
-            traceMsg(comp(), "process succBlock %d propagate (t/f: %d) isCatchBlock=%d monitorType=%d callerIndex=%d entryCallerIndex=%d\n", succBlock->getNumber(), addInfo, succBlock->isCatchBlock(), monitorType, callerIndex, succBlock->getEntry()->getNode()->getByteCodeInfo().getCallerIndex());
-
-         bool popMonitor = false;
-         if (monitorStack)
-            {
-            // pop the last element of the stack if dontPropagateMonitor is true
-            //
-            if (!addInfo &&
-                !monitorStack->isEmpty())
-               {
-               popMonitor = true;
-               }
-
-            if (succBlock->getVisitCount() != _visitCount)
-               {
-               TR_Stack<TR::SymbolReference *> *newMonitorStack = new (trHeapMemory()) TR_Stack<TR::SymbolReference *>(*monitorStack);
-
-               if (traceIt)
-                  traceMsg(comp(), "\tIn SMSOnBE::addSuccesors  created newMonitorStack %p and monitorStack %p\n", newMonitorStack,monitorStack);
-
-               if (popMonitor)
-                  {
-                  if (traceIt)
-                     traceMsg(comp(), "popping monitor symRef=%d before propagation\n", newMonitorStack->top()->getReferenceNumber());
-                  newMonitorStack->pop();
-                  }
-
-               if (_liveMonitorStacks->find(succBlock->getNumber()) != _liveMonitorStacks->end())
-                  {
-                  _liveMonitorStacks->erase(succBlock->getNumber());
-                  }
-               (*_liveMonitorStacks)[succBlock->getNumber()] = newMonitorStack;
-               if (traceIt)
-                  traceMsg(comp(), "adding monitorstack to successor %d (%p size %d)\n", succBlock->getNumber(), newMonitorStack, newMonitorStack->size());
-               }
-            else 
-               {
-               // the block has been propagated already but we want to verify the monitor state is consistent
-               // skip osr blocks here because the monitor state of osrBlocks don't have to be consistent
-               if (!succBlock->isOSRCatchBlock() && !succBlock->isOSRCodeBlock()) 
-                  {
-                  if (!isMonitorStateConsistentForBlock(succBlock, monitorStack, popMonitor))               
-                     comp()->cg()->setLmmdFailed();
-                  else
-                     {
-                     if (traceIt)
-                        traceMsg(comp(), "verified block_%d monitorState is consistent\n", succBlock->getNumber());
-                     }
-                  }
-               continue;
-               }
-            }
-         else if (succBlock->getVisitCount() == _visitCount)
-            {
-            if(!succBlock->isOSRCatchBlock() && !succBlock->isOSRCodeBlock()) 
-               {
-               if (!isMonitorStateConsistentForBlock(succBlock, monitorStack, popMonitor))               
-                  comp()->cg()->setLmmdFailed();
-               else if (traceIt)
-                  traceMsg(comp(), "verified block_%d monitorState is consistent\n", succBlock->getNumber());
-               }
-            continue;
-            }
-
-         if (traceIt)
-            traceMsg(comp(), "\tIn SMSOnBE::addSuccessors adding block %d to blocksToVisit\n", succBlock->getNumber());
-         _blocksToVisit.push(succBlock);
-         }
-      }
-
-   return returnValue;
-   }
-
-bool TR_SetMonitorStateOnBlockEntry::isMonitorStateConsistentForBlock( TR::Block *block, TR_Stack<TR::SymbolReference *> *newMonitorStack, bool popMonitor)
-   {
-   TR_Stack<TR::SymbolReference *> *oldMonitorStack = _liveMonitorStacks->find(block->getNumber()) != _liveMonitorStacks->end() ? 
-      (*_liveMonitorStacks)[block->getNumber()] : NULL; 
-   static const bool traceItEnv = feGetEnv("TR_traceLiveMonitors") ? true : false;
-   bool traceIt = traceItEnv || comp()->getOption(TR_TraceLiveMonitorMetadata);
-   
-   if (traceIt)
-      traceMsg(comp(), "MonitorState block_%d: oldMonitorStack %p newMonitorStack %p popMonitor %d\n", block->getNumber(), oldMonitorStack, newMonitorStack, popMonitor);
-
-   // first step: check if both monitor stacks are empty
-   bool oldMonitorStackEmpty = false;
-   bool newMonitorStackEmpty = false;
-  
-   if (!oldMonitorStack || oldMonitorStack->isEmpty())   
-      oldMonitorStackEmpty = true;
-   if (!newMonitorStack || newMonitorStack->isEmpty()
-       || (newMonitorStack->size() == 1 && popMonitor))
-      newMonitorStackEmpty = true;
-   if (oldMonitorStackEmpty != newMonitorStackEmpty)
-      {
-      if (traceIt)
-         traceMsg(comp(), "MonitorState inconsistent for block_%d: oldMonitorStack isEmpty %d, newMonitorStack isEmpty %d\n", block->getNumber(), oldMonitorStackEmpty, newMonitorStackEmpty);
-      return false;
-      }
-   else if (oldMonitorStackEmpty)
-      return true;
-
-   // second step: check if the monitor stacks are the same size
-   int32_t oldSize = oldMonitorStack->size();
-   int32_t newSize = newMonitorStack->size();
-   if (popMonitor)
-      newSize--;
-   if (newSize != oldSize)
-      {
-      if (traceIt)
-         traceMsg(comp(), "MonitorState inconsistent for block_%d: oldMonitorStack size %d, newMonitorStack size %d\n",block->getNumber(), oldSize, newSize);
-      return false;
-      }
-
-   // third step: check if all the monitors in both stacks are the same
-   for (int i = oldMonitorStack->topIndex(); i>= 0; i--)
-      {
-      if (newMonitorStack->element(i)->getReferenceNumber() != oldMonitorStack->element(i)->getReferenceNumber()) 
-         {
-         if (traceIt)
-            traceMsg(comp(), "MonitorState inconsistent for block_%d: oldMonitorStack(%d) symRef=%d, newMonitorStack(%d) symRef=%d\n",block->getNumber(), i, oldMonitorStack->element(i)->getReferenceNumber(), i, newMonitorStack->element(i)->getReferenceNumber());
-         return false;
-         }
-      }
-   return true;
-   }
-
-// this routine is used to decide if the monitorStack needs to be popped
-// the analysis needs to be careful in particular for DLT compiles as there are
-// several scenarios as the DLT control could land into the middle of a
-// nested (several levels deep) synchronized region
-// a) if the monexit is at callerIndex=-1,
-//      this means that the monitorStack could be imbalanced
-//      i) if synchronized method then the syncObjectTemp would have been used to
-//      initialize the hidden slot in the DLT entry (monitorStack size is 1) and
-//      then control could branch into the middle of a synchronized region (without
-//      ever seeing any monents). At the monexit, the analysis would then try to pop
-//      the lone monitor on the stack so prevent this by checking if the stack size is 1.
-//      This is done because the special slot needs to be live across the entire method
-//
-//      ii) an improvement to i) is done at blocks that exit the method. in these cases,
-//      the analysis would have encountered the monexits corresponding to the synchronized
-//      'this' so it needs to empty the stack
-//
-//      iii) an exception to i) is when the method is a static synchronized method. in this
-//      case, the syncObjectTemp is not used to initialize the monitor slot in the DLT entry
-//      (so the monitorStack size is 0). so the analysis should avoid any special checks
-//
-//      in case i) or iii) fails, this means that the DLT control landed straight into the sync
-//      region (with no monitorStack), in this case the analysis needs to ensure that an empty
-//      monitorStack is not popped
-//
-//
-// b) if the monexit is not at callerIndex=-1, then this means that the monexit was
-// part of a monent-monexit region that would have normally appeared in the method. an imbalance
-// in the monitorStack indicates an error, but return the default answer as "yes", the stack
-// can be popped.
-//
-// c) if not DLT, then return the default answer as "yes"
-//
-//
-static bool canPopMonitorStack(TR::Compilation *comp,
-                                 TR_Stack<TR::SymbolReference *> * monitorStack,
-                                 TR::Node *node,
-                                 bool blockExitsMethod,
-                                 bool traceIt)
-   {
-   int32_t callerIndex = node->getByteCodeInfo().getCallerIndex();
-   if (comp->isDLT())
-      {
-      if (callerIndex == -1)
-         {
-         if (comp->getJittedMethodSymbol()->isSynchronised())
-            {
-            // We have the special slot set up at DLT entry. Let us avoid resetting
-            // the bit for this special slot so that we do not have any wrong GC maps
-            // TODO : if we need to empty the monitor stack at the end of the method
-            // then pop it off the stack only when we reach a block whose successor is
-            // the dummy exit block
-            //
-            if (monitorStack->size() == 1 &&
-                  !comp->getJittedMethodSymbol()->isStatic() &&
-                  !blockExitsMethod)
-               {
-               if (traceIt)
-                   traceMsg(comp, "monitorStack is empty (except for special DLT sync object slot) for DLT compile at monexit %p\n", node);
-               return false;
-               }
-            else if (monitorStack->isEmpty())
-               {
-               if (traceIt)
-                  traceMsg(comp, "monitorStack is empty for DLT compile at monexit %p\n", node);
-               return false;
-               }
-            }
-         else
-            {
-            if (monitorStack->isEmpty())
-               {
-                if (traceIt)
-                   traceMsg(comp, "monitorStack is empty for non-synchronized DLT compile at monexit %p\n", node);
-                return false;
-               }
-            }
-         }
-      else
-         {
-         // TODO : could add an assert error here : check if the elem to be popped off
-         // from the monitor stack for your caller index and assert if there is not
-         /*
-         if (!monitorStack->isEmpty() &&
-               monitorStack->top())
-            {
-            if (monitorStack->top()->getOwningMethodIndex() != callerIndex)
-               traceMsg(comp(), "unbalanced monitorStack, trying to pop %d but top is %d symRef: %d\n", callerIndex, monitorStack->top()->getOwningMethodIndex(), monitorStack->top()->getReferenceNumber());
-            TR_ASSERT(monitorStack->top()->getOwningMethodIndex() == callerIndex, "unbalanced monitorStack, trying to pop %d but top is %d\n", callerIndex, monitorStack->top()->getOwningMethodIndex());
-            }
-         */
-         return true;
-         }
-      }
-
-   return true;
-   }
-
-static bool needToPushMonitor(TR::Compilation *comp, TR::Block *block, bool traceIt)
-   {
-   // this routine is needed to decide if the monitor needs to be temporarily
-   // pushed back onto the stack for the successor
-   // for a sequence such as this for a synchronized block:
-   // synchronized {
-   // ...
-   // }
-   // return
-   // BBEnd
-   //
-   // older javac includes the return in the exception range (for the catch-all block)
-   // when MethodEnter/MethodExit hooks are enabled, we split the blocks as follows:
-   // synchronized {
-   // ...
-   // }
-   // check the hook bit
-   // BBEnd
-   // BBStart <-- new block after split
-   // return
-   // BBEnd
-   // ...
-   // since the return is included in the exception range, the new blocks (after the split)
-   // also have exception successors to the catch-all block. this results in unbalanced
-   // monitors because we would have popped the monitorStack at the block containing the monexit
-   // new javac seem to correctly exclude the return from the exception range
-   // To support this case, walk the successors of the current block and check if the successor
-   // has identical exception successors.
-   //
-   // A new case.  When a transaction exists, the monexitfence is in a separate block from the
-   // monexit and the tfinish.  So the two blocks will generally have an exception edge with the same destination block
-   // So for this case don't return true.  *Shudder*
-
-   bool retval = false;
-   for (auto e = block->getSuccessors().begin(); e != block->getSuccessors().end(); ++e)
-      {
-      TR::Block *succ = (*e)->getTo()->asBlock();
-      if (comp->getFlowGraph()->compareExceptionSuccessors(block, succ) == 0)
-         {
-         if (traceIt)
-            traceMsg(comp, "found identical exception successors for block %d and succ %d\n", block->getNumber(), succ->getNumber());
-
-         retval = true;
-         for (TR::TreeTop *tt = succ->getEntry(); tt != succ->getExit() ; tt = tt->getNextTreeTop())
-            {
-            TR::Node *aNode = tt->getNode();
-
-            if (aNode && (aNode->getOpCodeValue() == TR::tfinish || aNode->getOpCodeValue() == TR::monexit ||
-                          ((aNode->getOpCodeValue() == TR::treetop|| aNode->getOpCodeValue() == TR::NULLCHK) && aNode->getFirstChild()->getOpCodeValue() == TR::monexit )
-                          ))
-               {
-               if(traceIt)
-                  traceMsg(comp, "overriding identical exception decision because node %p in block %d is either monexit or tfinish",aNode,succ->getNumber());
-               retval = false;
-               break;
-               }
-            }
-         break;
-         }
-      }
-   return retval;
-   }
-
-void TR_SetMonitorStateOnBlockEntry::set(bool& lmmdFailed, bool traceIt)
-   {
-   addSuccessors(comp()->getFlowGraph()->getStart(), 0, traceIt);
-   static bool traceInitMonitorsForExceptionAfterMonexit = feGetEnv("TR_traceInitMonitorsForExceptionAfterMonexit")? true: false;
-
-   while (!_blocksToVisit.isEmpty())
-      {
-      TR::Block * block = _blocksToVisit.pop();
-      if (block->getVisitCount() == _visitCount)
-         continue;
-      block->setVisitCount(_visitCount);
-
-      if (traceIt)
-         traceMsg(comp(), "block to process: %d\n", block->getNumber());
-
-      TR_Stack<TR::SymbolReference *> *monitorStack =
-         (_liveMonitorStacks->find(block->getNumber()) != _liveMonitorStacks->end()) ?
-         (*_liveMonitorStacks)[block->getNumber()] :
-         NULL;
-
-      if (traceIt && monitorStack && !monitorStack->isEmpty())
-         traceMsg(comp(), "top of the stack symRef=%d, and size=%d\n", monitorStack->top()->getReferenceNumber(), monitorStack->size());
-      else if (traceIt)
-         traceMsg(comp(), "monitor stack is empty\n");
-
-      bool blockHasMonent = false;
-      bool blockHasMonexit = false;
-
-      bool blockExitsMethod = false;
-      TR_SuccessorIterator succs(block);
-      for (TR::CFGEdge *edge = succs.getFirst(); edge; edge = succs.getNext())
-         {
-         if (edge->getTo()->getNumber() == comp()->getFlowGraph()->getEnd()->getNumber())
-            blockExitsMethod = true;
-         }
-
-      bool isSyncMethodMonent = false;
-      bool isSyncMethodMonexit = false;
-      TR::SymbolReference *monitorStackTop = NULL;
-      int32_t callerIndex = -1;
-      int32_t monitorPoppedForExceptionSucc = 1;
-      int32_t monitorEnterStore = 0;
-      int32_t monitorExitFence= 0;
-      for (TR::TreeTop * tt = block->getEntry(); ; tt = tt->getNextTreeTop())
-         {
-         TR::Node * node = tt->getNode();
-         if (node->getOpCodeValue() == TR::treetop || node->getOpCodeValue() == TR::NULLCHK)
-            node = node->getFirstChild();
-
-         TR::ILOpCodes opCode = node->getOpCodeValue();
-
-         if ((node->getOpCode().isStore() &&            //only monents are represented by this store now
-               node->getSymbol()->holdsMonitoredObject() &&
-               !node->isLiveMonitorInitStore()))
-            {
-            //problem with lmmd only occurs when the exception successor is not 0
-            if(!block->getExceptionSuccessors().empty())
-               monitorEnterStore++;
-
-            callerIndex = node->getByteCodeInfo().getCallerIndex();
-            if (monitorStack)
-               {
-               monitorStack = new (trHeapMemory()) TR_Stack<TR::SymbolReference *>(*monitorStack);
-               if (traceIt)
-                  traceMsg(comp(), "adding monitor to stack symbol=%p symRef=%d (size=%d) (node %p)\n", node->getSymbol(), node->getSymbolReference()->getReferenceNumber(), monitorStack->size()+1,node);
-               }
-            else
-               {
-               monitorStack = new (trHeapMemory()) TR_Stack<TR::SymbolReference *>(trMemory());
-               if (traceIt)
-                  traceMsg(comp(), "adding monitor to fresh stack symbol=%p symRef=%d (size=%d) (node %p)\n", node->getSymbol(), node->getSymbolReference()->getReferenceNumber(), monitorStack->size()+1,node);
-               }
-
-            monitorStack->push(node->getSymbolReference());
-            blockHasMonent = true;
-
-            // if the callerIndex of the node is *not* -1, then this node
-            // came from a synchronized method that was inlined. in this case,
-            // don't push the monitor info along exception successors for this block.
-            // the typical pattern should be:
-            // ...
-            // astore <holdsMonitoredObject>
-            // monent
-            // BBEnd   // exception successor of this block will not unlock the object (it
-            //         // actually belongs to the caller
-            // BBStart //start of inlined method, these blocks will have the catchall block
-            //         //that unlocks the monitor
-            //
-            if (node->getSymbolReference()->holdsMonitoredObjectForSyncMethod() &&
-                  (callerIndex == -1))
-               isSyncMethodMonent = true;
-            }
-         else if ( (node->getOpCode().getOpCodeValue() == TR::monexitfence) &&
-                    monitorStack && !monitorStack->isEmpty() &&
-                    canPopMonitorStack(comp(), monitorStack, node, blockExitsMethod, traceIt))
-            {
-            if(!block->getExceptionSuccessors().empty())
-               monitorExitFence++;
-
-            // The check for this assume was moved in the if statement above.
-            // JCK has tests for unbalanced monitor exits and we would crash during compilation
-            // if we tried to pop a non-existent monitor off the stack.
-            // TR_ASSERT(!monitorStack->isEmpty(), "monitor stack is empty at block %d node %p\n",
-            //         block->getNumber(), node);
-            //
-            monitorStackTop = monitorStack->top();
-            if (monitorStackTop && monitorStackTop->holdsMonitoredObjectForSyncMethod())
-               isSyncMethodMonexit = true;
-            blockHasMonexit = true;
-            callerIndex = node->getByteCodeInfo().getCallerIndex();
-
-            ///traceMsg(comp(), "blockHasMonexit = %d isSyncMethodMonitor = %d\n", blockHasMonexit, isSyncMethodMonitor);
-            // process all the exception successors at this point
-            // the normal successors will be processed at the end of the block
-            //
-            monitorPoppedForExceptionSucc = addSuccessors(block, monitorStack, traceIt, false /*not used*/, MonitorExit, callerIndex, true /*walkOnlyExceptionSuccs*/);
-            // monexit
-            if (monitorStack->topIndex() == 0)
-               {
-               monitorStack = new (trHeapMemory()) TR_Stack<TR::SymbolReference *>(*monitorStack);
-               if (traceIt)
-                  traceMsg(comp(), "popping monitor off stack symRef=%d, BEFORE pop size=%d, ", monitorStack->top()->getReferenceNumber(), monitorStack->size());
-               monitorStack->pop();
-               if (traceIt)
-                  traceMsg(comp(), "AFTER size=%d\n", monitorStack->size());
-               }
-
-            else
-               {
-               monitorStack = new (trHeapMemory()) TR_Stack<TR::SymbolReference *>(*monitorStack);
-               if (traceIt)
-                  traceMsg(comp(), "popping monitor off stack symRef=%d, BEFORE pop size=%d, ", monitorStack->top()->getReferenceNumber(), monitorStack->size());
-               monitorStack->pop();
-               if (traceIt)
-                  traceMsg(comp(), "AFTER size=%d\n", monitorStack->size());
-               }
-            }
-         else if(node->getOpCode().getOpCodeValue() != TR::monexit && node->exceptionsRaised())
-            {
-            if (monitorExitFence > 0)
-               {
-               auto edge = block->getExceptionSuccessors().begin();
-               for (; edge != block->getExceptionSuccessors().end(); ++edge)
-                  {
-                  TR::Block * succBlock = toBlock((*edge)->getTo());
-                  if (node->getByteCodeInfo().getCallerIndex() ==
-                        succBlock->getEntry()->getNode()->getByteCodeInfo().getCallerIndex())
-                     {
-                     if (traceInitMonitorsForExceptionAfterMonexit)
-                           traceMsg(comp(), "block_%d has exceptions after monexit with catch block in the same method %s\n", block->getNumber(), comp()->signature());
-                     lmmdFailed = true;
-                     break;
-                     }
-                  }
-               }
-            }
-
-         if (tt == block->getExit())
-            {
-            bool dontPropagateMonitor = false; // so propagate it by default!
-            MonitorInBlock monitorType = NoMonitor;
-            if ((monitorExitFence+monitorEnterStore)>= 2)
-               {
-               if (traceIt)
-                  traceMsg(comp(), "block_%d has monitorEnterStore=%d monitorExitFence=%d\n", block->getNumber(), monitorEnterStore, monitorExitFence);
-               lmmdFailed = true;
-               }
-
-            if (blockHasMonent)
-               {
-               // the monitorStack will contain the monitor to be pushed
-               // along the successors at this point
-               // a) if the edge is a normal edge, then just propagate the stack
-               // b) if the edge is an exception edge, then only push the monitor on
-               // the stack if it is a syncMethodMonitor. otherwise don't propagate
-               // the monitor to the exception successors (this is because if there is
-               // an exception successor of a block containing the monent and control to
-               // the exception is reached, this means that the monitor is not locked, ie
-               // there is no monexit to pop the stack)
-               //
-               monitorType = MonitorEnter;
-               dontPropagateMonitor = !isSyncMethodMonent;
-               }
-
-            if (blockHasMonexit)
-               {
-               // the monitorStack will be popped under 2 conditions:
-               // a) if the successor is a normal edge (ie. not an exception edge)
-               // b) if the successor is an exception edge, then pop the stack *only* if the
-               // monexit came from a synchronized method (check the callerIndex on the catch block
-               // and the monexit)
-               //
-               // isSyncMethodMonexit will control b)
-               //
-               monitorType = MonitorExit;
-               dontPropagateMonitor = isSyncMethodMonexit;
-
-               if ((monitorPoppedForExceptionSucc > 0) &&
-                     monitorStackTop &&
-                     needToPushMonitor(comp(), block, traceIt))
-                  {
-                  if (traceIt)
-                     traceMsg(comp(), "pushing monexit symRef=%d back temporarily\n", monitorStackTop->getReferenceNumber());
-                  monitorStack->push(monitorStackTop);
-                  }
-               }
-
-            if (traceIt)
-               traceMsg(comp(), "blockHasMonent=%d blockHasMonexit=%d dontPropagateMonitor=%d callerIndex=%d monitorPoppedForExceptionSucc=%d\n", blockHasMonent, blockHasMonexit, dontPropagateMonitor, callerIndex, monitorPoppedForExceptionSucc);
-
-            addSuccessors(block, monitorStack, traceIt, dontPropagateMonitor, monitorType, callerIndex);
-            break;
-            }
-         }
-      }
-
-#ifdef J9_PROJECT_SPECIFIC
-   static bool disableCountingMonitors = feGetEnv("TR_disableCountingMonitors")? true: false;
-   if (lmmdFailed && !disableCountingMonitors)
-      {
-      TR_Array<List<TR::RegisterMappedSymbol> *> & monitorAutos = comp()->getMonitorAutos();
-      for (int32_t i=0; i<monitorAutos.size(); i++)
-         {
-         List<TR::RegisterMappedSymbol> *autos = monitorAutos[i];
-         if (autos)
-            {
-            ListIterator<TR::RegisterMappedSymbol> iterator(autos);
-            for (TR::RegisterMappedSymbol * a = iterator.getFirst(); a; a = iterator.getNext())
-               {
-               TR::DebugCounter::incStaticDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "lmmdFailed/(%s)", comp()->signature()));
-               a->setUninitializedReference();
-               }
-            }
-         }
-      }
-#endif
-   }
-
-
 // returns true iff, based on opcodes and offsets if two store/load/address nodes are definitely disjoint (i.e. guaranteed not to overlap)
 // any combination of stores,loads and address nodes are allowed as node1 and node2
 // The return tells how node1 and node2 is overlapped (TR_StorageOverlapKind)
@@ -2254,19 +1548,6 @@ OMR::CodeGenerator::nodeMatches(TR::Node *addr1, TR::Node *addr2, bool addresses
    else if (addr1->getType().isIntegral() && addr1->getOpCode().isLoadConst() &&
             addr2->getType().isIntegral() && addr2->getOpCode().isLoadConst() &&
             addr1->get64bitIntegralValue() == addr2->get64bitIntegralValue())
-      {
-      foundMatch = true;
-      }
-   else if (addr1->getOpCodeValue() == TR::aload && addr2->getOpCodeValue() == TR::aload &&
-            self()->getLinkage()->isAddressOfStaticSymRef(addr1->getSymbolReference()) &&
-            self()->getLinkage()->isAddressOfStaticSymRef(addr2->getSymbolReference()) &&
-            addr1->getSymbolReference() == addr2->getSymbolReference())
-      {
-      foundMatch = true;
-      }
-   else if (addr1->getOpCodeValue() == TR::aload && addr2->getOpCodeValue() == TR::aload &&
-            self()->getLinkage()->isAddressOfPrivateStaticSymRef(addr1->getSymbolReference()) &&
-            self()->getLinkage()->isAddressOfPrivateStaticSymRef(addr2->getSymbolReference()))
       {
       foundMatch = true;
       }
@@ -2608,8 +1889,8 @@ OMR::CodeGenerator::allocateCodeMemory(uint32_t size, bool isCold, bool isMethod
 void
 OMR::CodeGenerator::resizeCodeMemory()
    {
-   int32_t warmCodeLength = self()->getWarmCodeEnd()-self()->getBinaryBufferStart();
-   self()->fe()->resizeCodeMemory(self()->comp(), self()->getBinaryBufferStart(), warmCodeLength);
+   int32_t codeLength = self()->getCodeEnd()-self()->getBinaryBufferStart();
+   self()->fe()->resizeCodeMemory(self()->comp(), self()->getBinaryBufferStart(), codeLength);
    }
 
 bool
@@ -3265,24 +2546,13 @@ OMR::CodeGenerator::computeBlocksWithCalls()
 From codegen/CodeGenerator.cpp to make the size of instructions to patch smarter.
 **/
 
-static bool isStopTheWorldGuard(TR::Node *node)
+bool OMR::CodeGenerator::areMergeableGuards(TR::Instruction *earlierGuard, TR::Instruction *laterGuard)
    {
-   return node->isHCRGuard() || node->isOSRGuard();
-   }
-
-static bool mergeableGuard(TR::Instruction *guard)
-   {
-   static char *mergeOnlyHCRGuards = feGetEnv("TR_MergeOnlyHCRGuards");
-   return mergeOnlyHCRGuards ? isStopTheWorldGuard(guard->getNode()) : guard->getNode()->isNopableInlineGuard();
-   }
-
-static bool mergeableGuards(TR::Instruction *earlierGuard, TR::Instruction *laterGuard)
-   {
-   return    mergeableGuard(earlierGuard)
-          && mergeableGuard(laterGuard)
+   return    earlierGuard->isMergeableGuard()
+          && laterGuard->isMergeableGuard()
           && earlierGuard->getNode()->getBranchDestination()
              == laterGuard->getNode()->getBranchDestination()
-          && (!isStopTheWorldGuard(earlierGuard->getNode()) || isStopTheWorldGuard(laterGuard->getNode()));
+          && (!earlierGuard->getNode()->isStopTheWorldGuard() || laterGuard->getNode()->isStopTheWorldGuard());
    }
 
 TR::Instruction *OMR::CodeGenerator::getVirtualGuardForPatching(TR::Instruction *vgdnop)
@@ -3290,7 +2560,7 @@ TR::Instruction *OMR::CodeGenerator::getVirtualGuardForPatching(TR::Instruction 
    TR_ASSERT(vgdnop->isVirtualGuardNOPInstruction(),
       "getGuardForPatching called with non VirtualGuardNOPInstruction [%p] - this only works for guards!", vgdnop);
 
-   if (!mergeableGuard(vgdnop))
+   if (!vgdnop->isMergeableGuard())
       return vgdnop;
 
    // If there are no previous instructions the instruction must be the patch point
@@ -3314,7 +2584,7 @@ TR::Instruction *OMR::CodeGenerator::getVirtualGuardForPatching(TR::Instruction 
       {
       if (prevI->isVirtualGuardNOPInstruction())
          {
-         if (mergeableGuards(prevI, vgdnop))
+         if (self()->areMergeableGuards(prevI, vgdnop))
             {
             toReturn = prevI;
             }
@@ -3325,7 +2595,7 @@ TR::Instruction *OMR::CodeGenerator::getVirtualGuardForPatching(TR::Instruction 
          }
       else
          {
-         if (mergeableGuard(prevI) &&
+         if (prevI->isMergeableGuard() &&
              prevI->getNode()->getBranchDestination() == vgdnop->getNode()->getBranchDestination())
             {
             // instruction tied to an acceptable guard so do nothing and continue
@@ -3346,7 +2616,8 @@ TR::Instruction *OMR::CodeGenerator::getVirtualGuardForPatching(TR::Instruction 
    if (toReturn != vgdnop)
       {
       TR::DebugCounter::incStaticDebugCounter(self()->comp(), TR::DebugCounter::debugCounterName(self()->comp(), "guardMerge/(%s)", self()->comp()->signature()));
-      traceMsg(self()->comp(), "vgdnop instruction [%p] begins scanning for patch instructions for mergeable guard [%p]\n", vgdnop, toReturn);
+      if (self()->comp()->getOption(TR_TraceCG))
+         traceMsg(self()->comp(), "vgdnop instruction [%p] begins scanning for patch instructions for mergeable guard [%p]\n", vgdnop, toReturn);
       }
    return toReturn;
    }
@@ -3361,7 +2632,7 @@ TR::Instruction
       {
       if (nextI->isVirtualGuardNOPInstruction())
          {
-         if (!mergeableGuards(vgdnop, nextI))
+         if (!self()->areMergeableGuards(vgdnop, nextI))
             return NULL;
          continue;
          }
@@ -3403,12 +2674,6 @@ OMR::CodeGenerator::sizeOfInstructionToBePatched(TR::Instruction *vgdnop)
         return 0;
    }
 
-bool
-OMR::CodeGenerator::requiresAtomicPatching(TR::Instruction *vgdnop)
-   {
-   return !(vgdnop->getNode() && isStopTheWorldGuard(vgdnop->getNode()));
-   }
-
 int32_t
 OMR::CodeGenerator::sizeOfInstructionToBePatchedHCRGuard(TR::Instruction *vgdnop)
    {
@@ -3420,7 +2685,7 @@ OMR::CodeGenerator::sizeOfInstructionToBePatchedHCRGuard(TR::Instruction *vgdnop
       {
       if (nextI->isVirtualGuardNOPInstruction())
          {
-         if (!mergeableGuards(vgdnop, nextI))
+         if (!self()->areMergeableGuards(vgdnop, nextI))
             break;
          continue;
          }
@@ -3430,7 +2695,7 @@ OMR::CodeGenerator::sizeOfInstructionToBePatchedHCRGuard(TR::Instruction *vgdnop
 
       accumulatedSize += nextI->getBinaryLengthLowerBound();
 
-      if (accumulatedSize > self()->getMaxPatchableInstructionLength())
+      if (accumulatedSize > nextI->getMaxPatchableInstructionLength())
          break;
 
       TR::Node * node = nextI->getNode();
@@ -3768,7 +3033,7 @@ OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaRe
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *cursor, const char *name, int32_t delta, int8_t fidelity, int32_t staticDelta)
    {
    if (!cursor)
-      cursor = self()->comp()->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
    if (!self()->comp()->getOptions()->enableDebugCounters())
       return cursor;
    if (delta == 0)
@@ -3783,7 +3048,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *curso
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *cursor, const char *name, TR::Register *deltaReg, int8_t fidelity, int32_t staticDelta)
    {
    if (!cursor)
-      cursor = self()->comp()->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
    if (!self()->comp()->getOptions()->enableDebugCounters())
       return cursor;
    // We won't do any aggregation (histogram buckets, bytecode breakdown, etc.) if we're getting the delta from a register
@@ -3796,7 +3061,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *curso
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::RegisterDependencyConditions &cond, int32_t delta, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->comp()->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
    if (!self()->comp()->getOptions()->enableDebugCounters())
       return cursor;
    if (delta == 0)
@@ -3811,7 +3076,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaReg, TR::RegisterDependencyConditions &cond, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->comp()->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
    if (!self()->comp()->getOptions()->enableDebugCounters())
       return cursor;
    // We won't do any aggregation (histogram buckets, bytecode breakdown, etc.) if we're getting the delta from a register
@@ -3824,7 +3089,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR_ScratchRegisterManager &srm, int32_t delta, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->comp()->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
    if (!self()->comp()->getOptions()->enableDebugCounters())
       return cursor;
    if (delta == 0)
@@ -3839,7 +3104,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR_S
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaReg, TR_ScratchRegisterManager &srm, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->comp()->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
    if (!self()->comp()->getOptions()->enableDebugCounters())
       return cursor;
    // We won't do any aggregation (histogram buckets, bytecode breakdown, etc.) if we're getting the delta from a register
@@ -3891,7 +3156,7 @@ void OMR::CodeGenerator::addRelocation(TR::Relocation *r)
       }
    }
 
-void OMR::CodeGenerator::addAOTRelocation(TR::Relocation *r, char *generatingFileName, uintptr_t generatingLineNumber, TR::Node *node)
+void OMR::CodeGenerator::addAOTRelocation(TR::Relocation *r, const char *generatingFileName, uintptr_t generatingLineNumber, TR::Node *node)
    {
    TR_ASSERT(generatingFileName, "AOT relocation location has improper NULL filename specified");
    if (self()->comp()->compileRelocatableCode())
@@ -3913,6 +3178,12 @@ void OMR::CodeGenerator::addAOTRelocation(TR::Relocation *r, TR::RelocationDebug
       r->setDebugInfo(info);
       _aotRelocationList.push_back(r);
       }
+   }
+
+void
+OMR::CodeGenerator::addStaticRelocation(const TR::StaticRelocation &relocation)
+   {
+   _staticRelocationList.push_back(relocation);
    }
 
 intptrj_t OMR::CodeGenerator::hiValue(intptrj_t address)

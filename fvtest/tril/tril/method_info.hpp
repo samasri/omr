@@ -1,26 +1,30 @@
 /*******************************************************************************
+ * Copyright (c) 2017, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2017, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef METHOD_INFO_HPP
 #define METHOD_INFO_HPP
 
 #include "il/DataTypes.hpp"
 #include "ilgen.hpp"
+#include "compiler_util.hpp"
 
 #include <vector>
 #include <string>
@@ -39,21 +43,13 @@ class MethodInfo {
          * @param methodNode is the Tril AST node
          */
         explicit MethodInfo(const ASTNode* methodNode) : _methodNode{methodNode} {
-            auto returnTypeArg = getArgByName(_methodNode, "return");
-            _returnType = getTRDataTypes(returnTypeArg->value->value.str);
+            auto returnTypeArg = _methodNode->getArgByName("return");
+            _returnType = getTRDataTypes(returnTypeArg->getValue()->getString());
+            _argTypes = parseArgTypes(_methodNode); 
 
-            auto argTypesArg = getArgByName(_methodNode, "args");
-            if (argTypesArg != nullptr) {
-                auto typeValue = argTypesArg->value;
-                while (typeValue != nullptr) {
-                    _argTypes.push_back(getTRDataTypes(typeValue->value.str));
-                    typeValue = typeValue->next;
-                }
-            }
-
-            auto nameArg = getArgByName(_methodNode, "name");
-            if (nameArg != nullptr) {
-                _name = nameArg->value->value.str;
+            auto nameArg = _methodNode->getArgByName("name");
+            if (nameArg != NULL) {
+                _name = nameArg->getValue()->get<ASTValue::String_t>();
             }
         }
 
@@ -70,7 +66,7 @@ class MethodInfo {
         /**
          * @brief Returns the AST representation of the method's body
          */
-        const ASTNode* getBodyAST() const { return _methodNode->children; }
+        const ASTNode* getBodyAST() const { return _methodNode->getChildren(); }
 
         /**
          * @brief Returns the return type of the method
@@ -86,25 +82,6 @@ class MethodInfo {
          * @brief Returns the number of arguments the Tril method takes
          */
         std::size_t getArgCount() const { return _argTypes.size(); }
-
-        /**
-         * @brief Gets the TR::DataTypes value from the data type's name
-         * @param name is the name of the data type as a string
-         * @return the TR::DataTypes value corresponding to the specified name
-         */
-        static TR::DataTypes getTRDataTypes(const std::string& name) {
-            if (name == "Int8") return TR::Int8;
-            else if (name == "Int16") return TR::Int16;
-            else if (name == "Int32") return TR::Int32;
-            else if (name == "Int64") return TR::Int64;
-            else if (name == "Address") return TR::Address;
-            else if (name == "Float") return TR::Float;
-            else if (name == "Double") return TR::Double;
-            else if (name == "NoType") return TR::NoType;
-            else {
-                throw std::runtime_error{std::string{"Unknown type name: "}.append(name)};
-            }
-        }
 
     private:
         const ASTNode* _methodNode;

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/IsolatedStoreElimination.hpp"
@@ -47,8 +50,8 @@
 #include "infra/BitVector.hpp"                 // for TR_BitVector, etc
 #include "infra/Cfg.hpp"                       // for CFG
 #include "infra/List.hpp"                      // for List, ListIterator, etc
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
-#include "infra/TRCfgNode.hpp"                 // for CFGNode
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
+#include "infra/CfgNode.hpp"                   // for CFGNode
 #include "optimizer/Optimization.hpp"          // for Optimization
 #include "optimizer/Optimization_inlines.hpp"
 #include "optimizer/Optimizations.hpp"
@@ -66,9 +69,6 @@ TR_IsolatedStoreElimination::TR_IsolatedStoreElimination(TR::OptimizationManager
      _deferUseDefInfoInvalidation(false),
      _currentTree(NULL),
      _usedSymbols(NULL),
-     _temp(NULL),
-     _temp1(NULL),
-     _temp2(NULL),
      _storeNodes(NULL),
      _defParentOfUse(NULL),
      _defStatus(NULL),
@@ -201,13 +201,6 @@ int32_t TR_IsolatedStoreElimination::perform()
    TR_UseDefInfo *useDefInfo = optimizer()->getUseDefInfo();
    int32_t cost = 0;
 
-   // The non-useDefInfo path examines direct loads/stores to autos/parms to determine what
-   // stores are removable.  Autos can have their address taken in WCode and this aliasing
-   // is only required to be communicated through PALIs (pointer aliasing) on consuming calls.
-   // Therefore aliasing (through useDefInfo) must be consulted to safely remove stores.
-   // Checking address taken is not sufficient as a frontend does not have to set address taken
-   // if the aliasing is correctly communicated through PALIs (address taken pessimizes optimizing
-   // the symbol everywhere but PALIs can provide more precise information)
    _mustUseUseDefInfo = false;
 
    // The use of _mustUseUseDefInfo is temporary until all opts maintain proper
@@ -219,18 +212,11 @@ int32_t TR_IsolatedStoreElimination::perform()
           traceMsg(comp(), "Starting Global Store Elimination (using use/def info)\n");
       cost = performWithUseDefInfo();
       }
-   else if (!_mustUseUseDefInfo)
+   else
       {
       if (trace())
           traceMsg(comp(), "Starting Global Store Elimination (without using use/def info)\n");
       cost = performWithoutUseDefInfo();
-      }
-   else
-      {
-      if (trace())
-          traceMsg(comp(), "Not performing Global Store Elimination because there is no use/def info\n");
-
-      bool enableBailOut = !comp()->getOption(TR_DisableDeadStoreBailOut);
       }
 
    // Now remove the isolated stores.
@@ -410,10 +396,8 @@ int32_t TR_IsolatedStoreElimination::perform()
                traceMsg(comp(), "correcting UseDefInfo:\n");
                }
             TR_UseDefInfo::BitVector defsOfRhs(comp()->allocator());
-            useDefInfo->getUseDef(defsOfRhs, node->getFirstChild()->getUseDefIndex());
             TR_UseDefInfo::BitVector nodeUses(comp()->allocator());
-            useDefInfo->getUsesFromDef(nodeUses, useDefIndex);
-            if (!defsOfRhs.IsZero() && !nodeUses.IsZero())
+            if (useDefInfo->getUseDef(defsOfRhs, node->getFirstChild()->getUseDefIndex()) && useDefInfo->getUsesFromDef(nodeUses, useDefIndex))
                {
                TR_UseDefInfo::BitVector::Cursor cursor1(defsOfRhs);
                for (cursor1.SetToFirstOne(); cursor1.Valid(); cursor1.SetToNextOne())
@@ -523,7 +507,7 @@ bool TR_IsolatedStoreElimination::canRemoveStoreNode(TR::Node *node)
    // operation that we do not want to remove.
    //
 
-   if (!comp()->cg()->allowDSEOfVolatiles() && node->getSymbolReference()->getSymbol()->isVolatile())
+   if (node->getSymbolReference()->getSymbol()->isVolatile())
       return false;
 
    if (node->dontEliminateStores())
@@ -560,8 +544,7 @@ void TR_IsolatedStoreElimination::removeRedundantSpills()
             continue;
 
          TR_UseDefInfo::BitVector defs(comp()->allocator());
-         useDefInfo->getUseDef(defs, useIndex);
-         if (!defs.IsZero())
+         if (useDefInfo->getUseDef(defs, useIndex))
             {
             bool redundantStore= true;
             TR_UseDefInfo::BitVector::Cursor cursor(defs);
@@ -599,7 +582,6 @@ int32_t TR_IsolatedStoreElimination::performWithUseDefInfo()
    {
    removeRedundantSpills();
 
-   _temp1 = NULL;
    TR_UseDefInfo *info = optimizer()->getUseDefInfo();
    int32_t i;
 
@@ -811,8 +793,7 @@ bool TR_IsolatedStoreElimination::groupIsolatedStores(int32_t defIndex,TR_BitVec
    //If even one of the uses is not under store node, then it imposible to remove this def, and thus return.
 
    TR_UseDefInfo::BitVector usesOfThisDef(comp()->allocator());
-   info->getUsesFromDef(usesOfThisDef, defIndex+info->getFirstDefIndex());
-   if (usesOfThisDef.IsZero())
+   if (!info->getUsesFromDef(usesOfThisDef, defIndex+info->getFirstDefIndex()))
       {
       if (trace())
          traceMsg(comp(), "groupIsolated - DEF %d has no uses - can be removed \n", defIndex);
@@ -984,12 +965,10 @@ void TR_IsolatedStoreElimination::performDeadStructureRemoval(TR_UseDefInfo *inf
    vcount_t visitCount = comp()->incVisitCount();
    TR_Structure *rootStructure = comp()->getFlowGraph()->getStructure();
    bool propagateRemovalToParent = false;
-   TR_BitVector *nodesInStructure = new (trStackMemory()) TR_BitVector(info->getTotalNodes(), trMemory(), stackAlloc, growable);
-   _temp = new (trStackMemory()) TR_BitVector(info->getNumDefNodes(), trMemory(), stackAlloc, growable);
+   TR_BitVector *nodesInStructure = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
+   TR_BitVector *defsInStructure = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
 
-   _temp2 = new (trStackMemory()) TR_BitVector(info->getTotalNodes(), trMemory(), stackAlloc, growable);
-
-   findStructuresAndNodesUsedIn(info, rootStructure, visitCount, nodesInStructure,&propagateRemovalToParent);
+   findStructuresAndNodesUsedIn(info, rootStructure, visitCount, nodesInStructure, defsInStructure, &propagateRemovalToParent);
    }
 
 
@@ -997,7 +976,7 @@ void TR_IsolatedStoreElimination::performDeadStructureRemoval(TR_UseDefInfo *inf
 
 
 bool
-TR_IsolatedStoreElimination::findStructuresAndNodesUsedIn(TR_UseDefInfo *info, TR_Structure *structure, vcount_t visitCount, TR_BitVector *nodesInStructure, bool *propagateRemovalToParent)
+TR_IsolatedStoreElimination::findStructuresAndNodesUsedIn(TR_UseDefInfo *info, TR_Structure *structure, vcount_t visitCount, TR_BitVector *nodesInStructure, TR_BitVector *defsInStructure, bool *propagateRemovalToParent)
    {
    bool canRemoveStructure = true;
    int32_t onlyExitEdge = -1;
@@ -1016,6 +995,7 @@ TR_IsolatedStoreElimination::findStructuresAndNodesUsedIn(TR_UseDefInfo *info, T
       TR_RegionStructure *regionStructure = structure->asRegion();
 
       if (regionStructure->isNaturalLoop() &&
+          regionStructure->numSubNodes() == 1 &&
           (regionStructure->getParent() &&
            regionStructure->getParent()->asRegion()->isCanonicalizedLoop()))
          {
@@ -1088,14 +1068,16 @@ TR_IsolatedStoreElimination::findStructuresAndNodesUsedIn(TR_UseDefInfo *info, T
 
       bool subStructureHasSideEffect = false;
 
-      TR_BitVector *nodesInSubStructure = new (trStackMemory()) TR_BitVector(info->getTotalNodes(), trMemory(), stackAlloc, growable);
+      TR_BitVector *nodesInSubStructure = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
+      TR_BitVector *defsInSubStructure = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
       TR_RegionStructure::Cursor si(*regionStructure);
       for (subNode = si.getCurrent(); subNode != NULL; subNode = si.getNext())
          {
          bool toPropagateRemoval = false;
          nodesInSubStructure->empty();
+         defsInSubStructure->empty();
          subStruct = subNode->getStructure();
-         if (findStructuresAndNodesUsedIn(info, subStruct, visitCount, nodesInSubStructure,&toPropagateRemoval))
+         if (findStructuresAndNodesUsedIn(info, subStruct, visitCount, nodesInSubStructure, defsInSubStructure, &toPropagateRemoval))
             {
             if (!toPropagateRemoval)
                {
@@ -1106,6 +1088,7 @@ TR_IsolatedStoreElimination::findStructuresAndNodesUsedIn(TR_UseDefInfo *info, T
             }
 
          *nodesInStructure |= *nodesInSubStructure;
+         *defsInStructure |= *defsInSubStructure;
          }
 
       if (subStructureHasSideEffect)
@@ -1137,7 +1120,7 @@ TR_IsolatedStoreElimination::findStructuresAndNodesUsedIn(TR_UseDefInfo *info, T
       while (currentTree != exitTree)
          {
          TR::Node *currentNode = currentTree->getNode();
-         if (markNodesAndLocateSideEffectIn(currentNode, visitCount, nodesInStructure))
+         if (markNodesAndLocateSideEffectIn(currentNode, visitCount, nodesInStructure, defsInStructure))
             hasSideEffects = true;
          currentTree = currentTree->getNextRealTreeTop();
          }
@@ -1156,60 +1139,40 @@ TR_IsolatedStoreElimination::findStructuresAndNodesUsedIn(TR_UseDefInfo *info, T
 
    if (canRemoveStructure)
       {
-
-      TR_BitVector *defNodesInStructure = new (trStackMemory()) TR_BitVector(info->getNumDefNodes(), trMemory(), stackAlloc, growable);
-      int32_t i;
-      for (i = info->getNumDefNodes()-1; i >= 0; --i)
+      // check for any defs whose uses appear outside this region
+      // we cannot remove structure if we find any of these
+      TR_BitVectorIterator defs(*defsInStructure);
+      while (canRemoveStructure && defs.hasMoreElements())
          {
-         TR::Node *node = info->getNode(i + info->getFirstDefIndex());
-         if (node &&
-             nodesInStructure->get(i + info->getFirstDefIndex()))
-            defNodesInStructure->set(i);
-         }
-#if 1
-      _temp2->setAll(info->getTotalNodes());
-      *_temp2 -= *nodesInStructure;
-#else
-      for (i = info->getNumUseNodes()-1; i >= 0; --i)
-         {
-         int32_t useIndex = i + info->getFirstUseIndex();
-         TR::Node *node = info->getNode(useIndex);
-         if (node &&
-             !nodesInStructure->get(node->getGlobalIndex()))
-#endif
-
-      TR_BitVectorIterator bviOutsideUses(*_temp2);
-      while (bviOutsideUses.hasMoreElements())
-         {
-         int32_t useIndex = bviOutsideUses.getNextElement();
-
+         int32_t defIndex = defs.getNextElement();
+         if (trace())
+            traceMsg(comp(), "Checking defIndex %d\n", defIndex);
+         TR_UseDefInfo::BitVector uses(comp()->allocator());
+         info->getUsesFromDef(uses, defIndex);
+         TR_UseDefInfo::BitVector::Cursor useCursor(uses);
+         for (useCursor.SetToFirstOne(); canRemoveStructure && useCursor.Valid(); useCursor.SetToNextOne())
             {
-            if (!info->isUseIndex(useIndex))
-               continue;
-
-            TR_UseDefInfo::BitVector defs(comp()->allocator());
-            info->getUseDef(defs, useIndex);
-            if (!defs.IsZero())
+            int32_t useIndex = (int32_t)useCursor + info->getFirstUseIndex();
+            TR::Node *useNode = info->getNode(useIndex);
+            if (useNode && useNode->getReferenceCount() > 0 && !nodesInStructure->get(useNode->getGlobalIndex()))
                {
-               *_temp = *defNodesInStructure;
-               *_temp &= defs;
-               if (!_temp->isEmpty())
+               if (trace())
                   {
-                  if (trace())
-                     {
-                     if (structure->asRegion())
-                        traceMsg(comp(), "Use Node %d invalidates region structure %d - will propagate removal to parent\n", useIndex, structure->getNumber());
-                     else
-                        traceMsg(comp(), "Use Node %d invalidates block structure %d\n", useIndex, structure->getNumber());
-                     }
-                  canRemoveStructure = false;
-                  if (structure->asRegion() )
-                     *propagateRemovalToParent = true;
-                  break;
+                  if (structure->asRegion())
+                     traceMsg(comp(), "Use Node %d invalidates region structure %d - will propagate removal to parent\n", useIndex, structure->getNumber());
+                  else
+                     traceMsg(comp(), "Use Node %d invalidates block structure %d\n", useIndex, structure->getNumber());
                   }
+               canRemoveStructure = false;
+               if (structure->asRegion())
+                  *propagateRemovalToParent = true;
                }
             }
          }
+      // if we can remove the strucutre then these defs are ok here and in all parent structures
+      // so we don't need to check them again
+      if (canRemoveStructure)
+         defsInStructure->empty();
       }
 
 
@@ -1678,37 +1641,54 @@ nodeHasSideEffect(TR::Node *node)
 
 
 bool
-TR_IsolatedStoreElimination::markNodesAndLocateSideEffectIn(TR::Node *node, vcount_t visitCount, TR_BitVector *nodesSeen)
+TR_IsolatedStoreElimination::markNodesAndLocateSideEffectIn(TR::Node *node, vcount_t visitCount, TR_BitVector *nodesSeen, TR_BitVector *defsSeen)
    {
    if (node->getVisitCount() == visitCount)
       return false;
 
    node->setVisitCount(visitCount);
+   bool toReturn = false;
 
    if (node->exceptionsRaised() ||
        nodeHasSideEffect(node) ||
        node->getOpCode().isReturn() ||
        node->getOpCode().isLoadReg() ||
        node->getOpCode().isStoreReg() ||
-       node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isVolatile() ||
+       (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isVolatile()) ||
        ((node->getOpCode().isStore() ||
          (node->getOpCode().hasSymbolReference() &&
           node->getSymbolReference()->getSymbol()->isVolatile())) &&
         (node->getSymbolReference()->getSymbol()->isShadow() ||
          node->getSymbolReference()->getSymbol()->isStatic()))
       )
-      return true;
+      {
+      toReturn = true;
+      }
+   else if (node->getUseDefIndex())
+      {
+      nodesSeen->set(node->getUseDefIndex());
+      }
 
-   nodesSeen->set(node->getUseDefIndex());
+   if (node->getOpCode().isLikeDef() && node->getUseDefIndex())
+      {
+      // we don't need to record defs marked as stored value is irrelevant - there will be no uses of the dead values
+      if (!(node->getOpCode().isStoreDirect()
+            && node->getSymbolReference()->getSymbol()->isAutoOrParm() && node->storedValueIsIrrelevant()))
+         {
+         if (trace())
+            traceMsg(comp(), "Marking useDefIndex %d as seendef at node n%dn\n", node->getUseDefIndex(), node->getGlobalIndex());
+         defsSeen->set(node->getUseDefIndex());
+         }
+      }
 
    int32_t childNum;
    for (childNum=0;childNum<node->getNumChildren();childNum++)
       {
-      if (markNodesAndLocateSideEffectIn(node->getChild(childNum), visitCount, nodesSeen))
-        return true;
+      if (markNodesAndLocateSideEffectIn(node->getChild(childNum), visitCount, nodesSeen, defsSeen))
+        toReturn = true;
       }
 
-   return false;
+   return toReturn;
    }
 
 const char *

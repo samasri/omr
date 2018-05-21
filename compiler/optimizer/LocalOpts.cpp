@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/LocalOpts.hpp"
@@ -73,13 +76,12 @@
 #include "infra/BitVector.hpp"                 // for TR_BitVector, etc
 #include "infra/Cfg.hpp"                       // for CFG, etc
 #include "infra/ILWalk.hpp"
-#include "ras/ILValidator.hpp"                 // for TR::ILValidator
 #include "infra/Link.hpp"                      // for TR_LinkHeadAndTail, etc
 #include "infra/List.hpp"                      // for List, TR_ScratchList, etc
 #include "optimizer/Inliner.hpp"               // for TR_InlineCall, etc
 #include "infra/Stack.hpp"                     // for TR_Stack
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
-#include "infra/TRCfgNode.hpp"                 // for CFGNode
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
+#include "infra/CfgNode.hpp"                   // for CFGNode
 #include "optimizer/Optimization.hpp"          // for Optimization
 #include "optimizer/Optimization_inlines.hpp"
 #include "optimizer/OptimizationManager.hpp"   // for OptimizationManager
@@ -92,6 +94,8 @@
 #include "optimizer/UseDefInfo.hpp"            // for TR_UseDefInfo
 #include "ras/Debug.hpp"                       // for TR_DebugBase
 #include "ras/DebugCounter.hpp"                // for TR::DebugCounter, etc
+#include "ras/ILValidator.hpp"
+#include "ras/ILValidationStrategies.hpp"
 #include "runtime/Runtime.hpp"
 
 #ifdef J9_PROJECT_SPECIFIC
@@ -1609,39 +1613,6 @@ int32_t TR_HoistBlocks::process(TR::TreeTop *startTree, TR::TreeTop *endTree)
                //
                nextEdge = next;
                continue;
-
-
-               // Check if the hoisted loop header won't have a block in
-               // middle of the loop as a successor; this situation could
-               // create improper regions, reducing effectiveness of opts that
-               // follow.
-               //
-               int32_t successorsInMidLoop = 0;
-               for (auto nextEdge = block->getSuccessors().begin(); nextEdge != block->getSuccessors().end(); ++nextEdge)
-                  {
-                  TR::Block *succBlock = toBlock((*nextEdge)->getTo());
-                  TR_Structure *succBlockStructure = succBlock->getStructureOf();
-                  while (succBlockStructure)
-                     {
-                     if (succBlockStructure == containingLoop)
-                        break;
-
-                     succBlockStructure = succBlockStructure->getParent();
-                     }
-
-                  if (succBlockStructure)
-                     {
-                     successorsInMidLoop++;
-                     if (successorsInMidLoop > 1)
-                        break;
-                     }
-                  }
-
-               if (successorsInMidLoop > 1)
-                  {
-                  nextEdge = next;
-                  continue;
-                  }
                }
 
 
@@ -3352,7 +3323,7 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
    if (cfg == NULL)
       return false;
 
-   if (comp()->isProfilingCompilation())
+   if (comp()->getProfilingMode() == JitProfiling)
       return 0;
 
    bool gotosWereEliminated = false;
@@ -3415,6 +3386,45 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
          //////dumpOptDetails(comp(), "Contains trees other than gotos when at block number : %d\n", block->getNumber());
          }
 
+      bool blockIsRegionEntry = false;
+      TR_Structure *rootStructure = cfg->getStructure();
+      TR_RegionStructure *blockRegion = NULL;
+      if (rootStructure != NULL)
+         {
+         blockRegion = block->getParentStructureIfExists(cfg);
+         blockIsRegionEntry =
+            blockRegion != NULL && blockRegion->getNumber() == block->getNumber();
+         }
+
+      bool manuallyFixStructure = blockIsRegionEntry;
+
+      if (!block->isExtensionOfPreviousBlock())
+         {
+         // Check register dependencies
+         TR::TreeTop *lastTT = emptyBlock ? block->getExit() : lastNonFenceTree;
+         TR::Node *exit = lastTT->getNode();
+         if (exit->getNumChildren() > 0)
+            {
+            TR::Node *exitDeps = exit->getChild(0);
+
+            // If every child of the outgoing GlRegDeps is a register load,
+            // then the outgoing registers agree with the incoming registers,
+            // because each register load must appear first under BBStart.
+            bool depsOK = true;
+            for (int i = 0; i < exitDeps->getNumChildren(); i++)
+               {
+               if (!exitDeps->getChild(i)->getOpCode().isLoadReg())
+                  {
+                  depsOK = false;
+                  break;
+                  }
+               }
+
+            if (!depsOK)
+               continue;
+            }
+         }
+
       // This block consists of just a goto with maybe an async check as well.
       //
       // Look at the predecessors and see if they can all absorb the goto
@@ -3422,36 +3432,34 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
       if (block->getPredecessors().empty())
          continue;
 
-      bool gotoBlockRemovable = true;
-      TR::Block *destBlock = block->getSuccessors().front()->getTo()->asBlock();
-      auto inEdge = block->getPredecessors().begin();
-      while (inEdge != block->getPredecessors().end())
-         {
-         if (((*inEdge)->getFrom() == cfg->getStart()) || ((*inEdge)->getFrom() == block))
-            {
-            gotoBlockRemovable = false;
-            break;
-            }
+      if (block->isLoopInvariantBlock())
+         continue;
 
-         TR::TreeTop *tt = toBlock((*inEdge)->getFrom())->getLastRealTreeTop();
+      TR::Block *destBlock = block->getSuccessors().front()->getTo()->asBlock();
+      if (destBlock == block)
+         continue; // No point trying to "update" predecessors
+
+      TR::CFGEdgeList fixablePreds(comp()->trMemory()->currentStackRegion());
+      auto preds = block->getPredecessors();
+      for (auto inEdge = preds.begin(); inEdge != preds.end(); ++inEdge)
+         {
+         if ((*inEdge)->getFrom() == cfg->getStart())
+            continue;
+
+         TR::Block *pred = toBlock((*inEdge)->getFrom());
+         TR::TreeTop *tt = pred->getLastRealTreeTop();
          TR::Node *ttNode = tt->getNode();
          if(ttNode->getOpCodeValue() == TR::treetop)
              ttNode = ttNode->getFirstChild();
 
          if (tt->getNode()->getOpCode().isJumpWithMultipleTargets() ||
              tt->getNode()->isTheVirtualGuardForAGuardedInlinedCall())
-            {
-            gotoBlockRemovable = false;
-            break;
-            }
+            continue;
 
          if (!emptyBlock &&
              (!tt->getNode()->getOpCode().isBranch() ||
                tt->getNode()->getBranchDestination() != block->getEntry()))
-            {
-            gotoBlockRemovable = false;
-            break;
-            }
+            continue;
 
          if (tt->getNode()->getOpCode().isBranch()  &&
              ((tt->getNode()->getBranchDestination() != block->getEntry()) &&
@@ -3459,42 +3467,43 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
                !(destBlock->getSuccessors().size() == 1) ||
                !(destBlock->getPredecessors().size() == 1) ||
                !destBlock->getLastRealTreeTop()->getNode()->getOpCode().isBranch())))
-            {
-            gotoBlockRemovable = false;
-            break;
-            }
+            continue;
 
          // PR 65144: The transformation logic later in this loop doesn't cope
          // with a branch whose target is also the fallthrough block.  Protect
          // against that case, whether it appears in the incoming trees, or
          // arises after an earlier transformation by this very loop.
          //
-         TR::Block *pred = toBlock((*inEdge)->getFrom());
          if (  tt->getNode()->getOpCode().isBranch()
             && tt->getNode()->getBranchDestination() == block->getEntry()
             && pred->getNextBlock() == block)
-            {
-            gotoBlockRemovable = false;
-            break;
-            }
+            continue;
 
          //if (asyncMessagesFlag && (tt->getNode()->getOpCodeValue() != TR::Goto))
          //   {
          //   gotoBlockRemovable = false;
          //   break;
          //   }
-         //
-         ++inEdge;
+
+         fixablePreds.push_front(*inEdge);
          }
-      if (!gotoBlockRemovable)
+
+      if (fixablePreds.empty())
          continue;
 
-
-      if (block->getStructureOf() && block->getStructureOf()->isLoopInvariantBlock())
-         continue;
+      if (fixablePreds.size() < preds.size())
+         {
+         // Not all predecessors can be adjusted, so block cannot be removed.
+         if (emptyBlock || manuallyFixStructure)
+            continue;
+         }
 
       if (containsTreesOtherThanGoto)
          {
+         if (block->getEntry()->getNode()->getNumChildren() > 0
+             || destBlock->getEntry()->getNode()->getNumChildren() > 0)
+            continue; // to move the trees we would need to deal with regdeps
+
          if (!(destBlock->getPredecessors().size() == 1))
             continue;
 
@@ -3538,9 +3547,7 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
             !performTransformation(comp(), "%sEliminating goto at the end of block_%d with BBStart %p\n", optDetailString(), block->getNumber(), block->getEntry()->getNode()))
         continue;
 
-      TR_Structure *rootStructure     = cfg->getStructure();
-      TR_RegionStructure *blockRegion = block->getParentStructureIfExists(cfg);
-      if (rootStructure && blockRegion && blockRegion->getNumber() == block->getNumber())
+      if (manuallyFixStructure)
          {
          // We are removing a goto block that is the head of a structure region.
          // Attempt to remove the goto block will result in the collapse of blockStrucutre
@@ -3591,39 +3598,7 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
 
          // Fixup all the CFGEdges to goto destBlock
          //
-         for (auto edge = block->getPredecessors().begin(); edge != block->getPredecessors().end();)
-            {
-            TR::CFGEdge* current = *(edge++);
-            TR::Block *predBlock = current->getFrom()->asBlock();
-            requestOpt(OMR::treeSimplification, true, predBlock);
-
-            if (asyncMessagesFlag && comp()->getHCRMode() != TR::osr)
-               placeAsyncCheckBefore(predBlock->getLastRealTreeTop());
-
-            if (predBlock->getLastRealTreeTop()->getNode()->getOpCode().isBranch() &&
-                predBlock->getLastRealTreeTop()->getNode()->getBranchDestination() == block->getEntry())
-                predBlock->changeBranchDestination(destBlock->getEntry(), cfg);
-            else
-                predBlock->redirectFlowToNewDestination(comp(), current, destBlock, false);
-
-            if (predBlock->getNextBlock() == destBlock)
-               {
-               TR::Node *last = predBlock->getLastRealTreeTop()->getNode();
-               if (last->getOpCodeValue() == TR::Goto)
-                  {
-                  int32_t i = 0;
-                  while (i < last->getNumChildren())
-                     {
-                     last->getChild(i)->recursivelyDecReferenceCount();
-                     i++;
-                     }
-
-                  TR::TreeTop *prev = predBlock->getLastRealTreeTop()->getPrevTreeTop();
-                  TR::TreeTop *next = predBlock->getLastRealTreeTop()->getNextTreeTop();
-                  prev->join(next);
-                  }
-               }
-            }
+         redirectPredecessors(block, destBlock, fixablePreds, emptyBlock, asyncMessagesFlag);
 
          if (!cannotRepairStructure)
             {
@@ -3643,47 +3618,7 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
          {
          // Okay to allow automatic structure fixup (if it exists)
          //
-         for (auto inEdge = block->getPredecessors().begin(); inEdge != block->getPredecessors().end();)
-            {
-            TR::CFGEdge* current = *(inEdge++);
-            TR::Block *prevBlock = toBlock(current->getFrom());
-
-            if (asyncMessagesFlag && comp()->getHCRMode() != TR::osr)
-               placeAsyncCheckBefore(prevBlock->getLastRealTreeTop());
-
-            if (prevBlock->getLastRealTreeTop()->getNode()->getOpCode().isBranch() &&
-                prevBlock->getLastRealTreeTop()->getNode()->getBranchDestination() == block->getEntry())
-               {
-               prevBlock->changeBranchDestination(destBlock->getEntry(), cfg);
-               }
-            else
-               {
-               prevBlock->redirectFlowToNewDestination(comp(), current, destBlock, false);
-               }
-
-            if (prevBlock->getNextBlock() == destBlock)
-               {
-               TR::Node *last = prevBlock->getLastRealTreeTop()->getNode();
-               if (last->getOpCodeValue() == TR::Goto)
-                  {
-                  int32_t i = 0;
-                  while (i < last->getNumChildren())
-                     {
-                     last->getChild(i)->recursivelyDecReferenceCount();
-                     i++;
-                     }
-
-                  TR::TreeTop *prev = prevBlock->getLastRealTreeTop()->getPrevTreeTop();
-                  TR::TreeTop *next = prevBlock->getLastRealTreeTop()->getNextTreeTop();
-                  prev->join(next);
-                  }
-               }
-            }
-
-         if (!emptyBlock)
-            optimizer()->prepareForTreeRemoval(lastNonFenceTree);
-
-         cfg->removeNode(block);
+         redirectPredecessors(block, destBlock, fixablePreds, emptyBlock, asyncMessagesFlag);
          }
 
       // Place an asynccheck as the first treetop of the successor, if there was one in the removed block
@@ -3699,6 +3634,223 @@ int32_t TR_EliminateRedundantGotos::process(TR::TreeTop *startTree, TR::TreeTop 
       }
 
    return 0; // actual cost
+   }
+
+void TR_EliminateRedundantGotos::redirectPredecessors(
+   TR::Block *block,
+   TR::Block *destBlock,
+   const TR::CFGEdgeList &preds,
+   bool emptyBlock,
+   bool asyncMessagesFlag)
+   {
+   TR::CFG *cfg = comp()->getFlowGraph();
+
+   TR::Node *regdepsToMove = NULL;
+   TR::Node *newRegdepParent = NULL;
+
+   // In case we're deleting an empty block at the beginning or end of a larger
+   // extended block, take care to move any incoming regdeps forward, or
+   // outgoing ones backward, to ensure they aren't lost.
+   bool regdepsAreOutgoing = block->isExtensionOfPreviousBlock();
+   if (regdepsAreOutgoing)
+      {
+      TR::Node *exitNode = block->getExit()->getNode();
+      if (exitNode->getNumChildren() > 0)
+         {
+         // block is the last in its extended block. It must be empty because
+         // it has only one predecessor, and the predecessor falls through into
+         // block. Predecessor edges that don't branch to block are rejected
+         // unless emptyBlock holds.
+         TR_ASSERT_FATAL(
+            emptyBlock,
+            "expected block_%d to be empty\n",
+            block->getNumber());
+
+         regdepsToMove = exitNode->getChild(0);
+         exitNode->setChild(0, NULL);
+         exitNode->setNumChildren(0);
+         newRegdepParent = toBlock(preds.front()->getFrom())->getExit()->getNode();
+         }
+      }
+   else
+      {
+      TR::Node *entryNode = block->getEntry()->getNode();
+      if (emptyBlock &&
+          entryNode->getNumChildren() > 0 &&
+          destBlock->isExtensionOfPreviousBlock())
+         {
+         regdepsToMove = entryNode->getChild(0);
+         entryNode->setChild(0, NULL);
+         entryNode->setNumChildren(0);
+         newRegdepParent = destBlock->getEntry()->getNode();
+         }
+      }
+
+   if (regdepsToMove != NULL)
+      {
+      TR_ASSERT_FATAL(
+         newRegdepParent->getNumChildren() == 0,
+         "n%un %s has unexpected register dependencies\n",
+         newRegdepParent->getGlobalIndex(),
+         newRegdepParent->getOpCode().getName());
+
+      newRegdepParent->setNumChildren(1);
+      newRegdepParent->setChild(0, regdepsToMove);
+      }
+
+   // Update predecessors now that the regdeps have been moved as appropriate
+   for (auto edge = preds.begin(); edge != preds.end(); ++edge)
+      {
+      TR::CFGEdge* current = *edge;
+      TR::Block *predBlock = toBlock(current->getFrom());
+      requestOpt(OMR::treeSimplification, true, predBlock);
+
+      if (asyncMessagesFlag && comp()->getHCRMode() != TR::osr)
+         placeAsyncCheckBefore(predBlock->getLastRealTreeTop());
+
+      TR::TreeTop *predExitTree = NULL;
+      if (predBlock->getLastRealTreeTop()->getNode()->getOpCode().isBranch() &&
+          predBlock->getLastRealTreeTop()->getNode()->getBranchDestination() == block->getEntry())
+         {
+         predBlock->changeBranchDestination(
+            destBlock->getEntry(),
+            cfg,
+            /* callerFixesRegdeps = */ true);
+         predExitTree = predBlock->getLastRealTreeTop();
+         }
+      else
+         {
+         predBlock->redirectFlowToNewDestination(comp(), current, destBlock, false);
+         predExitTree = predBlock->getExit();
+         }
+
+      if (regdepsToMove == NULL && block->getEntry()->getNode()->getNumChildren() > 0)
+         {
+         fixPredecessorRegDeps(predExitTree->getNode(), destBlock);
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            "redundantGotoElimination.regDeps/none");
+         }
+
+      if (predBlock->getNextBlock() == destBlock)
+         {
+         TR::Node *last = predBlock->getLastRealTreeTop()->getNode();
+         if (last->getOpCodeValue() == TR::Goto)
+            {
+            TR::Node *exit = predBlock->getExit()->getNode();
+            TR_ASSERT_FATAL(
+               exit->getNumChildren() == 0,
+               "n%un BBEnd has GlRegDeps even though it follows goto\n",
+               exit->getGlobalIndex());
+
+            if (last->getNumChildren() > 0)
+               {
+               TR_ASSERT_FATAL(
+                  last->getNumChildren() == 1,
+                  "n%un goto has %d children\n",
+                  last->getGlobalIndex(),
+                  last->getNumChildren());
+
+               exit->setNumChildren(1);
+               exit->setChild(0, last->getChild(0));
+               last->setChild(0, NULL);
+               last->setNumChildren(0);
+               }
+
+            TR::TreeTop *prev = predBlock->getLastRealTreeTop()->getPrevTreeTop();
+            TR::TreeTop *next = predBlock->getLastRealTreeTop()->getNextTreeTop();
+            prev->join(next);
+            }
+         }
+      }
+   }
+
+void TR_EliminateRedundantGotos::fixPredecessorRegDeps(
+   TR::Node *regdepsParent,
+   TR::Block *destBlock)
+   {
+   const int childIndex = regdepsParent->getNumChildren() - 1;
+   TR_ASSERT_FATAL(
+      childIndex >= 0,
+      "n%un should have at least one child "
+      "because it leads to a block with incoming regdeps\n",
+      regdepsParent->getGlobalIndex());
+
+   TR::Node *regdeps = regdepsParent->getChild(childIndex);
+   TR_ASSERT_FATAL(
+      regdeps->getOpCodeValue() == TR::GlRegDeps,
+      "expected n%un to be a GlRegDeps\n",
+      regdeps->getGlobalIndex());
+
+   TR::Node *destEntry = destBlock->getEntry()->getNode();
+   if (destEntry->getNumChildren() == 0)
+      {
+      // No regdeps necessary
+      TR::DebugCounter::incStaticDebugCounter(comp(),
+         TR::DebugCounter::debugCounterName(comp(),
+            "redundantGotoElimination.regDeps/wiped/%s/(%s)/block_%d",
+            comp()->getHotnessName(comp()->getMethodHotness()),
+            comp()->signature(),
+            destBlock->getNumber()));
+      regdeps->recursivelyDecReferenceCount();
+      regdepsParent->setChild(childIndex, NULL);
+      regdepsParent->setNumChildren(childIndex);
+      return;
+      }
+
+   TR::Node *newReceivingRegdeps = destEntry->getChild(0);
+   TR_ASSERT_FATAL(
+      newReceivingRegdeps->getOpCodeValue() == TR::GlRegDeps,
+      "expected n%un child of n%un BBStart <block_%d> to be GlRegDeps\n",
+      newReceivingRegdeps->getGlobalIndex(),
+      destEntry->getGlobalIndex(),
+      destBlock->getNumber());
+
+   if (regdeps->getNumChildren() == newReceivingRegdeps->getNumChildren())
+      {
+      TR::DebugCounter::incStaticDebugCounter(comp(),
+         "redundantGotoElimination.regDeps/retained");
+      }
+   else
+      {
+      TR::DebugCounter::incStaticDebugCounter(comp(),
+         TR::DebugCounter::debugCounterName(comp(),
+            "redundantGotoElimination.regDeps/dropped/%s/(%s)/block_%d",
+            comp()->getHotnessName(comp()->getMethodHotness()),
+            comp()->signature(),
+            destBlock->getNumber()));
+      }
+
+   int remainingDeps = 0;
+   for (int i = 0; i < regdeps->getNumChildren(); i++)
+      {
+      TR::Node *dep = regdeps->getChild(i);
+      auto reg = dep->getGlobalRegisterNumber();
+      bool needed = false;
+      for (int j = 0; j < newReceivingRegdeps->getNumChildren(); j++)
+         {
+         if (newReceivingRegdeps->getChild(j)->getGlobalRegisterNumber() == reg)
+            {
+            needed = true;
+            break;
+            }
+         }
+
+      if (needed)
+         regdeps->setChild(remainingDeps++, dep);
+      else
+         dep->recursivelyDecReferenceCount();
+      }
+
+   TR_ASSERT_FATAL(
+      remainingDeps == newReceivingRegdeps->getNumChildren(),
+      "n%un: bad number %d of remaining regdeps\n",
+      regdeps->getGlobalIndex(),
+      remainingDeps);
+
+   regdeps->setNumChildren(remainingDeps);
    }
 
 const char *
@@ -3761,7 +3913,7 @@ void TR_CleanseTrees::prePerformOnBlocks()
 
 int32_t TR_CleanseTrees::process(TR::TreeTop *startTree, TR::TreeTop *endTreeTop)
    {
-   if (comp()->isProfilingCompilation())
+   if (comp()->getProfilingMode() == JitProfiling)
       return 0;
 
    TR_Structure *rootStructure = comp()->getFlowGraph()->getStructure();
@@ -3954,7 +4106,7 @@ int32_t TR_ProfiledNodeVersioning::perform()
                   continue;
 
                TR_ByteCodeInfo originalBcInfo = TR_ProfiledNodeVersioning::temporarilySetProfilingBcInfoOnNewArrayLengthChild(node, comp());
-               TR_ValueInfo *numElementsInfo = (TR_ValueInfo*)TR_ValueProfiler::getProfiledValueInfo(numElementsNode, comp());
+               TR_ValueInfo *numElementsInfo = static_cast<TR_ValueInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(numElementsNode, comp(), ValueInfo));
                numElementsNode->setByteCodeInfo(originalBcInfo);
 
                if (numElementsInfo)
@@ -3970,15 +4122,14 @@ int32_t TR_ProfiledNodeVersioning::perform()
                      static char *versionNewarrayForMultipleSizes = feGetEnv("TR_versionNewarrayForMultipleSizes");
                      if (trace())
                         traceMsg(comp(), "Node %s has %d profiled values:\n", getDebug()->getName(node), totalFrequency);
-                     TR_ScratchList<TR_ExtraAbstractInfo> valuesSortedByFrequency(trMemory());
-                     numElementsInfo->getSortedList(comp(), (List<TR_ExtraAbstractInfo> *) &valuesSortedByFrequency);
-                     ListIterator<TR_ExtraAbstractInfo> i((List<TR_ExtraAbstractInfo> *) &valuesSortedByFrequency);
-                     for (TR_ExtraAbstractInfo *profiledInfo = i.getFirst(); profiledInfo != NULL; profiledInfo = i.getNext())
+                     TR_ScratchList<TR_ExtraValueInfo> valuesSortedByFrequency(trMemory());
+                     numElementsInfo->getSortedList(comp(), &valuesSortedByFrequency);
+                     ListIterator<TR_ExtraValueInfo> i(&valuesSortedByFrequency);
+                     for (TR_ExtraValueInfo *profiledInfo = i.getFirst(); profiledInfo != NULL; profiledInfo = i.getNext())
                         {
-                        TR_ExtraValueInfo *someValue = (TR_ExtraValueInfo*)profiledInfo;
-                        float probability = (float)someValue->_frequency / totalFrequency;
+                        float probability = (float)profiledInfo->_frequency / totalFrequency;
                         if (trace())
-                           traceMsg(comp(), "%8d %5.1f%%\n", someValue->_value, 100.0 * probability);
+                           traceMsg(comp(), "%8d %5.1f%%\n", profiledInfo->_value, 100.0 * probability);
 
                         // The heuristic: accumulate values until we hit the
                         // threshold where it's worth versioning.  After that
@@ -3987,14 +4138,14 @@ int32_t TR_ProfiledNodeVersioning::perform()
                         // the case, the more we're willing to grow the size to
                         // catch it.
                         //
-                        if (!doProfiling || (someValue->_value < (uint32_t)(profiledSize * (1.0+probability))))
+                        if (!doProfiling || (profiledInfo->_value < (uint32_t)(profiledSize * (1.0+probability))))
                            {
                            if (numDifferentSizes == 1 && !versionNewarrayForMultipleSizes)
                               break;
 
                            numDifferentSizes++;
-                           profiledSize    = std::max(profiledSize, someValue->_value);
-                           minProfiledSize = std::min(minProfiledSize, someValue->_value);
+                           profiledSize    = std::max(profiledSize, profiledInfo->_value);
+                           minProfiledSize = std::min(minProfiledSize, profiledInfo->_value);
 
                            combinedProbability += probability;
                            if (combinedProbability > MIN_PROFILED_FREQUENCY)
@@ -6387,8 +6538,12 @@ int32_t TR_BlockSplitter::perform()
          int16_t coldFreq = mergeNode->getFrequency() - hotFreq;
          if (hotFreq < splitPred->getFrequency())
             {
-            TR::DebugCounter::incStaticDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "blockSplitter.inconsistentFreqs/%s/(%s)/block_%d", comp()->getHotnessName(comp()->getMethodHotness()), comp()->signature(), mergeNode->getNumber()));
-            hotFreq = splitPred->getFrequency();
+            static const bool force = feGetEnv("TR_forceBlockSplitterFrequencyAdjustment") != NULL;
+            if (force || splitPred->getSuccessors().size() == 1)
+               {
+               TR::DebugCounter::incStaticDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "blockSplitter.inconsistentFreqs/%s/(%s)/block_%d", comp()->getHotnessName(comp()->getMethodHotness()), comp()->signature(), mergeNode->getNumber()));
+               hotFreq = splitPred->getFrequency();
+               }
             }
          int16_t hotEdgeFreq = splitPred_to_mergeNode_edge->getFrequency();
          int16_t coldEdgeFreq = (predEdgeFrequency - splitPred_to_mergeNode_edge->getFrequency()) / predEdgeFrequency;
@@ -6866,7 +7021,7 @@ bool TR_BlockSplitter::isExitEdge(TR::Block *mergeNode, TR::Block *successor)
 bool TR_BlockSplitter::hasIVUpdate(TR::Block *block)
    {
    TR_RegionStructure *parent = getParentStructure(block);
-   if (getLastRun() || comp()->isProfilingCompilation() || !parent || !parent->isNaturalLoop())
+   if (getLastRun() || comp()->getProfilingMode() == JitProfiling || !parent || !parent->isNaturalLoop())
       return false;
 
    if (trace())
@@ -6898,7 +7053,7 @@ bool TR_BlockSplitter::hasIVUpdate(TR::Block *block)
 bool TR_BlockSplitter::hasLoopAsyncCheck(TR::Block *block)
    {
    TR_RegionStructure *parent = getParentStructure(block);
-   if (getLastRun() || comp()->isProfilingCompilation() || !parent || !parent->isNaturalLoop())
+   if (getLastRun() || comp()->getProfilingMode() == JitProfiling || !parent || !parent->isNaturalLoop())
       return false;
 
    if (trace())
@@ -7286,7 +7441,7 @@ int32_t TR_InvariantArgumentPreexistence::perform()
                TR_ASSERT(((*sig == 'L') || (*sig == '[')), "non address argument cannot be fixed/preexistent");
 
                parmInfo.setSymbol(p);
-               TR_OpaqueClassBlock *clazz = arg->getFixedClass();
+               TR_OpaqueClassBlock *clazz = arg->getClass();
                if (clazz)
                   {
                   TR_ASSERT(classIsFixed, "assertion failure");
@@ -7398,7 +7553,7 @@ int32_t TR_InvariantArgumentPreexistence::perform()
                {
                if (arg->classIsFixed())
                   {
-                  symbol->setFixedType(arg->getFixedClass());
+                  symbol->setFixedType(arg->getClass());
                   if (trace())
                      traceMsg(comp(), "PREX:      Parm %d symbol [%p] has fixed type %p\n", index, symbol, symbol->getFixedType());
                   }
@@ -8201,10 +8356,10 @@ int32_t
 TR_ColdBlockMarker::perform()
    {
    static char *validate = feGetEnv("TR_validateBeforeColdBlockMarker");
-   if (validate)
+   /* The ILValidator is only created if the useILValidator Compiler Option is set */
+   if (validate && comp()->getOption(TR_UseILValidator))
       {
-      TR::ILValidator validator(comp());
-      validator.treesAreValid(comp()->getStartTree());
+      comp()->validateIL(TR::postILgenValidation);
       }
 
    identifyColdBlocks();
@@ -8305,7 +8460,10 @@ TR_ColdBlockMarker::isBlockCold(TR::Block *block)
 
       if (_notYetRunMeansCold && hasNotYetRun(node))
          {
-         traceMsg(comp(), "%s n%dn [%p] has not yet run\n", node->getOpCode().getName(), node->getGlobalIndex(), node);
+         if (trace())
+            {
+            traceMsg(comp(), "%s n%dn [%p] has not yet run\n", node->getOpCode().getName(), node->getGlobalIndex(), node);
+            }
          return UNRESOLVED_COLD_BLOCK_COUNT;
          }
 
@@ -8320,7 +8478,10 @@ TR_ColdBlockMarker::isBlockCold(TR::Block *block)
 
          if (calleeSymbol->getResolvedMethod()->isCold(comp(), node->getOpCode().isCallIndirect(), calleeSymbol))
             {
-            traceMsg(comp(), "Infrequent interpreted call node %p\n", node);
+            if (trace())
+               {
+               traceMsg(comp(), "Infrequent interpreted call node %p\n", node);
+               }
             return INTERP_CALLEE_COLD_BLOCK_COUNT;
             }
          }

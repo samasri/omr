@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef omrportlibraryprivatedefines_h
@@ -456,6 +460,8 @@ omrsysinfo_get_processor_info(struct OMRPortLibrary *portLibrary, J9ProcessorInf
 extern J9_CFUNC void
 omrsysinfo_destroy_processor_info(struct OMRPortLibrary *portLibrary, J9ProcessorInfos *procInfos);
 extern J9_CFUNC uint64_t
+omrsysinfo_get_addressable_physical_memory(struct OMRPortLibrary *portLibrary);
+extern J9_CFUNC uint64_t
 omrsysinfo_get_physical_memory(struct OMRPortLibrary *portLibrary);
 extern J9_CFUNC uint32_t
 omrsysinfo_get_limit(struct OMRPortLibrary *portLibrary, uint32_t resourceID, uint64_t *limit);
@@ -511,12 +517,18 @@ extern J9_CFUNC BOOLEAN
 omrsysinfo_os_has_feature(struct OMRPortLibrary *portLibrary, struct OMROSDesc *desc, uint32_t feature);
 extern J9_CFUNC BOOLEAN
 omrsysinfo_os_kernel_info(struct OMRPortLibrary *portLibrary, struct OMROSKernelInfo *kernelInfo);
-extern J9_CFUNC int32_t 
-omrsysinfo_cgroup_is_limits_supported(struct OMRPortLibrary *portLibrary);
 extern J9_CFUNC BOOLEAN 
-omrsysinfo_cgroup_is_limits_enabled(struct OMRPortLibrary *portLibrary);
-extern J9_CFUNC int32_t 
-omrsysinfo_cgroup_enable_limits(struct OMRPortLibrary *portLibrary);
+omrsysinfo_cgroup_is_system_available(struct OMRPortLibrary *portLibrary);
+extern J9_CFUNC uint64_t
+omrsysinfo_cgroup_get_available_subsystems(struct OMRPortLibrary *portLibrary);
+extern J9_CFUNC uint64_t 
+omrsysinfo_cgroup_are_subsystems_available(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlags);
+extern J9_CFUNC uint64_t
+omrsysinfo_cgroup_get_enabled_subsystems(struct OMRPortLibrary *portLibrary);
+extern J9_CFUNC uint64_t
+omrsysinfo_cgroup_enable_subsystems(struct OMRPortLibrary *portLibrary, uint64_t requestedSubsystems);
+extern J9_CFUNC uint64_t
+omrsysinfo_cgroup_are_subsystems_enabled(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlags);
 extern J9_CFUNC int32_t 
 omrsysinfo_cgroup_get_memlimit(struct OMRPortLibrary *portLibrary, uint64_t *limit);
 
@@ -535,8 +547,16 @@ extern J9_CFUNC int32_t
 omrsig_set_options(struct OMRPortLibrary *portLibrary, uint32_t options);
 extern J9_CFUNC int32_t
 omrsig_protect(struct OMRPortLibrary *portLibrary,  omrsig_protected_fn fn, void *fn_arg, omrsig_handler_fn handler, void *handler_arg, uint32_t flags, uintptr_t *result);
+extern J9_CFUNC int32_t
+omrsig_set_async_signal_handler(struct OMRPortLibrary *portLibrary, omrsig_handler_fn handler, void *handler_arg, uint32_t flags);
+extern J9_CFUNC int32_t
+omrsig_set_single_async_signal_handler(struct OMRPortLibrary *portLibrary, omrsig_handler_fn handler, void *handler_arg, uint32_t portlibSignalFlag, void **oldOSHandler);
 extern J9_CFUNC uint32_t
-omrsig_set_async_signal_handler(struct OMRPortLibrary *portLibrary,  omrsig_handler_fn handler, void *handler_arg, uint32_t flags);
+omrsig_map_os_signal_to_portlib_signal(struct OMRPortLibrary *portLibrary, uint32_t osSignalValue);
+extern J9_CFUNC int32_t
+omrsig_map_portlib_signal_to_os_signal(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag);
+extern J9_CFUNC int32_t
+omrsig_register_os_handler(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag, void *newOSHandler, void **oldOSHandler);
 extern J9_CFUNC uint32_t
 omrsig_info(struct OMRPortLibrary *portLibrary, void *info, uint32_t category, int32_t index, const char **name, void **value);
 extern J9_CFUNC int32_t

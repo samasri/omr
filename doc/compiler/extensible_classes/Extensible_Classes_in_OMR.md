@@ -1,3 +1,25 @@
+<!--
+Copyright (c) 2016, 2018 IBM Corp. and others
+
+This program and the accompanying materials are made available under
+the terms of the Eclipse Public License 2.0 which accompanies this
+distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+or the Apache License, Version 2.0 which accompanies this distribution and
+is available at https://www.apache.org/licenses/LICENSE-2.0.
+
+This Source Code may also be made available under the following
+Secondary Licenses when the conditions for such availability set
+forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+General Public License, version 2 with the GNU Classpath 
+Exception [1] and GNU General Public License, version 2 with the
+OpenJDK Assembly Exception [2].
+
+[1] https://www.gnu.org/software/classpath/license.html
+[2] http://openjdk.java.net/legal/assembly-exception.html
+
+SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+-->
+
 # Extensible Classes in OMR  {#OMRExtensibleClasses}
 
 This document describes the use of extensible classes in the Eclipse OMR source
@@ -29,6 +51,7 @@ Each project also provides some specializations for the various supported
 architectures. These are also assigned namespaces as follows:
 
 - `ARM`: for the ARM architecture
+- `ARM64`: for the ARM architecture
 - `Power`: for IBM Power architecture
 - `X86`: for general x86
   - `AMD64`: for 64-bit x86 (x86-64)
@@ -37,7 +60,7 @@ architectures. These are also assigned namespaces as follows:
 
 Since there are many different possible class strings that can be generated
 depending on the build time configuration, we need a name that consumers of
-particlar classes can use to reference the final complete concept.
+particular classes can use to reference the final complete concept.
 
 We use the `TR::` namespace to serve this purpose. Outside of the layered
 construction of an extensible class, all compiler code uses the `TR::`
@@ -45,7 +68,7 @@ namespace (rooted in the code name for the compiler technology which was
 _Testasrossa_). 
 
 In the case of extensible classes, we expose them to consumers by providing a
-terminating subclass in the `TR::` namespace, which we call the _Concrete_ 
+terminating subclass in the `TR::` namespace, which we call the _Concrete_
 class. 
 
 In the case of classes that aren't extensible, It is perfectly legitimate to
@@ -63,7 +86,7 @@ specializations. The project directories are:
 - `test`
 
 The architecture sub-directories are:
-
+- `AArch64`: for ARM 64-Bit
 - `arm`: for ARM
 - `p`: for IBM's Power architecture
 - `x`: for x86

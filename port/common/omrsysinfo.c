@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -235,6 +239,21 @@ omrsysinfo_get_memory_info(struct OMRPortLibrary *portLibrary, struct J9MemoryIn
 {
 	return -1;
 }
+
+/**
+ * Determine the size of the total usable physical memory in the system, in bytes.
+ * It takes into account limitation on address space to compute usable physical memory.
+ *
+ * @param[in] portLibrary The port library.
+ *
+ * @return 0 if the information was unavailable, otherwise total usable physical memory in bytes.
+ */
+uint64_t
+omrsysinfo_get_addressable_physical_memory(struct OMRPortLibrary *portLibrary)
+{
+	return 0;
+}
+
 /**
  * Determine the size of the total physical memory in the system, in bytes.
  * Note that if cgroups limits is enabled (see omrsysinfo_cgroup_enable_limits())
@@ -783,7 +802,7 @@ omrsysinfo_os_has_feature(struct OMRPortLibrary *portLibrary, struct OMROSDesc *
 		uint32_t featureIndex = feature / 32;
 		uint32_t featureShift = feature % 32;
 
-		rc = J9_ARE_ALL_BITS_SET(desc->features[featureIndex], 1 << featureShift);
+		rc = OMR_ARE_ALL_BITS_SET(desc->features[featureIndex], 1 << featureShift);
 	}
 
 	Trc_PRT_sysinfo_os_has_feature_Exit((uintptr_t)rc);
@@ -808,42 +827,88 @@ omrsysinfo_os_kernel_info(struct OMRPortLibrary *portLibrary, struct OMROSKernel
 }
 
 /**
- * Checks if the port library can use cgroup limits
+ * Checks if the platform supports cgroup system and the port library can use it
  *
  * @param[in] portLibrary pointer to OMRPortLibrary
  *
- * @return 0 if the port library can use cgroup limits, otherwise negative error code
+ * @return TRUE if the the cgroup system is available, otherwise FALSE
  */
-int32_t 
-omrsysinfo_cgroup_is_limits_supported(struct OMRPortLibrary *portLibrary)
-{
-	return OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM;
-}
-
-/**
- * Returns TRUE if port library is using cgroup limits, FALSE otherwise
- *
- * @param[in] portLibrary pointer to OMRPortLibrary
- *
- * @return TRUE if port library has been enabled to use cgroup limits, FALSE otherwise
- */
-BOOLEAN 
-omrsysinfo_cgroup_is_limits_enabled(struct OMRPortLibrary *portLibrary)
+BOOLEAN
+omrsysinfo_cgroup_is_system_available(struct OMRPortLibrary *portLibrary)
 {
 	return FALSE;
 }
 
 /**
- * Enable port library to use cgroup limits 
+ * Returns cgroup subsystems available for port library to use
  *
- * @param[in] portLibrary pointer to OMRPortLibrary 
+ * @param[in] portLibrary pointer to OMRPortLibrary
  *
- * @return 0 if the port library can use cgroup limits, otherwise negative error code
+ * @return bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_* indicating the
+ * subsystems that are available
  */
-int32_t 
-omrsysinfo_cgroup_enable_limits(struct OMRPortLibrary *portLibrary)
+uint64_t
+omrsysinfo_cgroup_get_available_subsystems(struct OMRPortLibrary *portLibrary)
 {
-	return OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM;
+	return 0;
+}
+
+/**
+ * Checks if the specified cgroup subsystems are available for port library to use.
+ *
+ * @param[in] portLibrary pointer to OMRPortLibrary
+ * @param[in] subsystemFlags bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_*
+ *
+ * @return bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_* indicating the
+ * subsystems that are available 
+ */
+uint64_t
+omrsysinfo_cgroup_are_subsystems_available(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlags)
+{
+	return FALSE;
+}
+
+/**
+ * Returns cgroup subsystems enabled for port library to use
+ *
+ * @param[in] portLibrary pointer to OMRPortLibrary
+ *
+ * @return bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_* indicating the
+ * subsystems that are enbaled
+ */
+uint64_t
+omrsysinfo_cgroup_get_enabled_subsystems(struct OMRPortLibrary *portLibrary)
+{
+	return 0;
+}
+
+/**
+ * Enable port library to use specified cgroup subsystems
+ *
+ * @param[in] portLibrary pointer to OMRPortLibrary
+ * @param[in] subsystems bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_* 
+ * indicating the subsystems to be enabled 
+ *                           
+ * @return bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_* indicating the subsystems that are enabled
+ */
+uint64_t
+omrsysinfo_cgroup_enable_subsystems(struct OMRPortLibrary *portLibrary, uint64_t requestedSubsystems)
+{
+	return 0;
+}
+
+/**
+ * Check which subsystems are enabled in port library
+ *
+ * @param[in] portLibrary pointer to OMRPortLibrary
+ * @param[in] subsystemsFlags bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_*
+ *
+ * @return bitwise-OR of flags of type OMR_CGROUP_SUBSYSTEMS_* indicating the subsystems that are enabled
+ */
+uint64_t
+omrsysinfo_cgroup_are_subsystems_enabled(struct OMRPortLibrary *portLibrary, uint64_t subsystemsFlags)
+{
+	return 0;
 }
 
 /**
@@ -852,6 +917,7 @@ omrsysinfo_cgroup_enable_limits(struct OMRPortLibrary *portLibrary)
  * omrsysinfo_cgroup_enable_limits() before calling this function.
  * When the fuction returns OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM,
  * value of *limits is unspecified.
+ * Note that 'limit' parameter must not be NULL.
  *
  * @param[in] portLibrary pointer to OMRPortLibrary
  * @param[out] limit pointer to uint64_t which successful return contains memory limit imposed by cgroup

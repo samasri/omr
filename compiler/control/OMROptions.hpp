@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OMR_OPTIONS_INCL
 #define OMR_OPTIONS_INCL
@@ -112,7 +115,6 @@ enum TR_CompilationOptions
 
    TR_TraceBC                    = 0x00010000,
    TR_TraceInfo                  = 0x00020000,
-   TR_TraceOSR                   = TR_TraceInfo, // We want this on by default with traceFull
    TR_TraceTrees                 = 0x00040000,
    TR_TraceCG                    = 0x00080000,
    TR_TraceAliases               = 0x00100000,
@@ -292,10 +294,10 @@ enum TR_CompilationOptions
    TR_TLHPrefetch                         = 0x00002000 + 6,
    TR_ReservingLocks                      = 0x00004000 + 6, // Can be merged with TR_DisableLockResevation when lock reservation is enabled on all platforms
    TR_DisableLockResevation               = 0x00008000 + 6,
-   // Available                           = 0x00010000 + 6,
+   TR_DisableNopBreakpointGuard           = 0x00010000 + 6,
    TR_DisableAggressiveRecompilations     = 0x00020000 + 6,
    TR_DisableVariablePrecisionDAA         = 0x00040000 + 6,
-   // Available                           =0x00080000 + 6,
+   TR_ContinueAfterILValidationError      = 0x00080000 + 6,
    TR_DisableScorchingSampleThresholdScalingBasedOnNumProc = 0x00100000 + 6,
    TR_CummTiming                          = 0x00200000 + 6,
    TR_ReserveAllLocks                     = 0x00400000 + 6,
@@ -307,19 +309,19 @@ enum TR_CompilationOptions
    TR_DisableNewLoopTransfer              = 0x10000000 + 6, // loop versioning for virtual guards
    TR_UseSamplingJProfilingForDLT                 = 0x20000000 + 6,
    TR_UseSamplingJProfilingForInterpSampledMethods= 0x40000000 + 6,
-   // Available                           = 0x80000000 + 6,
+   TR_EnableObjectFileGeneration          = 0x80000000 + 6,
 
    // Option word 7
    //
    TR_DisableCodeCacheSnippets            = 0x00000020 + 7,
    TR_EnableReassociation                 = 0x00000040 + 7,
    TR_DisableSSOpts                       = 0x00000080 + 7,
-   // Available                           = 0x00000100 + 7,
+   TR_TraceObjectFileGeneration           = 0x00000100 + 7,
    TR_DisableDelayRelocationForAOTCompilations   = 0x00000200 + 7,
-   TR_DisableLateEdgeSplitting            = 0x00000400 + 7,
+   // Available                           = 0x00000400 + 7,
    TR_DisableLoopReplicatorColdSideEntryCheck = 0x00000800 + 7,
    TR_TraceVFPSubstitution                = 0x00001000 + 7,
-   // Available                           = 0x00002000 + 7,
+   TR_DontDowgradeToColdDuringGracePeriod = 0x00002000 + 7,
    TR_EnableRecompilationPushing          = 0x00004000 + 7,
    TR_EnableJCLInline                     = 0x00008000 + 7, // enable JCL Integer and Long methods inline
    TR_DisableTreePatternMatching          = 0x00010000 + 7,
@@ -350,7 +352,7 @@ enum TR_CompilationOptions
    // Available                           = 0x00000800 + 8,
    TR_DisableLinkageRegisterAllocation    = 0x00001000 + 8,
    // Available                           = 0x00002000 + 8,
-   TR_EnableSpecializedEpilogues          = 0x00004000 + 8,
+   // Available                           = 0x00004000 + 8,
    TR_DisableCompilationAfterDLT          = 0x00008000 + 8,
    TR_DLTMostOnce                         = 0x00010000 + 8,
    TR_DisableSelectiveNoOptServer         = 0x00020000 + 8,
@@ -375,7 +377,7 @@ enum TR_CompilationOptions
    // Available                           = 0x00000020 + 9,
    TR_DisableHysteresis                   = 0x00000040 + 9, // DFP
    TR_DisableTLHPrefetch                  = 0x00000080 + 9,
-   // Available                           = 0x00000100 + 9,
+   TR_DisableJProfilerThread              = 0x00000100 + 9,
    TR_DisableIProfilerThread              = 0x00000200 + 9,
    TR_DisableGuardedCountingRecompilations = 0x00000400 + 9,
    TR_EnableCompYieldStats                = 0x00000800 + 9,
@@ -384,7 +386,7 @@ enum TR_CompilationOptions
    TR_VerboseInlineProfiling              = 0x00004000 + 9,
    // Available                           = 0x00008000 + 9,
    // Available                           = 0x00010000 + 9,
-   // Available                           = 0x00020000 + 9,
+   TR_DisableIntegerCompareSimplification = 0x00020000 + 9,
    TR_DisableAutoSIMD                      = 0x00040000 + 9,
    TR_DisableOOL                          = 0x00080000 + 9,
    TR_DisableWriteBarriersRangeCheck      = 0x00100000 + 9,
@@ -474,7 +476,7 @@ enum TR_CompilationOptions
    TR_AggressiveOpts                          = 0x00010000 + 12,
    TR_DisableMarshallingIntrinsics            = 0x00020000 + 12,
    TR_DisablePackedDecimalIntrinsics          = 0x00040000 + 12,
-   TR_DisablePackedLongConversion             = 0x00080000 + 12,
+   // Available                               = 0x00080000 + 12,
    TR_DisableDememoization                    = 0x00100000 + 12,
    TR_DisableStringBuilderTransformer         = 0x00200000 + 12,
    TR_TraceILGen                              = 0x00400000 + 12,
@@ -534,7 +536,7 @@ enum TR_CompilationOptions
    TR_DebugInliner                                    = 0x00040000 + 14,
    TR_TracePartialInlining                            = 0x00080000 + 14,
    // Available                                       = 0x00100000 + 14,
-   // Available                                       = 0x00200000 + 14,
+   TR_TraceOSR                                        = 0x00200000 + 14,
    TR_EnableOSR                                       = 0x00400000 + 14,
    TR_DisableAOTCheckCastInlining                     = 0x00800000 + 14,
    TR_DisableAOTInstanceOfInlining                    = 0x01000000 + 14,
@@ -562,7 +564,7 @@ enum TR_CompilationOptions
    TR_DisableOSRLocalRemat                            = 0x00040000 + 15,
    TR_DoNotUsePersistentIprofiler                     = 0x00080000 + 15,
    TR_DoNotUseFastStackwalk                           = 0x00100000 + 15,
-   // Available                                       = 0x00200000 + 15,
+   TR_DisableOSRLiveRangeAnalysis                     = 0x00200000 + 15,
    // Available                                       = 0x00400000 + 15,
    // Available                                       = 0x00800000 + 15,
    //                                                 = 0x01000000 + 15,   AVAILABLE
@@ -591,7 +593,7 @@ enum TR_CompilationOptions
    TR_DisableSynchronizedFieldLoad                    = 0x00040000 + 16,
    TR_QuickProfile                                    = 0x00080000 + 16,
    TR_DisableVerification                             = 0x00100000 + 16,
-   TR_DisableZHelix                                   = 0x00200000 + 16,
+   TR_DisableZEC12                                    = 0x00200000 + 16,
    TR_BreakOnJ2IThunk                                 = 0x00400000 + 16,
    TR_DisableGlobalStaticBaseRegister                 = 0x00800000 + 16,
    TR_DisableMethodHandleThunks                       = 0x01000000 + 16,
@@ -735,7 +737,7 @@ enum TR_CompilationOptions
    TR_EnableScratchMemoryDebugging                    = 0x00400000 + 21,
    TR_ProfileMemoryRegions                            = 0x00800000 + 21,
    TR_DisableConverterReducer                         = 0x01000000 + 21,
-   // Available                                       = 0x02000000 + 21,
+   TR_CompileTimeProfiler                             = 0x02000000 + 21,
    // Available                                       = 0x04000000 + 21,
    // Available                                       = 0x08000000 + 21,
    // Available                                       = 0x10000000 + 21,
@@ -898,14 +900,14 @@ enum TR_CompilationOptions
    TR_DisableSIMDStringCaseConv                       = 0x00040000 + 27,
    TR_DisableSIMDUTF16BEEncoder                       = 0x00080000 + 27,
    TR_DisableSIMDArrayCopy                            = 0x00100000 + 27,
-   // Available                                       = 0x00200000 + 27,
+   TR_CheckStructureDuringExitExtraction              = 0x00200000 + 27,
    TR_EnableRMODE64                                   = 0x00400000 + 27,
    TR_EnableLocalVPSkipLowFreqBlock                   = 0x00800000 + 27,
    TR_DisableLastITableCache                          = 0x01000000 + 27,
    TR_StressTrampolines                               = 0x02000000 + 27,
    TR_DisableSIMDUTF16LEEncoder                       = 0x04000000 + 27,
-   // Available                                       = 0x08000000 + 27,
-   // Available                                       = 0x10000000 + 27,
+   TR_DisableExitExtraction                           = 0x08000000 + 27,
+   TR_TraceExitExtraction                             = 0x10000000 + 27,
    TR_VaryInlinerAggressivenessWithTime               = 0x20000000 + 27,
    TR_EnableGRACostBenefitModel                       = 0x40000000 + 27,
    TR_VerifyReferenceCounts                           = 0x80000000 + 27,
@@ -956,13 +958,13 @@ enum TR_CompilationOptions
    TR_EnableMethodTrampolineReservation               = 0x00400000 + 29,
    TR_UseGlueIfMethodTrampolinesAreNotNeeded          = 0x00800000 + 29,
    TR_EnableFpreductionAnnotation                     = 0x01000000 + 29,
-   // Avialable                                       = 0x02000000 + 29,
+   TR_ExtractExitsByInvalidatingStructure             = 0x02000000 + 29,
    TR_DisableCrackedEditOptimization                  = 0x04000000 + 29,
    TR_InhibitRIBufferProcessingDuringDeepSteady       = 0x08000000 + 29,
    TR_DontDowngradeWhenRIIsTemporarilyOff             = 0x10000000 + 29,
    TR_DontRIUpgradeAOTWarmMethods                     = 0x20000000 + 29,
    TR_UseRIOnlyForLargeQSZ                            = 0x20000000 + 29,
-   // Available                                       = 0x40000000 + 29,
+   TR_EnableAggressiveLiveness                        = 0x40000000 + 29,
    // Available                                       = 0x80000000 + 29,
 
 
@@ -977,15 +979,14 @@ enum TR_CompilationOptions
    TR_EnableNewCheckCastInstanceOf                    = 0x00001000 + 30,
    TR_DisableHardwareProfilerReducedWarm              = 0x00002000 + 30,
    TR_RestrictStaticFieldFolding                      = 0x00004000 + 30,
-   // Available                                       = 0x00008000 + 30,
-   // Available                                       = 0x00010000 + 30,
+   TR_TraceILValidator                                = 0x00008000 + 30,
+   TR_EnableJProfilingInProfilingCompilations         = 0x00010000 + 30,
    TR_EnableJProfiling                                = 0x00020000 + 30,
    TR_DisableForcedEXInlining                         = 0x00040000 + 30,
    TR_EnableOnsiteCacheForSuperClassTest              = 0x00080000 + 30,
    TR_DisableVMCSProfiling                            = 0x00100000 + 30,
    TR_EnableHardwareProfileIndirectDispatch           = 0x00200000 + 30,
    TR_DisableCompareAndBranchInstruction              = 0x00400000 + 30,
-   TR_EnableAggressiveLiveness                        = 0x00010000 + 30,
    TR_EnableMetadataBytecodePCToIAMap                 = 0x00800000 + 30,
    TR_DisableHardwareProfilerReducedWarmUpgrades      = 0x01000000 + 30,
    TR_DontAddHWPDataToIProfiler                       = 0x02000000 + 30,
@@ -1043,7 +1044,7 @@ enum TR_CompilationOptions
    TR_TraceRAPreAssignmentInstruction   = 0x00000008,
    TR_TraceRARegisterStates             = 0x00000010,
    TR_TraceRASpillTemps                 = 0x00000020,
-   TR_TraceRALateEdgeSplitting          = 0x00000040,
+   // Available                         = 0x00000040,
    TR_TraceRAListing                    = 0x00000200,
 
    // Instruction Level GRA tracing option word
@@ -1149,6 +1150,8 @@ enum TR_VerboseFlags
    TR_VerboseHookDetailsClassLoading,
    TR_VerboseHookDetailsClassUnloading,
    TR_VerboseSampleDensity,
+
+   TR_VerboseProfiling,
 
    //If adding new options add an entry to _verboseOptionNames as well
    TR_NumVerboseOptions        // Must be the last one;
@@ -1947,6 +1950,8 @@ public:
    static bool isQuickstartDetected() { return _quickstartDetected; }
    void disableCHOpts(); // disable CHOpts, but also IPA and prex which depend on the chtable
 
+   const char *getObjectFileName() { return _objectFileName; }
+
 protected:
    void  jitPreProcess();
    bool  fePreProcess(void *base);
@@ -2429,6 +2434,8 @@ private:
    int32_t                     _maxSzForVPInliningWarm;
 
    int32_t                     _loopyAsyncCheckInsertionMaxEntryFreq;
+
+   char *                      _objectFileName;
 
    }; // TR::Options
 

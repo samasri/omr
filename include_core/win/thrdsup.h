@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 #ifndef thrdsup_h
 #define thrdsup_h
@@ -175,20 +179,20 @@ extern struct J9ThreadLibrary default_library;
 
 #define ENABLE_OS_THREAD_STATS(self)
 
-#define J9OSMUTEX_INIT(mutex) MUTEX_INIT((mutex))
-#define J9OSMUTEX_DESTROY(mutex) MUTEX_DESTROY((mutex))
-#define J9OSMUTEX_ENTER(mutex) MUTEX_ENTER((mutex))
-#define J9OSMUTEX_EXIT(mutex) MUTEX_EXIT((mutex))
-#define J9OSMUTEX_TRY_ENTER(mutex) MUTEX_TRY_ENTER((mutex))
-#define J9OSMUTEX_FREE(mutex) (0)
-#define J9OSCOND_INIT(cond) COND_INIT((cond))
-#define J9OSCOND_DESTROY(cond) COND_DESTROY((cond))
-#define J9OSCOND_NOTIFY(cond) COND_NOTIFY((cond))
-#define J9OSCOND_NOTIFY_ALL(cond) COND_NOTIFY_ALL((cond))
-#define J9OSCOND_FREE(cond) (0)
-#define J9OSCOND_WAIT_IF_TIMEDOUT(cond, mutex, millis, nanos) COND_WAIT_IF_TIMEDOUT((cond), (mutex), (millis), (nanos))
-#define J9OSCOND_WAIT_TIMED_LOOP() COND_WAIT_TIMED_LOOP()
-#define J9OSCOND_WAIT(cond, mutex) COND_WAIT((cond), (mutex))
-#define J9OSCOND_WAIT_LOOP() COND_WAIT_LOOP()
+#define OMROSMUTEX_INIT(mutex) MUTEX_INIT((mutex))
+#define OMROSMUTEX_DESTROY(mutex) MUTEX_DESTROY((mutex))
+#define OMROSMUTEX_ENTER(mutex) MUTEX_ENTER((mutex))
+#define OMROSMUTEX_EXIT(mutex) MUTEX_EXIT((mutex))
+#define OMROSMUTEX_TRY_ENTER(mutex) MUTEX_TRY_ENTER((mutex))
+#define OMROSMUTEX_FREE(mutex) (0)
+#define OMROSCOND_INIT(cond) COND_INIT((cond))
+#define OMROSCOND_DESTROY(cond) COND_DESTROY((cond))
+#define OMROSCOND_NOTIFY(cond) COND_NOTIFY((cond))
+#define OMROSCOND_NOTIFY_ALL(cond) COND_NOTIFY_ALL((cond))
+#define OMROSCOND_FREE(cond) (0)
+#define OMROSCOND_WAIT_IF_TIMEDOUT(cond, mutex, millis, nanos) COND_WAIT_IF_TIMEDOUT((cond), (mutex), (millis), (nanos))
+#define OMROSCOND_WAIT_TIMED_LOOP() COND_WAIT_TIMED_LOOP()
+#define OMROSCOND_WAIT(cond, mutex) COND_WAIT((cond), (mutex))
+#define OMROSCOND_WAIT_LOOP() COND_WAIT_LOOP()
 
 #endif     /* thrdsup_h */

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stddef.h>                                // for NULL
@@ -221,7 +224,6 @@ OMR::X86::MemoryReference::MemoryReference(
             if (symbol->isMethodMetaData())
                {
                _baseRegister = cg->getMethodMetaDataRegister();
-               cg->setVMThreadRequired(true);
                }
 
             rcount_t refCount = base->getReferenceCount();
@@ -251,7 +253,6 @@ OMR::X86::MemoryReference::MemoryReference(
             else
                {
                _baseRegister = cg->getMethodMetaDataRegister();
-               cg->setVMThreadRequired(true);
                }
             _baseNode = NULL;
             }
@@ -307,7 +308,6 @@ OMR::X86::MemoryReference::initialize(
    if (symbol->isMethodMetaData())
       {
       _baseRegister = cg->getMethodMetaDataRegister();
-      cg->setVMThreadRequired(true);
       }
    else if (symbol->isRegisterMappedSymbol())
       {
@@ -416,9 +416,6 @@ OMR::X86::MemoryReference::decNodeReferenceCounts(TR::CodeGenerator *cg)
 
    if (_baseRegister != NULL)
       {
-      if (_baseRegister == vmThreadReg)
-         cg->setVMThreadRequired(false);
-
       if (_baseNode != NULL)
          cg->decReferenceCount(_baseNode);
       else if (_baseRegister != vmThreadReg)
@@ -427,9 +424,6 @@ OMR::X86::MemoryReference::decNodeReferenceCounts(TR::CodeGenerator *cg)
 
    if (_indexRegister != NULL)
       {
-      if (_indexRegister == vmThreadReg)
-         cg->setVMThreadRequired(false);
-
       if (_indexNode != NULL)
          cg->decReferenceCount(_indexNode);
       else if (_indexRegister != vmThreadReg)
@@ -444,16 +438,12 @@ OMR::X86::MemoryReference::stopUsingRegisters(TR::CodeGenerator *cg)
    TR::Register *vmThreadReg = cg->getVMThreadRegister();
    if (_baseRegister != NULL)
       {
-      if (_baseRegister == vmThreadReg)
-         cg->setVMThreadRequired(false);
-      else
+      if (_baseRegister != vmThreadReg)
          cg->stopUsingRegister(_baseRegister);
       }
    if (_indexRegister != NULL)
       {
-      if (_indexRegister == vmThreadReg)
-         cg->setVMThreadRequired(false);
-      else
+      if (_indexRegister != vmThreadReg)
          cg->stopUsingRegister(_indexRegister);
       }
    }
@@ -535,7 +525,7 @@ OMR::X86::MemoryReference::populateMemoryReference(
       evalSubTree = false;
 
    if (evalSubTree &&
-       subTree->getReferenceCount() > 1 || subTree->getRegister() != NULL || self()->inUpcastingMode() && !subTree->cannotOverflow())
+       subTree->getReferenceCount() > 1 || subTree->getRegister() != NULL || (self()->inUpcastingMode() && !subTree->cannotOverflow()))
       {
       if (_baseRegister != NULL)
          {
@@ -692,7 +682,6 @@ OMR::X86::MemoryReference::populateMemoryReference(
                else
                   {
                   _indexRegister = cg->getMethodMetaDataRegister();
-                  cg->setVMThreadRequired(true);
                   }
                _indexNode = NULL;
                }
@@ -707,7 +696,6 @@ OMR::X86::MemoryReference::populateMemoryReference(
                else
                   {
                   _baseRegister = cg->getMethodMetaDataRegister();
-                  cg->setVMThreadRequired(true);
                   }
                _baseNode = NULL;
                }
@@ -1210,7 +1198,7 @@ OMR::X86::MemoryReference::addMetaDataForCodeAddress(
             && self()->getSymbolReference().getSymbol()->isClassObject()
             && cg->wantToPatchClassPointer(NULL, cursor)) // might not point to beginning of class
             {
-            cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)*(int32_t*)cursor, (void *) cursor, self()->getUnresolvedDataSnippet() != NULL);
+            cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)(uintptr_t)*(int32_t*)cursor, (void *) cursor, self()->getUnresolvedDataSnippet() != NULL);
             }
 
          break;
@@ -1248,7 +1236,7 @@ OMR::X86::MemoryReference::addMetaDataForCodeAddress(
 
                      if (cg->wantToPatchClassPointer(NULL, cursor)) // might not point to beginning of class
                         {
-                        cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)*(int32_t*)cursor, (void *) cursor, false);
+                        cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)(uintptr_t)*(int32_t*)cursor, (void *) cursor, false);
                         }
                      }
                   else
@@ -1279,7 +1267,7 @@ OMR::X86::MemoryReference::addMetaDataForCodeAddress(
                         {
                         cg->addAOTRelocation(new (cg->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                            (uint8_t *)&self()->getSymbolReference(),
-                                                                           node ? (uint8_t *)node->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                           node ? (uint8_t *)(uintptr_t)node->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                            TR_DataAddress, cg),
                                              __FILE__,
                                              __LINE__,
@@ -1345,7 +1333,7 @@ OMR::X86::MemoryReference::addMetaDataForCodeAddress(
                && self()->getSymbolReference().getSymbol()->isClassObject()
                && cg->wantToPatchClassPointer(NULL, cursor)) // possibly unresolved, may not point to beginning of class
                {
-               cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)*(int32_t*)cursor, (void *) cursor, self()->getUnresolvedDataSnippet() != NULL);
+               cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)(uintptr_t)*(int32_t*)cursor, (void *) cursor, self()->getUnresolvedDataSnippet() != NULL);
                }
             }
 
@@ -1364,7 +1352,7 @@ OMR::X86::MemoryReference::addMetaDataForCodeAddress(
                && self()->getSymbolReference().getSymbol()->isClassObject()
                && cg->wantToPatchClassPointer(NULL, cursor)) // possibly unresolved, may not point to beginning of class
                {
-               cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)*(int32_t*)cursor, (void *)cursor, self()->getUnresolvedDataSnippet() != NULL);
+               cg->jitAdd32BitPicToPatchOnClassRedefinition((void*)(uintptr_t)*(int32_t*)cursor, (void *)cursor, self()->getUnresolvedDataSnippet() != NULL);
                }
             }
 

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
@@ -69,7 +72,6 @@ const float SECOND_BEST_MIN_CALL_FREQUENCY = .2275f; //65% of 35%
 
 class TR_BitVector;
 class TR_CallStack;
-class TR_ExtraAddressInfo;
 class TR_FrontEnd;
 class TR_HashTabInt;
 class TR_InlineBlocks;
@@ -535,8 +537,31 @@ class OMR_InlinerUtil : public TR::OptimizationUtil, public OMR_InlinerHelper
       virtual void adjustMethodByteCodeSizeThreshold(TR::ResolvedMethodSymbol *callSymbol, int &methodByteCodeSizeThreshold){ return; }
       virtual TR_PrexArgInfo *computePrexInfo(TR_CallTarget *target);
       virtual void collectCalleeMethodClassInfo(TR_ResolvedMethod *calleeMethod);
+
+      /**
+       * \brief
+       *    Check if another pass of targeted inlining is needed if the given method is inlined.
+       *
+       * \parm callee
+       *    The method symbol of the callee.
+       *
+       * \return
+       *    True if another pass of targeted inlining is needed, otherwise false.
+       *
+       * \note
+       *    Targeted inlining is meant to deal with method call chains where the receiver of current call stores the information
+       *    of the next call, which is usually the receiver or the method of the next call. Knowing the receiver of the first call
+       *    means we can devirtualize all the calls along the chain.
+       *
+       *    Each method except the last one in the chain usually contains simple code that manipulates the arguments for the next
+       *    call. The last method in the chain is usually the most important one, it does the real job and can contain arbitrary
+       *    code.
+       *
+       *    The goal of targeted inlining is to inline along the call chain to get the most important method inlined, which is the
+       *    last one in the chain. It does not care about other callsites.
+       */
+      virtual bool needTargetedInlining(TR::ResolvedMethodSymbol *callee);
    protected:
-      virtual bool validateInterfaceImplementation(TR_ResolvedMethod *interfaceMethod);
       virtual void refineColdness (TR::Node* node, bool& isCold);
       virtual void computeMethodBranchProfileInfo (TR::Block * cfgBlock, TR_CallTarget* calltarget, TR::ResolvedMethodSymbol* callerSymbol);
       virtual int32_t getCallCount(TR::Node *callNode);

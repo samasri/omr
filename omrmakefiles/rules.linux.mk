@@ -1,19 +1,23 @@
 ###############################################################################
+# Copyright (c) 2015, 2018 IBM Corp. and others
 #
-# (c) Copyright IBM Corp. 2015
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
 #
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
 ###
@@ -53,7 +57,6 @@ ifeq (ppc,$(OMR_HOST_ARCH))
         endif
     endif
 endif
-
 
 # Compile without exceptions
 ifeq (gcc,$(OMR_TOOLCHAIN))
@@ -100,6 +103,8 @@ endif
 # option, it is silently ignored.
 GLOBAL_ASFLAGS+=-noexecstack
 
+ARM_ARCH_FLAGS=-march=armv6 -marm -mfpu=vfp -mfloat-abi=hard
+
 ifeq (ppc,$(OMR_HOST_ARCH))
     ifeq (gcc,$(OMR_TOOLCHAIN))
         ifeq (1,$(OMR_ENV_DATA64))
@@ -135,7 +140,9 @@ else
             endif
         else
             ifeq (arm,$(OMR_HOST_ARCH))
-                GLOBAL_ASFLAGS+=-march=armv6 -mfpu=vfp -mfloat-abi=hard
+                GLOBAL_ASFLAGS+=$(ARM_ARCH_FLAGS)
+            else ifeq (aarch64,$(OMR_HOST_ARCH))
+                GLOBAL_ASFLAGS+=-march=armv8-a+simd
             else
                 # Nothing
             endif
@@ -147,13 +154,10 @@ endif
 ### Platform Flags
 ###
 
-## Debugging Infomation
+## Debugging Information
 # Indicate that GNU debug symbols are being used
 ifeq (gcc,$(OMR_TOOLCHAIN))
-  ifeq (arm,$(OMR_HOST_ARCH))
-    USE_GNU_DEBUG:=1
-  endif
-  ifeq (x86,$(OMR_HOST_ARCH))
+  ifneq (,$(filter aarch64 arm ppc s390 x86,$(OMR_HOST_ARCH)))
     USE_GNU_DEBUG:=1
   endif
 endif
@@ -184,9 +188,15 @@ ifeq (x86,$(OMR_HOST_ARCH))
         GLOBAL_CPPFLAGS+=-DJ9X86
     endif
 
+else ifeq (aarch64,$(OMR_HOST_ARCH))
+    GLOBAL_CFLAGS+=-march=armv8-a+simd -Wno-unused-but-set-variable
+    GLOBAL_CXXFLAGS+=-march=armv8-a+simd -Wno-unused-but-set-variable
+    GLOBAL_CPPFLAGS+=-DJ9AARCH64 -DAARCH64GNU -DAARCH64 -DFIXUP_UNALIGNED -Wno-unused-but-set-variable
+
 else
     ifeq (arm,$(OMR_HOST_ARCH))
-        GLOBAL_CPPFLAGS+=-DJ9ARM -DARMGNU -DARM -DFIXUP_UNALIGNED
+        GLOBAL_CFLAGS+=$(ARM_ARCH_FLAGS) -Wno-unused-but-set-variable
+        GLOBAL_CPPFLAGS+=-DJ9ARM -DARMGNU -DARM -DFIXUP_UNALIGNED $(ARM_ARCH_FLAGS) -Wno-unused-but-set-variable
     else
         ifeq (ppc,$(OMR_HOST_ARCH))
             GLOBAL_CPPFLAGS+=-DLINUXPPC
@@ -245,7 +255,6 @@ ifneq (,$(findstring executable,$(ARTIFACT_TYPE)))
   DEFAULT_LIBS:=-lm -lpthread -lc -lrt -ldl -lutil -Wl,-z,origin,-rpath,\$$ORIGIN,--disable-new-dtags,-rpath-link,$(top_srcdir)
   GLOBAL_LDFLAGS+=$(DEFAULT_LIBS)
 endif
-
 
 ###
 ### Shared Libraries
@@ -312,7 +321,6 @@ endif # OMR_TOOLCHAIN is not "xlc"
 
 endif # ARTIFACT_TYPE contains "shared"
 
-
 ###
 ### Warning As Errors
 ###
@@ -331,7 +339,6 @@ ifeq ($(OMR_WARNINGS_AS_ERRORS),1)
         GLOBAL_CXXFLAGS+=-Wreturn-type -Werror
     endif
 endif
-
 
 ###
 ### Enhanced Warnings
@@ -357,7 +364,10 @@ ifeq ($(OMR_OPTIMIZE),1)
         endif
     else
         ifeq (arm,$(OMR_HOST_ARCH))
-            OPTIMIZATION_FLAGS+=-O3 -fno-strict-aliasing -march=armv6 -mfpu=vfp -mfloat-abi=hard -Wno-unused-but-set-variable
+            OPTIMIZATION_FLAGS+=-O3 -fno-strict-aliasing
+        else ifeq (aarch64,$(OMR_HOST_ARCH))
+            #TODO:AARCH64 Do not optimize just yet. we need debugging support until we are assured this run
+            OPTIMIZATION_FLAGS+=-O3 -fno-strict-aliasing
         else
             ifeq (ppc,$(OMR_HOST_ARCH))
                 OPTIMIZATION_FLAGS+=-O3
@@ -390,16 +400,16 @@ ifeq (1,$(USE_GNU_DEBUG))
 
 define LINK_C_SHARED_COMMAND
 $(CCLINKSHARED) -o $@ $(OBJECTS) $(LDFLAGS) $(MODULE_LDFLAGS) $(GLOBAL_LDFLAGS)
-cp $@ $@.dbg
+$(OBJCOPY) --only-keep-debug $@ $@.dbg
 $(OBJCOPY) --strip-debug $@
-$(OBJCOPY) --add-gnu-debuglink=$@ $@.dbg
+$(OBJCOPY) --add-gnu-debuglink=$@.dbg $@
 endef
 
 define LINK_CXX_SHARED_COMMAND
 $(CXXLINKSHARED) -o $@ $(OBJECTS) $(LDFLAGS) $(MODULE_LDFLAGS) $(GLOBAL_LDFLAGS)
-cp $@ $@.dbg
+$(OBJCOPY) --only-keep-debug $@ $@.dbg
 $(OBJCOPY) --strip-debug $@
-$(OBJCOPY) --add-gnu-debuglink=$@ $@.dbg
+$(OBJCOPY) --add-gnu-debuglink=$@.dbg $@
 endef
 
 ## Files to clean
@@ -424,4 +434,3 @@ show_deps:
 ifneq ($(DEPS),)
 -include $(DEPS)
 endif
-

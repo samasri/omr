@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 2017, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+
 #include "omr.h"
 #include "omrhashtable.h"
 
@@ -53,16 +57,15 @@ MM_MarkingDelegate::masterCleanupAfterGC(MM_EnvironmentBase *env)
 {
 	OMRPORT_ACCESS_FROM_OMRVM(env->getOmrVM());
 	J9HashTableState state;
-	ObjectEntry *rEntry = NULL;
+	ObjectEntry *objEntry = NULL;
 	OMR_VM_Example *omrVM = (OMR_VM_Example *)env->getOmrVM()->_language_vm;
-	rEntry = (ObjectEntry *)hashTableStartDo(omrVM->objectTable, &state);
-	while (rEntry != NULL) {
-		if (!_markingScheme->isMarked(rEntry->objPtr)) {
-			omrmem_free_memory((void *)rEntry->name);
-			rEntry->name = NULL;
+	objEntry = (ObjectEntry *)hashTableStartDo(omrVM->objectTable, &state);
+	while (objEntry != NULL) {
+		if (!_markingScheme->isMarked(objEntry->objPtr)) {
+			omrmem_free_memory((void *)objEntry->name);
+			objEntry->name = NULL;
 			hashTableDoRemove(&state);
 		}
-		rEntry = (ObjectEntry *)hashTableNextDo(&state);
+		objEntry = (ObjectEntry *)hashTableNextDo(&state);
 	}
 }
-

@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * (c) Copyright 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #if !defined(COLLECTOR_HPP_)
 #define COLLECTOR_HPP_
@@ -30,7 +34,7 @@
 class MM_AllocateDescription;
 class MM_AllocationContext;
 class MM_CollectorLanguageInterface;
-class MM_ConcurrentGMPStats;
+class MM_ConcurrentPhaseStatsBase;
 class MM_MemoryPool;
 class MM_ObjectAllocationInterface;
 class MM_MemorySubSpace;
@@ -48,7 +52,6 @@ private:
 	uintptr_t _exclusiveAccessCount; /**< The number of times exclusive access requests have been made to use the receiver */
 
 protected:
-	MM_CollectorLanguageInterface *_cli; /**< Language specific interface used to extend the Modron GC framework */
 
 	uintptr_t _bytesRequested;
 
@@ -275,16 +278,19 @@ public:
 	virtual void preMasterGCThreadInitialize(MM_EnvironmentBase *env) {}
 	virtual	void masterThreadGarbageCollect(MM_EnvironmentBase *env, MM_AllocateDescription *allocDescription, bool initMarkMap = false, bool rebuildMarkBits = false) {}
 	virtual bool isConcurrentWorkAvailable(MM_EnvironmentBase *env) { return false; }
-	virtual	void preConcurrentInitializeStatsAndReport(MM_EnvironmentBase *env, MM_ConcurrentGMPStats *stats) {}
+	virtual	void preConcurrentInitializeStatsAndReport(MM_EnvironmentBase *env, MM_ConcurrentPhaseStatsBase *stats) {}
 	virtual uintptr_t masterThreadConcurrentCollect(MM_EnvironmentBase *env) { return 0; }
-	virtual	void postConcurrentUpdateStatsAndReport(MM_EnvironmentBase *env, MM_ConcurrentGMPStats *stats, UDATA bytesConcurrentlyScanned) {}
+	virtual	void postConcurrentUpdateStatsAndReport(MM_EnvironmentBase *env, MM_ConcurrentPhaseStatsBase *stats, UDATA bytesConcurrentlyScanned) {}
 	virtual void forceConcurrentFinish() {}
 	virtual void completeExternalConcurrentCycle(MM_EnvironmentBase *env) {}
+	/**
+	 * @return pointer to collector/phase specific concurrent stats structure
+	 */
+	virtual MM_ConcurrentPhaseStatsBase *getConcurrentPhaseStats() { return NULL; }
 	
-	MM_Collector(MM_CollectorLanguageInterface *cli)
+	MM_Collector()
 		: MM_BaseVirtual()
 		, _exclusiveAccessCount(0)
-		, _cli(cli)
 		, _bytesRequested(0)
 		, _globalCollector(false)
 		, _gcCompleted(false)

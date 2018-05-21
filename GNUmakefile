@@ -1,19 +1,23 @@
 ###############################################################################
-#
-# (c) Copyright IBM Corp. 2015, 2016
-#
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
-#
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
-#
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# Copyright (c) 2015, 2018 IBM Corp. and others
+# 
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
+#      
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
+#    
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
+# 
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
 top_srcdir:=.
@@ -65,7 +69,14 @@ endif
 
 tool_targets += tools/hookgen
 
-HOOK_DEFINITION_FILES = $(abspath ./gc/base/omrmmprivate.hdf ./gc/include/omrmm.hdf ./fvtest/algotest/hooksample.hdf)
+# convert Cygwin path to Windows path with regular slashes
+ifneq (,$(findstring CYGWIN,$(shell uname -s)))
+convertPath = $(shell cygpath -m $1)
+else
+convertPath = $1
+endif
+
+HOOK_DEFINITION_FILES = $(call convertPath,$(abspath ./gc/base/omrmmprivate.hdf ./gc/include/omrmm.hdf ./fvtest/algotest/hooksample.hdf))
 HOOK_DEFINITION_SENTINEL = $(patsubst %.hdf,%.sentinel, $(HOOK_DEFINITION_FILES))
 define HOOKGEN_COMMAND
 cd $(exe_output_dir) && ./hookgen $<
@@ -133,12 +144,6 @@ main_targets += omrtrace
 # OMR Startup
 main_targets += omr omr/startup
 
-# DDR tools
-ifeq (yes,$(ENABLE_DDR))
-postbuild_targets += tools/ddrgen
-targets += tools/ddrgen
-endif
-
 # RAS Tests
 test_targets += fvtest/rastest
 
@@ -150,15 +155,23 @@ endif
 # VM Tests
 test_targets += fvtest/vmtest
 
+# List of targets that are needed for the test compil
+compiler_prereqs = port thread util/pool util/omrutil util/avl util/hashtable util/hookable
+
 # Test Compiler
 ifeq (1,$(OMR_TEST_COMPILER))
-main_targets += fvtest/compilertest
+  main_targets += fvtest/compilertest
 endif
 
 # JitBuilder
 ifeq (1,$(OMR_JITBUILDER))
-main_targets += jitbuilder
-test_targets += fvtest/jitbuildertest jitbuilder/release
+  main_targets += jitbuilder
+  test_targets += fvtest/jitbuildertest jitbuilder/release
+endif
+
+ifeq (yes,$(ENABLE_DDR))
+  postbuild_targets += ddr
+  ddr:: staticlib
 endif
 
 DO_TEST_TARGET := yes
@@ -177,10 +190,9 @@ postbuild_targets += tests
 main_targets := $(sort $(main_targets))
 test_targets := $(sort $(test_targets))
 
-targets += $(tool_targets) $(prebuild_targets) $(main_targets) omr_static_lib $(test_targets)
+targets += $(tool_targets) $(prebuild_targets) $(main_targets) omr_static_lib $(test_targets) ddr
 targets_clean := $(addsuffix _clean,$(targets))
-targets_ddrgen := $(addsuffix _ddrgen,$(filter-out omr_static_lib fvtest/% perftest/% third_party/% tools/%, $(targets)))
-
+targets_ddrgen := $(addsuffix _ddrgen,$(filter-out omr_static_lib jitbuilder/% fvtest/% perftest/% third_party/% tools/% ddr ddr/% example/%,$(targets)))
 
 ###
 ### Rules
@@ -207,7 +219,7 @@ prebuild: tools
 tools:
 	@$(MAKE) -f GNUmakefile $(tool_targets)
 
-.PHONY: tools prebuild mainbuild staticbuild tests postbuild
+.PHONY: tools prebuild mainbuild staticlib tests postbuild
 
 ###
 ### Inter-target Dependencies
@@ -223,8 +235,6 @@ tools/tracegen:: util/a2e
 tools/tracemerge:: util/a2e
 tools/hookgen:: util/a2e
 endif
-
-tools/ddrgen:: staticlib
 
 $(HOOK_DEFINITION_SENTINEL): $(exe_output_dir)/hookgen$(EXEEXT)
 %.sentinel: %.hdf
@@ -250,6 +260,18 @@ fvtest/utiltest:: $(test_prereqs)
 fvtest/vmtest:: $(test_prereqs)
 
 perftest/gctest:: $(test_prereqs)
+
+# Test Compiler dependencies
+ifeq (1,$(OMR_TEST_COMPILER))
+  fvtest/compilertest:: $(compiler_prereqs)
+endif
+
+# JitBuilder dependencies
+ifeq (1,$(OMR_JITBUILDER))
+  fvtest/jitbuildertest:: $(compiler_prereqs)
+  jitbuilder:: $(compiler_prereqs)
+  jitbuilder/release:: $(compiler_prereqs)
+endif
 
 ###
 ### Targets
@@ -283,6 +305,7 @@ endif
 
 
 # preprocess ddrgen-annotated source code
+
 ddrgen:
 	$(MAKE) -f GNUmakefile $(targets_ddrgen)
 

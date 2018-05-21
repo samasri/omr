@@ -1,34 +1,37 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
-#ifndef OMR_COMPILATIONBASE_INCL
-#define OMR_COMPILATIONBASE_INCL
+#ifndef OMR_COMPILATION_INCL
+#define OMR_COMPILATION_INCL
 
 /*
  * The following #define and typedef must appear before any #includes in this file
  */
-#ifndef OMR_COMPILATIONBASE_CONNECTOR
-#define OMR_COMPILATIONBASE_CONNECTOR
+#ifndef OMR_COMPILATION_CONNECTOR
+#define OMR_COMPILATION_CONNECTOR
 namespace OMR { class Compilation; }
 namespace OMR { typedef OMR::Compilation CompilationConnector; }
 #endif
 
-/** 
+/**
  * \file OMRCompilation.hpp
  * \brief Header for OMR::Compilation, root of the Compilation extensible class hierarchy.
  */
@@ -63,6 +66,7 @@ namespace OMR { typedef OMR::Compilation CompilationConnector; }
 #include "optimizer/Optimizations.hpp"        // for Optimizations, etc
 #include "ras/Debug.hpp"                      // for TR_DebugBase
 #include "ras/DebugCounter.hpp"               // for TR_DebugCounter, etc
+#include "ras/ILValidationStrategies.hpp"
 
 
 #include "omr.h"
@@ -93,6 +97,7 @@ namespace TR { class CodeGenerator; }
 namespace TR { class Compilation; }
 namespace TR { class IlGenRequest; }
 namespace TR { class IlVerifier; }
+namespace TR { class ILValidator; }
 namespace TR { class Instruction; }
 namespace TR { class KnownObjectTable; }
 namespace TR { class LabelSymbol; }
@@ -123,9 +128,17 @@ enum CompilationReturnCodes
    COMPILATION_SUCCEEDED = 0,
    COMPILATION_REQUESTED,
    COMPILATION_IL_GEN_FAILURE,
+   COMPILATION_IL_VALIDATION_FAILURE,
    COMPILATION_UNIMPL_OPCODE,
    // Keep this the last one
    COMPILATION_FAILED
+   };
+
+enum ProfilingMode
+   {
+   DisabledProfiling,
+   JitProfiling,
+   JProfiling
    };
 
 #if defined(DEBUG)
@@ -155,10 +168,10 @@ enum CompilationReturnCodes
 #endif
 
 /**
- * \def performTransformation(comp, msg, ...) 
+ * \def performTransformation(comp, msg, ...)
  *
  * \brief Macro that is used to guard optional steps in compilation in order to
- *        aid debuggability  
+ *        aid debuggability
  *
  *
  * Ostensibly, the purpose of performTransformation is to allow code
@@ -166,37 +179,37 @@ enum CompilationReturnCodes
  * isolate a buggy optimization. But this description fails to capture the
  * important effect that performTransformation has on the maintainability of
  * Testarossa’s code base.
- * 
+ *
  * Calls to performTransformation can (and should) be placed around any part of
  * the code that is optional; in an optimizer, that’s a lot of code. Tons of
  * Testarossa code is there only to improve performance–not for correctness–and
  * can therefore be guarded by performTransformation.
- * 
+ *
  * A call in a hypothetical dead code elimination might look like this:
- * 
+ *
  *     if (performTransformation2c(comp(),
  *           "%sDeleting dead candidate [%p]\n", OPT_DETAILS, candidate->_node))
  *        {
- *        // Logic to delete some dead code. 
+ *        // Logic to delete some dead code.
  *        }
- * 
+ *
  * When this opt runs on a method that is being logged, all calls to
  * performTransformation will be assigned a unique number. Running the test
  * case with lastOptTransformationIndex=n will prevent subsequent
  * transformations from occurring. By adjusting n and observing when the test
  * passes and fails, it is possible to narrow down the failing transformation
  * using a binary-search approach.
- * 
+ *
  * But beyond just allowing this opt to be enabled and disabled, this idiom
  * also does the following:
- * 
+ *
  *  -  It describes what the code does without needing a comment
  *  -  It reports the transformation in the log
  *  -  It gives people unfamiliar with the opt a way to locate the code that
  *     caused a particular transformation
  *  -  Combined with countOptTransformations, it allows you to locate methods
  *     in which this opt is occurring
- * 
+ *
  * Most importantly, it identifies exactly the code that should be skipped if
  * someone wanted to prevent this opt from occurring in certain cases. Even if
  * you know nothing about an optimization, you can locate its
@@ -205,7 +218,7 @@ enum CompilationReturnCodes
  * the optimization in some undefined state. The author of the optimization
  * has identified this code as “skippable”, so you can be fairly certain that
  * skipping it will do just what you want.
- * 
+ *
  * If you are developing code that has optional parts, it is strongly
  * recommended to guard them with performTransformation. It is likely to help
  * you debug your code immediately, and will certainly help people after you to
@@ -416,6 +429,7 @@ public:
    int32_t getCompThreadID() const { return _compThreadID; }
 
    const char * signature() { return _signature; }
+   const char * externalName() { return _method->externalName(_trMemory); }
 
    TR::ResolvedMethodSymbol *getJittedMethodSymbol() { return _methodSymbol;}
    TR::CFG *getFlowGraph();
@@ -498,17 +512,6 @@ public:
    // ==========================================================================
    // Should be in Code Generator
    //
-   TR::Instruction *getFirstInstruction() {return _firstInstruction;}
-   TR::Instruction *setFirstInstruction(TR::Instruction *fi) {return (_firstInstruction = fi);}
-
-   TR::Instruction *getAppendInstruction() {return _appendInstruction;}
-   TR::Instruction *setAppendInstruction(TR::Instruction *ai) {return (_appendInstruction = ai);}
-
-   TR::Instruction *getFirstColdInstruction() {return _firstColdInstruction;}
-   TR::Instruction *setFirstColdInstruction(TR::Instruction *fi) {return (_firstColdInstruction = fi);}
-
-   bool nodeNeeds2Regs(TR::Node * node);
-
    // J9
    int32_t getNumReservedIPICTrampolines() const { return _numReservedIPICTrampolines; }
    void setNumReservedIPICTrampolines(int32_t n) { _numReservedIPICTrampolines = n; }
@@ -551,8 +554,6 @@ public:
    // ==========================================================================
    // Should be in Optimizer
    //
-
-   bool isPinningNeeded() { return true; }
 
    // J9
    bool getLoopWasVersionedWrtAsyncChecks() { return _loopVersionedWrtAsyncChecks; }
@@ -665,6 +666,10 @@ public:
 
    bool getAddressEnumerationOption(TR_CompilationOptions o) {return _options->getAddressEnumerationOption(o);}
 
+   TR::ILValidator *getILValidator() { return _ilValidator; }
+   void setILValidator(TR::ILValidator *ilValidator) { _ilValidator = ilValidator; }
+   void validateIL(TR::ILValidationContext ilValidationContext);
+
    void verifyTrees(TR::ResolvedMethodSymbol *s = 0);
    void verifyBlocks(TR::ResolvedMethodSymbol *s = 0);
    void verifyCFG(TR::ResolvedMethodSymbol *s = 0);
@@ -729,11 +734,10 @@ public:
    bool isRecompilationEnabled() { return false; }
 
    int32_t getOptLevel();
- 
+
    TR_Hotness getNextOptLevel() { return _nextOptLevel; }
    void setNextOptLevel(TR_Hotness nextOptLevel) { _nextOptLevel = nextOptLevel; }
    TR_Hotness getMethodHotness();
-   TR_Hotness getDeFactoHotness();
    static const char *getHotnessName(TR_Hotness t);
    const char *getHotnessName();
 
@@ -748,6 +752,7 @@ public:
    TR_OptimizationPlan * getOptimizationPlan() {return _optimizationPlan;}
 
    bool isProfilingCompilation();
+   ProfilingMode getProfilingMode();
    bool isJProfilingCompilation();
 
    TR::Recompilation *getRecompilationInfo() { return _recompilationInfo; }
@@ -827,8 +832,12 @@ public:
     *
     * osrPointNode can be used to identify the node that is believed to be the
     * potential OSR point. Multiple OSR points are not expected within a tree.
+    *
+    * The ignoreInfra flag will result in the call checking the node even if
+    * OSR infrastructure has been removed. By default, if infrastructure has been
+    * removed, this call will always return false.
     */
-   bool isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNode=NULL);
+   bool isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNode=NULL, bool ignoreInfra=false);
    bool isPotentialOSRPointWithSupport(TR::TreeTop *tt);
 
    TR::OSRMode getOSRMode();
@@ -836,6 +845,8 @@ public:
    bool isOSRTransitionTarget(TR::OSRTransitionTarget target);
    int32_t getOSRInductionOffset(TR::Node *node);
    bool requiresAnalysisOSRPoint(TR::Node *node);
+
+   bool pendingPushLivenessDuringIlgen();
 
    // for OSR
    TR_OSRCompilationData* getOSRCompilationData() {return _osrCompilationData;}
@@ -873,14 +884,6 @@ public:
       {
       return _flags.testAny(HasColdBlocks);
       }
-
-   void printMemStatsCS2();
-
-   void printMemStats(const char *name);
-
-   void printMemStatsBefore(const char *name);
-
-   void printMemStatsAfter(const char *name);
 
    TR::ResolvedMethodSymbol *createJittedMethodSymbol(TR_ResolvedMethod *resolvedMethod);
 
@@ -951,8 +954,19 @@ public:
    // To TransformUtil
    void setStartTree(TR::TreeTop * tt);
 
-
+   /**
+    * \brief
+    *    Answers whether the fact that a method has not been executed yet implies
+    *    that the method is cold.
+    *
+    * \return
+    *    true if the fact that a method has not been executed implies it is cold;
+    *    false otherwise
+    */
    bool notYetRunMeansCold();
+
+   TR::Region &aliasRegion();
+   void invalidateAliasRegion();
 
 private:
    void resetVisitCounts(vcount_t, TR::ResolvedMethodSymbol *);
@@ -1027,13 +1041,12 @@ private:
    TR_ResolvedMethod                 *_method; // must be declared before _flowGraph
    TR_ArenaAllocator                 _arenaAllocator;
    const char *                      _allocatorName;
+   TR::Region                        _aliasRegion;
 
 
    TR_IlGenerator                    *_ilGenerator;
+   TR::ILValidator                    *_ilValidator;
    TR::Optimizer                      *_optimizer;
-   TR::Instruction                    *_firstInstruction;
-   TR::Instruction                    *_appendInstruction;
-   TR::Instruction                    *_firstColdInstruction;
    TR_RegisterCandidates             *_globalRegisterCandidates;
    TR::SymbolReferenceTable          *_currentSymRefTab;
    TR::Recompilation                  *_recompilationInfo;

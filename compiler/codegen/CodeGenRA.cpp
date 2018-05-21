@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "codegen/OMRCodeGenerator.hpp"
@@ -65,8 +68,8 @@
 #include "infra/Flags.hpp"                     // for flags32_t
 #include "infra/Link.hpp"                      // for TR_LinkHead
 #include "infra/List.hpp"                      // for List, etc
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
-#include "infra/TRCfgNode.hpp"                 // for CFGNode
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
+#include "infra/CfgNode.hpp"                   // for CFGNode
 #include "optimizer/Optimizations.hpp"
 #include "optimizer/RegisterCandidate.hpp"
 #include "optimizer/Structure.hpp"
@@ -1278,21 +1281,18 @@ OMR::CodeGenerator::pickRegister(TR_RegisterCandidate     *rc,
          }
 
       TR_BitVector remainingRegisters = availableRegisters;
-      if (!self()->comp()->cg()->getSupportsVMThreadGRA() || self()->comp()->getOption(TR_DisableLateEdgeSplitting))
+      TR_BitVector *spilledRegisters = self()->getGlobalRegisters(TR_vmThreadSpill, self()->comp()->getMethodSymbol()->getLinkageConvention());
+      if (spilledRegisters)
          {
-         TR_BitVector *spilledRegisters = self()->getGlobalRegisters(TR_vmThreadSpill, self()->comp()->getMethodSymbol()->getLinkageConvention());
-         if (spilledRegisters)
+         if (self()->traceSimulateTreeEvaluation())
             {
-            if (self()->traceSimulateTreeEvaluation())
-               {
-               TR_BitVector regsToPrint = remainingRegisters;
-               regsToPrint &= *spilledRegisters;
-               traceMsg(self()->comp(), "            vmThread register not enabled; rejected: ");
-               self()->getDebug()->print(self()->comp()->getOptions()->getLogFile(), &regsToPrint);
-               traceMsg(self()->comp(), "\n");
-               }
-            remainingRegisters -= *spilledRegisters;
+            TR_BitVector regsToPrint = remainingRegisters;
+            regsToPrint &= *spilledRegisters;
+            traceMsg(self()->comp(), "            vmThread register not enabled; rejected: ");
+            self()->getDebug()->print(self()->comp()->getOptions()->getLogFile(), &regsToPrint);
+            traceMsg(self()->comp(), "\n");
             }
+         remainingRegisters -= *spilledRegisters;
          }
 
       // 1. Simulate register pressure in each extended basic block.
@@ -1601,17 +1601,6 @@ OMR::CodeGenerator::pickRegister(TR_RegisterCandidate     *rc,
                   if ((node->getOpCodeValue() == TR::treetop) && (node->getFirstChild()->getOpCode().isCall()))
                      {
                      callNode = node->getFirstChild();
-                     }
-
-                  if (callNode &&
-                       (self()->getLinkage()->isRecognizedBuiltin(self()->comp(), callNode) ||
-                       self()->getLinkage()->isAlwaysInlined(callNode)))
-                     {
-                     callNode = NULL;
-                     }
-
-                  if (callNode)
-                     {
                      for (uint32_t i = 0; i < callNode->getNumChildren(); i++)
                         {
                         bool isUnpreferred;
@@ -1647,7 +1636,7 @@ OMR::CodeGenerator::pickRegister(TR_RegisterCandidate     *rc,
                               }
                            }
                         }
-                     } // end if (callNode)
+                     }
 
                   if (!candidate)
                      {
@@ -2127,15 +2116,11 @@ OMR::CodeGenerator::findCoalescenceForRegisterCopy(TR::Node *node, TR_RegisterCa
 TR_GlobalRegisterNumber
 OMR::CodeGenerator::findCoalescenceRegisterForParameter(TR::Node *callNode, TR_RegisterCandidate *rc, uint32_t childIndex, bool *isUnpreferred)
    {
-   int32_t realRegNum = -1;
-
    TR::Node *paramNode = callNode->getChild(childIndex);
    if (paramNode->getOpCode().isLoadVarDirect())
       {
       int32_t paramSymRefNum = paramNode->getSymbolReference()->getReferenceNumber();
       *isUnpreferred = !(paramSymRefNum == rc->getSymbolReference()->getReferenceNumber());
-      TR_GlobalRegisterNumber candidateRegister = self()->getLinkage()->getInRegisterNumberForParameter(callNode, childIndex);
-      return candidateRegister;
       }
    return -1;
    }
@@ -2386,7 +2371,7 @@ static TR_RegisterCandidate *findCandidate(TR::SymbolReference *symRef, TR_LinkH
 static void rememberMostRecentValue(TR::SymbolReference *symRef, TR::Node *valueNode, OMR::CodeGenerator::TR_RegisterPressureState *state, TR::CodeGenerator *cg)
    {
    if (  state->_alreadyAssignedOnExit.isSet(symRef->getReferenceNumber())
-      || state->_candidate && state->getCandidateSymRef() == symRef)
+      || (state->_candidate && (state->getCandidateSymRef() == symRef)))
       {
       TR_RegisterCandidate *candidate = findCandidate(symRef, state->_candidatesAlreadyAssigned, state->_candidate);
       TR_ASSERT(candidate, "rememberMostRecentValue: there should be a matching candidate for #%d %s", symRef->getReferenceNumber(), cg->getDebug()->getName(symRef));
@@ -2452,11 +2437,6 @@ OMR::CodeGenerator::simulateBlockEvaluation(
    {
    TR_ASSERT(!block->isExtensionOfPreviousBlock(), "simulateBlockEvaluation operates on extended basic blocks");
    state->_currentBlock = block;
-
-#if defined(TR_TARGET_S390)
-   if (self()->getCurrentlyRestrictedRegisters())
-      self()->getCurrentlyRestrictedRegisters()->empty();
-#endif
 
    if (self()->traceSimulateTreeEvaluation())
       {
@@ -2770,13 +2750,6 @@ OMR::CodeGenerator::simulateTreeEvaluation(TR::Node *node, TR_RegisterPressureSt
       if (isCall)
          {
          isCall = self()->comp()->cg()->willBeEvaluatedAsCallByCodeGen(node, self()->comp());
-         }
-
-      if (isCall &&
-          (self()->getLinkage()->isRecognizedBuiltin(self()->comp(), node) ||
-           self()->getLinkage()->isAlwaysInlined(node)))
-         {
-         isCall = false;
          }
 
       if (isCall && node->isTheVirtualCallNodeForAGuardedInlinedCall())
@@ -3120,7 +3093,10 @@ OMR::CodeGenerator::simulateNodeEvaluation(TR::Node *node, TR_RegisterPressureSt
          self()->simulateMemoryReference(&memref, node->getChild(0), state, summary);
       }
 
-   traceMsg(self()->comp(), "state->_gprPressure = %d summary->_gprPressure = %d summary->PRESSURE_LIMIT = %d\n",state->_gprPressure,summary->_gprPressure,summary->PRESSURE_LIMIT);
+   if (self()->comp()->getOption(TR_TraceRegisterPressureDetails))
+      {
+      traceMsg(self()->comp(), "state->_gprPressure = %d summary->_gprPressure = %d summary->PRESSURE_LIMIT = %d\n",state->_gprPressure,summary->_gprPressure,summary->PRESSURE_LIMIT);
+      }
 
    if (summary->_gprPressure < summary->PRESSURE_LIMIT)
       TR_ASSERT(state->_gprPressure <= summary->_gprPressure, "Children of %s must record max register gprPressure in summary; %d > %d", self()->getDebug()->getName(node), state->_gprPressure, summary->_gprPressure);

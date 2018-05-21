@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -107,6 +111,7 @@ resume_all_preempted(struct PlatformWalkData *data)
  * of our threads barring the one executing the function. It then takes a new snapshot to determine
  * if new threads were created during the suspension. This is repeated until the thread count matches
  * between the two snapshots.
+ * Use GetLastError() to get error details if any.
  */
 int
 suspend_all_preemptive(struct PlatformWalkData *data)
@@ -114,7 +119,7 @@ suspend_all_preemptive(struct PlatformWalkData *data)
 	int a_count = 0;
 	int b_count = 0;
 	char passA = 1;
-	int result;
+	DWORD result;
 	DWORD current_thread_id = GetCurrentThreadId();
 	DWORD current_pid = GetCurrentProcessId();
 
@@ -131,8 +136,7 @@ suspend_all_preemptive(struct PlatformWalkData *data)
 		}
 
 		if (!Thread32First(data->snapshot, &data->thread32)) {
-			result = GetLastError();
-			goto error_return;
+			return -1;
 		}
 
 		do {
@@ -142,7 +146,6 @@ suspend_all_preemptive(struct PlatformWalkData *data)
 			if (data->thread32.th32OwnerProcessID != current_pid || thread_id == current_thread_id) {
 				continue;
 			}
-
 
 			if (passA) {
 				a_count++;
@@ -172,12 +175,7 @@ suspend_all_preemptive(struct PlatformWalkData *data)
 		passA = !passA;
 	} while (a_count != b_count);
 
-	if (a_count != b_count) {
-		goto error_return;
-	}
-
 	return a_count;
-
 
 error_return:
 	/* we don't close the snapshot so that it's still available to resume any threads we suspended */
@@ -230,7 +228,7 @@ freeThread(J9ThreadWalkState *state, J9PlatformThread *thread)
 void
 cleanup(J9ThreadWalkState *state)
 {
-	uint8_t result = 0;
+	BOOL resumedOK = TRUE;
 	struct PlatformWalkData *data;
 
 	if (state) {
@@ -238,10 +236,10 @@ cleanup(J9ThreadWalkState *state)
 		if (data) {
 			if (data->snapshot && data->snapshot != INVALID_HANDLE_VALUE) {
 				if (resume_all_preempted(data) == -1) {
-					result = -1;
+					resumedOK = FALSE;
 				}
 
-				if (result != -1 || GetLastError() != ERROR_INVALID_HANDLE) {
+				if (!resumedOK || GetLastError() != ERROR_INVALID_HANDLE) {
 					/* it seems this can raise an exception if the handle has become invalid */
 					CloseHandle(data->snapshot);
 				}
@@ -303,52 +301,7 @@ setup_native_thread(J9ThreadWalkState *state, CONTEXT *sigContext)
 		memcpy(&tmpContext, sigContext, sizeof(CONTEXT));
 	} else if (state->current_thread->thread_id == GetCurrentThreadId()) {
 		/* return context for current thread */
-
-		/*
-		 * NOTE: According to MSDN this call to GetThreadContext() should not work for the
-		 * current thread. It seems to work, however, if we populate the EIP and EBP context
-		 * data manually (which is what the assembler does below).
-		 */
-#ifdef WIN64
 		RtlCaptureContext(&tmpContext);
-#else
-		if (GetThreadContext(GetCurrentThread(), &tmpContext) == FALSE) {
-			return -3;
-		}
-		/* Manually obtain the EIP & EBP registers. We do this because the
-		 * Windows GetThreadContext() function used above often fails to correctly
-		 * identify the current location in the code. Together, these two registers
-		 * indicate where we are. EIP is the instruction pointer and EBP is the
-		 * stack frame.
-		 *
-		 * Explanation of what the assembler does:
-		 *
-		 * Create an assembler routine called 'getCtx' and call it. The call will
-		 * push the current instruction pointer onto the stack.
-		 *
-		 * Function 'getCtx' then pops the top value from the stack into register
-		 * eax. This will be the instruction pointer as at the point of the
-		 * 'call' instruction.
-		 *
-		 * We can assume the stack frame (held in register ebp) will not change
-		 * during this function.
-		 *
-		 * We now have (roughly) the correct instruction pointer in register eax
-		 * and the correct stack frame in register ebp.
-		 */
-		__asm {
-			/* Invoke the routine 'getCtx' */
-			call getCtx;
-			/* Define a routine called 'getCtx' */
-			getCtx:
-			/* Retrieve the previous instruction pointer from the stack and copy into register eax */
-			pop eax;
-			/* Copy the contents of eax into the instruction and ebp into  */
-			mov tmpContext.Eip, eax;
-			/* Copy the contents of ebp into the stack frame part of the context */
-			mov tmpContext.Ebp, ebp;
-		}
-#endif
 	} else {
 		/* generate context for target thread */
 		HANDLE thread_handle = OpenThread(THREAD_GET_CONTEXT|THREAD_QUERY_INFORMATION, FALSE, (DWORD)state->current_thread->thread_id);
@@ -454,7 +407,7 @@ omrintrospect_threads_startDo_with_signal(struct OMRPortLibrary *portLibrary, J9
 		goto cleanup;
 	}
 
-	if (result = setup_native_thread(state, signalContext) != 0) {
+	if ((result = setup_native_thread(state, signalContext)) != 0) {
 		RECORD_ERROR(state, COLLECTION_FAILURE, result);
 		goto cleanup;
 	}
@@ -489,10 +442,7 @@ omrintrospect_threads_nextDo(J9ThreadWalkState *state)
 {
 	int result = 0;
 	struct PlatformWalkData *data = state->platform_data;
-	J9PlatformThread *nativeThread = NULL;
-	int rc = 0;
 	DWORD processId = GetCurrentProcessId();
-	DWORD currentThreadId = GetCurrentThreadId();
 
 	if (data == NULL) {
 		/* state is invalid */
@@ -523,7 +473,7 @@ omrintrospect_threads_nextDo(J9ThreadWalkState *state)
 		}
 	}
 
-	if (result = setup_native_thread(state, NULL) != 0) {
+	if ((result = setup_native_thread(state, NULL)) != 0) {
 		RECORD_ERROR(state, COLLECTION_FAILURE, result);
 		goto cleanup;
 	}
@@ -535,7 +485,7 @@ cleanup:
 		result = GetLastError();
 		if (result == ERROR_NO_MORE_FILES) {
 			/* this is a ligitimate end of thread list error value */
-			result = 0;
+			result = ERROR_SUCCESS;
 		} else {
 			RECORD_ERROR(state, COLLECTION_FAILURE, result);
 		}

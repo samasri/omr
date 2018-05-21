@@ -1,21 +1,23 @@
-################################################################################
-##
-## (c) Copyright IBM Corp. 2016, 2017
-##
-##  This program and the accompanying materials are made available
-##  under the terms of the Eclipse Public License v1.0 and
-##  Apache License v2.0 which accompanies this distribution.
-##
-##      The Eclipse Public License is available at
-##      http://www.eclipse.org/legal/epl-v10.html
-##
-##      The Apache License v2.0 is available at
-##      http://www.opensource.org/licenses/apache2.0.php
-##
-## Contributors:
-##    Multiple authors (IBM Corp.) - initial implementation and documentation
-################################################################################
-
+###############################################################################
+# Copyright (c) 2016, 2018 IBM Corp. and others
+#
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at http://eclipse.org/legal/epl-2.0
+# or the Apache License, Version 2.0 which accompanies this distribution
+# and is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the
+# Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+# version 2 with the GNU Classpath Exception [1] and GNU General Public
+# License, version 2 with the OpenJDK Assembly Exception [2].
+#
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+###############################################################################
 
 #
 # Explicitly set shell
@@ -114,13 +116,14 @@ CX_OPTFLAG?=$(CX_DEFAULTOPT)
 CX_FLAGS_PROD+=$(CX_OPTFLAG)
 
 ifeq ($(HOST_ARCH),x)
+    CX_FLAGS+=-mfpmath=sse -msse -msse2 -fno-strict-aliasing -fno-math-errno -fno-rounding-math -fno-trapping-math -fno-signaling-nans
     ifeq ($(HOST_BITS),32)
-        CX_FLAGS+=-m32 -fpic -fno-strict-aliasing
+        CX_FLAGS+=-m32 -fpic
     endif
     
     ifeq ($(HOST_BITS),64)
         CX_DEFINES+=J9HAMMER
-        CX_FLAGS+=-m64 -fPIC -fno-strict-aliasing
+        CX_FLAGS+=-m64 -fPIC
     endif
 endif
 
@@ -330,6 +333,33 @@ endif
 #
 ifeq ($(HOST_ARCH),arm)
     ARMASM_CMD?=$(SED_PATH)
+
+    SPP_CMD?=$(CC_PATH)
+    
+    SPP_INCLUDES=$(PRODUCT_INCLUDES)
+    
+    SPP_DEFINES+=$(CX_DEFINES)
+    SPP_FLAGS+=$(CX_FLAGS)
+    
+    ifeq ($(BUILD_CONFIG),debug)
+        SPP_DEFINES+=$(SPP_DEFINES_DEBUG)
+        SPP_FLAGS+=$(SPP_FLAGS_DEBUG)
+    endif
+
+    ifeq ($(BUILD_CONFIG),prod)
+        SPP_DEFINES+=$(SPP_DEFINES_PROD)
+        SPP_FLAGS+=$(SPP_FLAGS_PROD)
+    endif
+    
+    SPP_DEFINES+=$(SPP_DEFINES_EXTRA)
+    SPP_FLAGS+=$(SPP_FLAGS_EXTRA)
+endif
+
+#
+# Now setup stuff for AARCH64 assembly
+#
+ifeq ($(HOST_ARCH),aarch64)
+    AARCH64ASM_CMD?=$(SED_PATH)
 
     SPP_CMD?=$(CC_PATH)
     

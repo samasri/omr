@@ -1,25 +1,29 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/DeadTreesElimination.hpp"
 
 #include <stddef.h>                             // for NULL
 #include <stdint.h>                             // for int32_t, uint32_t
+#include "infra/forward_list.hpp"               // for TR::forward_list
 #include "codegen/CodeGenerator.hpp"            // for CodeGenerator
 #include "codegen/FrontEnd.hpp"                 // for TR_FrontEnd, etc
 #include "compile/Compilation.hpp"              // for Compilation
@@ -74,23 +78,19 @@ static OMR::TreeInfo *findOrCreateTreeInfo(TR::TreeTop *treeTop, List<OMR::TreeI
    return t;
    }
 
-// temporarily revert this fix
-//static bool fixUpTree(TR::Node *node, TR::TreeTop *treeTop, TR::SparseBitVector &seenNodes, bool &highGlobalIndex, TR::Compilation *comp, vcount_t oldCompVisitCount)
-static bool fixUpTree(TR::Node *node, TR::TreeTop *treeTop, TR::SparseBitVector &seenNodes, bool &highGlobalIndex, TR::Optimization *opt)
+static bool fixUpTree(TR::Node *node, TR::TreeTop *treeTop, TR::NodeChecklist &visited, bool &highGlobalIndex, TR::Optimization *opt, vcount_t evaluatedVisitCount)
    {
+   if (node->getVisitCount() == evaluatedVisitCount)
+      return false;
+
+   if (visited.contains(node))
+      return false;
+
+   visited.add(node);
+
    bool containsFloatingPoint = false;
    bool anchorLoadaddr = true;
    bool anchorArrayCmp = true;
-
-   // temporarily revert this fix
-   /*if (node->getVisitCount() <= oldCompVisitCount)
-     {
-     // This node was from a treetop that was encountered before the current treetop
-     // in which case it should already be anchored and so would not need to be anchored afresh
-     //
-     return containsFloatingPoint;
-     }*/
-
 
    // for arraycmp node, don't create its tree top anchor
    // fold it into if statment and save jump instruction
@@ -102,7 +102,6 @@ static bool fixUpTree(TR::Node *node, TR::TreeTop *treeTop, TR::SparseBitVector 
       }
 
    if ((node->getReferenceCount() > 1) &&
-       !seenNodes.ValueAt(node->getGlobalIndex()) &&
        !node->getOpCode().isLoadConst() &&
        anchorLoadaddr &&
        anchorArrayCmp)
@@ -121,7 +120,6 @@ static bool fixUpTree(TR::Node *node, TR::TreeTop *treeTop, TR::SparseBitVector 
             }
          }
 
-      seenNodes[node->getGlobalIndex()] = 1;
       if (node->getOpCode().isFloatingPoint())
         containsFloatingPoint = true;
       TR::TreeTop *nextTree = treeTop->getNextTreeTop();
@@ -136,9 +134,7 @@ static bool fixUpTree(TR::Node *node, TR::TreeTop *treeTop, TR::SparseBitVector 
       for (int32_t i = 0; i < node->getNumChildren(); ++i)
          {
          TR::Node *child = node->getChild(i);
-         // temporarily rever this fix
-         //if (fixUpTree(child, treeTop, seenNodes, highGlobalIndex, comp, oldCompVisitCount))
-         if (fixUpTree(child, treeTop, seenNodes, highGlobalIndex, opt))
+         if (fixUpTree(child, treeTop, visited, highGlobalIndex, opt, evaluatedVisitCount))
             containsFloatingPoint = true;
          }
       }
@@ -204,43 +200,27 @@ bool collectSymbolReferencesInNode(TR::Node *node,
    return true;
    }
 
-// TODO: Path retrieval is not implemented, but is trivial, making this O(N)
-static int32_t getLongestPathOfDAG(TR::Node *entry, TR::Compilation *cm)
+typedef std::pair<TR::Node* const, int32_t> LPEntry;
+typedef TR::typed_allocator<LPEntry, TR::Region&> LPAlloc;
+typedef std::map<TR::Node*, int32_t, std::less<TR::Node*>, LPAlloc> LongestPathMap;
+
+static int32_t getLongestPathOfDAG(TR::Node *node, LongestPathMap &memo)
    {
-   TR::StackMemoryRegion stackMemoryRegion(*cm->trMemory());
-   TR::deque<TR::Node *, TR::Region&> queue(stackMemoryRegion);
-   typedef TR::typed_allocator<std::pair<TR::Node *, int32_t>, TR::Region&> LongestPathAllocator;
-   typedef std::less<TR::Node *> LongestPathComparator;
-   typedef std::map<TR::Node *, int32_t, LongestPathComparator, LongestPathAllocator> LongestPathMap;
-   LongestPathMap longestPathLens((LongestPathComparator()), stackMemoryRegion);
-   longestPathLens[entry] = 0;
-   queue.push_back(entry);
+   if (node->getNumChildren() == 0)
+      return 0;
+
+   auto ins = memo.insert(std::make_pair(node, 0));
+   int32_t &value = ins.first->second;
+   bool fresh = ins.second;
+   if (!fresh)
+      return value;
+
    int32_t maxLen = 0;
-   while (!queue.empty())
-      {
-      TR::Node *node = queue.front();
-      queue.pop_front();
-      auto prevLongestPathLen = longestPathLens[node];
-      if (node->getNumChildren() == 0)
-         {
-         if (prevLongestPathLen > maxLen)
-            maxLen = prevLongestPathLen;
-         }
-      for (int i = 0; i < node->getNumChildren(); ++i)
-         {
-         TR::Node *child = node->getChild(i);
-         if (longestPathLens.find(child) == longestPathLens.end())
-            longestPathLens[child] = 0;
-         
-         // if new longest path is found, update and push child
-         if (prevLongestPathLen + 1 > longestPathLens[child])
-            {
-            longestPathLens[child] = prevLongestPathLen + 1;
-            queue.push_back(child);
-            }
-         }
-      }
-   return maxLen;
+   for (int i = 0; i < node->getNumChildren(); i++)
+      maxLen = std::max(maxLen, getLongestPathOfDAG(node->getChild(i), memo));
+
+   value = maxLen + 1;
+   return value;
    }
 
 static bool containsNode(TR::Node *containerNode, TR::Node *node, vcount_t visitCount, TR::Compilation *comp, int32_t *height, int32_t *maxHeight, bool &canMoveIfVolatile)
@@ -273,7 +253,8 @@ static bool containsNode(TR::Node *containerNode, TR::Node *node, vcount_t visit
 #define MAX_ALLOWED_HEIGHT 50
 
 static bool isSafeToReplaceNode(TR::Node *currentNode, TR::TreeTop *curTreeTop, bool *seenConditionalBranch,
-      vcount_t visitCount, TR::Compilation *comp, List<OMR::TreeInfo> *targetTrees, bool &cannotBeEliminated)
+      vcount_t visitCount, TR::Compilation *comp, List<OMR::TreeInfo> *targetTrees, bool &cannotBeEliminated,
+      LongestPathMap &longestPaths)
    {
    LexicalTimer tx("safeToReplace", comp->phaseTimer());
 
@@ -287,7 +268,7 @@ static bool isSafeToReplaceNode(TR::Node *currentNode, TR::TreeTop *curTreeTop, 
    bool cantMoveUnderBranch = false;
    bool seenInternalPointer = false;
    bool seenArraylet = false;
-   int32_t curMaxHeight = getLongestPathOfDAG(currentNode, comp);
+   int32_t curMaxHeight = getLongestPathOfDAG(currentNode, longestPaths);
    collectSymbolReferencesInNode(currentNode, symbolReferencesInNode, &numDeadSubNodes, visitCount, comp,
          &seenInternalPointer, &seenArraylet, &cantMoveUnderBranch);
 
@@ -517,11 +498,16 @@ void TR::DeadTreesElimination::prePerformOnBlocks()
         tt != 0;
         tt = tt->getNextTreeTop())
       {
+      bool removed = false;
+
       TR::Node *node = tt->getNode();
       if (node->getOpCodeValue() == TR::treetop &&
           node->getFirstChild()->getVisitCount() == visitCount &&
           performTransformation(comp(), "%sRemove trivial dead tree: %p\n", optDetailString(), node))
+         {
          TR::TransformUtil::removeTree(comp(), tt);
+         removed = true;
+         }
       else
          {
          if (node->getOpCode().isCheck() &&
@@ -530,7 +516,18 @@ void TR::DeadTreesElimination::prePerformOnBlocks()
              node->getFirstChild()->getSymbolReference()->getSymbol()->isResolvedMethod() &&
              node->getFirstChild()->getSymbolReference()->getSymbol()->castToResolvedMethodSymbol()->isSideEffectFree() &&
              performTransformation(comp(), "%sRemove dead check of side-effect free call: %p\n", optDetailString(), node))
+            {
             TR::TransformUtil::removeTree(comp(), tt);
+            removed = true;
+            }
+         }
+
+      if (removed
+          && tt->getNextTreeTop()->getNode()->getOpCodeValue() == TR::Goto
+          && tt->getPrevTreeTop()->getNode()->getOpCodeValue() == TR::BBStart
+          && !tt->getPrevTreeTop()->getNode()->getBlock()->isExtensionOfPreviousBlock())
+         {
+         requestOpt(OMR::redundantGotoElimination, tt->getEnclosingBlock());
          }
 
       if (node->getVisitCount() >= visitCount)
@@ -611,8 +608,25 @@ void TR::DeadTreesElimination::prePerformOnBlocks()
       }
    }
 
+namespace
+   {
+   struct CRAnchor
+      {
+      TR::TreeTop *tree;
+      TR::Block *block;
+      CRAnchor(TR::TreeTop *tree, TR::Block *block) : tree(tree), block(block) { }
+      };
+   }
+
 int32_t TR::DeadTreesElimination::process(TR::TreeTop *startTree, TR::TreeTop *endTree)
    {
+   TR::StackMemoryRegion stackRegion(*comp()->trMemory());
+   LongestPathMap longestPaths(std::less<TR::Node*>(), stackRegion);
+
+   typedef TR::typed_allocator<CRAnchor, TR::Region&> CRAnchorAlloc;
+   typedef TR::forward_list<CRAnchor, CRAnchorAlloc> CRAnchorList;
+   CRAnchorList anchors(stackRegion);
+
    vcount_t visitCount = comp()->incOrResetVisitCount();
    TR::TreeTop *treeTop;
    for (treeTop = startTree; (treeTop != endTree); treeTop = treeTop->getNextTreeTop())
@@ -623,16 +637,16 @@ int32_t TR::DeadTreesElimination::process(TR::TreeTop *startTree, TR::TreeTop *e
 
    // Update visitCount as they are used in this optimization and need to be
    visitCount = comp()->incOrResetVisitCount();
-   //TR_ScratchList<TR::Node> seenNodes(trMemory());
-   TR::SparseBitVector seenNodes(comp()->allocator());
    for (TR::TreeTopIterator iter(startTree, comp()); iter != endTree; ++iter)
       {
-      // temporarily revert this fix
-      //vcount_t compVisitCount = comp()->getVisitCount();
       TR::Node *node = iter.currentTree()->getNode();
 
       if (node->getOpCodeValue() == TR::BBStart)
+         {
          block = node->getBlock();
+         if (!block->isExtensionOfPreviousBlock())
+            longestPaths.clear();
+         }
 
       int vcountLimit = MAX_VCOUNT - 3;
       if (comp()->getVisitCount() > vcountLimit)
@@ -653,6 +667,9 @@ int32_t TR::DeadTreesElimination::process(TR::TreeTop *startTree, TR::TreeTop *e
            !node->getOpCode().isStoreReg() ||
            (node->getVisitCount() == visitCount)))
          {
+         if (node->getOpCode().isAnchor() && node->getFirstChild()->getOpCode().isLoadIndirect())
+            anchors.push_front(CRAnchor(iter.currentTree(), block));
+
          TR::TransformUtil::recursivelySetNodeVisitCount(node, visitCount);
          continue;
          }
@@ -732,7 +749,17 @@ int32_t TR::DeadTreesElimination::process(TR::TreeTop *startTree, TR::TreeTop *e
                   treeTopCanBeEliminated = true;
                }
             else if (!_cannotBeEliminated)
-               safeToReplaceNode = isSafeToReplaceNode(child, iter.currentTree(), &seenConditionalBranch, visitCount, comp(), &_targetTrees, _cannotBeEliminated);
+               {
+               safeToReplaceNode = isSafeToReplaceNode(
+                  child,
+                  iter.currentTree(),
+                  &seenConditionalBranch,
+                  visitCount,
+                  comp(),
+                  &_targetTrees,
+                  _cannotBeEliminated,
+                  longestPaths);
+               }
 
             if (safeToReplaceNode)
                {
@@ -784,16 +811,14 @@ int32_t TR::DeadTreesElimination::process(TR::TreeTop *startTree, TR::TreeTop *e
 
          if (treeTopCanBeEliminated)
             {
-            seenNodes.Clear();
+            TR::NodeChecklist visited(comp());
             bool containsFloatingPoint = false;
             for (int32_t i = 0; i < child->getNumChildren(); ++i)
                {
                // Anchor nodes with reference count > 1
                //
                bool highGlobalIndex = false;
-               // temporarily revert this fix
-               //if (fixUpTree(child->getChild(i), iter.currentTree(), seenNodes, highGlobalIndex, comp(), compVisitCount))
-               if (fixUpTree(child->getChild(i), iter.currentTree(), seenNodes, highGlobalIndex, self()))
+               if (fixUpTree(child->getChild(i), iter.currentTree(), visited, highGlobalIndex, self(), visitCount))
                   containsFloatingPoint = true;
                if (highGlobalIndex)
                   {
@@ -838,6 +863,15 @@ int32_t TR::DeadTreesElimination::process(TR::TreeTop *startTree, TR::TreeTop *e
                iter.jumpTo(prevTree);
                if (child->getReferenceCount() == 1)
                   requestOpt(OMR::treeSimplification, true, block);
+
+               if (nextTree->getNode()->getOpCodeValue() == TR::Goto
+                   && prevTree->getNode()->getOpCodeValue() == TR::BBStart
+                   && !prevTree->getNode()->getBlock()->isExtensionOfPreviousBlock())
+                  {
+                  requestOpt(
+                     OMR::redundantGotoElimination,
+                     prevTree->getNode()->getBlock());
+                  }
                }
             }
          else
@@ -890,6 +924,40 @@ int32_t TR::DeadTreesElimination::process(TR::TreeTop *startTree, TR::TreeTop *e
                }
             }
          }
+      }
+
+   for (auto it = anchors.begin(); it != anchors.end(); ++it)
+      {
+      TR::Node *anchor = it->tree->getNode();
+      TR::Node *load = anchor->getChild(0);
+      if (load->getReferenceCount() > 1)
+         continue;
+
+      // We can eliminate the indirect load immediately, but for the moment the
+      // subtree providing the base object has to be anchored.
+
+      TR::Node *heapBase = anchor->getChild(1);
+
+      TR::Node::recreate(anchor, TR::treetop);
+      anchor->setAndIncChild(0, load->getChild(0));
+      anchor->setChild(1, NULL);
+      anchor->setNumChildren(1);
+
+      if (!heapBase->getOpCode().isLoadConst())
+         {
+         it->tree->insertAfter(
+            TR::TreeTop::create(
+               comp(),
+               TR::Node::create(heapBase, TR::treetop, 1, heapBase)));
+         }
+
+      load->recursivelyDecReferenceCount();
+      heapBase->recursivelyDecReferenceCount();
+
+      // A later pass of dead trees can likely move (or even remove) the base
+      // object expression.
+
+      requestOpt(OMR::deadTreesElimination, true, it->block);
       }
 
    return 1; // actual cost

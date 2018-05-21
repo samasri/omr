@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "codegen/CodeGenerator.hpp"
@@ -54,7 +57,7 @@
 #include "x/codegen/X86Instruction.hpp"
 #include "x/codegen/X86Ops.hpp"                     // for ::MOV4RegReg
 
-OMR::X86::i386::CodeGenerator::CodeGenerator() :
+OMR::X86::I386::CodeGenerator::CodeGenerator() :
    OMR::X86::CodeGenerator()
    {
    // Common X86 initialization
@@ -87,23 +90,6 @@ OMR::X86::i386::CodeGenerator::CodeGenerator() :
          }
       self()->setSupportsDivCheck();
       self()->setJNILinkageCalleeCleanup();
-
-      // The non-linear register assigner doesn't know about EBP spills yet.
-      //
-      static char *disableEBPasGPR = feGetEnv("TR_DisableEBPasGPR");
-      if (!disableEBPasGPR && self()->allowVMThreadRematerialization() && !self()->comp()->requiresSpineChecks()
-          //when OSR is enabled, we don't want to generate any code in the osr code block or the osr catch block
-          //that causes ebp to be restored (because it was saved at some other jitted code).
-          //if we don't, when we jump to the osr catch block, we trash ebp by that restore
-          && !self()->comp()->getOption(TR_EnableOSR)
-         )
-         {
-         TR::RealRegister *ebp = self()->machine()->getX86RealRegister(TR::RealRegister::ebp);
-         ebp->resetState(TR::RealRegister::Free);
-         ebp->setAssignedRegister(NULL);
-         if (!self()->comp()->getOptions()->getOption(TR_DisableVMThreadGRA))
-            self()->setSupportsVMThreadGRA();
-         }
 
       // The default CTM behaviour is to do the conversion via X87 instructions.
       //
@@ -153,7 +139,7 @@ OMR::X86::i386::CodeGenerator::CodeGenerator() :
 
 
 TR::Register *
-OMR::X86::i386::CodeGenerator::longClobberEvaluate(TR::Node *node)
+OMR::X86::I386::CodeGenerator::longClobberEvaluate(TR::Node *node)
    {
    TR_ASSERT(node->getOpCode().is8Byte(), "assertion failure");
    if (node->getReferenceCount() > 1)
@@ -175,7 +161,7 @@ OMR::X86::i386::CodeGenerator::longClobberEvaluate(TR::Node *node)
 
 
 TR_GlobalRegisterNumber
-OMR::X86::i386::CodeGenerator::pickRegister(
+OMR::X86::I386::CodeGenerator::pickRegister(
       TR_RegisterCandidate *rc,
       TR::Block **allBlocks,
       TR_BitVector &availableRegisters,
@@ -184,8 +170,7 @@ OMR::X86::i386::CodeGenerator::pickRegister(
    {
    if (!self()->comp()->getOptions()->getOption(TR_DisableRegisterPressureSimulation))
       {
-      if (self()->comp()->getOption(TR_AssignEveryGlobalRegister) &&
-          (!self()->comp()->cg()->getSupportsVMThreadGRA() || self()->comp()->getOption(TR_DisableLateEdgeSplitting)))
+      if (self()->comp()->getOption(TR_AssignEveryGlobalRegister))
          {
          // This is not really necessary except for testing purposes.
          // Conceptually, the common pickRegister code should be free to make
@@ -226,36 +211,6 @@ OMR::X86::i386::CodeGenerator::pickRegister(
 
    if (!_assignedGlobalRegisters)
       _assignedGlobalRegisters = new (self()->trStackMemory()) TR_BitVector(self()->comp()->getSymRefCount(), self()->trMemory(), stackAlloc, growable);
-
-   if (self()->comp()->cg()->getSupportsVMThreadGRA() && !self()->comp()->getOption(TR_DisableLateEdgeSplitting) && availableRegisters.get(6))
-      {
-      vcount_t visitCount = self()->comp()->incVisitCount();
-      bool vmThreadUsed = false;
-      TR_BitVectorIterator bvi(rc->getBlocksLiveOnEntry());
-      bvi.setBitVector(rc->getBlocksLiveOnEntry());
-      while (bvi.hasMoreElements())
-         {
-         int32_t liveBlockNum = bvi.getNextElement();
-         TR::Block *block = allBlocks[liveBlockNum];
-
-         _assignedGlobalRegisters->empty();
-         int32_t numAssignedGlobalRegs = 0;
-         int32_t maxFrequency = 1;
-         int32_t maxStaticFrequency = 1;
-         bool assigningEDX = false;
-         int32_t maxRegisterPressure = self()->estimateRegisterPressure(block, visitCount, maxStaticFrequency, maxFrequency, vmThreadUsed, numAssignedGlobalRegs, _assignedGlobalRegisters, rc->getSymbolReference(), assigningEDX);
-         if (vmThreadUsed)
-            break;
-         }
-
-      if (!vmThreadUsed)
-         {
-         if (debug("vmThreadGRA"))
-            diagnostic("\npickRegister answering with EBP\n");
-
-         return 6;
-         }
-      }
 
    if (availableRegisters.get(5))
       return 5; // esi
@@ -372,7 +327,7 @@ OMR::X86::i386::CodeGenerator::pickRegister(
    }
 
 int32_t
-OMR::X86::i386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *node)
+OMR::X86::I386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *node)
    {
    // TODO: Currently, lookupEvaluator doesn't deal properly with different
    // glRegDeps on different cases of a lookupswitch.
@@ -386,7 +341,7 @@ OMR::X86::i386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node 
       // 1 for jump table base reg, which is not apparent in the trees
       // 1 for ebp when it is needed for the VMThread
       //
-      return self()->getNumberOfGlobalGPRs() - self()->comp()->cg()->getSupportsVMThreadGRA()? 1 : 2;
+      return self()->getNumberOfGlobalGPRs() - 2;
       }
 
    if (node->getOpCode().isIf())
@@ -447,7 +402,7 @@ OMR::X86::i386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node 
 
 
 bool
-OMR::X86::i386::CodeGenerator::codegenMulDecomposition(int64_t multiplier)
+OMR::X86::I386::CodeGenerator::codegenMulDecomposition(int64_t multiplier)
    {
    bool iMulDecomposeReport = self()->comp()->getOptions()->getTraceSimplifier(TR_TraceMulDecomposition);
    bool answer = false;

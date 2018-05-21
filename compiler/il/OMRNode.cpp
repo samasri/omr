@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "il/OMRNode.hpp"
 
@@ -257,7 +260,7 @@ OMR::Node::Node(TR::Node * from, uint16_t numChildren)
 
    if (from->getOpCode().isStoreReg() || from->getOpCode().isLoadReg())
       {
-      if (comp->nodeNeeds2Regs(from))
+      if (from->requiresRegisterPair(comp))
          {
          self()->setLowGlobalRegisterNumber(from->getLowGlobalRegisterNumber());
          self()->setHighGlobalRegisterNumber(from->getHighGlobalRegisterNumber());
@@ -1788,7 +1791,7 @@ OMR::Node::duplicateTree_DEPRECATED(bool duplicateChildren)
 
    if (newRoot->getOpCode().isStoreReg() || newRoot->getOpCode().isLoadReg())
       {
-      if (comp->nodeNeeds2Regs(newRoot))
+      if (newRoot->requiresRegisterPair(comp))
          {
          newRoot->setLowGlobalRegisterNumber(self()->getLowGlobalRegisterNumber());
          newRoot->setHighGlobalRegisterNumber(self()->getHighGlobalRegisterNumber());
@@ -1846,7 +1849,7 @@ OMR::Node::isUnsafeToDuplicateAndExecuteAgain(int32_t *nodeVisitBudget)
          // Unresolved symrefs need to be evaluated in their original location,
          // under the ResolveCHK.
          //
-         return false;
+         return true;
          }
       else if (self()->getOpCodeValue() == TR::loadaddr)
          {
@@ -2159,13 +2162,6 @@ static bool
 refCanBeKilled(TR::Node *node, TR::Compilation *comp)
    {
    if (node->getOpCodeValue() == TR::loadaddr)
-      {
-      return false;
-      }
-
-   if (node->getOpCodeValue() == TR::aload &&
-       (comp->cg()->getLinkage()->isAddressOfStaticSymRef(node->getSymbolReference()) ||
-        comp->cg()->getLinkage()->isAddressOfPrivateStaticSymRef(node->getSymbolReference())))
       {
       return false;
       }
@@ -3135,44 +3131,6 @@ OMR::Node::getFirstArgumentIndex()
    return 0;
    }
 
-
-
-TR::Node *
-OMR::Node::getReturnReason()
-   {
-   return self()->getReturnCode(true);
-   }
-
-TR::Node *
-OMR::Node::getReturnCode(bool isReason)
-   {
-   TR::Compilation *c = TR::comp();
-   TR::Node *codeChild = NULL;
-   TR::Node *reasonChild = NULL;
-
-   if (!self()->getOpCode().isReturn())
-      return NULL;
-
-   // just return code
-   else if (self()->getOpCodeValue() == TR::ireturn &&
-            self()->getNumChildren() == 1)
-      codeChild = self()->getChild(0);
-
-   // return code and return reason
-   else if ((self()->getOpCodeValue() == TR::Return) &&
-            (self()->getNumChildren() == 2 ||
-             (self()->getNumChildren() == 3 &&
-              self()->getChild(2)->getOpCodeValue() == TR::GlRegDeps)))
-      {
-      codeChild = self()->getChild(0);
-      reasonChild = self()->getChild(1);
-      }
-
-   return isReason ? reasonChild : codeChild;
-   }
-
-
-
 uint32_t
 OMR::Node::getSize()
    {
@@ -3560,6 +3518,9 @@ OMR::Node::exceptionsRaised()
 
    switch (node->getOpCodeValue())
       {
+      case TR::ZEROCHK:
+         possibleExceptions |= TR::Block:: CanCatchEverything;
+      break;
       case TR::DIVCHK:
          possibleExceptions |= TR::Block:: CanCatchDivCheck;
          break;
@@ -3934,100 +3895,120 @@ OMR::Node::setOpCodeValue(TR::ILOpCodes op)
    return op;
    }
 
-
-
-#define SignExtensionFlagsIndex(x) reinterpret_cast<long>(self()->hasNodeExtension() ? _unionBase._extension.getExtensionPtr()->getElem<TR::Node *>(1) : _unionBase._children[1])*numSignExtensionFlags + x
-#define SupportedType(node) (node->getOpCode().isLoadVar() && TR_LoadExtensions::supportedType(node)|| \
-                            (node->getOpCode().isLoadConst() && TR_LoadExtensions::supportedConstLoad(node, c)))
-
 bool
-OMR::Node::couldIgnoreExtend()
+OMR::Node::isExtendedTo32BitAtSource()
    {
-   TR::Compilation * c = TR::comp();
-   TR_BitVector* flags = c->cg()->signExtensionFlags();
-   //traceMsg(c, "\t\tChecking couldIgnore on %d+%d == %c on %p\n", SignExtensionFlagsIndex(0), (int)couldSkipExtension, flags && SupportedType(getOpCode()) && flags->isSet(SignExtensionFlagsIndex(couldSkipExtension))?'1':'0', this);
-   return flags &&
-         SupportedType(self()) &&
-         flags->isSet(SignExtensionFlagsIndex(couldSkipExtension));
-   }
-
-void
-OMR::Node::setCouldIgnoreExtend(bool b)
-   {
-   TR::Compilation * c = TR::comp();
-   TR_ASSERT(SupportedType(self()), "couldIgnoreExtend() should only be called for loads");
-   TR_BitVector* flags = c->cg()->signExtensionFlags();
-   TR_ASSERT(flags, "Flags for signExtension have not been allocated");
-   //traceMsg(c, "\t\tSetting couldIgnore on %d+%d to %c on %p\n", SignExtensionFlagsIndex(0), (int)couldSkipExtension, b?'1':'0', this);
-   if (b)
-      flags->set(SignExtensionFlagsIndex(couldSkipExtension));
-   else
-      flags->reset(SignExtensionFlagsIndex(couldSkipExtension));
-   }
-
-const char *
-OMR::Node::printCouldIgnoreExtend()
-   {
-   return self()->couldIgnoreExtend() ? "couldSkipExt " : "";
+   return self()->isSignExtendedTo32BitAtSource() || self()->isZeroExtendedTo32BitAtSource();
    }
 
 bool
-OMR::Node::force64BitLoad()
+OMR::Node::isExtendedTo64BitAtSource()
    {
-   TR::Compilation * c = TR::comp();
-   TR_BitVector* flags = c->cg()->signExtensionFlags();
-   //traceMsg(c, "\t\tChecking force64BitReg on %d+%d == %c on %p\n", SignExtensionFlagsIndex(0), (int)force64BitReg, flags && SupportedType(getOpCode()) && flags->isSet(SignExtensionFlagsIndex(force64BitReg))?'1':'0', this);
-   return flags && SupportedType(self()) && flags->isSet(SignExtensionFlagsIndex(force64BitReg));
-   }
-
-void
-OMR::Node::setForce64BitLoad(bool b)
-   {
-   TR::Compilation * c = TR::comp();
-   TR_ASSERT(SupportedType(self()), "setForce64BitLoad() should only be called for loads");
-   TR_BitVector* flags = c->cg()->signExtensionFlags();
-   TR_ASSERT(flags, "Flags for signExtension have not been allocated");
-   //traceMsg(c, "\t\tSetting force64BitReg on %d+%d to %c on %p\n", SignExtensionFlagsIndex(0), (int)force64BitReg, b?'1':'0', this);
-   if (b)
-      flags->set(SignExtensionFlagsIndex(force64BitReg));
-   else
-      flags->reset(SignExtensionFlagsIndex(force64BitReg));
-   }
-
-const char *
-OMR::Node::printForce64BitLoad()
-   {
-   return self()->force64BitLoad() ? "force64Reg " : "";
+   return self()->isSignExtendedTo64BitAtSource() || self()->isZeroExtendedTo64BitAtSource();
    }
 
 bool
-OMR::Node::isUnsignedLoad()
+OMR::Node::isSignExtendedAtSource()
    {
-   TR::Compilation * c = TR::comp();
-   TR_BitVector* flags = c->cg()->signExtensionFlags();
-   //traceMsg(c, "\t\tChecking unsignedLoad on %d+%d == %c on %p\n", SignExtensionFlagsIndex(0), (int)unsignedLoad, flags && SupportedType(getOpCode()) && flags->isSet(SignExtensionFlagsIndex(unsignedLoad))?'1':'0', this);
-   return flags && SupportedType(self()) && flags->isSet(SignExtensionFlagsIndex(unsignedLoad));
+   return self()->isSignExtendedTo32BitAtSource() || self()->isSignExtendedTo64BitAtSource();
+   }
+
+bool
+OMR::Node::isZeroExtendedAtSource()
+   {
+   return self()->isZeroExtendedTo32BitAtSource() || self()->isZeroExtendedTo64BitAtSource();
+   }
+
+bool
+OMR::Node::isSignExtendedTo32BitAtSource()
+   {
+   return self()->getOpCode().isLoadVar() && _flags.testAny(signExtendTo32BitAtSource);
+   }
+
+bool
+OMR::Node::isSignExtendedTo64BitAtSource()
+   {
+   return self()->getOpCode().isLoadVar() && _flags.testAny(signExtendTo64BitAtSource);
    }
 
 void
-OMR::Node::setIsUnsignedLoad(bool b)
+OMR::Node::setSignExtendTo32BitAtSource(bool v)
    {
-   TR::Compilation * c = TR::comp();
-   TR_ASSERT(SupportedType(self()), "setIsUnsignedLoad() should only be called for loads");
-   TR_BitVector* flags = c->cg()->signExtensionFlags();
-   TR_ASSERT(flags, "Flags for signExtension have not been allocated");
-//   traceMsg(c->cg(), "Node %p was marked as %d\n", this, (long)(_unionBase._children[1]));
-//   traceMsg(c, "\t\tSetting unsignedLoad on %d+%d to %c on %p\n", SignExtensionFlagsIndex(0), (int)unsignedLoad, b?'1':'0', this);
-   if (b)
-      flags->set(SignExtensionFlagsIndex(unsignedLoad));
-   else
-      flags->reset(SignExtensionFlagsIndex(unsignedLoad));
+   TR::Compilation* c = TR::comp();
+   TR_ASSERT(self()->getOpCode().isLoadVar(), "Can only call this for variable loads\n");
+   if (performNodeTransformation2(c, "O^O NODE FLAGS: Setting signExtendedTo32BitAtSource flag on node %p to %d\n", self(), v))
+      {
+      _flags.set(signExtendTo32BitAtSource, v);
+      }
    }
 
-const char *
-OMR::Node::printIsUnsignedLoad()
+void
+OMR::Node::setSignExtendTo64BitAtSource(bool v)
    {
-   return self()->isUnsignedLoad() ? "isUnsignedLoad " : "";
+   TR::Compilation* c = TR::comp();
+   TR_ASSERT(self()->getOpCode().isLoadVar(), "Can only call this for variable loads\n");
+   if (performNodeTransformation2(c, "O^O NODE FLAGS: Setting signExtendedTo64BitAtSource flag on node %p to %d\n", self(), v))
+      {
+      _flags.set(signExtendTo64BitAtSource, v);
+      }
+   }
+
+const char*
+OMR::Node::printIsSignExtendedTo32BitAtSource()
+   {
+   return self()->isSignExtendedTo32BitAtSource() ? "signExtendedTo32BitAtSource " : "";
+   }
+
+const char*
+OMR::Node::printIsSignExtendedTo64BitAtSource()
+   {
+   return self()->isSignExtendedTo64BitAtSource() ? "signExtendedTo64BitAtSource " : "";
+   }
+
+bool
+OMR::Node::isZeroExtendedTo32BitAtSource()
+   {
+   return self()->getOpCode().isLoadVar() && _flags.testAny(zeroExtendTo32BitAtSource);
+   }
+
+bool
+OMR::Node::isZeroExtendedTo64BitAtSource()
+   {
+   return self()->getOpCode().isLoadVar() && _flags.testAny(zeroExtendTo64BitAtSource);
+   }
+
+void
+OMR::Node::setZeroExtendTo32BitAtSource(bool v)
+   {
+   TR::Compilation* c = TR::comp();
+   TR_ASSERT(self()->getOpCode().isLoadVar(), "Can only call this for variable loads\n");
+   if (performNodeTransformation2(c, "O^O NODE FLAGS: Setting zeroExtendTo32BitAtSource flag on node %p to %d\n", self(), v))
+      {
+      _flags.set(zeroExtendTo32BitAtSource, v);
+      }
+   }
+
+void
+OMR::Node::setZeroExtendTo64BitAtSource(bool v)
+   {
+   TR::Compilation* c = TR::comp();
+   TR_ASSERT(self()->getOpCode().isLoadVar(), "Can only call this for variable loads\n");
+   if (performNodeTransformation2(c, "O^O NODE FLAGS: Setting zeroExtendTo64BitAtSource flag on node %p to %d\n", self(), v))
+      {
+      _flags.set(zeroExtendTo64BitAtSource, v);
+      }
+   }
+
+const char*
+OMR::Node::printIsZeroExtendedTo32BitAtSource()
+   {
+   return self()->isZeroExtendedTo32BitAtSource() ? "zeroExtendTo32BitAtSource " : "";
+   }
+
+const char*
+OMR::Node::printIsZeroExtendedTo64BitAtSource()
+   {
+   return self()->isZeroExtendedTo64BitAtSource() ? "zeroExtendTo64BitAtSource " : "";
    }
 
 /**
@@ -4233,6 +4214,13 @@ OMR::Node::countChildren(TR::ILOpCodes opcode)
       }
    return count;
    }
+
+bool
+OMR::Node::requiresRegisterPair(TR::Compilation *comp)
+   {
+   return (self()->getType().isInt64() && TR::Compiler->target.is32Bit() && !comp->cg()->use64BitRegsOn32Bit());
+   }
+
 
 /**
  * Node field functions end
@@ -4743,7 +4731,7 @@ OMR::Node::setArrayComponentClassInNode(TR_OpaqueClassBlock *c)
 TR::ILOpCodes
 OMR::Node::setOverflowCheckOperation(TR::ILOpCodes op)
    {
-   TR_ASSERT(self()->getOpCode().isOverflowCheck(), 
+   TR_ASSERT(self()->getOpCode().isOverflowCheck(),
              "set OverflowCHK operation info for no OverflowCHK node");
    return _unionBase._extension.getExtensionPtr()->setElem<TR::ILOpCodes>(3, op);
    }
@@ -4751,7 +4739,7 @@ OMR::Node::setOverflowCheckOperation(TR::ILOpCodes op)
 TR::ILOpCodes
 OMR::Node::getOverflowCheckOperation()
    {
-   TR_ASSERT(self()->getOpCode().isOverflowCheck(), 
+   TR_ASSERT(self()->getOpCode().isOverflowCheck(),
    	     "get OverflowCHK operation info for no OverflowCHK node");
    return _unionBase._extension.getExtensionPtr()->getElem<TR::ILOpCodes>(3);
    }
@@ -5589,22 +5577,6 @@ OMR::Node::divisionCannotOverflow()
    bool divisorIsNotNegativeOne = divisor ->isNonNegative();
    return dividendIsNotMin || divisorIsNotNegativeOne;
    }
-
-
-
-bool
-OMR::Node::isDebug()
-   {
-   return _flags.testAny(nodeIsDebug);
-   }
-
-void
-OMR::Node::setIsDebug(bool v)
-   {
-   _flags.set(nodeIsDebug, v);
-   }
-
-
 
 bool
 OMR::Node::cannotOverflow()
@@ -7300,7 +7272,11 @@ OMR::Node::printIsMaxLoopIterationGuard()
    return self()->isMaxLoopIterationGuard() ? "maxLoopIternGuard " : "";
    }
 
-
+bool
+OMR::Node::isStopTheWorldGuard()
+   {
+   return self()->isHCRGuard() || self()->isOSRGuard() || self()->isBreakpointGuard();
+   }
 
 bool
 OMR::Node::isProfiledGuard()
@@ -7504,10 +7480,10 @@ OMR::Node::resetIsTheVirtualGuardForAGuardedInlinedCall()
 bool
 OMR::Node::isNopableInlineGuard()
    {
-   return self()->isTheVirtualGuardForAGuardedInlinedCall() && !self()->isProfiledGuard() && !self()->isBreakpointGuard();
+   TR::Compilation * c = TR::comp();
+   return self()->isTheVirtualGuardForAGuardedInlinedCall() && !self()->isProfiledGuard() &&
+      !(self()->isBreakpointGuard() && c->getOption(TR_DisableNopBreakpointGuard));
    }
-
-
 
 bool
 OMR::Node::isMutableCallSiteTargetGuard()

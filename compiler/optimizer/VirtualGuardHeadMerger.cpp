@@ -1,22 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
-#include "VirtualGuardHeadMerger.hpp"
 
 #include <stddef.h>                            // for NULL
 #include "codegen/FrontEnd.hpp"                // for feGetEnv
@@ -32,11 +33,13 @@
 #include "il/symbol/ResolvedMethodSymbol.hpp"  // for ResolvedMethodSymbol
 #include "infra/Cfg.hpp"                       // for CFG
 #include "infra/List.hpp"                      // for List, ListIterator, etc
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
 #include "optimizer/Optimization_inlines.hpp"
 #include "optimizer/Optimizer.hpp"             // for Optimizer
 #include "optimizer/TransformUtil.hpp"         // for TransformUtil
+#include "optimizer/VirtualGuardHeadMerger.hpp"
 #include "ras/DebugCounter.hpp"
+#include "infra/Checklist.hpp"
 
 #define OPT_DETAILS "O^O VG HEAD MERGE: "
 
@@ -46,42 +49,170 @@ static bool isMergeableGuard(TR::Node *node)
    return mergeOnlyHCRGuards ? node->isHCRGuard() : node->isNopableInlineGuard();
    }
 
-// Splits monitor store from priv args
-// Return the block containing only the priv args if exist
-static TR::Block* splitMonitorStoreFromPrivArg(TR::Block* block, TR::CFG *cfg)
+static bool isStopTheWorldGuard(TR::Node *node)
    {
+   return node->isHCRGuard() || node->isOSRGuard();
+   }
+
+/**
+ * Recursive call to anchor nodes with a reference count greater than one prior to a treetop.
+ *
+ * @param comp Compilation object
+ * @param node Node to potentially anchor
+ * @param tt Treetop to anchor nodes before
+ * @param checklist Checklist of visited nodes
+ * @return Whether or not a nodes was anchored.
+ */
+static bool anchorCommonNodes(TR::Compilation *comp, TR::Node* node, TR::TreeTop* tt, TR::NodeChecklist &checklist)
+   {
+   if (checklist.contains(node))
+      return false;
+   checklist.add(node);
+
+   bool anchored = false;
+   if (node->getReferenceCount() > 1)
+      {
+      tt->insertBefore(TR::TreeTop::create(comp, TR::Node::create(TR::treetop, 1, node)));
+      anchored = true;
+      }
+   else
+      {
+      for (int i = 0; i <node->getNumChildren(); i++)
+         anchored |= anchorCommonNodes(comp, node->getChild(i), tt, checklist);
+      }
+
+   return anchored;
+   }
+
+/**
+ * A runtime guard block may have monitor stores and privarg stores along with the guard
+ * it self. This method will rearrange these stores and split the block, managing any
+ * uncommoning necessary for eventual block order.
+ *
+ * The provided block will become the privarg block, containing any privarg stores and additonal
+ * temps for uncommoning. It must be evaluated first. The returned block will contain monitor
+ * stores and the guard. If no split is required, the provided block will be returned.
+ *
+ * @param comp Compilation object
+ * @param block Block to manipulate
+ * @param cfg Current CFG
+ * @return The block containing the guard.
+ */
+static TR::Block* splitRuntimeGuardBlock(TR::Compilation *comp, TR::Block* block, TR::CFG *cfg)
+   {
+   TR::NodeChecklist checklist(comp);
    TR::TreeTop *start = block->getFirstRealTreeTop();
-   TR::TreeTop *end = block->getLastRealTreeTop();
-   bool hasMonitorStore = false;
+   TR::TreeTop *guard = block->getLastRealTreeTop();
    TR::TreeTop *firstPrivArg = NULL;
-   for(TR::TreeTop *tt = start; tt && tt != end; tt = tt->getNextTreeTop())
+   TR::TreeTop *firstMonitor = NULL;
+
+   // Manage the unexpected case that monitors and priv args are reversed
+   bool privThenMonitor = false;
+
+   TR_ASSERT(isMergeableGuard(guard->getNode()), "last node must be guard %p", guard->getNode());
+
+   // Search for privarg and monitor stores
+   // Only commoned nodes under the guard are required to be anchored, due to the guard being
+   // evaluted before the monitor stores later on
+   bool anchoredTemps = false;
+   for (TR::TreeTop *tt = start; tt && tt->getNode()->getOpCodeValue() != TR::BBEnd; tt = tt->getNextTreeTop())
       {
       TR::Node * node = tt->getNode();
+
       if (node->getOpCode().hasSymbolReference() && node->getSymbol()->holdsMonitoredObject())
-         hasMonitorStore = true;
-      else if(node->chkIsPrivatizedInlinerArg())
+         firstMonitor = firstMonitor == NULL ? tt : firstMonitor;
+      else if (node->chkIsPrivatizedInlinerArg())
          {
-         firstPrivArg = tt;
-         // Monitor stores always appear before priv args, so we can safely stop here
-         break;
+         if (firstPrivArg == NULL)
+            {
+            firstPrivArg = tt;
+            privThenMonitor = (firstMonitor == NULL);
+            }
+         }
+      else if (isMergeableGuard(node))
+         anchoredTemps |= anchorCommonNodes(comp, node, start, checklist);
+      else
+         TR_ASSERT(0, "Node other than monitor or privarg store %p before runtime guard", node);
+      }
+
+   // If there are monitors then privargs, they must be swapped around, such that all privargs are
+   // evaluated first
+   if (firstPrivArg && firstMonitor && !privThenMonitor)
+      {
+      TR::TreeTop *monitorEnd = firstPrivArg->getPrevTreeTop();
+      firstMonitor->getPrevTreeTop()->join(firstPrivArg);
+      guard->getPrevTreeTop()->join(firstMonitor);
+      monitorEnd->join(guard);
+      }
+
+   // If there were temps created or privargs in the block, perform a split
+   TR::TreeTop *split = NULL;
+   if (firstPrivArg)
+      split = firstMonitor ? firstMonitor : guard;
+   else if (anchoredTemps)
+      split = start;
+
+   if (split)
+      return block->split(split, cfg, true /* fixupCommoning */, false /* copyExceptionSuccessors */);
+   return block;
+   }
+
+/**
+ * Collect direct loads in a node and its children, adding them to the provided BitVector.
+ *
+ * @param node The node to consider.
+ * @param loadSymRefs BitVector of symbol reference numbers seen.
+ * @param checklist Checklist of visited nodes.
+ */
+static void collectDirectLoads(TR::Node *node, TR_BitVector &loadSymRefs, TR::NodeChecklist &checklist)
+   {
+   if (checklist.contains(node))
+      return;
+   checklist.add(node);
+
+   if (node->getOpCode().isLoadVarDirect())
+      loadSymRefs.set(node->getSymbolReference()->getReferenceNumber());
+
+   for (int i = 0; i < node->getNumChildren(); i++)
+      collectDirectLoads(node->getChild(i), loadSymRefs, checklist);
+   }
+
+/**
+ * Search for direct loads in the taken side of a guard
+ *
+ * @param firstBlock The guard's branch destination
+ * @param coldPathLoads BitVector of symbol reference numbers for any direct loads seen until the merge back to mainline
+ */
+static void collectColdPathLoads(TR::Block* firstBlock, TR_BitVector &coldPathLoads)
+   {
+   TR_Stack<TR::Block*> blocksToCheck(TR::comp()->trMemory(), 8, false, stackAlloc);
+   blocksToCheck.push(firstBlock);
+   TR::NodeChecklist checklist(TR::comp());
+
+   coldPathLoads.empty();
+   while (!blocksToCheck.isEmpty())
+      {
+      TR::Block *block = blocksToCheck.pop();
+
+      for (TR::TreeTop *tt = block->getFirstRealTreeTop(); tt->getNode()->getOpCodeValue() != TR::BBEnd; tt = tt->getNextTreeTop())
+         collectDirectLoads(tt->getNode(), coldPathLoads, checklist);
+
+      // Search for any successors that have not merged with the mainline
+      for (auto itr = block->getSuccessors().begin(), end = block->getSuccessors().end(); itr != end; ++itr)
+         {
+         TR::Block *dest = (*itr)->getTo()->asBlock();
+         if (dest != TR::comp()->getFlowGraph()->getEnd() && dest->getPredecessors().size() == 1)
+            blocksToCheck.push(dest);
          }
       }
-   if (hasMonitorStore && firstPrivArg)
-      return block->split(firstPrivArg, cfg, true /* fixupCommoning */, false /* copyExceptionSuccessors */);
-   else if (firstPrivArg)
-      return block;
-   else
-      // This block does not contain a priv arg
-      return NULL;
    }
 
 static bool safeToMoveGuard(TR::Block *destination, TR::TreeTop *guardCandidate,
-   TR::TreeTop *branchDest)
+   TR::TreeTop *branchDest, TR_BitVector &privArgSymRefs)
    {
    static char *disablePrivArgMovement = feGetEnv("TR_DisableRuntimeGuardPrivArgMovement");
    TR::TreeTop *start = destination ? destination->getExit() : TR::comp()->getStartTree();
-   bool stopTheWorld = guardCandidate->getNode()->isHCRGuard();
-   if (stopTheWorld)
+   if (guardCandidate->getNode()->isHCRGuard())
       {
       for (TR::TreeTop *tt = start; tt && tt != guardCandidate; tt = tt->getNextTreeTop())
          {
@@ -89,13 +220,22 @@ static bool safeToMoveGuard(TR::Block *destination, TR::TreeTop *guardCandidate,
             return false;
          }
       }
-   else
+   else if (guardCandidate->getNode()->isOSRGuard())
       {
       for (TR::TreeTop *tt = start; tt && tt != guardCandidate; tt = tt->getNextTreeTop())
          {
-          // It's safe to move the guard if there are only priv arg stores and live monitor stores
-          // ahead of the guard
-          if (tt->getNode()->getOpCodeValue() != TR::BBStart
+         if (TR::comp()->isPotentialOSRPoint(tt->getNode(), NULL, true))
+            return false;
+         }
+      }
+   else
+      {
+      privArgSymRefs.empty();
+      for (TR::TreeTop *tt = start; tt && tt != guardCandidate; tt = tt->getNextTreeTop())
+         {
+         // It's safe to move the guard if there are only priv arg stores and live monitor stores
+         // ahead of the guard
+         if (tt->getNode()->getOpCodeValue() != TR::BBStart
              && tt->getNode()->getOpCodeValue() != TR::BBEnd
              && !tt->getNode()->chkIsPrivatizedInlinerArg()
              && !(tt->getNode()->getOpCode().hasSymbolReference() && tt->getNode()->getSymbol()->holdsMonitoredObject())
@@ -109,6 +249,9 @@ static bool safeToMoveGuard(TR::Block *destination, TR::TreeTop *guardCandidate,
              // then we cannot move the guard and its priv args up across other calls' priv args
              tt->getNode()->getInlinedSiteIndex() != TR::comp()->getInlinedCallSite(guardCandidate->getNode()->getInlinedSiteIndex())._byteCodeInfo.getCallerIndex())))
             return false;
+
+         if (tt->getNode()->chkIsPrivatizedInlinerArg())
+            privArgSymRefs.set(tt->getNode()->getSymbolReference()->getReferenceNumber());
 
          if (tt->getNode()->isNopableInlineGuard()
              && tt->getNode()->getBranchDestination() != branchDest)
@@ -170,6 +313,12 @@ static void moveBlockAfterDest(TR::CFG *cfg, TR::Block *toMove, TR::Block *dest)
 int32_t TR_VirtualGuardHeadMerger::perform() {
    static char *disableVGHeadMergerTailSplitting = feGetEnv("TR_DisableVGHeadMergerTailSplitting");
    TR::CFG *cfg = comp()->getFlowGraph();
+
+   // Cache the loads for the outer guard's cold path
+   TR_BitVector coldPathLoads(comp()->trMemory()->currentStackRegion());
+   TR_BitVector privArgSymRefs(comp()->trMemory()->currentStackRegion());
+   bool evaluatedColdPathLoads = false;
+
    for (TR::Block *block = optimizer()->getMethodSymbol()->getFirstTreeTop()->getNode()->getBlock();
         block; block = block->getNextBlock())
       {
@@ -229,6 +378,9 @@ int32_t TR_VirtualGuardHeadMerger::perform() {
          TR::Block *runtimeIns = block->getPrevBlock();
          TR::Block *HCRIns = block;
 
+         // New outer guard so cold paths must be evaluated
+         evaluatedColdPathLoads = false;
+
          // scan for candidate guards to merge with guard1 identified above
          for (TR::Block *nextBlock = block->getNextBlock(); nextBlock; nextBlock = nextBlock->getNextBlock())
             {
@@ -253,8 +405,13 @@ int32_t TR_VirtualGuardHeadMerger::perform() {
             TR::Node *guard2 = guard2Tree->getNode();
             TR::Block *guard2Block = nextBlock;
 
-            TR::Block *insertPoint = guard2->isHCRGuard() ? HCRIns : runtimeIns;
-            if (!safeToMoveGuard(insertPoint, guard2Tree, guard1->getBranchDestination()))
+            // It is not possible to shift an OSR guard unless the destination is already an OSR point
+            // as the necessary OSR state will not be available
+            if (guard2->isOSRGuard() && !guard1->isOSRGuard())
+               break;
+
+            TR::Block *insertPoint = isStopTheWorldGuard(guard2) ? HCRIns : runtimeIns;
+            if (!safeToMoveGuard(insertPoint, guard2Tree, guard1->getBranchDestination(), privArgSymRefs))
                break;
 
             // now we figure out if we can redirect guard2 to guard1's cold block
@@ -284,7 +441,28 @@ int32_t TR_VirtualGuardHeadMerger::perform() {
                break;
                }
 
-            if (!performTransformation(comp(), "%sRedirecting %s guard [%p] in block_%d to parent guard cold block_%d\n", OPT_DETAILS, guard2->isHCRGuard() ? "HCR" : "runtime", guard2, guard2Block->getNumber(), cold1->getNumber()))
+            // Runtime guards will shift their privargs, so it is necessary to check such a move is safe
+            // This is possible if a privarg temp was recycled for the inner call site, with a prior use as an
+            // argument for the outer call site. As the privargs for the inner call site must be evaluated before
+            // both guards, this would result in the recycled temp holding the incorrect value if the guard is ever
+            // taken.
+            if (!isStopTheWorldGuard(guard2))
+               {
+               if (!evaluatedColdPathLoads)
+                  {
+                  collectColdPathLoads(cold1, coldPathLoads);
+                  evaluatedColdPathLoads = true;
+                  }
+
+               if (coldPathLoads.intersects(privArgSymRefs))
+                  {
+                  if (trace())
+                     traceMsg(comp(), "  Recycled temp live in cold1 block_%d and used as privarg before guard2 [%p] - stop guard merging", cold1->getNumber(), guard2);
+                  break;
+                  }
+               }
+
+            if (!performTransformation(comp(), "%sRedirecting %s guard [%p] in block_%d to parent guard cold block_%d\n", OPT_DETAILS, isStopTheWorldGuard(guard2) ? "stop the world" : "runtime", guard2, guard2Block->getNumber(), cold1->getNumber()))
                   continue;
 
             if (guard2->getBranchDestination() != guard1->getBranchDestination())
@@ -293,15 +471,12 @@ int32_t TR_VirtualGuardHeadMerger::perform() {
             if (guard2Tree != guard2Block->getFirstRealTreeTop())
                {
                cfg->setStructure(NULL);
-               guard2Block = guard2Block->split(guard2Tree, cfg, true, false);
-               if (trace())
-                  traceMsg(comp(), "  Created new block_%d to hold guard [%p] from block_%d\n", guard2Block->getNumber(), guard2, guard2Block->getNumber());
 
                // We should leave code ahead of an HCR guard in place because:
                // 1, it might have side effect to runtime guards after it, moving it up might cause us to falsely merge
                //    the subsequent runtime guards
                // 2, it might contain live monitor, moving it up above a guard can affect the monitor's live range
-               if (!guard2->isHCRGuard())
+               if (!isStopTheWorldGuard(guard2))
                   {
 	          // the block created above guard2 contains only privarg treetops or monitor stores if
                   // guard2 is a runtime-patchable guard and is safe to merge. We need to move the priv
@@ -310,12 +485,12 @@ int32_t TR_VirtualGuardHeadMerger::perform() {
                   // the priv arg store, because the priv arg store does not load the value from the temp
                   // holding the monitored object
 
-
                   // Split priv arg stores from monitor stores
                   // Monitor store is generated for the caller of the method guard2 protects, so should appear before
                   // priv arg stores for the method guard2 protects
-                  TR::Block *privargBlock = splitMonitorStoreFromPrivArg(guard2Block->getPrevBlock(), cfg);
-                  if (privargBlock)
+                  TR::Block *privargBlock = guard2Block;
+                  guard2Block = splitRuntimeGuardBlock(comp(), guard2Block, cfg);
+                  if (privargBlock != guard2Block)
                      {
                      if (trace())
                         traceMsg(comp(), "  Moving privarg block_%d after block_%d\n", privargBlock->getNumber(), privargIns->getNumber());
@@ -330,13 +505,17 @@ int32_t TR_VirtualGuardHeadMerger::perform() {
 
                      // refresh the insertPoint since it could be stale after the above updates
                      insertPoint = runtimeIns;
-                    }
+                     }
                   }
+
+               guard2Block = guard2Block->split(guard2Tree, cfg, true, false);
+               if (trace())
+                  traceMsg(comp(), "  Created new block_%d to hold guard [%p] from block_%d\n", guard2Block->getNumber(), guard2, guard2Block->getNumber());
                }
 
             if (insertPoint != guard2Block->getPrevBlock())
                {
-               TR::DebugCounter::incStaticDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "headMerger/%s_%s/(%s)", guard1->isHCRGuard() ? "hcr" : "runtime", guard2->isHCRGuard() ? "hcr" : "runtime", comp()->signature()));
+               TR::DebugCounter::incStaticDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "headMerger/%s_%s/(%s)", isStopTheWorldGuard(guard1) ? "stop the world" : "runtime", isStopTheWorldGuard(guard2) ? "stop the world" : "runtime", comp()->signature()));
                cfg->setStructure(NULL);
 
                block = nextBlock = guard2Block->getPrevBlock();

@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "GCExtensionsBase.hpp"
 
@@ -26,6 +30,9 @@
 
 #include "CollectorLanguageInterface.hpp"
 #include "EnvironmentBase.hpp"
+#if defined(OMR_GC_MODRON_SCAVENGER)
+#include "Scavenger.hpp"
+#endif /* OMR_GC_MODRON_SCAVENGER */
 
 MM_GCExtensionsBase*
 MM_GCExtensionsBase::newInstance(MM_EnvironmentBase* env)
@@ -33,7 +40,7 @@ MM_GCExtensionsBase::newInstance(MM_EnvironmentBase* env)
 	OMRPORT_ACCESS_FROM_ENVIRONMENT(env);
 	MM_GCExtensionsBase* extensions;
 
-	/* Avoid using MM_Forge to allocate memory for the extension, since MM_Forge itself has not been created! */
+	/* Avoid using OMR::GC::Forge to allocate memory for the extension, since OMR::GC::Forge itself has not been created! */
 	extensions = static_cast<MM_GCExtensionsBase*>(omrmem_allocate_memory(sizeof(MM_GCExtensionsBase), OMRMEM_CATEGORY_MM));
 	if (extensions) {
 		new (extensions) MM_GCExtensionsBase();
@@ -48,7 +55,7 @@ MM_GCExtensionsBase::newInstance(MM_EnvironmentBase* env)
 void
 MM_GCExtensionsBase::kill(MM_EnvironmentBase* env)
 {
-	/* Avoid using MM_Forge to free memory for the extension, since MM_Forge was not used to allocate the memory */
+	/* Avoid using OMR::GC::Forge to free memory for the extension, since OMR::GC::Forge was not used to allocate the memory */
 	OMRPORT_ACCESS_FROM_ENVIRONMENT(env);
 	tearDown(env);
 	omrmem_free_memory(this);
@@ -58,10 +65,6 @@ bool
 MM_GCExtensionsBase::initialize(MM_EnvironmentBase* env)
 {
 	OMRPORT_ACCESS_FROM_OMRPORT(env->getPortLibrary());
-	uint64_t physicalMemory = 0;
-	uint64_t memoryLimit = 0;
-	uint64_t usableMemory = 0;
-	uint64_t memoryToRequest = 0;
 	uintptr_t *pageSizes = NULL;
 	uintptr_t *pageFlags = NULL;
 
@@ -83,10 +86,10 @@ MM_GCExtensionsBase::initialize(MM_EnvironmentBase* env)
 
 
 #if defined(OMR_GC_MODRON_SCAVENGER)
-	if (!rememberedSet.initialize(env, MM_AllocationCategory::REMEMBERED_SET)) {
+	if (!rememberedSet.initialize(env, OMR::GC::AllocationCategory::REMEMBERED_SET)) {
 		goto failed;
 	}
-	rememberedSet.setGrowSize(J9_SCV_REMSET_SIZE);
+	rememberedSet.setGrowSize(OMR_SCV_REMSET_SIZE);
 #endif /* OMR_GC_MODRON_SCAVENGER */
 
 #if defined(J9MODRON_USE_CUSTOM_SPINLOCKS)
@@ -99,41 +102,14 @@ MM_GCExtensionsBase::initialize(MM_EnvironmentBase* env)
 	excessiveGCStats.endGCTimeStamp = omrtime_hires_clock();
 	excessiveGCStats.lastEndGlobalGCTimeStamp = excessiveGCStats.endGCTimeStamp;
 
-	/* Set Xmx (heap default).  For most platforms the heap default is a fraction of
-	 * the available physical memory, bounded by the build specs.
-	 *
-	 * 	Windows: half the REAL memory; with a min of 16MiB and a max of 2GiB.
-	 *
-	 * Linux, AIX, and z/OS:  half of OMR_MIN(physical memory, RLIMIT_AS) with a min of
-	 * 16 MiB and a max of 512 MiB.
-	 * -note that RLIMIT_AS is as extracted from getrlimit and represents the resouce
-	 * limitation on address space.
+        /* Get usable physical memory from portlibrary. This is used by computeDefaultMaxHeap().
+	 * It can also be used by downstream projects to compute project specific GC parameters.
 	 */
+	usablePhysicalMemory = omrsysinfo_get_addressable_physical_memory();
 
-	/* Initial physicalMemory as per system call. */
-	physicalMemory = omrsysinfo_get_physical_memory();
-	if (OMRPORT_LIMIT_LIMITED == omrsysinfo_get_limit(OMRPORT_RESOURCE_ADDRESS_SPACE, &memoryLimit)) {
-		/* there is a limit on the memory we can use so take the minimum of this usable amount and the physical memory */
-		usableMemory = OMR_MIN(memoryLimit, physicalMemory);
-	} else {
-		/* if there is no memory limit being imposed on us, we will use physical memory as our max */
-		usableMemory = physicalMemory;
-	}
-	/* we are going to try to request a slice of half the usable memory */
-	memoryToRequest = (usableMemory / 2);
+	computeDefaultMaxHeap(env);
 
-	/* TODO: Only cap HRT to 64M heap.  Should this be removed? */
-#define J9_PHYSICAL_MEMORY_MAX (uint64_t)(512 * 1024 * 1024)
-#define J9_PHYSICAL_MEMORY_DEFAULT (16 * 1024 * 1024)
-
-	if (0 == memoryToRequest) {
-		memoryToRequest = J9_PHYSICAL_MEMORY_DEFAULT;
-	}
-	memoryToRequest = OMR_MIN(memoryToRequest, J9_PHYSICAL_MEMORY_MAX);
-
-	/* Initialize Xmx, Xmdx */
-	memoryMax = MM_Math::roundToFloor(heapAlignment, (uintptr_t)memoryToRequest);
-	maxSizeDefaultMemorySpace = MM_Math::roundToFloor(heapAlignment, (uintptr_t)memoryToRequest);
+	maxSizeDefaultMemorySpace = memoryMax;
 
 	/* Set preferred page size/page flags for Heap and GC Metadata */
 	pageSizes = omrvmem_supported_page_sizes();
@@ -172,7 +148,7 @@ MM_GCExtensionsBase::initialize(MM_EnvironmentBase* env)
 	}
 
 
-	if (!_forge.initialize(env)) {
+	if (!_forge.initialize(env->getPortLibrary())) {
 		goto failed;
 	}
 
@@ -204,12 +180,6 @@ MM_GCExtensionsBase::initialize(MM_EnvironmentBase* env)
 		goto failed;
 	}
 
-#if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
-	if (!scavengerHotFieldStats.initialize(env)) {
-		goto failed;
-	}
-#endif /* defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC) */
-
 	return true;
 
 failed:
@@ -236,10 +206,6 @@ MM_GCExtensionsBase::validateDefaultPageParameters(uintptr_t pageSize, uintptr_t
 void
 MM_GCExtensionsBase::tearDown(MM_EnvironmentBase* env)
 {
-#if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
-	scavengerHotFieldStats.tearDown(env);
-#endif /* defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC) */
-
 #if defined(OMR_GC_MODRON_SCAVENGER)
 	rememberedSet.tearDown(env);
 #endif /* OMR_GC_MODRON_SCAVENGER */
@@ -268,7 +234,7 @@ MM_GCExtensionsBase::tearDown(MM_EnvironmentBase* env)
 		_lightweightNonReentrantLockPoolMutex = (omrthread_monitor_t) NULL;
 	}
 
-	_forge.tearDown(env);
+	_forge.tearDown();
 
 	J9HookInterface** tmpHookInterface = getPrivateHookInterface();
 	if ((NULL != tmpHookInterface) && (NULL != *tmpHookInterface)) {
@@ -283,6 +249,16 @@ MM_GCExtensionsBase::tearDown(MM_EnvironmentBase* env)
 	}
 }
 
+bool
+MM_GCExtensionsBase::isConcurrentScavengerInProgress()
+{
+#if defined(OMR_GC_CONCURRENT_SCAVENGER)
+	return scavenger->isConcurrentInProgress();
+#else
+	return false;
+#endif
+}
+
 void
 MM_GCExtensionsBase::identityHashDataAddRange(MM_EnvironmentBase* env, MM_MemorySubSpace* subspace, uintptr_t size, void* lowAddress, void* highAddress)
 {
@@ -293,4 +269,25 @@ void
 MM_GCExtensionsBase::identityHashDataRemoveRange(MM_EnvironmentBase* env, MM_MemorySubSpace* subspace, uintptr_t size, void* lowAddress, void* highAddress)
 {
 	/* empty */
+}
+
+/* Set Xmx (heap default). For most platforms the heap default is a fraction of
+ * the usable physical memory - half of usable memory with a min of 16 MiB and a max of 512 MiB.
+ */
+void
+MM_GCExtensionsBase::computeDefaultMaxHeap(MM_EnvironmentBase* env)
+{
+	/* we are going to try to request a slice of half the usable memory */
+	uint64_t memoryToRequest = (usablePhysicalMemory / 2);
+
+#define J9_PHYSICAL_MEMORY_MAX (uint64_t)(512 * 1024 * 1024)
+#define J9_PHYSICAL_MEMORY_DEFAULT (16 * 1024 * 1024)
+
+	if (0 == memoryToRequest) {
+		memoryToRequest = J9_PHYSICAL_MEMORY_DEFAULT;
+	}
+	memoryToRequest = OMR_MIN(memoryToRequest, J9_PHYSICAL_MEMORY_MAX);
+
+	/* Initialize Xmx, Xmdx */
+	memoryMax = MM_Math::roundToFloor(heapAlignment, (uintptr_t)memoryToRequest);
 }

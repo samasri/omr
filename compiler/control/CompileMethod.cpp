@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "control/CompileMethod.hpp"
 
@@ -50,6 +53,7 @@
 #include "omr.h"
 #include "env/SystemSegmentProvider.hpp"
 #include "env/DebugSegmentProvider.hpp"
+#include "runtime/CodeCacheManager.hpp"
 
 static void
 writePerfToolEntry(void *start, uint32_t size, const char *name)
@@ -136,7 +140,25 @@ int32_t commonJitInit(OMR::FrontEnd &fe, char *cmdLineOptions)
 
    void *pseudoTOC = NULL;
 #if defined(TR_TARGET_POWER)
-   pseudoTOC = (void *) TR_PPCTableOfConstants::initTOC(&fe, fe.getPersistentInfo(), jitConfig->getInterpreterTOC());
+
+   static bool initializedTOC = false;
+   // some silliness  here needed to support projects like JitBuilder where the JIT
+   // can be initialized, shutdown, then initialized again. If we're initializing the
+   // JIT a second (or later) time, the TOC cannot be re-initialized (it will throw
+   // an assertion), but we can reuse the older pseudoTOC. This code has never been
+   // thread safe on its own (it relies on the caller to ensure thread safety if
+   // required), so relying on a static boolean doesn't make this code any less safe.
+   if (initializedTOC)
+      {
+      TR_PPCTableOfConstants *tocManagement = static_cast<TR_PPCTableOfConstants *>(fe.getPersistentInfo()->getPersistentTOC());
+      pseudoTOC = tocManagement->getTOCBase();
+      }
+   else
+      {
+      pseudoTOC = (void *) TR_PPCTableOfConstants::initTOC(&fe, fe.getPersistentInfo(), jitConfig->getInterpreterTOC());
+      initializedTOC = true;
+      }
+
    if (pseudoTOC == (void*)0x1)
       pseudoTOC = NULL;
 #endif
@@ -315,9 +337,7 @@ compileMethodFromDetails(
          compiler.setDebug(createDebugObject(&compiler));
          }
 
-#ifdef TEST_PROJECT_SPECIFIC
       compiler.setIlVerifier(details.getIlVerifier());
-#endif
 
       if (TR::Options::getCmdLineOptions()->getVerboseOption(TR_VerboseCompileStart))
          {
@@ -373,8 +393,27 @@ compileMethodFromDetails(
             trfflush(jitConfig->options.vLogFile);
             }
 
-         if (TR::Options::getCmdLineOptions()->getOption(TR_PerfTool))
-            generatePerfToolEntry(startPC, compiler.cg()->getCodeEnd(), compiler.signature(), compiler.getHotnessName(compiler.getMethodHotness()));
+         if (
+               TR::Options::getCmdLineOptions()->getOption(TR_PerfTool)
+            || TR::Options::getCmdLineOptions()->getOption(TR_EnableObjectFileGeneration)
+            )
+            {
+            TR::CodeCacheManager &codeCacheManager(fe.codeCacheManager());
+            TR::CodeGenerator &codeGenerator(*compiler.cg());
+            codeCacheManager.registerCompiledMethod(compiler.externalName(), startPC, codeGenerator.getCodeLength());
+            if (TR::Options::getCmdLineOptions()->getOption(TR_EnableObjectFileGeneration))
+               {
+               auto &relocations = codeGenerator.getStaticRelocations();
+               for (auto it = relocations.begin(); it != relocations.end(); ++it)
+                  {
+                  codeCacheManager.registerStaticRelocation(*it);
+                  }
+               }
+            if (TR::Options::getCmdLineOptions()->getOption(TR_PerfTool))
+               {
+               generatePerfToolEntry(startPC, codeGenerator.getCodeEnd(), compiler.signature(), compiler.getHotnessName(compiler.getMethodHotness()));
+               }
+            }
 
          if (compiler.getOutFile() != NULL && compiler.getOption(TR_TraceAll))
             traceMsg((&compiler), "<result success=\"true\" startPC=\"%#p\" time=\"%lld.%lldms\"/>\n",
@@ -393,6 +432,17 @@ compileMethodFromDetails(
          }
 
       }
+   catch (const TR::ILValidationFailure &exception)
+      {
+      rc = COMPILATION_IL_VALIDATION_FAILURE;
+#if defined(J9ZOS390)
+      // Compiling with -Wc,lp64 results in a crash on z/OS when trying
+      // to call the what() virtual method of the exception.
+      printCompFailureInfo(jitConfig, &compiler, "");
+#else
+      printCompFailureInfo(jitConfig, &compiler, exception.what());
+#endif
+      } 
    catch (const std::exception &exception)
       {
       // failed! :-(
@@ -410,7 +460,7 @@ compileMethodFromDetails(
    // TR::Compilation. We'll need exceptions working instead of setjmp
    // before we can get working, and we need to make sure the other
    // frontends are properly calling the destructor
-   fe.unreserveCodeCache(compiler.getCurrentCodeCache());
+   TR::CodeCacheManager::instance()->unreserveCodeCache(compiler.getCurrentCodeCache());
 
    TR_OptimizationPlan::freeOptimizationPlan(plan);
 

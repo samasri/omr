@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #if !defined(MARKINGSCHEME_HPP_)
 #define MARKINGSCHEME_HPP_
@@ -25,9 +29,6 @@
 
 #include "BaseVirtual.hpp"
 
-#if defined(OMR_GC_MODRON_CONCURRENT_MARK)
-#include "CollectorLanguageInterface.hpp"
-#endif /* defined(OMR_GC_MODRON_CONCURRENT_MARK) */
 #include "EnvironmentBase.hpp"
 #include "GCExtensionsBase.hpp"
 #include "MarkingDelegate.hpp"
@@ -63,18 +64,8 @@ public:
 	 */
 private:
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
-	bool isConcurrentMarkInProgress() {
-#if defined(OMR_GC_MODRON_CONCURRENT_MARK) 
-		uintptr_t mode = _extensions->collectorLanguageInterface->concurrentGC_getConcurrentStats()->getExecutionMode();
-		return (CONCURRENT_ROOT_TRACING <= mode) && (mode < CONCURRENT_EXHAUSTED);
-#else	
-		return false;
-#endif /* OMR_GC_MODRON_CONCURRENT_MARK */
-	}
-	bool isConcurrentScavengeInProgress();
+	bool isConcurrentMarkInProgress();
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
-	
-
 
 	MMINLINE void
 	assertSaneObjectPtr(MM_EnvironmentBase *env, omrobjectptr_t objectPtr)
@@ -93,7 +84,8 @@ private:
 			/* It is ok to encounter a forwarded object during overlapped concurrent scavenger/marking (or even root scanning),
 			 * but we must do nothing about it (if in backout, STW global phase will recover them).
 			 */
-			Assert_MM_true(NULL == forwardPtr || (isConcurrentMarkInProgress() && isConcurrentScavengeInProgress()));
+			Assert_GC_true_with_message3(env, ((NULL == forwardPtr) || (isConcurrentMarkInProgress() && _extensions->isConcurrentScavengerInProgress())),
+				"Encountered object %p forwarded to %p (header %p) while Concurrent Scavenger/Marking not in progress\n", objectPtr, forwardPtr, &forwardHeader);
 		}
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */ 				
 	}

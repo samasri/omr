@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stddef.h>                                 // for size_t
@@ -1089,23 +1092,7 @@ OMR::Z::TreeEvaluator::returnEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    TR::Register * CAARegister = NULL;
    TR::Linkage * linkage = cg->getS390Linkage();
 
-   // Some asm macros in epilog can kill return code and reason registers.
-   // defer loading constants to avoid caching these values around the macros
-   bool returnCodeDeferred = false;
-   bool returnReasonDeferrred = false;
-   if (linkage->checkEpilogKillsReturnCodeReason())
-      {
-      TR::Node *returnCode = node->getReturnCode();
-      TR::Node *returnReason = node->getReturnReason();
-      if (returnCode && returnCode->getOpCode().isLoadConst())
-         returnCodeDeferred = true;
-      if (returnReason && returnReason->getOpCode().isLoadConst())
-         returnReasonDeferrred = true;
-      }
-
-   if ((node->getOpCodeValue() != TR::Return)
-         && !returnCodeDeferred
-          )
+   if (node->getOpCodeValue() != TR::Return)
       returnValRegister = cg->evaluate(node->getFirstChild());
 
    // GRA needs to tell LRA about the register type
@@ -1275,7 +1262,7 @@ static inline void generateMergedHCRGuardCodeIfNeeded(TR::Node *node, TR::CodeGe
       if (virtualGuard && virtualGuard->mergedWithHCRGuard())
          {
          TR::RegisterDependencyConditions  *mergedHCRDeps = NULL;
-         TR::Instruction *instr = comp->getAppendInstruction();
+         TR::Instruction *instr = cg->getAppendInstruction();
          if (instr && instr->getNode() == node && instr->getDependencyConditions())
             mergedHCRDeps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(instr->getDependencyConditions(), 1, 0, cg);
 
@@ -1293,7 +1280,7 @@ static inline void generateMergedHCRGuardCodeIfNeeded(TR::Node *node, TR::CodeGe
             deps = cg->addVMThreadDependencies(deps, NULL);
             TR::Instruction *vgnopInstr = generateVirtualGuardNOPInstruction(cg, node, site, deps, fallThroughLabel, instr ? instr->getPrev() : NULL);
             vgnopInstr->setNext(instr);
-            comp->setAppendInstruction(instr);
+            cg->setAppendInstruction(instr);
             generateS390LabelInstruction(cg, TR::InstOpCode::LABEL, node, fallThroughLabel, mergedHCRDeps);
             }
          else
@@ -1302,7 +1289,7 @@ static inline void generateMergedHCRGuardCodeIfNeeded(TR::Node *node, TR::CodeGe
 
             TR::Instruction *vgnopInstr = generateVirtualGuardNOPInstruction(cg, node, site, mergedHCRDeps, label, instr ? instr->getPrev() : NULL);
             vgnopInstr->setNext(instr);
-            comp->setAppendInstruction(instr);
+            cg->setAppendInstruction(instr);
             }
          traceMsg(comp, "generateMergedHCRGuardCodeIfNeeded for %s %s\n",
                   comp->getDebug()?comp->getDebug()->getVirtualGuardKindName(virtualGuard->getKind()):"???Guard" , virtualGuard->mergedWithHCRGuard()?"merged with HCRGuard":"");
@@ -2815,7 +2802,7 @@ TR::Register *OMR::Z::TreeEvaluator::evaluateNULLCHKWithPossibleResolve(TR::Node
          reference->incReferenceCount(); // will be decremented again later
          needLateEvaluation = false;
          cg->evaluate(reference);
-         appendTo = comp->getAppendInstruction();
+         appendTo = cg->getAppendInstruction();
          cg->evaluate(firstChild);
 
          if (cg->getImplicitExceptionPoint() &&
@@ -2856,7 +2843,7 @@ TR::Register *OMR::Z::TreeEvaluator::evaluateNULLCHKWithPossibleResolve(TR::Node
             {
             targetRegister = cg->evaluate(reference);
 
-            appendTo = comp->getAppendInstruction();
+            appendTo = cg->getAppendInstruction();
 
             if (appendTo->getOpCodeValue() == TR::InstOpCode::LLGF)
                {
@@ -3734,12 +3721,12 @@ OMR::Z::TreeEvaluator::ternaryEvaluator(TR::Node *node, TR::CodeGenerator *cg)
             
             auto mnemonic = is64BitRegister ? TR::InstOpCode::LOCGR: TR::InstOpCode::LOCR;
 
-            generateRRFInstruction(cg, mnemonic, node, trueReg->getHighOrder(), falseReg->getHighOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER)>>4, true);
-            generateRRFInstruction(cg, mnemonic, node, trueReg->getLowOrder(), falseReg->getLowOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER)>>4, true);
+            generateRRFInstruction(cg, mnemonic, node, trueReg->getHighOrder(), falseReg->getHighOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER), true);
+            generateRRFInstruction(cg, mnemonic, node, trueReg->getLowOrder(), falseReg->getLowOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER), true);
             }
          else
             {
-            generateRRFInstruction(cg, trueVal->getOpCode().is8Byte() ? TR::InstOpCode::LOCGR: TR::InstOpCode::LOCR, node, trueReg, falseReg, getMaskForBranchCondition(TR::TreeEvaluator::mapBranchConditionToLOCRCondition(bc))>>4, true);
+            generateRRFInstruction(cg, trueVal->getOpCode().is8Byte() ? TR::InstOpCode::LOCGR: TR::InstOpCode::LOCR, node, trueReg, falseReg, getMaskForBranchCondition(TR::TreeEvaluator::mapBranchConditionToLOCRCondition(bc)), true);
             }
          }
       else
@@ -3828,7 +3815,7 @@ OMR::Z::TreeEvaluator::ternaryEvaluator(TR::Node *node, TR::CodeGenerator *cg)
       if (comp->getOption(TR_TraceCG))
          traceMsg(comp, "emitting a compare with 0 instruction\n");
 
-      TR::Instruction *compareInst = generateRILInstruction(cg,condition->getOpCode().isLongCompare() ? TR::InstOpCode::CGFI : TR::InstOpCode::CFI,condition,condition->getRegister(),(uintptrj_t)0);
+      TR::Instruction *compareInst = generateRILInstruction(cg,condition->getOpCode().isLongCompare() ? TR::InstOpCode::CGFI : TR::InstOpCode::CFI,condition,condition->getRegister(), 0);
 
       // Load on condition is supported on z196 and up
       if (cg->getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z196))
@@ -3845,14 +3832,14 @@ OMR::Z::TreeEvaluator::ternaryEvaluator(TR::Node *node, TR::CodeGenerator *cg)
 
             auto mnemonic = trueReg->getKind() == TR_GPR64 || cg->use64BitRegsOn32Bit() ? TR::InstOpCode::LOCGR: TR::InstOpCode::LOCR;
 
-            generateRRFInstruction(cg, mnemonic, node, trueReg->getHighOrder(), falseReg->getHighOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER) >> 4, true);
-            generateRRFInstruction(cg, mnemonic, node, trueReg->getLowOrder(), falseReg->getLowOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER) >> 4, true);
+            generateRRFInstruction(cg, mnemonic, node, trueReg->getHighOrder(), falseReg->getHighOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER), true);
+            generateRRFInstruction(cg, mnemonic, node, trueReg->getLowOrder(), falseReg->getLowOrder(), getMaskForBranchCondition(TR::InstOpCode::COND_BER), true);
             }
          else
             {
             auto mnemonic = trueVal->getOpCode().is8Byte() ? TR::InstOpCode::LOCGR: TR::InstOpCode::LOCR;
 
-            generateRRFInstruction(cg, mnemonic, node, trueReg, falseReg->getRegister(), getMaskForBranchCondition(TR::InstOpCode::COND_BER)>>4, true);
+            generateRRFInstruction(cg, mnemonic, node, trueReg, falseReg->getRegister(), getMaskForBranchCondition(TR::InstOpCode::COND_BER), true);
             }
          }
       else
@@ -4048,7 +4035,7 @@ TR::Instruction *generateAlwaysTrapSequence(TR::Node *node, TR::CodeGenerator *c
    TR::RegisterDependencyConditions *regDeps =
          new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 1, cg);
    regDeps->addPostCondition(zeroReg, TR::RealRegister::AssignAny);
-   cursor = new (cg->trHeapMemory()) TR::S390RRFInstruction(TR::InstOpCode::CLRT, node, zeroReg, zeroReg, getMaskForBranchCondition(TR::InstOpCode::COND_BER)>>4, true, cg);
+   cursor = new (cg->trHeapMemory()) TR::S390RRFInstruction(TR::InstOpCode::CLRT, node, zeroReg, zeroReg, getMaskForBranchCondition(TR::InstOpCode::COND_BER), true, cg);
    cursor->setDependencyConditions(regDeps);
 
    cg->stopUsingRegister(zeroReg);

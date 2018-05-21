@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stdint.h>
@@ -74,7 +77,6 @@ OMR::ARM::CodeGenerator::CodeGenerator()
    : OMR::CodeGenerator(),
      _frameRegister(NULL),
      _constantData(NULL),
-     _assignmentDirection(Backward),
      _outOfLineCodeSectionList(self()->trMemory()),
      _internalControlFlowNestingDepth(0),
      _internalControlFlowSafeNestingDepth(0)
@@ -138,6 +140,7 @@ OMR::ARM::CodeGenerator::CodeGenerator()
    self()->setSupportsScaledIndexAddressing();
    self()->setSupportsAlignedAccessOnly();
    self()->setSupportsPrimitiveArrayCopy();
+   self()->setSupportsReferenceArrayCopy();
    self()->setSupportsLoweringConstIDiv();
    self()->setSupportsNewInstanceImplOpt();
 
@@ -382,10 +385,7 @@ void OMR::ARM::CodeGenerator::doRegisterAssignment(TR_RegisterKinds kindsToAssig
    if (comp->getOption(TR_TraceCG))
       diagnostic("\nPerforming Register Assignment:\n");
 
-   // gprs, fprs, and ccrs are all assigned in backward direction
-   self()->setAssignmentDirection(Backward);
-
-   TR::Instruction *instructionCursor = comp->getAppendInstruction();
+   TR::Instruction *instructionCursor = self()->getAppendInstruction();
    if (!comp->getOption(TR_DisableOOL))
       {
       TR::list<TR::Register*> *spilledRegisterList = new (self()->trHeapMemory()) TR::list<TR::Register*>(getTypedAllocator<TR::Register*>(comp->allocator()));
@@ -450,7 +450,7 @@ void OMR::ARM::CodeGenerator::doBinaryEncoding()
    {
    TR::Compilation *comp = self()->comp();
    int32_t estimate = 0;
-   TR::Instruction *cursorInstruction = comp->getFirstInstruction();
+   TR::Instruction *cursorInstruction = self()->getFirstInstruction();
 
    self()->getLinkage()->createPrologue(cursorInstruction);
 
@@ -482,12 +482,11 @@ void OMR::ARM::CodeGenerator::doBinaryEncoding()
       estimate = identifyFarConditionalBranches(estimate, self());
       }
 
-   self()->setEstimatedWarmLength(estimate);
-   self()->setEstimatedColdLength(0);
+   self()->setEstimatedCodeLength(estimate);
 
-   cursorInstruction = comp->getFirstInstruction();
+   cursorInstruction = self()->getFirstInstruction();
    uint8_t *coldCode = NULL;
-   uint8_t *temp = self()->allocateCodeMemory(self()->getEstimatedWarmLength(), self()->getEstimatedColdLength(), &coldCode);
+   uint8_t *temp = self()->allocateCodeMemory(self()->getEstimatedCodeLength(), 0, &coldCode);
 
    self()->setBinaryBufferStart(temp);
    self()->setBinaryBufferCursor(temp);
@@ -569,7 +568,7 @@ TR::Register *OMR::ARM::CodeGenerator::gprClobberEvaluate(TR::Node *node)
 static int32_t identifyFarConditionalBranches(int32_t estimate, TR::CodeGenerator *cg)
    {
    TR_Array<TR::ARMConditionalBranchInstruction *> candidateBranches(cg->trMemory(), 256);
-   TR::Instruction *cursorInstruction = cg->comp()->getFirstInstruction();
+   TR::Instruction *cursorInstruction = cg->getFirstInstruction();
 
    while (cursorInstruction)
       {

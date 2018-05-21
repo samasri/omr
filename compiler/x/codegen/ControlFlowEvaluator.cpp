@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stddef.h>                                 // for NULL
@@ -173,7 +176,7 @@ bool isConditionCodeSetForCompareToZero(TR::Node *node, bool justTestZeroFlag)
    //
    TR::Instruction     *prevInstr;
    TR::X86RegInstruction  *prevRegInstr;
-   for (prevInstr = comp->getAppendInstruction();
+   for (prevInstr = comp->cg()->getAppendInstruction();
         prevInstr;
         prevInstr = prevInstr->getPrev())
       {
@@ -468,36 +471,15 @@ TR::Register *OMR::X86::TreeEvaluator::tableEvaluator(TR::Node *node, TR::CodeGe
 
    TR::X86MemTableInstruction *jmpTableInstruction = NULL;
 
-   // A VMThread Register of NoReg means we are in WCode and don't have a VM
-   // thread register to worry about
-   //
    if (cg->getLinkage()->getProperties().getMethodMetaDataRegister() != TR::RealRegister::NoReg)
       {
-      TR::Compilation *comp = cg->comp();
-      bool needVMThreadDep =
-         comp->getOption(TR_DisableLateEdgeSplitting) ||
-         !performTransformation(comp, "O^O LATE EDGE SPLITTING: Omit ebp dependency for %s node %s\n", node->getOpCode().getName(), cg->getDebug()->getName(node));
-
-      TR::RegisterDependencyConditions  *deps = NULL;
+      TR::RegisterDependencyConditions *deps = NULL;
 
       if (secondChild->getNumChildren() > 0)
          {
-         deps = generateRegisterDependencyConditions(secondChild->getFirstChild(), cg, needVMThreadDep?1:0, NULL);
-         }
-      else if (needVMThreadDep)
-         {
-         deps = generateRegisterDependencyConditions((uint8_t)1, 0, cg);
-         }
-
-      if (needVMThreadDep)
-         {
-         TR_ASSERT(deps, "assertion failure");
-         TR::Register *vmThreadRegister = cg->getVMThreadRegister();
-         deps->addPreCondition(vmThreadRegister, (TR::RealRegister::RegNum)vmThreadRegister->getAssociation(), cg);
-         }
-
-      if (deps)
+         deps = generateRegisterDependencyConditions(secondChild->getFirstChild(), cg, 0, NULL);
          deps->stopAddingConditions();
+         }
 
       jmpTableInstruction = generateMemTableInstruction(JMPMem, node, tempMR, numBranchTableEntries, deps, cg);
       }
@@ -521,101 +503,50 @@ TR::Register *OMR::X86::TreeEvaluator::tableEvaluator(TR::Node *node, TR::CodeGe
    return NULL;
    }
 
-
 TR::Register *OMR::X86::TreeEvaluator::minmaxEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   TR::Node *child  = node->getFirstChild();
-   TR::DataType data_type = child->getDataType();
-   TR::DataType type = child->getType();
-   TR_X86OpCodes  move_op = MOVRegReg(TR::Compiler->target.is64Bit() && type.isInt64());
-   TR_X86OpCodes  cmp_op = CMPRegReg(TR::Compiler->target.is64Bit() && type.isInt64());
-   bool two_reg = (TR::Compiler->target.is32Bit() && type.isInt64());
-   bool isMin = false;
-   if ((node->getOpCodeValue() == TR::imin) || (node->getOpCodeValue() == TR::lmin))
-      isMin = true;
-
-   TR::Register *trgReg;
-   TR::Register *reg = cg->evaluate(child);
-
-   TR::LabelSymbol *startLabel       = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
-   TR::LabelSymbol *doneLabel        = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
-   startLabel->setStartInternalControlFlow();
-   doneLabel->setEndInternalControlFlow();
-   generateLabelInstruction(LABEL, node, startLabel, cg);
-
-   if (cg->canClobberNodesRegister(child))
+   TR_X86OpCodes CMP  = BADIA32Op;
+   TR_X86OpCodes MOV  = BADIA32Op;
+   TR_X86OpCodes CMOV = BADIA32Op;
+   switch (node->getOpCodeValue())
       {
-      trgReg = reg; // use first child as a target
-      }
-   else
-      {
-      switch (data_type)
-         {
-         case TR::Int32:
-            trgReg = cg->allocateRegister();
-            break;
-         case TR::Int64:
-            if (two_reg)
-               trgReg = cg->allocateRegisterPair(cg->allocateRegister(), cg->allocateRegister());
-            else
-               trgReg = cg->allocateRegister();
-            break;
-         default:
-            TR_ASSERT(false, "assertion failure");
-         }
-      if (two_reg)
-         {
-         generateRegRegInstruction(move_op, node, trgReg->getLowOrder(), reg->getLowOrder(), cg);
-         generateRegRegInstruction(move_op, node, trgReg->getHighOrder(), reg->getHighOrder(), cg);
-         }
-      else
-         {
-         generateRegRegInstruction(move_op, node, trgReg, reg, cg);
-         }
+      case TR::imin:
+         CMP = CMP4RegReg;
+         MOV = MOV4RegReg;
+         CMOV = CMOVG4RegReg;
+         break;
+      case TR::imax:
+         CMP = CMP4RegReg;
+         MOV = MOV4RegReg;
+         CMOV = CMOVL4RegReg;
+         break;
+      case TR::lmin:
+         CMP = CMP8RegReg;
+         MOV = MOV8RegReg;
+         CMOV = CMOVG8RegReg;
+         break;
+      case TR::lmax:
+         CMP = CMP8RegReg;
+         MOV = MOV8RegReg;
+         CMOV = CMOVL8RegReg;
+         break;
+      default:
+         TR_ASSERT(false, "INCORRECT IL OPCODE.");
+         break;
       }
 
-   child = node->getChild(1);
-   reg = cg->evaluate(child);
-   TR::RegisterDependencyConditions *dep;
-   if (two_reg)
-      {
-      TR::LabelSymbol *gtLabel = generateLabelSymbol(cg);
-      generateRegRegInstruction(cmp_op, node, reg->getHighOrder(), trgReg->getHighOrder(), cg);
-      generateLabelInstruction(isMin ? JG4 : JL4, node, doneLabel, false, cg);
-      generateLabelInstruction(JNE4, node, gtLabel, false, cg);
-      generateRegRegInstruction(cmp_op, node, reg->getLowOrder(), trgReg->getLowOrder(), cg);
-      generateLabelInstruction(isMin ? JA4 : JB4, node, doneLabel, false, cg);
-      generateLabelInstruction(LABEL, node, gtLabel, cg);
-      generateRegRegInstruction(move_op, node, trgReg->getHighOrder(), reg->getHighOrder(), cg);
-      generateRegRegInstruction(move_op, node, trgReg->getLowOrder(), reg->getLowOrder(), cg);
+   auto operand0 = cg->evaluate(node->getChild(0));
+   auto operand1 = cg->evaluate(node->getChild(1));
+   auto result = cg->allocateRegister();
+   generateRegRegInstruction(CMP,  node, operand0, operand1, cg);
+   generateRegRegInstruction(MOV,  node, result,  operand0, cg);
+   generateRegRegInstruction(CMOV, node, result,  operand1, cg);
 
-      dep = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 4, cg->trMemory());
-      dep->addPostCondition(trgReg->getLowOrder(), TR::RealRegister::NoReg, cg);
-      dep->addPostCondition(trgReg->getHighOrder(), TR::RealRegister::NoReg, cg);
-      dep->addPostCondition(reg->getLowOrder(), TR::RealRegister::NoReg, cg);
-      dep->addPostCondition(reg->getHighOrder(), TR::RealRegister::NoReg, cg);
-      }
-   else
-      {
-      generateRegRegInstruction(cmp_op, node, reg, trgReg, cg);
-      generateLabelInstruction(isMin ? JG4 : JL4, node, doneLabel, false, cg);
-      generateRegRegInstruction(move_op, node, trgReg, reg, cg);
-
-      dep = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 2, cg->trMemory());
-      dep->addPostCondition(trgReg, TR::RealRegister::NoReg, cg);
-      dep->addPostCondition(reg, TR::RealRegister::NoReg, cg);
-      }
-
-   generateLabelInstruction(LABEL, node, doneLabel, dep, cg);
-
-   node->setRegister(trgReg);
-   for (int i = 0; i < node->getNumChildren(); i++)
-      {
-      cg->decReferenceCount(node->getChild(i));
-      }
-   return trgReg;
+   node->setRegister(result);
+   cg->decReferenceCount(node->getChild(0));
+   cg->decReferenceCount(node->getChild(1));
+   return result;
    }
-
 
 
 void
@@ -663,8 +594,8 @@ void OMR::X86::TreeEvaluator::compareIntegersForEquality(TR::Node *node, TR::Cod
    intptrj_t constValue;
    if (secondChild->getOpCode().isLoadConst() &&
        secondChild->getRegister() == NULL     &&
-       ((secondChild->getSize() <= 2) && (!secondChild->isUnsigned()) ||
-       TR::TreeEvaluator::constNodeValueIs32BitSigned(secondChild, &constValue, cg) && !cg->constantAddressesCanChangeSize(secondChild)))
+       (((secondChild->getSize() <= 2) && (!secondChild->isUnsigned())) ||
+       (TR::TreeEvaluator::constNodeValueIs32BitSigned(secondChild, &constValue, cg) && !cg->constantAddressesCanChangeSize(secondChild))))
       {
       if(secondChild->getSize() <= 2)
          constValue = (intptrj_t)secondChild->get64bitIntegralValue();
@@ -1197,11 +1128,7 @@ void OMR::X86::TreeEvaluator::compareBytesForOrder(TR::Node *node, TR::CodeGener
 
 TR::Register *OMR::X86::TreeEvaluator::gotoEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   TR::Compilation *comp = cg->comp();
-   bool needVMThreadDep =
-      comp->getOption(TR_DisableLateEdgeSplitting) ||
-      !performTransformation(comp, "O^O LATE EDGE SPLITTING: Omit ebp dependency for %s node %s\n", node->getOpCode().getName(), cg->getDebug()->getName(node));
-   generateJumpInstruction(JMP4, node, cg, needVMThreadDep);
+   generateJumpInstruction(JMP4, node, cg, false);
    return NULL;
    }
 
@@ -1260,25 +1187,13 @@ TR::Register *OMR::X86::TreeEvaluator::integerReturnEvaluator(TR::Node *node, TR
    TR::RealRegister::RegNum machineReturnRegister =
       linkageProperties.getIntegerReturnRegister();
 
-   TR::RegisterDependencyConditions  *dependencies;
+   TR::RegisterDependencyConditions  *dependencies = NULL;
    if (machineReturnRegister != TR::RealRegister::NoReg)
       {
-      dependencies = generateRegisterDependencyConditions((uint8_t)2, 0, cg);
-      dependencies->addPreCondition(returnRegister, machineReturnRegister, cg);
-      }
-   else
-      {
       dependencies = generateRegisterDependencyConditions((uint8_t)1, 0, cg);
+      dependencies->addPreCondition(returnRegister, machineReturnRegister, cg);
+      dependencies->stopAddingConditions();
       }
-
-   if (cg->getLinkage()->getProperties().getMethodMetaDataRegister() != TR::RealRegister::NoReg)
-      {
-      dependencies->addPreCondition(
-         cg->getVMThreadRegister(),
-         (TR::RealRegister::RegNum)cg->getVMThreadRegister()->getAssociation(), cg);
-      }
-   dependencies->stopAddingConditions();
-
 
    if (linkageProperties.getCallerCleanup())
       {
@@ -1334,21 +1249,13 @@ TR::Register *OMR::X86::TreeEvaluator::returnEvaluator(TR::Node *node, TR::CodeG
       generateMemInstruction(LDCWMem, node, generateX86MemoryReference(cds, cg), cg);
       }
 
-   TR::RegisterDependencyConditions  *dependencies = generateRegisterDependencyConditions((uint8_t)1, 0, cg);
-
-   if (cg->getLinkage()->getProperties().getMethodMetaDataRegister() != TR::RealRegister::NoReg)
-      {
-      dependencies->addPreCondition(cg->getVMThreadRegister(), (TR::RealRegister::RegNum)cg->getVMThreadRegister()->getAssociation(), cg);
-      }
-   dependencies->stopAddingConditions();
-
    if (cg->getProperties().getCallerCleanup())
       {
-      generateInstruction(RET, node, dependencies, cg);
+      generateInstruction(RET, node, cg);
       }
    else
       {
-      generateImmInstruction(RETImm2, node, 0, dependencies, cg);
+      generateImmInstruction(RETImm2, node, 0, cg);
       }
 
    if (comp->getMethodSymbol()->getLinkageConvention() == TR_Private)
@@ -1474,9 +1381,7 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpeqEvaluator(TR::Node *node, T
             cg->evaluate(firstChild);
             cg->evaluate(secondChild);
 
-            cg->setVMThreadRequired(true);
             generateConditionalJumpInstruction(JO4, node, cg, true);
-            cg->setVMThreadRequired(false);
 
             cg->decReferenceCount(firstChild);
             cg->decReferenceCount(secondChild);
@@ -1496,9 +1401,7 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpeqEvaluator(TR::Node *node, T
 
       TR::TreeEvaluator::compareIntegersForEquality(node, cg);
 
-      cg->setVMThreadRequired(true);
       generateConditionalJumpInstruction(JE4, node, cg, true);
-      cg->setVMThreadRequired(false);
       return NULL;
       }
    }
@@ -1576,9 +1479,7 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpneEvaluator(TR::Node *node, T
             cg->evaluate(firstChild);
             cg->evaluate(secondChild);
 
-            cg->setVMThreadRequired(true);
             generateConditionalJumpInstruction(JNO4, node, cg, true);
-            cg->setVMThreadRequired(false);
 
             cg->decReferenceCount(firstChild);
             cg->decReferenceCount(secondChild);
@@ -1620,13 +1521,9 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpneEvaluator(TR::Node *node, T
              generateMemImmInstruction(TEST4MemImm4, node, sourceMR, ( ((int32_t)-1) << node->getFirstChild()->getSecondChild()->getInt() ), cg);
              }
 
-         cg->setVMThreadRequired(true);
-
          TR::X86LabelInstruction *instr = generateConditionalJumpInstruction(JNE4, node, cg, true);
          if (insertMergedHCRGuard)
             generateMergedHCRGuardCodeIfNeeded(node, cg, instr);
-
-         cg->setVMThreadRequired(false);
 
          cg->recursivelyDecReferenceCount(node->getFirstChild());
          cg->decReferenceCount(node->getSecondChild());
@@ -1634,7 +1531,6 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpneEvaluator(TR::Node *node, T
          }
 
       TR::TreeEvaluator::compareIntegersForEquality(node, cg);
-      cg->setVMThreadRequired(true);
 
       // If this is a guard that has not been NOPed, then
       // it might need to be registered in our internal data structures
@@ -1649,7 +1545,7 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpneEvaluator(TR::Node *node, T
       //             (virtualGuard->getTestType() == TR_VftTest) &&
       //             !TR::Compiler->cls.sameClassLoaders(comp, virtualGuard->getThisClass(), comp->getCurrentMethod()->classOfMethod()))
       //            {
-      //            TR::Instruction *guardInstr = comp->getAppendInstruction();
+      //            TR::Instruction *guardInstr = comp->cg()->getAppendInstruction();
       //            comp->getStaticPICSites()->add(guardInstr);
       //            }
       //         }
@@ -1658,7 +1554,6 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpneEvaluator(TR::Node *node, T
       if (insertMergedHCRGuard)
          generateMergedHCRGuardCodeIfNeeded(node, cg, instr);
 
-      cg->setVMThreadRequired(false);
       return NULL;
       }
    }
@@ -1752,16 +1647,12 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpltEvaluator(TR::Node *node, T
          TR::TreeEvaluator::generateLAddOrSubForOverflowCheck(node, cg)
        : TR::TreeEvaluator::generateIAddOrSubForOverflowCheck(node, cg))
       {
-      cg->setVMThreadRequired(true);
       generateConditionalJumpInstruction(JO4, node, cg, true);
-      cg->setVMThreadRequired(false);
       }
    else
       {
       TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-      cg->setVMThreadRequired(true);
       generateConditionalJumpInstruction(JL4, node, cg, true);
-      cg->setVMThreadRequired(false);
       }
    return NULL;
    }
@@ -1772,16 +1663,12 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpgeEvaluator(TR::Node *node, T
          TR::TreeEvaluator::generateLAddOrSubForOverflowCheck(node, cg)
        : TR::TreeEvaluator::generateIAddOrSubForOverflowCheck(node, cg))
       {
-      cg->setVMThreadRequired(true);
       generateConditionalJumpInstruction(JNO4, node, cg, true);
-      cg->setVMThreadRequired(false);
       }
    else
       {
       TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-      cg->setVMThreadRequired(true);
       generateConditionalJumpInstruction(JGE4, node, cg, true);
-      cg->setVMThreadRequired(false);
       }
    return NULL;
    }
@@ -1789,54 +1676,42 @@ TR::Register *OMR::X86::TreeEvaluator::integerIfCmpgeEvaluator(TR::Node *node, T
 TR::Register *OMR::X86::TreeEvaluator::integerIfCmpgtEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-   cg->setVMThreadRequired(true);
    generateConditionalJumpInstruction(JG4, node, cg, true);
-   cg->setVMThreadRequired(false);
    return NULL;
    }
 
 TR::Register *OMR::X86::TreeEvaluator::integerIfCmpleEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-   cg->setVMThreadRequired(true);
    generateConditionalJumpInstruction(JLE4, node, cg, true);
-   cg->setVMThreadRequired(false);
    return NULL;
    }
 
 TR::Register *OMR::X86::TreeEvaluator::unsignedIntegerIfCmpltEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-   cg->setVMThreadRequired(true);
    generateConditionalJumpInstruction(JB4, node, cg, true);
-   cg->setVMThreadRequired(false);
    return NULL;
    }
 
 TR::Register *OMR::X86::TreeEvaluator::unsignedIntegerIfCmpgeEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-   cg->setVMThreadRequired(true);
    generateConditionalJumpInstruction(JAE4, node, cg, true);
-   cg->setVMThreadRequired(false);
    return NULL;
    }
 
 TR::Register *OMR::X86::TreeEvaluator::unsignedIntegerIfCmpgtEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-   cg->setVMThreadRequired(true);
    generateConditionalJumpInstruction(JA4, node, cg, true);
-   cg->setVMThreadRequired(false);
    return NULL;
    }
 
 TR::Register *OMR::X86::TreeEvaluator::unsignedIntegerIfCmpleEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::TreeEvaluator::compareIntegersForOrder(node, cg);
-   cg->setVMThreadRequired(true);
    generateConditionalJumpInstruction(JBE4, node, cg, true);
-   cg->setVMThreadRequired(false);
    return NULL;
    }
 
@@ -2514,26 +2389,20 @@ static bool virtualGuardHelper(TR::Node *node, TR::CodeGenerator *cg)
       TR::Node *third = node->getChild(2);
       cg->evaluate(third);
       deps = generateRegisterDependencyConditions(third, cg, 1, &popRegisters);
+      deps->stopAddingConditions();
       }
-   else
-      deps = generateRegisterDependencyConditions (1, 1, cg);
 
    if(virtualGuard->shouldGenerateChildrenCode())
       cg->evaluateChildrenWithMultipleRefCount(node);
 
-   deps->addPostCondition(cg->getVMThreadRegister(), (TR::RealRegister::RegNum)cg->getVMThreadRegister()->getAssociation(), cg);
-   deps->addPreCondition (cg->getVMThreadRegister(), (TR::RealRegister::RegNum)cg->getVMThreadRegister()->getAssociation(), cg);
-
-   deps->stopAddingConditions();
    TR::LabelSymbol *label = node->getBranchDestination()->getNode()->getLabel();
 
-   cg->setVMThreadRequired(true);
    TR::Instruction *vgnopInstr = generateVirtualGuardNOPInstruction(node, site, deps, label, cg);
    TR::Instruction *patchPoint = cg->getVirtualGuardForPatching(vgnopInstr);
 
-   // HCR guards are patched when the threads are stopped.
-   // No issues with multithreaded patching, therefore alignment is not required
-   if (TR::Compiler->target.isSMP() && !node->isHCRGuard() && !node->isOSRGuard())
+   // Guards patched when the threads are stopped have no issues with multithreaded patching.
+   // therefore alignment is not required
+   if (TR::Compiler->target.isSMP() && !node->isStopTheWorldGuard())
       {
       // the compiler is now capable of generating a train of vgnops all looking to patch the
       // same point with different constraints. alignment is required before the delegated patch
@@ -2547,8 +2416,6 @@ static bool virtualGuardHelper(TR::Node *node, TR::CodeGenerator *cg)
          generatePatchableCodeAlignmentInstruction(TR::X86PatchableCodeAlignmentInstruction::spinLoopAtomicRegions, vgnopInstr, cg);
          }
       }
-
-   cg->setVMThreadRequired(false);
 
    cg->recursivelyDecReferenceCount(node->getFirstChild());
    cg->recursivelyDecReferenceCount(node->getSecondChild());
@@ -2573,8 +2440,6 @@ static bool virtualGuardHelper(TR::Node *node, TR::CodeGenerator *cg)
    return false;
 #endif
    }
-
-
 
 void
 OMR::X86::CodeGenerator::addMetaDataForBranchTableAddress(

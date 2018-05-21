@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -44,6 +48,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <sys/utsname.h>
+#include <inttypes.h>
 #elif defined(AIXPPC)
 #include <sys/ldr.h>
 #include <sys/debug.h>
@@ -166,7 +171,7 @@ close_wrapper(int fd)
 }
 
 /*
- * This function constructs a barrier for use within signal handler contexts. It's a combination o
+ * This function constructs a barrier for use within signal handler contexts. It's a combination of
  * spinlock techniques modified with blocking read/write/poll scheduler visible calls to avoid
  * thread contention.
  *
@@ -842,11 +847,19 @@ count_threads(struct PlatformWalkData *data)
 		while ((file = readdir(proc)) != NULL) {
 			/* we need a directory who's name starts with a '.' - we filter out '.' and '..' */
 			if (file->d_type == DT_DIR && file->d_name[0] == '.' && file->d_name[1] != '\0' && file->d_name[1] != '.') {
-				/* "/proc/.<pid>/status" 13 for /proc/ and /status, 11 for the .pid, 1 for the null */
-				char buf[13 + 11 + 1] = "/proc/";
+				/* The needed buffer size to store the path to status is calculated as:
+				 *  /proc/.<pid>/status\0
+				 *  |-----|-----|------|-|
+				 *   6     11    7      1
+				 */
+				char buf[6 + 11 + 7 + 1];
 				int tgid;
+
+				strcat(buf, "/proc/");
+				/* If d_name is longer than 11 characters, it will be truncated */
 				strncat(buf, file->d_name, 11);
-				strncat(buf, "/status", 7);
+				strcat(buf, "/status");
+
 				FILE *status = fopen(buf, "r");
 				if (status != NULL) {
 					if (fscanf(status, "%*[^\n]\n%*[^\n]\nTgid:%d", &tgid) == 1 && tgid == pid) {
@@ -1201,7 +1214,7 @@ freeThread(J9ThreadWalkState *state, J9PlatformThread *thread)
 }
 
 /*
- * This functions resumes all threads suspended by suspend_all_preemptive. The general behaviour
+ * This function resumes all threads suspended by suspend_all_preemptive. The general behaviour
  * is to swallow any spurious signals from the queue so they are not delivered after we remove our
  * custom handler, the custom handler is removed, then we wake any threads blocking on the relase
  * barrier. On AIX we set the signal handler to SIG_IGN before attempting to swallow signals off
@@ -1390,7 +1403,7 @@ setup_native_thread(J9ThreadWalkState *state, thread_context *sigContext, int he
 		/* copy the context */
 		if (sigContext) {
 			/* we're using the provided context instead of generating it */
-			memcpy(state->current_thread->context, ((J9UnixSignalInfo *)sigContext)->platformSignalInfo.context, size);
+			memcpy(state->current_thread->context, ((OMRUnixSignalInfo *)sigContext)->platformSignalInfo.context, size);
 		} else if (state->current_thread->thread_id == omrthread_get_ras_tid()) {
 			/* return context for current thread */
 			getcontext((ucontext_t *)state->current_thread->context);
@@ -1453,17 +1466,18 @@ sigqueue_is_reliable(void)
 {
 #if defined(LINUX)
 	struct utsname sysinfo;
-	uintptr_t release = 0;
+	uintptr_t release_major = 0;
+	uintptr_t release_minor = 0;
 
-	/* If either uname() or sscanf() fail, version will stay zero
-	 * and we'll consider sigqueue() unreliable.
+	/* If either uname() or sscanf() fail, release_major and/or release_minor
+	 * will stay zero and we'll consider sigqueue() unreliable.
 	 */
 	if (0 == uname(&sysinfo)) {
-		sscanf(sysinfo.release, "%lu", &release);
+		sscanf(sysinfo.release, "%" SCNuPTR ".%" SCNuPTR, &release_major, &release_minor);
 	}
 
-	/* sigqueue() is sufficiently reliable on newer Linux kernels (version 3.* and later). */
-	return release >= 3;
+	/* sigqueue() is sufficiently reliable on newer Linux kernels (version 3.11 and later). */
+	return (3 < release_major) || ((3 == release_major) && (11 <= release_minor));
 #elif defined(AIXPPC) || defined(J9ZOS390)
 	/* The controller can't use sem_timedwait_r on AIX or z/OS. */
 	return 0;

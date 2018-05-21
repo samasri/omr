@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include <assert.h>                            // for assert
 #include <stddef.h>                            // for size_t
@@ -218,6 +221,9 @@ TR_BitVector *
 OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePoint)
    {
    TR::Compilation *comp = TR::comp();
+   TR::Region &aliasRegion = comp->aliasRegion();
+   int32_t bvInitialSize = comp->getSymRefCount();
+   TR_BitVectorGrowable growability = growable;
 
    // allow more than one shadow for an array type.  Used by LoopAliasRefiner
    const bool supportArrayRefinement=true;
@@ -237,7 +243,7 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
             {
             if ((self()->isUnresolved() && !_symbol->isConstObjectRef()) || _symbol->isVolatile() || self()->isLiteralPoolAddress() ||
                 self()->isFromLiteralPool() || _symbol->isUnsafeShadowSymbol() ||
-                _symbol->isArrayShadowSymbol() && comp->getMethodSymbol()->hasVeryRefinedAliasSets())
+                (_symbol->isArrayShadowSymbol() && comp->getMethodSymbol()->hasVeryRefinedAliasSets()))
                {
                // getUseDefAliases might not return NULL
                }
@@ -353,7 +359,7 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
 #ifdef J9_PROJECT_SPECIFIC
                case TR::java_lang_System_arraycopy:
                   {
-                  TR_BitVector * aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+                  TR_BitVector * aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
                   *aliases |= symRefTab->aliasBuilder.arrayElementSymRefs();
                   if (comp->generateArraylets())
                      *aliases |= symRefTab->aliasBuilder.arrayletElementSymRefs();
@@ -440,7 +446,7 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
                             resolvedMethodSymbol->hasVeryRefinedAliasSets()) &&
              (method->isStatic() || method->isFinal() || isDirectCall))
             {
-            TR_BitVector * aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+            TR_BitVector * aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             if ((comp->generateArraylets() || comp->isDLT()) && includeGCSafePoint)
                *aliases |= symRefTab->aliasBuilder.gcSafePointSymRefNumbers();
 
@@ -544,7 +550,7 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
             {
             if (symRefTab->aliasBuilder.unsafeArrayElementSymRefs().get(self()->getReferenceNumber()))
                {
-               TR_BitVector *aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               TR_BitVector *aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
                *aliases |= comp->getSymRefTab()->aliasBuilder.defaultMethodDefAliasesWithoutImmutable();
                *aliases -= symRefTab->aliasBuilder.cpSymRefs();
                return aliases;
@@ -556,7 +562,7 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
          TR_BitVector *aliases = NULL;
          if (_symbol == symRefTab->findGenericIntShadowSymbol())
             {
-            aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+            aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             *aliases |= symRefTab->aliasBuilder.arrayElementSymRefs();
             if (comp->generateArraylets())
                *aliases |= symRefTab->aliasBuilder.arrayletElementSymRefs();
@@ -579,14 +585,14 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
 
          if (self()->reallySharesSymbol(comp))
             {
-            aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+            aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             self()->setSharedShadowAliases(aliases, symRefTab);
             }
 
          if (symRefTab->findGenericIntShadowSymbol())
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             self()->setLiteralPoolAliases(aliases, symRefTab);
 
             if (symRefTab->aliasBuilder.conservativeGenericIntShadowAliasing() || self()->isUnresolved())
@@ -601,7 +607,7 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
              symRefTab->findGenericIntShadowSymbol())
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             *aliases |= symRefTab->aliasBuilder.genericIntShadowSymRefs();
             *aliases |= symRefTab->aliasBuilder.genericIntArrayShadowSymRefs();
 
@@ -614,14 +620,14 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
          if (_symbol->isArrayShadowSymbol() && _symbol->getDataType() == TR::PackedDecimal)
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             aliases->set(symRefTab->getArrayShadowIndex(TR::Int8));
             }
          //the other way around.
          if (_symbol->isArrayShadowSymbol() && _symbol->getDataType() == TR::Int8)
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             aliases->set(symRefTab->getArrayShadowIndex(TR::PackedDecimal));
             }
 #endif
@@ -630,24 +636,40 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
          if (_symbol->isArrayShadowSymbol() && _symbol->getDataType().isVector())
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             aliases->set(symRefTab->getArrayShadowIndex(_symbol->getDataType().vectorToScalar()));
             }
          // the other way around
          if (_symbol->isArrayShadowSymbol() && !_symbol->getDataType().isVector())
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             aliases->set(symRefTab->getArrayShadowIndex(_symbol->getDataType().scalarToVector()));
             }
 
+         if (_symbol->isArrayShadowSymbol() &&
+             !symRefTab->aliasBuilder.immutableArrayElementSymRefs().isEmpty())
+            {
+            if (!aliases)
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
+
+            TR::DataType type = _symbol->getDataType();
+            TR_BitVectorIterator bvi(symRefTab->aliasBuilder.arrayElementSymRefs());
+            int32_t symRefNum;
+            while (bvi.hasMoreElements())
+               {
+               symRefNum = bvi.getNextElement();
+               if (symRefTab->getSymRef(symRefNum)->getSymbol()->getDataType() == type)
+                  aliases->set(symRefNum);
+               }
+            }
 
          if (_symbol->isArrayShadowSymbol() &&
              supportArrayRefinement &&
              comp->getMethodSymbol()->hasVeryRefinedAliasSets())
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
 
             TR::DataType type = _symbol->getDataType();
             TR_BitVectorIterator bvi(symRefTab->aliasBuilder.arrayElementSymRefs());
@@ -685,14 +707,14 @@ OMR::SymbolReference::getUseDefAliasesBV(bool isDirectCall, bool includeGCSafePo
          TR_BitVector *aliases = NULL;
          if (self()->reallySharesSymbol(comp))
             {
-            aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+            aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             self()->setSharedStaticAliases(aliases, symRefTab);
             }
 
          if (symRefTab->findGenericIntShadowSymbol())
             {
             if (!aliases)
-               aliases = new (comp->trHeapMemory()) TR_BitVector(symRefTab->getNumSymRefs(), comp->trMemory(), heapAlloc, growable);
+               aliases = new (aliasRegion) TR_BitVector(bvInitialSize, aliasRegion, growability);
             self()->setLiteralPoolAliases(aliases, symRefTab);
             }
 
@@ -771,7 +793,7 @@ OMR::SymbolReference::setLiteralPoolAliases(TR_BitVector * aliases, TR::SymbolRe
 
    TR_SymRefIterator i(symRefTab->aliasBuilder.genericIntShadowSymRefs(), symRefTab);
    TR::SymbolReference * symRef;
-   while (symRef = i.getNext())
+   while ((symRef = i.getNext()))
       if (symRef->isLiteralPoolAddress() || symRef->isFromLiteralPool())
          aliases->set(symRef->getReferenceNumber());
 
@@ -790,7 +812,7 @@ OMR::SymbolReference::setSharedShadowAliases(TR_BitVector * aliases, TR::SymbolR
                                            : (type.isInt32() ? symRefTab->aliasBuilder.intShadowSymRefs()
                                                              : symRefTab->aliasBuilder.nonIntPrimitiveShadowSymRefs()), symRefTab);
       TR::SymbolReference * symRef;
-      while (symRef = i.getNext())
+      while ((symRef = i.getNext()))
          if (symRef->getSymbol() == self()->getSymbol())
             aliases->set(symRef->getReferenceNumber());
 
@@ -814,7 +836,7 @@ OMR::SymbolReference::setSharedStaticAliases(TR_BitVector * aliases, TR::SymbolR
                                            : (type.isInt32() ? symRefTab->aliasBuilder.intStaticSymRefs()
                                                              : symRefTab->aliasBuilder.nonIntPrimitiveStaticSymRefs()), symRefTab);
       TR::SymbolReference * symRef;
-      while (symRef = i.getNext())
+      while ((symRef = i.getNext()))
          if (symRef->getSymbol() == self()->getSymbol())
             aliases->set(symRef->getReferenceNumber());
       }
@@ -832,7 +854,12 @@ addVeryRefinedCallAliasSets(TR::ResolvedMethodSymbol * methodSymbol, TR_BitVecto
 
    void * methodId = methodSymbol->getResolvedMethod()->getPersistentIdentifier();
    if (methodsPeeked->find(methodId))
-      return aliases;
+      {
+      // This can't be allocated into the alias region as it must be accessed across optimizations
+      TR_BitVector *heapAliases = new (comp->trHeapMemory()) TR_BitVector(comp->getSymRefCount(), comp->trMemory(), heapAlloc, growable);
+      *heapAliases |= *aliases;
+      return heapAliases;
+      }
 
    // stop if the peek is getting very deep
    //
@@ -913,7 +940,10 @@ addVeryRefinedCallAliasSets(TR::ResolvedMethodSymbol * methodSymbol, TR_BitVecto
          return 0;
       }
 
-   return aliases;
+   // This can't be allocated into the alias region as it must be accessed across optimizations
+   TR_BitVector *heapAliases = new (comp->trHeapMemory()) TR_BitVector(comp->getSymRefCount(), comp->trMemory(), heapAlloc, growable);
+   *heapAliases |= *aliases;
+   return heapAliases; 
    }
 #endif
 

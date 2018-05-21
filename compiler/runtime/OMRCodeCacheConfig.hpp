@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_CODECACHECONFIG_INCL
@@ -23,8 +26,8 @@
  * The following #define and typedef must appear before any #includes in this file
  */
 
-#ifndef OMR_CODECACHECONFIG_COMPOSED
-#define OMR_CODECACHECONFIG_COMPOSED
+#ifndef OMR_CODECACHECONFIG_CONNECTOR
+#define OMR_CODECACHECONFIG_CONNECTOR
 namespace OMR { class CodeCacheConfig; }
 namespace OMR { typedef CodeCacheConfig CodeCacheConfigConnector; }
 #endif
@@ -102,7 +105,8 @@ class OMR_EXTENSIBLE CodeCacheConfig
          _verboseReclamation(false),
          _doSanityChecks(false),
          _codeCacheFreeBlockRecylingEnabled(false),
-         _emitElfObject(false)
+         _emitElfObject(false),
+         _emitELFObjectFile(false)
       {
       #if defined(J9ZOS390)     // EBCDIC
       _warmEyeCatcher[0] = '\xD1';
@@ -171,6 +175,7 @@ class OMR_EXTENSIBLE CodeCacheConfig
    CodeCacheCodeGenCallbacks & mccCallbacks() { return _mccCallbacks; }
 
    bool emitElfObject() const { return _emitElfObject; }
+   bool emitELFObjectFile() const { return _emitELFObjectFile; }
 
    int32_t _trampolineCodeSize;          /*!< size of the trampoline code in bytes */
    int32_t _CCPreLoadedCodeSize;         /*!< size of the pre-Loaded CodeCache Helpers code in bytes */
@@ -200,6 +205,7 @@ class OMR_EXTENSIBLE CodeCacheConfig
    CodeCacheCodeGenCallbacks _mccCallbacks;              /*!< codeGen call backs */
 
    bool _emitElfObject;                  /*!< emit code cache as ELF object on shutdown */
+   bool _emitELFObjectFile;
 
    char * const warmEyeCatcher() { return _warmEyeCatcher; }
 

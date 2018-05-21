@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 
 /**
@@ -50,24 +54,18 @@
 #include "SweepPoolState.hpp"
 
 bool
-J9ModronHeapFreeList::initialize(MM_EnvironmentBase* env)
+J9ModronFreeList::initialize(MM_EnvironmentBase* env)
 {
-	if (!_lock.initialize(env, &env->getExtensions()->lnrlOptions, "J9ModronHeapFreeList:_lock")) {
+	if (!_lock.initialize(env, &env->getExtensions()->lnrlOptions, "J9ModronFreeList:_lock")) {
 		return false;
 	}
-	_freeList = NULL;
-	_timesLocked = 0;
 
-	_freeSize = 0;
-	_freeCount = 0;
+	_freeList = NULL;
 
 	/* Link up the inactive hints */
 	J9ModronAllocateHint* inactiveHint = (J9ModronAllocateHint*)_hintStorage;
 	J9ModronAllocateHint* previousInactiveHint = NULL;
 	uintptr_t inactiveCount = HINT_ELEMENT_COUNT;
-
-	_hintActive = NULL;
-	_hintLru = 0;
 
 	while (inactiveCount) {
 		inactiveHint->next = previousInactiveHint;
@@ -81,7 +79,7 @@ J9ModronHeapFreeList::initialize(MM_EnvironmentBase* env)
 }
 
 void
-J9ModronHeapFreeList::tearDown()
+J9ModronFreeList::tearDown()
 {
 	_lock.tearDown();
 }
@@ -91,7 +89,7 @@ J9ModronHeapFreeList::tearDown()
  ****************************************
  */
 void
-J9ModronHeapFreeList::clearHints()
+J9ModronFreeList::clearHints()
 {
 	J9ModronAllocateHint* activeHint = _hintActive;
 	J9ModronAllocateHint* nextActiveHint = NULL;
@@ -108,7 +106,7 @@ J9ModronHeapFreeList::clearHints()
 	_hintLru = 1;
 }
 
-void J9ModronHeapFreeList::reset()
+void J9ModronFreeList::reset()
 {
 	_freeList = NULL;
 	_freeSize = 0;
@@ -143,7 +141,7 @@ MM_MemoryPoolSplitAddressOrderedListBase::initialize(MM_EnvironmentBase* env)
 	 */
 	_sweepPoolManager = extensions->sweepPoolManagerSmallObjectArea;
 
-	_currentThreadFreeList = (uintptr_t*)extensions->getForge()->allocate(sizeof(uintptr_t) * _heapFreeListCount, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	_currentThreadFreeList = (uintptr_t*)extensions->getForge()->allocate(sizeof(uintptr_t) * _heapFreeListCount, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (NULL == _currentThreadFreeList) {
 		return false;
 	} else {
@@ -152,12 +150,12 @@ MM_MemoryPoolSplitAddressOrderedListBase::initialize(MM_EnvironmentBase* env)
 		}
 	}
 
-	_heapFreeLists = (J9ModronHeapFreeList*)extensions->getForge()->allocate(sizeof(J9ModronHeapFreeList) * _heapFreeListCountExtended, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	_heapFreeLists = (J9ModronFreeList*)extensions->getForge()->allocate(sizeof(J9ModronFreeList) * _heapFreeListCountExtended, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (NULL == _heapFreeLists) {
 		return false;
 	} else {
-		memset(_heapFreeLists, 0, sizeof(J9ModronHeapFreeList) * _heapFreeListCountExtended);
 		for (uintptr_t i = 0; i < _heapFreeListCountExtended; ++i) {
+			_heapFreeLists[i] = J9ModronFreeList();
 			if (!_heapFreeLists[i].initialize(env)) {
 				return false;
 			}
@@ -165,9 +163,15 @@ MM_MemoryPoolSplitAddressOrderedListBase::initialize(MM_EnvironmentBase* env)
 		_referenceHeapFreeList = &(_heapFreeLists[0]._freeList);
 	}
 
+#if defined(OMR_GC_MODRON_SCAVENGER)
+	/* this memoryPool can be used by scavenger, maximum tlh size should be max(_extensions->tlhMaximumSize, _extensions->scavengerScanCacheMaximumSize) */
+	uintptr_t tlhMaximumSize = OMR_MAX(_extensions->tlhMaximumSize, _extensions->scavengerScanCacheMaximumSize);
+#else /* OMR_GC_MODRON_SCAVENGER */
+	uintptr_t tlhMaximumSize = _extensions->tlhMaximumSize;
+#endif /* OMR_GC_MODRON_SCAVENGER */
 	/* set multiple factor = 2 for doubling _maxVeryLargeEntrySizes to avoid run out of _veryLargeEntryPool (minus count during decrement) */
 	_largeObjectAllocateStats = MM_LargeObjectAllocateStats::newInstance(env, (uint16_t)extensions->largeObjectAllocationProfilingTopK, extensions->largeObjectAllocationProfilingThreshold, extensions->largeObjectAllocationProfilingVeryLargeObjectThreshold, (float)extensions->largeObjectAllocationProfilingSizeClassRatio / (float)100.0,
-																		 _extensions->heap->getMaximumMemorySize(), _extensions->tlhMaximumSize + _minimumFreeEntrySize, _extensions->tlhMinimumSize, 2);
+																		 _extensions->heap->getMaximumMemorySize(), tlhMaximumSize + _minimumFreeEntrySize, _extensions->tlhMinimumSize, 2);
 
 	if (NULL == _largeObjectAllocateStats) {
 		return false;
@@ -176,7 +180,7 @@ MM_MemoryPoolSplitAddressOrderedListBase::initialize(MM_EnvironmentBase* env)
 	/* If we ever subclass MM_LargeObjectAllocateStats we will have to allocate this as an array of pointers to MM_LargeObjectAllocateStats and invoke newInstance instead of just initialize
 	 * Than, we may also need to virtualize initialize() and tearDown().
 	 */
-	_largeObjectAllocateStatsForFreeList = (MM_LargeObjectAllocateStats*)extensions->getForge()->allocate(sizeof(MM_LargeObjectAllocateStats) * _heapFreeListCountExtended, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	_largeObjectAllocateStatsForFreeList = (MM_LargeObjectAllocateStats*)extensions->getForge()->allocate(sizeof(MM_LargeObjectAllocateStats) * _heapFreeListCountExtended, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 	if (NULL == _largeObjectAllocateStatsForFreeList) {
 		return false;
@@ -186,7 +190,7 @@ MM_MemoryPoolSplitAddressOrderedListBase::initialize(MM_EnvironmentBase* env)
 
 			/* set multiple factor = 2 for doubling _maxVeryLargeEntrySizes to avoid run out of _veryLargeEntryPool (minus count during decrement) */
 			if (!_largeObjectAllocateStatsForFreeList[i].initialize(env, (uint16_t)extensions->largeObjectAllocationProfilingTopK, extensions->largeObjectAllocationProfilingThreshold, extensions->largeObjectAllocationProfilingVeryLargeObjectThreshold, (float)extensions->largeObjectAllocationProfilingSizeClassRatio / (float)100.0,
-																	_extensions->heap->getMaximumMemorySize(), _extensions->tlhMaximumSize + _minimumFreeEntrySize, _extensions->tlhMinimumSize, 2)) {
+																	_extensions->heap->getMaximumMemorySize(), tlhMaximumSize + _minimumFreeEntrySize, _extensions->tlhMinimumSize, 2)) {
 				return false;
 			}
 		}
@@ -330,6 +334,7 @@ MM_MemoryPoolSplitAddressOrderedListBase::reset(Cause cause)
 		/* initialize frequent allocates for each free list based on cummulative large object stats for the pool */
 		resetFreeEntryAllocateStats(&_largeObjectAllocateStatsForFreeList[i]);
 	}
+	_lastFreeEntry = NULL;
 	resetFreeEntryAllocateStats(_largeObjectAllocateStats);
 	resetLargeObjectAllocateStats();
 }

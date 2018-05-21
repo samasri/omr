@@ -1,25 +1,25 @@
 ###############################################################################
+# Copyright (c) 2017, 2017 IBM Corp. and others
 #
-# (c) Copyright IBM Corp. 2017
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at http://eclipse.org/legal/epl-2.0
+# or the Apache License, Version 2.0 which accompanies this distribution
+# and is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the
+# Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+# version 2 with the GNU Classpath Exception [1] and GNU General Public
+# License, version 2 with the OpenJDK Assembly Exception [2].
 #
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
-add_hookgen(hooksample.hdf
-	${CMAKE_CURRENT_SOURCE_DIR}/hooksample.h
-	${CMAKE_CURRENT_SOURCE_DIR}/hooksample_internal.h
-)
+omr_add_hookgen(INPUT hooksample.hdf)
 
 add_executable(omralgotest
 	algoTest.cpp
@@ -32,13 +32,21 @@ add_executable(omralgotest
 	hooktest.c
 	main.cpp
 	pooltest.c
+
+	# We need to introduce dependencies on the hookgen step.
+	"${CMAKE_CURRENT_BINARY_DIR}/hooksample.h"
 )
 
 target_link_libraries(omralgotest
 	omrGtestGlue
 	omrport
 	omrtestutil
+	omrcore
+	omrvmstartup
+	${OMR_GC_LIB}
 )
+
+target_include_directories(omralgotest PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 #TODO hack to get building
 if(OMR_HOST_OS STREQUAL "win")
@@ -48,7 +56,6 @@ if(OMR_HOST_OS STREQUAL "win")
 		Iphlpapi
 		psapi
 		pdh
-		omrglue
 	)
 endif()
 
@@ -59,5 +66,7 @@ target_link_libraries(omralgotest
 if(OMR_HOST_OS STREQUAL "zos")
 	target_link_libraries(omralgotest j9a2e)
 endif()
+
+set_property(TARGET omralgotest PROPERTY FOLDER fvtest)
 
 add_test(NAME algotest COMMAND omralgotest -avltest:${CMAKE_CURRENT_SOURCE_DIR}/avltest.lst)

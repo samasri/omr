@@ -1,21 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2016, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2016, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
-
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OMR_ILBUILDER_INCL
 #define OMR_ILBUILDER_INCL
@@ -100,9 +102,7 @@ public:
       _partOfSequence(false),
       _connectedTrees(false),
       _comesBack(true),
-      _isHandler(false),
-      _haveReplayName(false),
-      _rpILCpp(0)
+      _isHandler(false)
       {
       }
    IlBuilder(TR::IlBuilder *source);
@@ -118,7 +118,7 @@ public:
 
    virtual bool isBytecodeBuilder()             { return false; }
 
-   char *getName();
+   //char *getName();
 
    void print(const char *title, bool recurse=false);
    void printBlock(TR::Block *block);
@@ -154,7 +154,6 @@ public:
    TR::IlValue *ConstDouble(double value);
    TR::IlValue *ConstAddress(const void * const value);
    TR::IlValue *ConstString(const char * const value);
-   TR::IlValue *ConstzeroValueForValue(TR::IlValue *v);
 
    TR::IlValue *Const(int8_t value)             { return ConstInt8(value); }
    TR::IlValue *Const(int16_t value)            { return ConstInt16(value); }
@@ -176,6 +175,7 @@ public:
    TR::IlValue *Mul(TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *MulWithOverflow(TR::IlBuilder **handler, TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *Div(TR::IlValue *left, TR::IlValue *right);
+   TR::IlValue *Rem(TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *And(TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *Or(TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *Xor(TR::IlValue *left, TR::IlValue *right);
@@ -209,7 +209,6 @@ public:
    TR::IlValue *LoadIndirect(const char *type, const char *field, TR::IlValue *object);
    void StoreIndirect(const char *type, const char *field, TR::IlValue *object, TR::IlValue *value);
    TR::IlValue *IndexAt(TR::IlType *dt, TR::IlValue *base, TR::IlValue *index);
-   TR::IlValue *AtomicAddWithOffset(TR::IlValue *baseAddress, TR::IlValue *offset, TR::IlValue *value);
    TR::IlValue *AtomicAdd(TR::IlValue *baseAddress, TR::IlValue * value);
    void Transaction(TR::IlBuilder **persistentFailureBuilder, TR::IlBuilder **transientFailureBuilder, TR::IlBuilder **fallThroughBuilder);
    void TransactionAbort();
@@ -412,27 +411,6 @@ protected:
     */
    bool                          _isHandler;
 
-   /**
-    * @brief part of experimental "replay" support; returns true if replay is enabled
-    */
-   bool                          _haveReplayName;
-
-   /**
-    * @brief part of experimental "replay" support; the fstream where replay commands will be directed to
-    */
-   std::fstream                * _rpILCpp;
-
-   /**
-    * @brief part of experimental "replay" support; the name of the replay file name
-    */
-   char                          _replayName[21];
-
-   /**
-    * @brief part of experimental "replay" support: character array used to assemble each line of output
-    */
-   char                          _rpLine[256];
-
-
    virtual bool buildIL() { return true; }
 
    TR::SymbolReference *lookupSymbol(const char *name);
@@ -453,10 +431,14 @@ protected:
 
    TR::IlValue *unaryOp(TR::ILOpCodes op, TR::IlValue *v);
    void doVectorConversions(TR::Node **leftPtr, TR::Node **rightPtr);
+   TR::IlValue *widenIntegerTo32Bits(TR::IlValue *v);
    TR::IlValue *binaryOpFromNodes(TR::ILOpCodes op, TR::Node *leftNode, TR::Node *rightNode);
    TR::Node *binaryOpNodeFromNodes(TR::ILOpCodes op, TR::Node *leftNode, TR::Node *rightNode);
    TR::IlValue *binaryOpFromOpMap(OpCodeMapper mapOp, TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *binaryOpFromOpCode(TR::ILOpCodes op, TR::IlValue *left, TR::IlValue *right);
+   TR::Node *shiftOpNodeFromNodes(TR::ILOpCodes op, TR::Node *leftNode, TR::Node *rightNode);
+   TR::IlValue *shiftOpFromNodes(TR::ILOpCodes op, TR::Node *leftNode, TR::Node *rightNode);
+   TR::IlValue *shiftOpFromOpMap(OpCodeMapper mapOp, TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *compareOp(TR_ComparisonTypes ct, bool needUnsigned, TR::IlValue *left, TR::IlValue *right);
    TR::IlValue *convertTo(TR::IlType *t, TR::IlValue *v, bool needUnsigned);
 

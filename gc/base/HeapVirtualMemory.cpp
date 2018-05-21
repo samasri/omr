@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "HeapVirtualMemory.hpp"
 
@@ -29,6 +33,10 @@
 #include "MemoryManager.hpp"
 #include "MemorySubSpace.hpp"
 #include "PhysicalArena.hpp"
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+#include "MemcheckWrapper.hpp"
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 
 #define HIGH_ADDRESS UDATA_MAX
 #define OVERFLOW_ROUNDING ((uintptr_t)16 * 1024)
@@ -46,7 +54,7 @@ MM_HeapVirtualMemory::newInstance(MM_EnvironmentBase* env, uintptr_t heapAlignme
 {
 	MM_HeapVirtualMemory* heap;
 
-	heap = (MM_HeapVirtualMemory*)env->getForge()->allocate(sizeof(MM_HeapVirtualMemory), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	heap = (MM_HeapVirtualMemory*)env->getForge()->allocate(sizeof(MM_HeapVirtualMemory), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (heap) {
 		new (heap) MM_HeapVirtualMemory(env, heapAlignment, size, regionManager);
 		if (!heap->initialize(env, size)) {
@@ -66,7 +74,7 @@ MM_HeapVirtualMemory::initialize(MM_EnvironmentBase* env, uintptr_t size)
 	}
 
 	MM_GCExtensionsBase* extensions = env->getExtensions();
-	uintptr_t padding = extensions->heapTailPadding;
+	uintptr_t padding = 0;
 
 	uintptr_t effectiveHeapAlignment = _heapAlignment;
 	/* we need to ensure that we allocate the heap with region alignment since the region table requires that */
@@ -341,6 +349,10 @@ MM_HeapVirtualMemory::heapAddRange(MM_EnvironmentBase* env, MM_MemorySubSpace* s
 	
 	env->getExtensions()->identityHashDataAddRange(env, subspace, size, lowAddress, highAddress);
 
+#if defined(OMR_VALGRIND_MEMCHECK)
+	valgrindMakeMemNoaccess((uintptr_t)lowAddress,size);
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+
 	return result;
 }
 
@@ -362,6 +374,12 @@ MM_HeapVirtualMemory::heapRemoveRange(MM_EnvironmentBase* env, MM_MemorySubSpace
 	}
 
 	env->getExtensions()->identityHashDataRemoveRange(env, subspace, size, lowAddress, highAddress);
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+	//remove heap range from valgrind
+	valgrindClearRange(env->getExtensions(),(uintptr_t)lowAddress,size);
+	valgrindMakeMemNoaccess((uintptr_t)lowAddress,size);
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 
 	return result;
 }

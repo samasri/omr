@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /*
@@ -111,14 +114,14 @@
    TR::TreeEvaluator::integerDivOrRemEvaluator,         // TR::iurem
    TR::TreeEvaluator::integerNegEvaluator,              // TR::ineg
    TR::TreeEvaluator::integerPairNegEvaluator,         // TR::lneg
-   TR::TreeEvaluator::fnegEvaluator,                    // TR::fneg
-   TR::TreeEvaluator::dnegEvaluator,                    // TR::dneg
+   TR::TreeEvaluator::fpUnaryMaskEvaluator,             // TR::fneg
+   TR::TreeEvaluator::fpUnaryMaskEvaluator,             // TR::dneg
    TR::TreeEvaluator::bnegEvaluator,                    // TR::bneg
    TR::TreeEvaluator::snegEvaluator,                    // TR::sneg
    TR::TreeEvaluator::integerAbsEvaluator,              // TR::iabs
    TR::TreeEvaluator::integerPairAbsEvaluator,         // TR::labs
-   TR::TreeEvaluator::badILOpEvaluator,                    // TR::fabs
-   TR::TreeEvaluator::badILOpEvaluator,                    // TR::dabs
+   TR::TreeEvaluator::fpUnaryMaskEvaluator,             // TR::fabs
+   TR::TreeEvaluator::fpUnaryMaskEvaluator,             // TR::dabs
    TR::TreeEvaluator::integerShlEvaluator,              // TR::ishl
    TR::TreeEvaluator::integerPairShlEvaluator,         // TR::lshl
    TR::TreeEvaluator::bshlEvaluator,                    // TR::bshl
@@ -461,13 +464,13 @@
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vneg
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vcom
    TR::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator, // TR::vadd
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vsub
+   TR::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator, // TR::vsub
    TR::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator, // TR::vmul
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vdiv
+   TR::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator, // TR::vdiv
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vrem
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vand
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vor
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vxor
+   TR::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator, // TR::vand
+   TR::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator, // TR::vor
+   TR::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator, // TR::vxor
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vshl
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vushr
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vshr
@@ -493,21 +496,21 @@
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::v2v
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vl2vd
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vconst
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::getvelem
+   TR::TreeEvaluator::SIMDgetvelemEvaluator,               // TR::getvelem
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vsetelem
 
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vbRegLoad
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vsRegLoad
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::viRegLoad
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vlRegLoad
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vfRegLoad
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vdRegLoad
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vbRegStore
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vsRegStore
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::viRegStore
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vlRegStore
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vfRegStore
-   TR::TreeEvaluator::unImpOpEvaluator,                    // TR::vdRegStore
+   TR::TreeEvaluator::SIMDRegLoadEvaluator,                // TR::vbRegLoad
+   TR::TreeEvaluator::SIMDRegLoadEvaluator,                // TR::vsRegLoad
+   TR::TreeEvaluator::SIMDRegLoadEvaluator,                // TR::viRegLoad
+   TR::TreeEvaluator::SIMDRegLoadEvaluator,                // TR::vlRegLoad
+   TR::TreeEvaluator::SIMDRegLoadEvaluator,                // TR::vfRegLoad
+   TR::TreeEvaluator::SIMDRegLoadEvaluator,                // TR::vdRegLoad
+   TR::TreeEvaluator::SIMDRegStoreEvaluator,               // TR::vbRegStore
+   TR::TreeEvaluator::SIMDRegStoreEvaluator,               // TR::vsRegStore
+   TR::TreeEvaluator::SIMDRegStoreEvaluator,               // TR::viRegStore
+   TR::TreeEvaluator::SIMDRegStoreEvaluator,               // TR::vlRegStore
+   TR::TreeEvaluator::SIMDRegStoreEvaluator,               // TR::vfRegStore
+   TR::TreeEvaluator::SIMDRegStoreEvaluator,               // TR::vdRegStore
 
 /*
  *END OF OPCODES REQUIRED BY OMR
@@ -726,15 +729,15 @@
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::loadAutoOffset
 
 
-   TR::TreeEvaluator::minmaxEvaluator,                  // TR::imax
+   TR::TreeEvaluator::minmaxEvaluator,                     // TR::imax
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::iumax
-   TR::TreeEvaluator::minmaxEvaluator,                  // TR::lmax
+   TR::TreeEvaluator::integerPairMinMaxEvaluator,          // TR::lmax
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::lumax
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::fmax
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::dmax
-   TR::TreeEvaluator::minmaxEvaluator,                  // TR::imin
+   TR::TreeEvaluator::minmaxEvaluator,                     // TR::imin
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::iumin
-   TR::TreeEvaluator::minmaxEvaluator,                  // TR::lmin
+   TR::TreeEvaluator::integerPairMinMaxEvaluator,          // TR::lmin
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::lumin
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::fmin
    TR::TreeEvaluator::unImpOpEvaluator,                    // TR::dmin
@@ -751,4 +754,8 @@
    TR::TreeEvaluator::badILOpEvaluator,                    // TR::lnotz (J9)
    TR::TreeEvaluator::badILOpEvaluator,                    // TR::lpopcnt (J9)
    TR::TreeEvaluator::ibyteswapEvaluator,                  // TR::ibyteswap
-   TR::TreeEvaluator::PrefetchEvaluator,                // TR::Prefetch
+   TR::TreeEvaluator::bitpermuteEvaluator,                 // TR::bbitpermute
+   TR::TreeEvaluator::bitpermuteEvaluator,                 // TR::sbitpermute
+   TR::TreeEvaluator::bitpermuteEvaluator,                 // TR::ibitpermute
+   TR::TreeEvaluator::bitpermuteEvaluator,                 // TR::lbitpermute
+   TR::TreeEvaluator::PrefetchEvaluator,                   // TR::Prefetch

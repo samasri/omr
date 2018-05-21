@@ -1,19 +1,22 @@
 ###############################################################################
+# Copyright (c) 2015, 2016 IBM Corp. and others
 #
-# (c) Copyright IBM Corp. 2015, 2016
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at http://eclipse.org/legal/epl-2.0
+# or the Apache License, Version 2.0 which accompanies this distribution
+# and is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the
+# Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+# version 2 with the GNU Classpath Exception [1] and GNU General Public
+# License, version 2 with the OpenJDK Assembly Exception [2].
 #
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
 # top_srcdir is the relative path to the top of the OMR source tree.
@@ -42,16 +45,12 @@ SRCS := $(wildcard *.cpp)
 #
 # Here, OBJECTS is initialized with the list of source files in this directory,
 # and the .cpp file extension is stripped from each filename.
-OBJECTS := $(SRCS:%.cpp=%)
-
-# argmain.cpp is a helper file supplied by the fvtest framework. It defines a
-# portable main() function, which handles conversion of wchar_t or EBCDIC
-# command-line options into OMR's internal string format (UTF-8).
-OBJECTS += argmain
+OBJECTS := $(SRCS:%.cpp=%) main_function
 
 # Append the object file extension (.o or .obj) to each filename.
 OBJECTS := $(addsuffix $(OBJEXT),$(OBJECTS))
 
+vpath main_function.cpp $(top_srcdir)/util/main_function
 
 # MODULE_INCLUDES is a special variable that contains additional include paths.
 # These include paths take precedence over include paths specified by the
@@ -66,10 +65,8 @@ MODULE_INCLUDES += \
   $(OMR_GTEST_INCLUDES) \
   ./glue
 
-# Specify the search path for argmain.cpp.
 # OMR_GTEST_DIR is a special variable defined by configure.mk. It contains the
 # location of the googletest source code.
-vpath argmain.cpp $(top_srcdir)/fvtest/omrGtestGlue
 
 # MODULE_STATIC_LIBS is a special variable that contains a list of static
 # libraries needed to build this artifact.

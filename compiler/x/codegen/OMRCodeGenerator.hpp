@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_X86_CODEGENERATOR_INCL
@@ -125,6 +128,7 @@ struct TR_X86ProcessorInfo
       TR_UnknownVendor                 = 0x04
       };
 
+   bool enabledXSAVE()                     {return _featureFlags2.testAny(TR_OSXSAVE);}
    bool hasBuiltInFPU()                    {return _featureFlags.testAny(TR_BuiltInFPU);}
    bool supportsVirtualModeExtension()     {return _featureFlags.testAny(TR_VirtualModeExtension);}
    bool supportsDebuggingExtension()       {return _featureFlags.testAny(TR_DebuggingExtension);}
@@ -155,11 +159,11 @@ struct TR_X86ProcessorInfo
    bool supportsSSSE3()                    {return _featureFlags2.testAny(TR_SSSE3);}
    bool supportsSSE4_1()                   {return _featureFlags2.testAny(TR_SSE4_1);}
    bool supportsSSE4_2()                   {return _featureFlags2.testAny(TR_SSE4_2);}
-   bool supportsAVX()                      {return _featureFlags2.testAny(TR_AVX);}
-   bool supportsAVX2()                     {return _featureFlags8.testAny(TR_AVX2);}
-   bool supportsBMI1()                     {return _featureFlags8.testAny(TR_BMI1);}
-   bool supportsBMI2()                     {return _featureFlags8.testAny(TR_BMI2);}
-   bool supportsFMA()                      {return _featureFlags2.testAny(TR_FMA);}
+   bool supportsAVX()                      {return _featureFlags2.testAny(TR_AVX) && enabledXSAVE();}
+   bool supportsAVX2()                     {return _featureFlags8.testAny(TR_AVX2) && enabledXSAVE();}
+   bool supportsBMI1()                     {return _featureFlags8.testAny(TR_BMI1) && enabledXSAVE();}
+   bool supportsBMI2()                     {return _featureFlags8.testAny(TR_BMI2) && enabledXSAVE();}
+   bool supportsFMA()                      {return _featureFlags2.testAny(TR_FMA) && enabledXSAVE();}
    bool supportsCLMUL()                    {return _featureFlags2.testAny(TR_CLMUL);}
    bool supportsAESNI()                    {return _featureFlags2.testAny(TR_AESNI);}
    bool supportsPOPCNT()                   {return _featureFlags2.testAny(TR_POPCNT);}
@@ -297,6 +301,8 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
 
    virtual bool getSupportsIbyteswap();
 
+   virtual bool getSupportsBitPermute();
+
    bool supportsMergingGuards();
 
    bool supportsAtomicAdd()                {return true;}
@@ -358,6 +364,15 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
 
    int32_t branchDisplacementToHelperOrTrampoline(uint8_t *nextInstructionAddress, TR::SymbolReference *helper);
 
+   /*
+    * \brief Reserve space in the code cache for a specified number of trampolines.
+    *
+    * \param[in] numTrampolines : number of trampolines to reserve
+    *
+    * \return : none
+    */
+   void reserveNTrampolines(int32_t numTrampolines) { return; }
+
    // Note: This leaves the code aligned in the specified manner.
    TR::Instruction *generateSwitchToInterpreterPrePrologue(TR::Instruction *prev, uint8_t alignment, uint8_t alignmentMargin);
 
@@ -389,15 +404,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    TR::list<TR_OutlinedInstructions*> &getOutlinedInstructionsList() {return _outlinedInstructionsList;}
 
    TR_X86ScratchRegisterManager *generateScratchRegisterManager(int32_t capacity=7);
-
-   // Late edge splitting
-   //
-   void addDeferredSplit(TR::X86LabelInstruction *branch){ _deferredSplits.push_front(branch); }
-   int32_t hasDeferredSplits(){ return !_deferredSplits.empty(); }
-   void clearDeferredSplits();
-   void performDeferredSplits();
-   void processDeferredSplits(bool clear);
-   TR::LabelSymbol *splitLabel(TR::LabelSymbol *targetLabel, TR::X86LabelInstruction *instructionToDefer=NULL);
 
    bool supportsConstantRematerialization();
    bool supportsLocalMemoryRematerialization();
@@ -449,7 +455,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
 
    uint8_t getSizeOfCombinedBuffer();
 
-   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod);
    bool supportsInliningOfIsInstance();
 
    bool supportsPassThroughCopyToNewVirtualRegister() { return true; }
@@ -464,8 +469,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
       if (TR::Compiler->target.is64Bit()) return 12;
       return 8;
       }
-
-   int32_t getMaxPatchableInstructionLength() { return 10; }
 
    // codegen methods referenced from ras/
    //
@@ -518,9 +521,8 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    void dumpPreGPRegisterAssignment(TR::Instruction *);
    void dumpPostGPRegisterAssignment(TR::Instruction *, TR::Instruction *);
 #endif
-#ifdef DEBUG
+
    void dumpDataSnippets(TR::FILE *pOutFile);
-#endif
 
    TR::IA32ConstantDataSnippet *findOrCreate2ByteConstant(TR::Node *, int16_t c);
    TR::IA32ConstantDataSnippet *findOrCreate4ByteConstant(TR::Node *, int32_t c);
@@ -612,7 +614,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    TR::list<TR::Register*>               _dependentDiscardableRegisters;
    TR::list<TR::ClobberingInstruction*>  _clobberingInstructions;
    std::list<TR::ClobberingInstruction*, TR::typed_allocator<TR::ClobberingInstruction*, TR::Allocator> >::iterator _clobIterator;
-   TR::list<TR::X86LabelInstruction*>    _deferredSplits;
    TR::list<TR_OutlinedInstructions*>   _outlinedInstructionsList;
 
    RegisterAssignmentDirection     _assignmentDirection;
@@ -827,4 +828,3 @@ class TR_X86ScratchRegisterManager: public TR_ScratchRegisterManager
    };
 
 #endif
-

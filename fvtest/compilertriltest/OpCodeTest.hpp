@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2017, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2017, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OPCODETEST_HPP
 #define OPCODETEST_HPP
@@ -31,61 +34,7 @@
 namespace TRTest
 {
 
-/**
- * @brief A family of functions returning constants of the specified type
- */
-template <typename T> constexpr T zero_value() { return static_cast<T>(0); }
-template <typename T> constexpr T positive_value() { return static_cast<T>(3); }
-template <typename T> constexpr T negative_value() { return static_cast<T>(-2); }
-
-/**
- * @brief Convenience function returning possible test inputs of the specified type
- */
-template <typename T>
-std::vector<T> const_values()
-   {
-   return std::vector<T>{ zero_value<T>(),
-                          positive_value<T>(),
-                          negative_value<T>(),
-                          std::numeric_limits<T>::min(),
-                          std::numeric_limits<T>::max() };
-   }
-
-/**
- * @brief Convenience function returning pairs of possible test inputs of the specified types
- */
-template <typename L, typename R>
-std::vector<std::tuple<L,R>> const_value_pairs()
-   {
-   return TRTest::combine(const_values<L>(), const_values<R>());
-   }
-
-/**
- * @brief Type for holding argument to parameterized opcode tests
- * @tparam Ret the type returned by the opcode
- * @tparam Args the types of the arguments to the opcode
- *
- * This type is just a tuple that packages the different parts of a argument for
- * an opcode test. The first field is another tuple holding the input values to
- * be given to the opcode for testing. The second field is a two-tuple containing
- * the opcode's name as a string, and a pointer to an oracle function that
- * returns the expected return value of the opcode test when given the input
- * values from the first part of the outer tuple.
- */
-template <typename Ret, typename... Args>
-using ParamType = std::tuple<std::tuple<Args...>, std::tuple<std::string, Ret (*)(Args...)> >;
-
-/**
- * @brief Type for holding argument to parameterized binary opcode tests
- */
-template <typename Ret, typename Left, typename Right>
-using BinaryOpParamType = ParamType<Ret, Left, Right>;
-
-/**
- * @brief Struct equivalent to the BinaryOpParamType tuple
- *
- * Used for easier unpacking of test argument.
- */
+// C++11 upgrade (Issue #1916).
 template <typename Ret, typename Left, typename Right>
 struct BinaryOpParamStruct {
         Left lhs;
@@ -94,12 +43,33 @@ struct BinaryOpParamStruct {
         Ret (*oracle)(Left, Right);
 };
 
+// C++11 upgrade (Issue #1916).
+template <typename Ret, typename T>
+struct UnaryOpParamStruct {
+        T value;
+        std::string opcode;
+        Ret (*oracle)(T);
+};
+
+
+/**
+ * @brief Given an instance of UnaryOpParamType, returns an equivalent instance
+ *    of UnaryOpParamStruct
+ */
+template <typename Ret, typename T>
+UnaryOpParamStruct<Ret, T> to_struct(std::tuple<T , std::tuple<std::string, Ret (*)(T)>> param) {
+    UnaryOpParamStruct<Ret, T> s;
+    s.value  = std::get<0>(param);
+    s.opcode = std::get<0>(std::get<1>(param));
+    s.oracle = std::get<1>(std::get<1>(param));
+    return s;
+}
 /**
  * @brief Given an instance of BinaryOpParamType, returns an equivalent instance
  *    of BinaryOpParamStruct
  */
 template <typename Ret, typename Left, typename Right>
-BinaryOpParamStruct<Ret, Left, Right> to_struct(BinaryOpParamType<Ret, Left, Right> param) {
+BinaryOpParamStruct<Ret, Left, Right> to_struct(std::tuple<std::tuple<Left,Right>, std::tuple<std::string, Ret (*)(Left,Right)>> param) {
     BinaryOpParamStruct<Ret, Left, Right> s;
     s.lhs = std::get<0>(std::get<0>(param));
     s.rhs = std::get<1>(std::get<0>(param));
@@ -111,10 +81,14 @@ BinaryOpParamStruct<Ret, Left, Right> to_struct(BinaryOpParamType<Ret, Left, Rig
 //~ Opcode test fixtures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 template <typename Ret, typename... Args>
-class OpCodeTest : public JitTest, public ::testing::WithParamInterface<ParamType<Ret, Args...>> {};
+class OpCodeTest : public JitTest, public ::testing::WithParamInterface< std::tuple<std::tuple<Args...>, std::tuple<std::string, Ret (*)(Args...)>> > {};
 
 template <typename T>
-class BinaryOpTest : public JitTest, public ::testing::WithParamInterface<BinaryOpParamType<T,T,T>> {};
+class BinaryOpTest : public JitTest, public ::testing::WithParamInterface< std::tuple< std::tuple<T,T>, std::tuple<std::string, T (*)(T,T)>> > {};
+
+template <typename T>
+class UnaryOpTest : public JitTest, public ::testing::WithParamInterface< std::tuple< T , std::tuple<std::string, T (*)(T)>> > {};
+
 
 } // namespace CompTest
 

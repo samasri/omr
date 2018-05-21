@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "compile/Method.hpp"
 
@@ -380,7 +383,6 @@ bool         TR_ResolvedMethod::isPrivate()                                { not
 bool         TR_ResolvedMethod::isProtected()                              { notImplemented("isProtected"); return false; }
 bool         TR_ResolvedMethod::isPublic()                                 { notImplemented("isPublic"); return false; }
 bool         TR_ResolvedMethod::isFinal()                                  { notImplemented("isFinal"); return false; }
-bool         TR_ResolvedMethod::isDebugable()                              { notImplemented("isFinal"); return false; }
 bool         TR_ResolvedMethod::isStrictFP()                               { notImplemented("isStrictFP"); return false; }
 bool         TR_ResolvedMethod::isInterpreted()                            { notImplemented("isInterpreted"); return false; }
 bool         TR_ResolvedMethod::hasBackwardBranches()                      { notImplemented("hasBackwardBranches"); return false; }
@@ -436,6 +438,7 @@ void *       TR_ResolvedMethod::methodTypeTableEntryAddress(int32_t cpIndex)    
 TR_OpaqueClassBlock *TR_ResolvedMethod::getDeclaringClassFromFieldOrStatic(TR::Compilation *comp, int32_t cpIndex)  { notImplemented("getDeclaringClassFromFieldOrStatic"); return 0; }
 int32_t      TR_ResolvedMethod::classCPIndexOfFieldOrStatic(int32_t)       { notImplemented("classCPIndexOfFieldOrStatic"); return 0; }
 const char * TR_ResolvedMethod::signature(TR_Memory *, TR_AllocationKind)  { notImplemented("signature"); return 0; }
+const char * TR_ResolvedMethod::externalName(TR_Memory *, TR_AllocationKind)  { notImplemented("signature"); return 0; }
 char *       TR_ResolvedMethod::fieldName (int32_t, TR_Memory *, TR_AllocationKind kind)           { notImplemented("fieldName"); return 0; }
 char *       TR_ResolvedMethod::staticName(int32_t, TR_Memory *, TR_AllocationKind kind)           { notImplemented("staticName"); return 0; }
 char *       TR_ResolvedMethod::localName (uint32_t, uint32_t, TR_Memory *){ /*notImplemented("localName");*/ return 0; }
@@ -594,7 +597,7 @@ void TR_ResolvedMethod::makeParameterList(TR::ResolvedMethodSymbol *methodSym)
       }
    else
       {
-      parmSymbol = methodSym->comp()->getSymRefTab()->createParameterSymbol(methodSym, 0, TR::Address, false);
+      parmSymbol = methodSym->comp()->getSymRefTab()->createParameterSymbol(methodSym, 0, TR::Address);
       parmSymbol->setOrdinal(ordinal++);
 
       int32_t len = classNameLen; // len is passed by reference and changes during the call
@@ -639,9 +642,7 @@ void TR_ResolvedMethod::makeParameterList(TR::ResolvedMethodSymbol *methodSym)
       // pointer subtraction below getting converted into a 32-bit signed integer subtraction
       int len = static_cast<int>(end - s) + 1;
 
-      bool isUnsigned = (*s == 'C' || *s == 'Z'); // char or bool
-
-      parmSymbol = methodSym->comp()->getSymRefTab()->createParameterSymbol(methodSym, slot, type, isUnsigned);
+      parmSymbol = methodSym->comp()->getSymRefTab()->createParameterSymbol(methodSym, slot, type);
       parmSymbol->setOrdinal(ordinal++);
       parmSymbol->setTypeSignature(s, len);
 
@@ -671,3 +672,11 @@ void TR_ResolvedMethod::makeParameterList(TR::ResolvedMethodSymbol *methodSym)
    methodSym->setFirstJitTempIndex(methodSym->getTempIndex());
    }
 
+TR::SymbolReferenceTable*
+TR_ResolvedMethod::genMethodILForPeeking(TR::ResolvedMethodSymbol *methodSymbol, TR::Compilation  *comp, bool resetVisitCount, TR_PrexArgInfo  *argInfo)
+   {
+   if (comp->getOption(TR_EnableHCR))
+      return NULL;
+
+   return _genMethodILForPeeking(methodSymbol, comp, resetVisitCount, argInfo);
+   }

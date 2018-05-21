@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "compile/OMRCompilation.hpp"
 
@@ -46,6 +49,7 @@
 #include "cs2/allocator.h"                     // for heap_allocator
 #include "cs2/sparsrbit.h"
 #include "env/CompilerEnv.hpp"
+#include "env/CompileTimeProfiler.hpp"         // for TR::CompileTimeProfiler
 #include "env/IO.hpp"                  // for IO (trfflush)
 #include "env/ObjectModel.hpp"                 // for ObjectModel
 #include "env/KnownObjectTable.hpp"            // for KnownObjectTable
@@ -79,9 +83,9 @@
 #include "infra/List.hpp"                      // for List, ListIterator, etc
 #include "infra/Random.hpp"                    // for TR_RandomGenerator
 #include "infra/Stack.hpp"                     // for TR_Stack
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
 #include "infra/Timer.hpp"                     // for TR_SingleTimer
-#include "infra/ThreadLocal.h"         // for tlsDefine
+#include "infra/ThreadLocal.h"                 // for tlsDefine
 #include "optimizer/DebuggingCounters.hpp"     // for TR_DebuggingCounters
 #include "optimizer/Optimizations.hpp"         // for Optimizations, etc
 #include "optimizer/Optimizer.hpp"             // for Optimizer
@@ -90,10 +94,16 @@
 #include "optimizer/TransformUtil.hpp"
 #include "ras/Debug.hpp"                       // for TR_DebugBase
 #include "ras/DebugCounter.hpp"                // for TR_DebugCounterGroup, etc
+#include "ras/ILValidationStrategies.hpp"
+#include "ras/ILValidator.hpp"
 #include "ras/IlVerifier.hpp"                  // for TR::IlVerifier
 #include "control/Recompilation.hpp"           // for TR_Recompilation, etc
 #include "runtime/CodeCacheExceptions.hpp"
 #include "ilgen/IlGen.hpp"                     // for TR_IlGenerator
+#include "env/RegionProfiler.hpp"              // for TR::RegionProfiler
+// this ratio defines how full the alias memory region is allowed to become before
+// it is recreated after an optimization finishes
+#define ALIAS_REGION_LOAD_FACTOR 0.75
 
 #ifdef J9_PROJECT_SPECIFIC
 #include "control/RecompilationInfo.hpp"           // for TR_Recompilation, etc
@@ -172,11 +182,6 @@ OMR::Compilation::getHotnessName(TR_Hotness h)
    return pHotnessNames[h];
    }
 
-bool OMR::Compilation::nodeNeeds2Regs(TR::Node*node)
-   {
-   return (node->getType().isInt64() && TR::Compiler->target.is32Bit() && !self()->cg()->use64BitRegsOn32Bit());
-   }
-
 
 static TR::CodeGenerator * allocateCodeGenerator(TR::Compilation * comp)
    {
@@ -214,12 +219,11 @@ OMR::Compilation::Compilation(
    _allocator(TRCS2MemoryAllocator(m)),
    _method(compilee),
    _arenaAllocator(TR::Allocator(self()->allocator("Arena"))),
+   _aliasRegion(heapMemoryRegion),
    _allocatorName(NULL),
    _ilGenerator(0),
+   _ilValidator(NULL),
    _optimizer(0),
-   _firstInstruction(NULL),
-   _appendInstruction(NULL),
-   _firstColdInstruction(NULL),
    _currentSymRefTab(NULL),
    _recompilationInfo(0),
    _optimizationPlan(optimizationPlan),
@@ -523,12 +527,6 @@ OMR::Compilation::getMethodHotness()
    return (TR_Hotness) self()->getOptLevel();
    }
 
-TR_Hotness
-OMR::Compilation::getDeFactoHotness()
-   {
-   return self()->isProfilingCompilation() ? warm : self()->getMethodHotness();
-   }
-
 ncount_t
 OMR::Compilation::getAccurateNodeCount()
    {
@@ -553,19 +551,11 @@ bool OMR::Compilation::canAffordOSRControlFlow()
    {
    if (self()->getOption(TR_DisableOSR) || !self()->getOption(TR_EnableOSR))
       {
-      if (self()->getOption(TR_TraceOSR))
-         {
-         traceMsg(self(), "canAffordOSRControlFlow returning false due to OSR options: disableOSR %d, enableOSR %d\n", self()->getOption(TR_DisableOSR), self()->getOption(TR_EnableOSR));
-         }
       return false;
       }
 
    if (self()->osrInfrastructureRemoved())
       {
-      if (self()->getOption(TR_TraceOSR))
-         {
-         traceMsg(self(), "canAffordOSRControlFlow returning false due to removal of OSR infrastructure\n");
-         }
       return false;
       }
 
@@ -635,7 +625,7 @@ bool OMR::Compilation::isShortRunningMethod(int32_t callerIndex)
    return false;
    }
 
-bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNode)
+bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNode, bool ignoreInfra)
    {
    static char *disableAsyncCheckOSR = feGetEnv("TR_disableAsyncCheckOSR");
    static char *disableGuardedCallOSR = feGetEnv("TR_disableGuardedCallOSR");
@@ -645,9 +635,9 @@ bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNo
    if (self()->isOSRTransitionTarget(TR::postExecutionOSR))
       {
       if (node->getOpCodeValue() == TR::treetop || node->getOpCode().isCheck())
-         node = node->getFirstChild(); 
+         node = node->getFirstChild();
 
-      if (_osrInfrastructureRemoved)
+      if (_osrInfrastructureRemoved && !ignoreInfra)
          potentialOSRPoint = false;
       else if (node->getOpCodeValue() == TR::asynccheck)
          {
@@ -778,7 +768,7 @@ OMR::Compilation::getOSRInductionOffset(TR::Node *node)
    // If no induction after the OSR point, offset must be 0
    if (!self()->isOSRTransitionTarget(TR::postExecutionOSR))
       return 0;
-   
+
    TR::Node *osrNode;
    if (!self()->isPotentialOSRPoint(node, &osrNode))
       {
@@ -847,10 +837,47 @@ OMR::Compilation::requiresAnalysisOSRPoint(TR::Node *node)
       }
    }
 
+/**
+ * To reduce OSR overhead, OSRLiveRangeAnalysis supports solving liveness analysis
+ * during IlGen, as an approximation of this information is commonly known at this
+ * stage.
+ *
+ * If this function returns true, OSRLiveRangeAnalysis expects pending push liveness
+ * information to be stashed in OSRData using addPendingPushLivenessInfo prior to
+ * its execution in IlGenOpts. Returning true without the correct information stashed
+ * will result in reduced performance and failed OSR transitions.
+ *
+ * If this function returns false, OSRLiveRangeAnalysis will perform liveness analysis
+ * on pending push symbols.
+ */
+bool
+OMR::Compilation::pendingPushLivenessDuringIlgen()
+   {
+   return false;
+   }
+
+/**
+ * A profiling compilation will include instrumentation to collect information
+ * on block and value frequencies. isProfilingCompilation() should return true for
+ * such a compilation and getProfilingMode() can distinguish between the profiling
+ * implementations.
+ */
 bool
 OMR::Compilation::isProfilingCompilation()
    {
    return _recompilationInfo ? _recompilationInfo->isProfilingCompilation() : false;
+   }
+
+ProfilingMode
+OMR::Compilation::getProfilingMode()
+   {
+   if (!self()->isProfilingCompilation())
+      return DisabledProfiling;
+
+   if (self()->getOption(TR_EnableJProfiling) || self()->getOption(TR_EnableJProfilingInProfilingCompilations))
+      return JProfiling;
+
+   return JitProfiling;
    }
 
 bool
@@ -896,8 +923,6 @@ int32_t OMR::Compilation::compile()
          {
          if (!TR::Compiler->target.cpu.isPower())
             TR::Options::getCmdLineOptions()->setOption(TR_DisableInternalPointers);
-         if (TR::Compiler->target.cpu.isX86())
-            TR::Options::getCmdLineOptions()->setOption(TR_DisableLateEdgeSplitting);  // TR_DisableLateEdgeSplitting only used on X86
          }
       self()->getOptions()->setOption(TR_DisablePartialInlining);
       }
@@ -966,16 +991,11 @@ int32_t OMR::Compilation::compile()
    if (_recompilationInfo)
       _recompilationInfo->startOfCompilation();
 
-#ifdef J9_PROJECT_SPECIFIC
-   TR_PersistentMethodInfo * methodInfo = TR_PersistentMethodInfo::get(self()->getCurrentMethod());
-   if (methodInfo &&
-       self()->isProfilingCompilation())
-      methodInfo->setProfileInfo(NULL);
-#endif
-
-   self()->printMemStatsBefore(self()->signature());
+   // Create the compile time profiler
+   TR::CompileTimeProfiler perf(self(), "compileTimePerf");
 
    {
+     TR::RegionProfiler rpIlgen(self()->trMemory()->heapMemoryRegion(), *self(), "comp/ilgen");
      if (printCodegenTime) genILTime.startTiming(self());
      _ilGenSuccess = _methodSymbol->genIL(self()->fe(), self(), self()->getSymRefTab(), _ilGenRequest);
      if (printCodegenTime) genILTime.stopTiming(self());
@@ -1005,9 +1025,16 @@ int32_t OMR::Compilation::compile()
          self()->dumpMethodTrees("Initial Trees");
          self()->getDebug()->print(self()->getOutFile(), self()->getSymRefTab());
          }
-#ifndef DISABLE_CFG_CHECK
-      self()->verifyTrees (_methodSymbol);
-      self()->verifyBlocks(_methodSymbol);
+#if !defined(DISABLE_CFG_CHECK)
+      if (self()->getOption(TR_UseILValidator))
+         {
+         self()->validateIL(TR::postILgenValidation);
+         }
+      else
+         {
+         self()->verifyTrees (_methodSymbol);
+         self()->verifyBlocks(_methodSymbol);
+         }
 #endif
 
       if (_recompilationInfo)
@@ -1025,9 +1052,10 @@ int32_t OMR::Compilation::compile()
       TR_DebuggingCounters::initializeCompilation();
       if (printCodegenTime) optTime.startTiming(self());
 
-      self()->performOptimizations();
-
-      self()->printMemStatsAfter("optimization");
+         {
+         TR::RegionProfiler rpOpt(self()->trMemory()->heapMemoryRegion(), *self(), "comp/opt");
+         self()->performOptimizations();
+         }
 
       if (printCodegenTime) optTime.stopTiming(self());
 
@@ -1038,6 +1066,13 @@ int32_t OMR::Compilation::compile()
             dumpOptDetails(self(), "successfully verified compressedRefs anchors\n");
          else
             dumpOptDetails(self(), "failed while verifying compressedRefs anchors\n");
+         }
+#endif
+
+#if !defined(DISABLE_CFG_CHECK)
+      if (self()->getOption(TR_UseILValidator))
+         {
+         self()->validateIL(TR::preCodegenValidation);
          }
 #endif
 
@@ -1056,12 +1091,12 @@ int32_t OMR::Compilation::compile()
          _recompilationInfo->beforeCodeGen();
 
         {
+        TR::RegionProfiler rpCodegen(self()->trMemory()->heapMemoryRegion(), *self(), "comp/codegen");
+
         if (printCodegenTime)
            codegenTime.startTiming(self());
 
         self()->cg()->generateCode();
-
-        self()->printMemStatsAfter("all codegen");
 
         if (printCodegenTime)
            codegenTime.stopTiming(self());
@@ -1162,10 +1197,10 @@ int32_t OMR::Compilation::compile()
    // If that happened we want to fail the compilation at this point.
    //
    if (_methodSymbol->unimplementedOpcode())
-      throw TR::UnimplementedOpCode();
+      self()->failCompilation<TR::UnimplementedOpCode>("Unimplemented Op Code");
 
    if (!_ilGenSuccess)
-      throw TR::ILGenFailure();
+      self()->failCompilation<TR::ILGenFailure>("IL Gen Failure");
 
 #ifdef J9_PROJECT_SPECIFIC
    if (self()->getOption(TR_TraceCG))
@@ -1193,8 +1228,6 @@ int32_t OMR::Compilation::compile()
       self()->getDebug()->setupDebugger(self()->cg()->getCodeStart(),self()->cg()->getCodeEnd(),false);
       }
 #endif
-
-   self()->printMemStatsAfter(self()->signature());
 
    return COMPILATION_SUCCEEDED;
    }
@@ -1237,8 +1270,7 @@ void OMR::Compilation::performOptimizations()
    if (_optimizer)
       _optimizer->optimize();
 
-   if (!self()->getOption(TR_EnableSpecializedEpilogues) &&
-       self()->getOption(TR_DisableShrinkWrapping) &&
+   if (self()->getOption(TR_DisableShrinkWrapping) &&
        !TR::Compiler->target.cpu.isZ() && // 390 now uses UseDefs in CodeGenPrep
        !self()->getOptions()->getVerboseOption(TR_VerboseCompYieldStats))
       _optimizer = NULL;
@@ -1975,6 +2007,12 @@ void OMR::Compilation::switchCodeCache(TR::CodeCache *newCodeCache)
       }
    }
 
+void OMR::Compilation::validateIL(TR::ILValidationContext ilValidationContext)
+   {
+   TR_ASSERT_FATAL(_ilValidator != NULL, "Attempting to validate the IL without the ILValidator being initialized");
+   _ilValidator->validate(TR::omrValidationStrategies[ilValidationContext]);
+   }
+
 void OMR::Compilation::verifyTrees(TR::ResolvedMethodSymbol *methodSymbol)
    {
    if (self()->getDebug() && !self()->getOptions()->getOption(TR_DisableVerification) && !self()->isPeekingMethod())
@@ -2085,62 +2123,10 @@ void OMR::Compilation::registerResolvedMethodSymbolReference(TR::SymbolReference
    }
 
 
-bool OMR::Compilation::notYetRunMeansCold()
+bool
+OMR::Compilation::notYetRunMeansCold()
    {
-   if (_optimizer && !((TR::Optimizer*)_optimizer)->isIlGenOpt())
-      return false;
-
-   TR_ResolvedMethod *currentMethod = self()->getJittedMethodSymbol()->getResolvedMethod();
-
-   intptrj_t initialCount = currentMethod->hasBackwardBranches() ?
-                             self()->getOptions()->getInitialBCount() :
-                             self()->getOptions()->getInitialCount();
-
-   if (currentMethod->convertToMethod()->isBigDecimalMethod() ||
-       currentMethod->convertToMethod()->isBigDecimalConvertersMethod())
-       initialCount = 0;
-
-#ifdef J9_PROJECT_SPECIFIC
-    switch (currentMethod->getRecognizedMethod())
-      {
-      case TR::com_ibm_jit_DecimalFormatHelper_formatAsDouble:
-      case TR::com_ibm_jit_DecimalFormatHelper_formatAsFloat:
-         initialCount = 0;
-         break;
-      default:
-      	break;
-      }
-
-    if (currentMethod->containingClass() == self()->getStringClassPointer())
-       {
-       if (currentMethod->isConstructor())
-          {
-          char *sig = currentMethod->signatureChars();
-          if (!strncmp(sig, "([CIIII)", 8) ||
-              !strncmp(sig, "([CIICII)", 9) ||
-              !strncmp(sig, "(II[C)", 6))
-             initialCount = 0;
-          }
-       else
-          {
-          char *sig = "isRepeatedCharCacheHit";
-          if (strncmp(currentMethod->nameChars(), sig, strlen(sig)) == 0)
-             initialCount = 0;
-          }
-       }
-#endif
-
-   if (
-      self()->isDLT()
-      || (initialCount < TR_UNRESOLVED_IMPLIES_COLD_COUNT)
-      || ((self()->getOption(TR_UnresolvedAreNotColdAtCold) && self()->getMethodHotness() == cold) || self()->getMethodHotness() < cold)
-      || currentMethod->convertToMethod()->isArchetypeSpecimen()
-      || (  self()->getCurrentMethod()
-         && self()->getCurrentMethod()->convertToMethod()->isArchetypeSpecimen())
-      )
-      return false;
-   else
-      return true;
+   return false;
    }
 
 
@@ -2279,7 +2265,7 @@ OMR::Compilation::getOSRCallSiteRematSize(uint32_t callSiteIndex)
    }
 
 /*
- * Get the pending push symbol reference and the corresponding load, to later remat the pending push 
+ * Get the pending push symbol reference and the corresponding load, to later remat the pending push
  * within OSR code blocks inside the callee. To get a mapping, the call site index for the callee and
  * the caller's pending push slot should be provided.
  */
@@ -2486,18 +2472,6 @@ void
 OMR::Compilation::setStartTree(TR::TreeTop * tt)
    {
    _methodSymbol->setFirstTreeTop(tt);
-   }
-
-void OMR::Compilation::printMemStats(const char *name)
-   {
-   }
-
-void OMR::Compilation::printMemStatsBefore(const char *name)
-   {
-   }
-
-void OMR::Compilation::printMemStatsAfter(const char *name)
-   {
    }
 
 bool
@@ -2712,4 +2686,18 @@ OMR::Compilation::CompilationPhaseScope::CompilationPhaseScope(TR::Compilation *
 OMR::Compilation::CompilationPhaseScope::~CompilationPhaseScope()
    {
    _comp->restoreCompilationPhase(_savedPhase);
+   }
+
+TR::Region &OMR::Compilation::aliasRegion()
+   {
+   return self()->_aliasRegion;
+   }
+
+void OMR::Compilation::invalidateAliasRegion()
+   {
+   if (self()->_aliasRegion.bytesAllocated() > (ALIAS_REGION_LOAD_FACTOR) * TR::Region::initialSize())
+      {
+      self()->_aliasRegion.~Region();
+      new (&self()->_aliasRegion) TR::Region(_heapMemoryRegion);
+      }
    }

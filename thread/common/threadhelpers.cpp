@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "AtomicSupport.hpp"
@@ -57,7 +61,7 @@ omrthread_spinlock_acquire(omrthread_t self, omrthread_monitor_t monitor)
 
 #if defined(OMR_THR_JLM)
 	J9ThreadMonitorTracing *tracing = NULL;
-	if (J9_ARE_ALL_BITS_SET(lib->flags, J9THREAD_LIB_FLAG_JLM_ENABLED)) {
+	if (OMR_ARE_ALL_BITS_SET(lib->flags, J9THREAD_LIB_FLAG_JLM_ENABLED)) {
 		tracing = monitor->tracing;
 	}
 #endif /* OMR_THR_JLM */
@@ -66,20 +70,16 @@ omrthread_spinlock_acquire(omrthread_t self, omrthread_monitor_t monitor)
 	uintptr_t spinCount2Init = monitor->spinCount2;
 	uintptr_t spinCount1Init = monitor->spinCount1;
 
+	uintptr_t spinCount3 = spinCount3Init;
+	uintptr_t spinCount2 = spinCount2Init;
+
 #if defined(OMR_THR_SPIN_WAKE_CONTROL)
-	BOOLEAN spinning = TRUE;
  	if (monitor->spinThreads < lib->maxSpinThreads) {
  		VM_AtomicSupport::add(&monitor->spinThreads, 1);
  	} else {
- 		spinCount1Init = 1;
- 		spinCount2Init = 1;
- 		spinCount3Init = 1;
- 		spinning = FALSE;
+ 		goto exit;
  	}
 #endif /* defined(OMR_THR_SPIN_WAKE_CONTROL) */
-
-	uintptr_t spinCount3 = spinCount3Init;
-	uintptr_t spinCount2 = spinCount2Init;
 
 	for (; spinCount3 > 0; spinCount3--) {
 		for (spinCount2 = spinCount2Init; spinCount2 > 0; spinCount2--) {
@@ -90,7 +90,7 @@ omrthread_spinlock_acquire(omrthread_t self, omrthread_monitor_t monitor)
 				goto update_jlm;
 			}
 			/* Stop spinning if adaptive spin heuristic disables spinning */
-			if (J9_ARE_ALL_BITS_SET(monitor->flags, J9THREAD_MONITOR_DISABLE_SPINNING)) {
+			if (OMR_ARE_ALL_BITS_SET(monitor->flags, J9THREAD_MONITOR_DISABLE_SPINNING)) {
 				goto update_jlm;
 			}
 			VM_AtomicSupport::yieldCPU();
@@ -130,11 +130,10 @@ update_jlm:
 #endif /* OMR_THR_JLM */
 
 #if defined(OMR_THR_SPIN_WAKE_CONTROL)
-	if (spinning) {
-		VM_AtomicSupport::subtract(&monitor->spinThreads, 1);
-	}
-#endif /* defined(OMR_THR_SPIN_WAKE_CONTROL) */
+	VM_AtomicSupport::subtract(&monitor->spinThreads, 1);
 
+exit:
+#endif /* defined(OMR_THR_SPIN_WAKE_CONTROL) */
 	return result;
 }
 

@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "omrgcconsts.h"
@@ -52,6 +56,9 @@ static void verboseHandlerCompactEnd(J9HookInterface** hook, uintptr_t eventNum,
 #if defined(OMR_GC_MODRON_SCAVENGER)
 static void verboseHandlerScavengeEnd(J9HookInterface** hook, uintptr_t eventNum, void* eventData, void* userData);
 static void verboseHandlerScavengePercolate(J9HookInterface** hook, uintptr_t eventNum, void* eventData, void* userData);
+
+static void verboseHandlerConcurrentStart(J9HookInterface** hook, UDATA eventNum, void* eventData, void* userData);
+static void verboseHandlerConcurrentEnd(J9HookInterface** hook, UDATA eventNum, void* eventData, void* userData);
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 
 #if defined(OMR_GC_MODRON_CONCURRENT_MARK)
@@ -70,7 +77,7 @@ MM_VerboseHandlerOutputStandard::newInstance(MM_EnvironmentBase *env, MM_Verbose
 {
 	MM_GCExtensionsBase* extensions = MM_GCExtensionsBase::getExtensions(env->getOmrVM());
 
-	MM_VerboseHandlerOutputStandard *verboseHandlerOutput = (MM_VerboseHandlerOutputStandard *)extensions->getForge()->allocate(sizeof(MM_VerboseHandlerOutputStandard), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	MM_VerboseHandlerOutputStandard *verboseHandlerOutput = (MM_VerboseHandlerOutputStandard *)extensions->getForge()->allocate(sizeof(MM_VerboseHandlerOutputStandard), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (NULL != verboseHandlerOutput) {
 		new(verboseHandlerOutput) MM_VerboseHandlerOutputStandard(extensions);
 		if(!verboseHandlerOutput->initialize(env, manager)) {
@@ -131,6 +138,9 @@ MM_VerboseHandlerOutputStandard::enableVerbose()
 #if defined(OMR_GC_MODRON_SCAVENGER)
 	(*_mmPrivateHooks)->J9HookRegisterWithCallSite(_mmPrivateHooks, J9HOOK_MM_PRIVATE_SCAVENGE_END, verboseHandlerScavengeEnd, OMR_GET_CALLSITE(), (void *)this);
 	(*_mmPrivateHooks)->J9HookRegisterWithCallSite(_mmPrivateHooks, J9HOOK_MM_PRIVATE_PERCOLATE_COLLECT, verboseHandlerScavengePercolate, OMR_GET_CALLSITE(), (void *)this);
+
+	(*_mmPrivateHooks)->J9HookRegisterWithCallSite(_mmPrivateHooks, J9HOOK_MM_PRIVATE_CONCURRENT_PHASE_START, verboseHandlerConcurrentStart, OMR_GET_CALLSITE(), this);
+	(*_mmPrivateHooks)->J9HookRegisterWithCallSite(_mmPrivateHooks, J9HOOK_MM_PRIVATE_CONCURRENT_PHASE_END, verboseHandlerConcurrentEnd, OMR_GET_CALLSITE(), this);
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 
 	/* Concurrent */
@@ -186,6 +196,11 @@ MM_VerboseHandlerOutputStandard::disableVerbose()
 #if defined(OMR_GC_MODRON_SCAVENGER)
 	(*_mmPrivateHooks)->J9HookUnregister(_mmPrivateHooks, J9HOOK_MM_PRIVATE_SCAVENGE_END, verboseHandlerScavengeEnd, NULL);
 	(*_mmPrivateHooks)->J9HookUnregister(_mmPrivateHooks, J9HOOK_MM_PRIVATE_PERCOLATE_COLLECT, verboseHandlerScavengePercolate, NULL);
+
+	/* Concurrent GMP */
+	(*_mmPrivateHooks)->J9HookUnregister(_mmPrivateHooks, J9HOOK_MM_PRIVATE_CONCURRENT_PHASE_START, verboseHandlerConcurrentStart, NULL);
+	(*_mmPrivateHooks)->J9HookUnregister(_mmPrivateHooks, J9HOOK_MM_PRIVATE_CONCURRENT_PHASE_END, verboseHandlerConcurrentEnd, NULL);
+
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 
 	/* Concurrent */
@@ -388,7 +403,8 @@ MM_VerboseHandlerOutputStandard::handleScavengeEnd(J9HookInterface** hook, uintp
 	MM_GCExtensionsBase *extensions = MM_GCExtensionsBase::getExtensions(env->getOmrVM());
 	MM_VerboseManager* manager = getManager();
 	MM_VerboseWriterChain* writer = manager->getWriterChain();
-	MM_ScavengerStats *scavengerStats = &extensions->scavengerStats;
+	MM_ScavengerStats *scavengerStats = &extensions->incrementScavengerStats;
+	MM_ScavengerStats *cycleScavengerStats = &extensions->scavengerStats;
 	OMRPORT_ACCESS_FROM_OMRPORT(env->getPortLibrary());
 	uint64_t duration = 0;
 	bool deltaTimeSuccess = getTimeDeltaInMicroSeconds(&duration, scavengerStats->_startTime, scavengerStats->_endTime);
@@ -396,7 +412,10 @@ MM_VerboseHandlerOutputStandard::handleScavengeEnd(J9HookInterface** hook, uintp
 	enterAtomicReportingBlock();
 	handleGCOPOuterStanzaStart(env, "scavenge", env->_cycleState->_verboseContextID, duration, deltaTimeSuccess);
 
-	writer->formatAndOutput(env, 1, "<scavenger-info tenureage=\"%zu\" tenuremask=\"%4zx\" tiltratio=\"%zu\" />", scavengerStats->_tenureAge, scavengerStats->getFlipHistory(0)->_tenureMask, scavengerStats->_tiltRatio);
+	if (event->cycleEnd) {
+		writer->formatAndOutput(env, 1, "<scavenger-info tenureage=\"%zu\" tenuremask=\"%4zx\" tiltratio=\"%zu\" />",
+				cycleScavengerStats->_tenureAge, cycleScavengerStats->getFlipHistory(0)->_tenureMask, cycleScavengerStats->_tiltRatio);
+	}
 
 	if (0 != scavengerStats->_flipCount) {
 		writer->formatAndOutput(env, 1, "<memory-copied type=\"nursery\" objects=\"%zu\" bytes=\"%zu\" bytesdiscarded=\"%zu\" />",
@@ -439,6 +458,23 @@ MM_VerboseHandlerOutputStandard::handleScavengeEnd(J9HookInterface** hook, uintp
 	writer->flush(env);
 	exitAtomicReportingBlock();
 }
+
+void
+MM_VerboseHandlerOutputStandard::handleConcurrentGCOpEnd(J9HookInterface** hook, uintptr_t eventNum, void* eventData)
+{
+	/* convert event from concurrent-end to scavenge-end */
+	MM_ScavengeEndEvent scavengeEndEvent;
+	MM_ConcurrentPhaseEndEvent *event = (MM_ConcurrentPhaseEndEvent *)eventData;
+
+	scavengeEndEvent.currentThread = event->currentThread;
+	scavengeEndEvent.timestamp = event->timestamp;
+	scavengeEndEvent.eventid = event->eventid;
+	scavengeEndEvent.subSpace = NULL; //unknown info
+	scavengeEndEvent.cycleEnd = false;
+
+	handleScavengeEnd(hook, J9HOOK_MM_PRIVATE_SCAVENGE_END, &scavengeEndEvent);
+}
+
 
 void
 MM_VerboseHandlerOutputStandard::handleScavengeEndInternal(MM_EnvironmentBase* env, void* eventData)
@@ -826,14 +862,24 @@ MM_VerboseHandlerOutputStandard::outputMemoryInfoInnerStanza(MM_EnvironmentBase 
 {
 	MM_VerboseWriterChain* writer = _manager->getWriterChain();
 	MM_CollectionStatisticsStandard *stats = MM_CollectionStatisticsStandard::getCollectionStatistics(statsBase);
+	MM_GCExtensionsBase* extensions = MM_GCExtensionsBase::getExtensions(env->getOmrVM());
 
 	if (stats->_scavengerEnabled) {
 		writer->formatAndOutput(env, indent, "<mem type=\"nursery\" free=\"%zu\" total=\"%zu\" percent=\"%zu\">",
 				stats->_totalFreeNurseryHeapSize, stats->_totalNurseryHeapSize,
 				((stats->_totalNurseryHeapSize == 0) ? 0 : ((uintptr_t)(((uint64_t)stats->_totalFreeNurseryHeapSize*100) / (uint64_t)stats->_totalNurseryHeapSize))));
 
-		outputMemType(env, indent + 1, "allocate", stats->_totalFreeNurseryHeapSize - stats->_totalFreeSurvivorHeapSize, stats->_totalNurseryHeapSize - stats->_totalSurvivorHeapSize);
-		outputMemType(env, indent + 1, "survivor",  stats->_totalFreeSurvivorHeapSize,  stats->_totalSurvivorHeapSize);
+		/* The only free memory in Nursery is in Allocate subspace (hence, using _totalFreeNurseryHeapSize to report free allocate) */
+		if (extensions->isConcurrentScavengerInProgress()) {
+			/* During CS active cycle, Allocate and Survivor is same subspace. The rest is Evacuate */
+			Assert_MM_true(stats->_totalFreeSurvivorHeapSize == stats->_totalFreeNurseryHeapSize);
+			outputMemType(env, indent + 1, "allocate/survivor",  stats->_totalFreeNurseryHeapSize, stats->_totalSurvivorHeapSize);
+			outputMemType(env, indent + 1, "evacuate", 0, stats->_totalNurseryHeapSize - stats->_totalSurvivorHeapSize);
+		} else {
+			/* Prior to Scavenge start or just after the end, any Survivor free memory is reported as reserved (0 free) */
+			outputMemType(env, indent + 1, "allocate", stats->_totalFreeNurseryHeapSize, stats->_totalNurseryHeapSize - stats->_totalSurvivorHeapSize);
+			outputMemType(env, indent + 1, "survivor", 0,  stats->_totalSurvivorHeapSize);
+		}
 		writer->formatAndOutput(env, indent, "</mem>");
 	}
 
@@ -997,6 +1043,18 @@ void
 verboseHandlerScavengePercolate(J9HookInterface** hook, uintptr_t eventNum, void* eventData, void* userData)
 {
 	((MM_VerboseHandlerOutputStandard *)userData)->handleScavengePercolate(hook, eventNum, eventData);
+}
+
+void
+verboseHandlerConcurrentStart(J9HookInterface** hook, UDATA eventNum, void* eventData, void* userData)
+{
+	((MM_VerboseHandlerOutput *)userData)->handleConcurrentStart(hook, eventNum, eventData);
+}
+
+void
+verboseHandlerConcurrentEnd(J9HookInterface** hook, UDATA eventNum, void* eventData, void* userData)
+{
+	((MM_VerboseHandlerOutput *)userData)->handleConcurrentEnd(hook, eventNum, eventData);
 }
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 

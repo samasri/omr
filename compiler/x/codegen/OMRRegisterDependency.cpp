@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <algorithm>                             // for std::find, etc
@@ -192,7 +195,7 @@ OMR::X86::RegisterDependencyConditions::RegisterDependencyConditions(
                copyReg->setPinningArrayPointer(globalReg->getPinningArrayPointer());
                }
 
-            TR::Instruction *prevInstr = comp->getAppendInstruction();
+            TR::Instruction *prevInstr = cg->getAppendInstruction();
             TR::Instruction *placeToAdd = prevInstr;
             if (prevInstr && prevInstr->getOpCode().isFusableCompare())
                {
@@ -729,39 +732,6 @@ void TR_X86RegisterDependencyGroup::assignRegisters(TR::Instruction   *currentIn
          hasByteDeps = true;
       else if (dependentRegNum == TR::RealRegister::BestFreeReg)
          hasBestFreeRegDeps = true;
-
-      // Reload vmThread at the start of it's live range.
-      //
-      TR::Register *vmThreadReg = cg->getVMThreadRegister();
-      TR::RealRegister *vmThreadRealReg = machine->getX86RealRegister(TR::RealRegister::ebp);
-      if (cg->getSupportsVMThreadGRA() &&
-          dependentRegNum == TR::RealRegister::ebp &&
-          virtReg && virtReg != vmThreadReg &&
-          vmThreadReg->getAssignedRealRegister() == vmThreadRealReg)
-         {
-         TR_BackingStore *vmThreadSill = vmThreadReg->getBackingStorage();
-         if (vmThreadSill == NULL)
-            {
-            vmThreadSill = cg->allocateVMThreadSpill();
-            vmThreadReg->setBackingStorage(vmThreadSill);
-
-            // Set spill instruction to the "spill in prolog" value.
-            //
-            cg->setVMThreadSpillInstruction((TR::Instruction *)0xffffffff);
-            cg->getSpilledIntRegisters().push_front(vmThreadReg);
-            }
-         if (debug("vmThreadGRA"))
-            cg->traceRegisterAssignment("Force spill of vmThread at inst %p", currentInstruction);
-         TR::MemoryReference    *tempMR  = generateX86MemoryReference(vmThreadSill->getSymbolReference(), cg);
-         TR::X86RegMemInstruction  *inst    = generateRegMemInstruction(currentInstruction, LRegMem(), vmThreadRealReg, tempMR, cg);
-         cg->traceRAInstruction(inst);
-
-         // Reset vmThread register's state.
-         //
-         vmThreadReg->setAssignedRegister(NULL);
-         vmThreadRealReg->setAssignedRegister(NULL);
-         vmThreadRealReg->setState(TR::RealRegister::Free);
-         }
 
       // Handle spill registers first.
       //

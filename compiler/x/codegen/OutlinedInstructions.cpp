@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "x/codegen/OutlinedInstructions.hpp"
@@ -150,12 +153,12 @@ void TR_OutlinedInstructions::swapInstructionListsWithCompilation()
    {
    TR::Instruction *temp;
 
-   temp = comp()->getFirstInstruction();
-   comp()->setFirstInstruction(_firstInstruction);
+   temp = cg()->getFirstInstruction();
+   cg()->setFirstInstruction(_firstInstruction);
    _firstInstruction = temp;
 
-   temp = comp()->getAppendInstruction();
-   comp()->setAppendInstruction(_appendInstruction);
+   temp = cg()->getAppendInstruction();
+   cg()->setAppendInstruction(_appendInstruction);
    _appendInstruction = temp;
    }
 
@@ -164,30 +167,18 @@ void TR_OutlinedInstructions::generateOutlinedInstructionsDispatch()
    // Switch to cold helper instruction stream.
    //
    TR::Register    *vmThreadReg = _cg->getMethodMetaDataRegister();
-   TR::Instruction *savedFirstInstruction = comp()->getFirstInstruction();
-   TR::Instruction *savedAppendInstruction = comp()->getAppendInstruction();
-   comp()->setFirstInstruction(NULL);
-   comp()->setAppendInstruction(NULL);
+   TR::Instruction *savedFirstInstruction = cg()->getFirstInstruction();
+   TR::Instruction *savedAppendInstruction = cg()->getAppendInstruction();
+   cg()->setFirstInstruction(NULL);
+   cg()->setAppendInstruction(NULL);
 
    new (_cg->trHeapMemory()) TR::X86LabelInstruction(NULL, LABEL, _entryLabel, _cg);
 
-   if (_rematerializeVMThread)
-      {
-      generateRegInstruction(PUSHReg, _callNode, vmThreadReg, _cg);
-      generateRestoreVMThreadInstruction ( _callNode, _cg);
-      TR::MemoryReference  *vmThreadMR = generateX86MemoryReference(vmThreadReg, (TR::Compiler->target.is64Bit()) ? 16 : 8, _cg);
-      generateRegMemInstruction (LRegMem(), _callNode, vmThreadReg, vmThreadMR, _cg);
-      }
    TR::Register *resultReg=NULL;
    if (_callNode->getOpCode().isCallIndirect())
       resultReg = TR::TreeEvaluator::performCall(_callNode, true, false, _cg);
    else
       resultReg = TR::TreeEvaluator::performCall(_callNode, false, false, _cg);
-
-   if (_rematerializeVMThread)
-      {
-      generateRegInstruction(POPReg, _callNode, vmThreadReg, _cg);
-      }
 
    if (_targetReg)
       {
@@ -230,10 +221,10 @@ void TR_OutlinedInstructions::generateOutlinedInstructionsDispatch()
 
    // Switch from cold helper instruction stream.
    //
-   _firstInstruction = comp()->getFirstInstruction();
-   _appendInstruction = comp()->getAppendInstruction();
-   comp()->setFirstInstruction(savedFirstInstruction);
-   comp()->setAppendInstruction(savedAppendInstruction);
+   _firstInstruction = cg()->getFirstInstruction();
+   _appendInstruction = cg()->getAppendInstruction();
+   cg()->setFirstInstruction(savedFirstInstruction);
+   cg()->setAppendInstruction(savedAppendInstruction);
    }
 
 
@@ -337,13 +328,13 @@ void TR_OutlinedInstructions::assignRegisters(TR_RegisterKinds kindsToBeAssigned
 
    // Ensure correct VFP state at the start of the outlined instruction sequence.
    //
-   generateVFPRestoreInstruction(comp()->getAppendInstruction(), vfpSaveInstruction, _cg);
+   generateVFPRestoreInstruction(cg()->getAppendInstruction(), vfpSaveInstruction, _cg);
    // Link in the helper stream into the mainline code.
    //
-   TR::Instruction *appendInstruction = comp()->getAppendInstruction();
+   TR::Instruction *appendInstruction = cg()->getAppendInstruction();
    appendInstruction->setNext(_firstInstruction);
    _firstInstruction->setPrev(appendInstruction);
-   comp()->setAppendInstruction(_appendInstruction);
+   cg()->setAppendInstruction(_appendInstruction);
 
    // Register assign the helper dispatch instructions.
    //
@@ -372,14 +363,14 @@ void TR_OutlinedInstructions::assignRegistersOnOutlinedPath(TR_RegisterKinds kin
 
    // Ensure correct VFP state at the start of the outlined instruction sequence.
    //
-   generateVFPRestoreInstruction(comp()->getAppendInstruction(), vfpSaveInstruction, _cg);
+   generateVFPRestoreInstruction(cg()->getAppendInstruction(), vfpSaveInstruction, _cg);
 
    // Link in the helper stream into the mainline code.
    //
-   TR::Instruction *appendInstruction = comp()->getAppendInstruction();
+   TR::Instruction *appendInstruction = cg()->getAppendInstruction();
    appendInstruction->setNext(_firstInstruction);
    _firstInstruction->setPrev(appendInstruction);
-   comp()->setAppendInstruction(_appendInstruction);
+   cg()->setAppendInstruction(_appendInstruction);
 
    setHasBeenRegisterAssigned(true);
    }

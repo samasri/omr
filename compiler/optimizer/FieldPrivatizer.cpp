@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/FieldPrivatizer.hpp"
@@ -52,8 +55,8 @@
 #include "infra/Cfg.hpp"                                // for CFG
 #include "infra/HashTab.hpp"
 #include "infra/List.hpp"                               // for ListIterator, etc
-#include "infra/TRCfgEdge.hpp"                          // for CFGEdge
-#include "infra/TRCfgNode.hpp"                          // for CFGNode
+#include "infra/CfgEdge.hpp"                            // for CFGEdge
+#include "infra/CfgNode.hpp"                            // for CFGNode
 #include "optimizer/Inliner.hpp"
 #include "optimizer/Optimization_inlines.hpp"
 #include "optimizer/OptimizationManager.hpp"
@@ -709,7 +712,7 @@ void TR_FieldPrivatizer::privatizeFields(TR::Node *node, bool postDominatesEntry
             node->setSymbolReference(autoForField);
             TR::Node *newFirstChild = 0;
             int32_t newFirstChildNum = -1;
-            if ( opCode.isIndirect() )
+            if (opCode.isIndirect())
                {
                if (opCode.isStore())
                   {
@@ -719,13 +722,16 @@ void TR_FieldPrivatizer::privatizeFields(TR::Node *node, bool postDominatesEntry
                   newFirstChildNum = 1;
                   }
                else
-                  TR::Node::recreate(node, comp()->il.opCodeForDirectLoad(nodeDataType));
-
-               int32_t j;
-               for (j=0;j<node->getNumChildren();j++)
                   {
-                  if (j != newFirstChildNum)
-                     node->getChild(j)->recursivelyDecReferenceCount();
+                  TR::Node::recreate(node, comp()->il.opCodeForDirectLoad(nodeDataType));
+                  }
+
+               for (int32_t i = 0; i < node->getNumChildren(); i++)
+                  {
+                  if (i != newFirstChildNum)
+                     {
+                     node->getChild(i)->recursivelyDecReferenceCount();
+                     }
                   }
 
                if (newFirstChild)
@@ -734,22 +740,31 @@ void TR_FieldPrivatizer::privatizeFields(TR::Node *node, bool postDominatesEntry
                   node->setNumChildren(1);
                   }
                else
+                  {
                   node->setNumChildren(0);
+                  }
                }
             else
                {
-               if ( opCode.isStore() )
+               if (opCode.isStore())
                   {
                   _needToStoreBack->set(autoForField->getReferenceNumber());
+                  if (node->getOpCodeValue() == TR::wrtbar)
+                     {
+                     node->getChild(1)->recursivelyDecReferenceCount();
+                     node->setNumChildren(1);
+                     TR::Node::recreate(node, comp()->il.opCodeForDirectStore(nodeDataType));
+                     }
                   }
                }
             }
          }
       }
 
-   int32_t i;
-   for (i=0;i<node->getNumChildren();i++)
+   for (int32_t i = 0; i < node->getNumChildren(); i++)
+      {
       privatizeFields(node->getChild(i), postDominatesEntry, visitCount);
+      }
    }
 
 
@@ -818,7 +833,9 @@ bool TR_FieldPrivatizer::bothSubtreesMatch(TR::Node *node1, TR::Node *node2)
                   return true;
                }
             else
+               {
                return true;
+               }
 
       }
 
@@ -1142,7 +1159,7 @@ void TR_FieldPrivatizer::placeStoresBackInExit(TR::Block *block, bool placeAtEnd
             // Add global reg candidate in exit as well
             // so that store backs are done from the registers
             //
-            privatizedCandidate->getData()->addBlock(block, blockWeight, trMemory());
+            privatizedCandidate->getData()->addBlock(block, blockWeight);
          }
 
       currentNodeElem = currentNodeElem->getNextElement();
@@ -1512,7 +1529,7 @@ void TR_FieldPrivatizer::privatizeElementCandidates()
             continue;
             }
 
-         tempSymRef = comp()->getSymRefTab()->createCoDependententTemporary(comp()->getMethodSymbol(),candidate.node->getDataType(),false,candidate.node->getSize(),candidate.node->getSymbol(),0);
+         tempSymRef = comp()->getSymRefTab()->createCoDependentTemporary(comp()->getMethodSymbol(),candidate.node->getDataType(),false,candidate.node->getSize(),candidate.node->getSymbol(),0);
 
          tempMap.Add(candidate.valueNum,tempSymRef);
          }

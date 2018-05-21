@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/LoopVersioner.hpp"
@@ -63,8 +66,8 @@
 #include "infra/Cfg.hpp"                           // for CFG, etc
 #include "infra/Link.hpp"                          // for TR_LinkHead, etc
 #include "infra/List.hpp"                          // for List, ListElement, etc
-#include "infra/TRCfgEdge.hpp"                     // for CFGEdge
-#include "infra/TRCfgNode.hpp"                     // for CFGNode
+#include "infra/CfgEdge.hpp"                       // for CFGEdge
+#include "infra/CfgNode.hpp"                       // for CFGNode
 #include "optimizer/Dominators.hpp"                // for TR_PostDominators
 #include "optimizer/LocalAnalysis.hpp"             // for TR_LocalAnalysis
 #include "optimizer/LoopCanonicalizer.hpp"
@@ -226,7 +229,7 @@ bool TR_LoopVersioner::loopIsWorthVersioning(TR_RegionStructure *naturalLoop)
 
       int32_t lvBlockFreqCutoff;
       static const char * b = feGetEnv("TR_LoopVersionerFreqCutoff");
-      if (b) 
+      if (b)
          {
          lvBlockFreqCutoff = atoi(b);
          }
@@ -569,9 +572,9 @@ int32_t TR_LoopVersioner::performWithoutDominators()
             if (trace()) traceMsg(comp(), "aggressiveLoopVersioning: raising hotnessThreshold for conditionalsWillBeEliminated\n");
             hotnessThreshold = maxHotness; // threshold which can't be matched by the > operator
             }
-         
-         if (( (debug("nullCheckVersion") || 
-                comp()->cg()->performsChecksExplicitly() || 
+
+         if (( (debug("nullCheckVersion") ||
+                comp()->cg()->performsChecksExplicitly() ||
                 (comp()->getMethodHotness() > hotnessThreshold)
                ) && nullChecksWillBeEliminated
              ) ||
@@ -710,7 +713,7 @@ int32_t TR_LoopVersioner::performWithoutDominators()
    if (!_virtualGuardInfo.isEmpty())
       {
       bool disableLT = TR::Options::getCmdLineOptions()->getOption(TR_DisableLoopTransfer);
-      if (!disableLT) 
+      if (!disableLT)
          performLoopTransfer();
       }
 
@@ -1541,7 +1544,7 @@ bool TR_LoopVersioner::detectInvariantNodes(List<TR_NodeParentSymRef> *invariant
       {
       TR::Node *node = nextNode->getData()->_node;
       TR::Node *parent = nextNode->getData()->_parent;
-      traceMsg(comp(), "Looking at node %p parent %p\n\n", node, nextNode->getData()->_parent);
+      if (trace()) traceMsg(comp(), "Looking at node %p parent %p\n\n", node, nextNode->getData()->_parent);
       bool isNodeInvariant = isExprInvariant(node);
       // while not technically true, computeCC and overflow compares need to have their children intact and so they can't be marked as invariant
       // a better solution is really needed
@@ -1563,7 +1566,9 @@ bool TR_LoopVersioner::detectInvariantNodes(List<TR_NodeParentSymRef> *invariant
          }
       else
          {
-         traceMsg(comp(), "Invariant expr %p (%s)\n", node, node->getOpCode().getName());
+         if (trace())
+            traceMsg(comp(), "Invariant expr %p (%s)\n", node, node->getOpCode().getName());
+
          prevNode = nextNode;
          }
 
@@ -2051,7 +2056,7 @@ TR::Node *TR_LoopVersioner::isDependentOnInvariant(TR::Node *useNode)
       return NULL;
 
    TR_UseDefInfo::BitVector defs(comp()->allocator());
-   useDefInfo->getUseDef(defs, useIndex);
+   bool isNonZero = useDefInfo->getUseDef(defs, useIndex);
    TR_UseDefInfo::BitVector::Cursor cursor(defs);
    cursor.SetToFirstOne();
 
@@ -2064,7 +2069,7 @@ TR::Node *TR_LoopVersioner::isDependentOnInvariant(TR::Node *useNode)
    if (trace())
       traceMsg(comp(),"Definition Counts for node [%p] is %d inside isDependentOnInvariant \n", useNode,defs.PopulationCount());
    TR::Node *childNode = NULL;
-   if (!defs.IsZero()) //&&
+   if (isNonZero) //&&
        //(defs.PopulationCount() == 1) &&
        //_writtenExactlyOnce.ValueAt(useNode->getSymbolReference()->getReferenceNumber()))
       {
@@ -2099,7 +2104,13 @@ TR::Node *TR_LoopVersioner::isDependentOnInvariant(TR::Node *useNode)
    }
 
 
-TR::Node *TR_LoopVersioner::isDependentOnInductionVariable(TR::Node *useNode, bool noArithmeticAllowed, bool &isIndexChildMultiplied, TR::Node * &mulNode, TR::Node * &strideNode)
+TR::Node *TR_LoopVersioner::isDependentOnInductionVariable(
+   TR::Node *useNode,
+   bool noArithmeticAllowed,
+   bool &isIndexChildMultiplied,
+   TR::Node * &mulNode,
+   TR::Node * &strideNode,
+   bool &indVarOccursAsSecondChildOfSub)
    {
    TR_UseDefInfo *useDefInfo = optimizer()->getUseDefInfo();
    if (!useDefInfo)
@@ -2110,8 +2121,7 @@ TR::Node *TR_LoopVersioner::isDependentOnInductionVariable(TR::Node *useNode, bo
       return NULL;
 
    TR_UseDefInfo::BitVector defs(comp()->allocator());
-   useDefInfo->getUseDef(defs, useIndex);
-   if (!defs.IsZero() &&
+   if (useDefInfo->getUseDef(defs, useIndex) &&
        (defs.PopulationCount() == 1) &&
        _writtenExactlyOnce.ValueAt(useNode->getSymbolReference()->getReferenceNumber()))
       {
@@ -2152,6 +2162,9 @@ TR::Node *TR_LoopVersioner::isDependentOnInductionVariable(TR::Node *useNode, bo
                   bool isFirstChildInvariant = isExprInvariant(child->getFirstChild());
                   if (isFirstChildInvariant)
                      {
+                     if (child->getOpCode().isSub())
+                        indVarOccursAsSecondChildOfSub = !indVarOccursAsSecondChildOfSub;
+
                      if(isIndexChildMultiplied)
                          strideNode=child->getFirstChild();
                      child = child->getSecondChild();
@@ -2419,7 +2432,14 @@ bool TR_LoopVersioner::detectInvariantBoundChecks(List<TR::TreeTop> *boundCheckT
                   bool isIndexChildMultiplied=false;
                   TR::Node *mulNode=NULL;
                   TR::Node *strideNode=NULL;
-                  indexChild = isDependentOnInductionVariable(indexChild, changedIndexSymRefAtSomePoint, isIndexChildMultiplied, mulNode, strideNode);
+                  bool indVarOccursAsSecondChildOfSub=false;
+                  indexChild = isDependentOnInductionVariable(
+                     indexChild,
+                     changedIndexSymRefAtSomePoint,
+                     isIndexChildMultiplied,
+                     mulNode,
+                     strideNode,
+                     indVarOccursAsSecondChildOfSub);
                   if (!indexChild ||
                       !indexChild->getOpCode().hasSymbolReference() ||
                       !indexChild->getSymbolReference()->getSymbol()->isAutoOrParm() ||
@@ -2648,8 +2668,7 @@ bool TR_LoopVersioner::isDependentOnAllocation(TR::Node *useNode, int32_t recurs
 
 
    TR_UseDefInfo::BitVector defs(comp()->allocator());
-   useDefInfo->getUseDef(defs, useIndex);
-   if (!defs.IsZero())
+   if (useDefInfo->getUseDef(defs, useIndex))
       {
       bool pointsToNew = false;
       bool pointsToNonNew = false;
@@ -3092,11 +3111,7 @@ bool TR_LoopVersioner::isBranchSuitableToVersion(TR_ScratchList<TR::Block> *loop
           }
        else if (comp->getInlinedCallerSymRef(node->getByteCodeInfo().getCallerIndex()))
           {
-          TR_ValueProfileInfoManager *profileManager = TR_ValueProfileInfoManager::get(comp);
-          TR_AddressInfo *  valueInfo = (TR_AddressInfo *)profileManager->getValueInfo(ics._byteCodeInfo,
-                                                               comp,
-                                                               TR_ValueProfileInfoManager::allProfileInfoKinds,
-                                                               NotBigDecimalOrString);
+          TR_AddressInfo *valueInfo = static_cast<TR_AddressInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(ics._byteCodeInfo, comp, AddressInfo));
 
           if (valueInfo)
              {
@@ -3154,6 +3169,14 @@ bool TR_LoopVersioner::detectChecksToBeEliminated(TR_RegionStructure *whileLoop,
    whileLoop->getBlocks(&blocksInWhileLoop);
    int32_t loop_size = blocksInWhileLoop.getSize();
 
+   // Blocks are listed in order of a traversal over the tree of regions, i.e.
+   // they are grouped by region. As we iterate, maintain the current innermost
+   // region, and current innermost containing loop. The hottest intervening
+   // loop header only has to be recomputed when the innermost loop changes.
+   TR_RegionStructure *rememberedInnermostRegion = NULL;
+   TR_RegionStructure *rememberedInnermostLoop = NULL;
+   TR::Block *rememberedHotLoopHeader = NULL;
+
    ListIterator<TR::Block> blocksIt(&blocksInWhileLoop);
    TR::Block *nextBlock;
    for (nextBlock = blocksIt.getCurrent(); nextBlock; nextBlock=blocksIt.getNext())
@@ -3178,17 +3201,54 @@ bool TR_LoopVersioner::detectChecksToBeEliminated(TR_RegionStructure *whileLoop,
          static char *unimportantFrequencyRatioStr = feGetEnv("TR_loopVersionerControlUnimportantFrequencyRatio");
          int32_t unimportantFrequencyRatio = unimportantFrequencyRatioStr ? atoi(unimportantFrequencyRatioStr) : 20;
          int16_t blockFrequency = nextBlock->getFrequency();
-         int16_t loopFrequency = whileLoop->getEntryBlock()->getFrequency();
 
          // If the aggressive loop versioning flag is set, only do the unimportant block test
          // at lower optlevels
          bool aggressive = TR::Options::getCmdLineOptions()->getOption(TR_EnableAggressiveLoopVersioning);
 
+         static const bool useOuterHeader =
+            feGetEnv("TR_loopVersionerUseOuterHeaderForImportance") != NULL;
+
+         TR::Block *hotBlock = NULL;
+         if (useOuterHeader)
+            {
+            hotBlock = whileLoop->getEntryBlock();
+            }
+         else
+            {
+            // Find the hottest intervening loop header.
+            TR_BlockStructure * const bstruct = nextBlock->getStructureOf();
+            TR_RegionStructure * const region = bstruct->getParent();
+
+            hotBlock = rememberedHotLoopHeader;
+            if (region != rememberedInnermostRegion)
+               {
+               rememberedInnermostRegion = region;
+               TR_RegionStructure *loop = bstruct->getContainingLoop();
+               if (loop != rememberedInnermostLoop)
+                  {
+                  rememberedInnermostLoop = loop;
+                  hotBlock = whileLoop->getEntryBlock();
+                  while (loop != whileLoop)
+                     {
+                     TR::Block * const innerHeader = loop->getEntryBlock();
+                     if (innerHeader->getFrequency() > hotBlock->getFrequency())
+                        hotBlock = innerHeader;
+
+                     loop = loop->getContainingLoop();
+                     }
+
+                  rememberedHotLoopHeader = hotBlock;
+                  }
+               }
+            }
+
+         const int16_t loopFrequency = hotBlock->getFrequency();
          if ( (!aggressive || comp()->getMethodHotness() <= warm)
               && blockFrequency >= 0 // frequency must be valid
               && blockFrequency < loopFrequency / unimportantFrequencyRatio
-              && performTransformation(comp(), "%sDisregard unimportant block_%d frequency %d < loop %d frequency %d\n",
-                 OPT_DETAILS_LOOP_VERSIONER, nextBlock->getNumber(), blockFrequency, whileLoop->getNumber(), loopFrequency)
+              && performTransformation(comp(), "%sDisregard unimportant block_%d frequency %d < %d from block_%d in loop %d\n",
+                 OPT_DETAILS_LOOP_VERSIONER, nextBlock->getNumber(), blockFrequency, loopFrequency, hotBlock->getNumber(), whileLoop->getNumber())
             )
             {
             isUnimportant = true;
@@ -3438,6 +3498,11 @@ void TR_LoopVersioner::updateDefinitionsAndCollectProfiledExprs(TR::Node *parent
    if (node->getVisitCount() == visitCount)
       return;
 
+   // There will be no definitions or profiled expressions
+   // beneath a nopable guard
+   if (node->isNopableInlineGuard() || node->isOSRGuard())
+      return;
+
    if(node->getOpCode().isIndirect() && refineAliases())
       collectArrayAliasCandidates(node,visitCount);
 
@@ -3538,11 +3603,11 @@ void TR_LoopVersioner::updateDefinitionsAndCollectProfiledExprs(TR::Node *parent
                (profileLongParms /* && (valueInfo->getTopValue() == 0) */)))
              {
 #ifdef J9_PROJECT_SPECIFIC
-             TR_ValueInfo *valueInfo = (TR_ValueInfo *)TR_ValueProfiler::getProfiledValueInfo(node, comp());
+             TR_ValueInfo *valueInfo = static_cast<TR_ValueInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(node, comp(), ValueInfo));
              if (valueInfo)
                 {
                 if ((valueInfo->getTopProbability() > MIN_PROFILED_FREQUENCY) &&
-                    (valueInfo->_totalFrequency > 0) &&
+                    (valueInfo->getTotalFrequency() > 0) &&
                     !_containsCall &&
                     !node->getByteCodeInfo().doNotProfile() && !node->isNodeCreatedByPRE() &&
                     // Only collect nodes from unspecialized blocks to avoid specializing the same nodes twice
@@ -3558,7 +3623,7 @@ void TR_LoopVersioner::updateDefinitionsAndCollectProfiledExprs(TR::Node *parent
                      if (comp()->requiresSpineChecks() && node->getOpCodeValue() == TR::contigarraylength && valueInfo->getTopValue() == 0)
                         {
                         dumpOptDetails(comp(), "From value profiling, NOT USING inconclusive contigarraylength node %p with value 0 freq %d total freq %d\n",
-                           node, ((int32_t) (valueInfo->getTopProbability()*((float) valueInfo->_totalFrequency))), valueInfo->_totalFrequency);
+                           node, ((int32_t) (valueInfo->getTopProbability()*((float) valueInfo->getTotalFrequency()))), valueInfo->getTotalFrequency());
                         }
                      else
                         {
@@ -3566,7 +3631,7 @@ void TR_LoopVersioner::updateDefinitionsAndCollectProfiledExprs(TR::Node *parent
                         // it can be changed to an int (high int value == 0)
                         //
                         /////if (debug("traceLVE"))
-                        dumpOptDetails(comp(), "From value profiling, node %p has value %d freq %d total freq %d\n", node, valueInfo->getTopValue(), ((int32_t) (valueInfo->getTopProbability()*((float) valueInfo->_totalFrequency))), valueInfo->_totalFrequency);
+                        dumpOptDetails(comp(), "From value profiling, node %p has value %d freq %d total freq %d\n", node, valueInfo->getTopValue(), ((int32_t) (valueInfo->getTopProbability()*((float) valueInfo->getTotalFrequency()))), valueInfo->getTotalFrequency());
                         profiledNodes->add(node);
                         }
 
@@ -3586,7 +3651,7 @@ void TR_LoopVersioner::updateDefinitionsAndCollectProfiledExprs(TR::Node *parent
               !node->getSymbolReference()->getSymbol()->isAutoOrParm()) ||
              !node->getOpCode().hasSymbolReference()))
           {
-          traceMsg(comp(), "Added invariant node %p %s\n", node, node->getOpCode().getName());
+          if (trace()) traceMsg(comp(), "Added invariant node %p %s\n", node, node->getOpCode().getName());
           invariantNodes->add(new (trStackMemory()) TR_NodeParentSymRef(node, parent, NULL));
           }
        }
@@ -4063,7 +4128,7 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
          !loopLimit->getByteCodeInfo().doNotProfile())
          {
 #ifdef J9_PROJECT_SPECIFIC
-         TR_ValueInfo *valueInfo = (TR_ValueInfo *)TR_ValueProfiler::getProfiledValueInfo(loopLimit, comp());
+         TR_ValueInfo *valueInfo = static_cast<TR_ValueInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(loopLimit, comp(), ValueInfo));
          if (valueInfo)
             {
             if ( valueInfo->getTotalFrequency() )
@@ -4077,19 +4142,18 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
                   // the static limit, do not version based on async
                   // checks--leave them in, so we can still run the
                   // version without bounds checks
-                  TR_ScratchList<TR_ExtraAbstractInfo> valuesSortedByFrequency(trMemory());
-                  valueInfo->getSortedList(comp(), (List<TR_ExtraAbstractInfo> *) &valuesSortedByFrequency);
-                  ListIterator<TR_ExtraAbstractInfo> sortedValuesIt((List<TR_ExtraAbstractInfo> *) &valuesSortedByFrequency);
+                  TR_ScratchList<TR_ExtraValueInfo> valuesSortedByFrequency(trMemory());
+                  valueInfo->getSortedList(comp(), &valuesSortedByFrequency);
+                  ListIterator<TR_ExtraValueInfo> sortedValuesIt(&valuesSortedByFrequency);
 
                   float totalFreq = (float) valueInfo->getTotalFrequency();
                   float valuedFreq = 0;
 
-                  for (TR_ExtraAbstractInfo *profiledInfo = sortedValuesIt.getFirst(); profiledInfo != NULL; profiledInfo = sortedValuesIt.getNext())
+                  for (TR_ExtraValueInfo *profiledInfo = sortedValuesIt.getFirst(); profiledInfo != NULL; profiledInfo = sortedValuesIt.getNext())
                      {
-                     TR_ExtraValueInfo *extraInfo = (TR_ExtraValueInfo *) profiledInfo;
 
-                     if ( extraInfo->_value < profiledLoopLimit )
-                        valuedFreq += (float) extraInfo->_value;
+                     if ( profiledInfo->_value < profiledLoopLimit )
+                        valuedFreq += (float) profiledInfo->_value;
 
                      }
 
@@ -4149,7 +4213,7 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
             _canPredictIters = false;
          }
 
-      if (!refineAliases() && _canPredictIters && !comp()->isProfilingCompilation() &&
+      if (!refineAliases() && _canPredictIters && comp()->getProfilingMode() != JitProfiling &&
           performTransformation(comp(), "%s Creating test outside loop for deciding if async check is required\n", OPT_DETAILS_LOOP_VERSIONER))
          {
          TR::Node *lowerBound = _loopTestTree->getNode()->getFirstChild()->duplicateTreeForCodeMotion();
@@ -4186,7 +4250,7 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
 
    // Construct the tests for invariant expressions that need
    // to be null checked.
-   
+
    // default hotness threshold
    TR_Hotness hotnessThreshold = hot;
 
@@ -4197,7 +4261,7 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
       hotnessThreshold = maxHotness; // threshold which can't be matched by the > operator
       }
 
-   if (comp()->cg()->performsChecksExplicitly() || 
+   if (comp()->cg()->performsChecksExplicitly() ||
        (comp()->getMethodHotness() > hotnessThreshold))
       {
       if (!nullCheckTrees->isEmpty() &&
@@ -4379,7 +4443,7 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
       dumpOptDetails(comp(), "The node %p has been created for testing if virtual guard is required\n", nextComparisonNode);
       }
 
-   // If all yield points have been removed from the loop but OSR guards remain, 
+   // If all yield points have been removed from the loop but OSR guards remain,
    // they can be versioned out. Currently, this code assumes all OSR guards
    // will be patched by the same runtime assumptions, so only one OSR guard is added
    // to branch to the slow loop.
@@ -4399,7 +4463,7 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
          {
          for (TR::TreeTop *tt = block->getEntry(); tt != block->getExit(); tt = tt->getNextTreeTop())
             {
-            if (comp()->isPotentialOSRPoint(tt->getNode()))
+            if (comp()->isPotentialOSRPoint(tt->getNode(), NULL, true))
                {
                safeToRemoveOSRGuards = false;
                break;
@@ -4419,7 +4483,8 @@ void TR_LoopVersioner::versionNaturalLoop(TR_RegionStructure *whileLoop, List<TR
 
             // Duplicate the OSR guard tree
             TR::Node *guard = osrGuard->duplicateTree();
-            traceMsg(comp(), "OSRGuard n%dn has been created to guard against method invalidation\n", guard->getGlobalIndex());
+            if (trace())
+               traceMsg(comp(), "OSRGuard n%dn has been created to guard against method invalidation\n", guard->getGlobalIndex());
             guard->setBranchDestination(clonedLoopInvariantBlock->getEntry());
             comparisonTrees.add(guard);
             }
@@ -4994,8 +5059,8 @@ void TR_LoopVersioner::buildNullCheckComparisonsTree(List<TR::Node> *nullChecked
               nextNode->getData()->getFirstChild()->getOpCode().hasSymbolReference() &&
               nextNode->getData()->getFirstChild()->getSymbolReference()->getSymbol()->isAuto();
 
-         if (nextNode->getData()->getOpCode().hasSymbolReference() &&
-             nextNode->getData()->getSymbolReference()->getSymbol()->isAuto() ||
+         if ((nextNode->getData()->getOpCode().hasSymbolReference() &&
+             nextNode->getData()->getSymbolReference()->getSymbol()->isAuto()) ||
              nullCheckReferenceisField)
             {
             TR::Node *invariantNullCheckReference = isDependentOnInvariant(nextNode->getData());
@@ -5568,7 +5633,7 @@ bool TR_LoopVersioner::buildSpecializationTree(List<TR::TreeTop> *nullCheckTrees
          if (!duplicateNode)
             duplicateNode = specializedNode->duplicateTreeForCodeMotion();
 
-         TR_ValueInfo *valueInfo = (TR_ValueInfo *)TR_ValueProfiler::getProfiledValueInfo(specializedNode, comp());
+         TR_ValueInfo *valueInfo = static_cast<TR_ValueInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(specializedNode, comp(), ValueInfo));
          int32_t value = valueInfo->getTopValue();
 
          TR::Node *comparisonNode = NULL;
@@ -5884,8 +5949,8 @@ void TR_LoopVersioner::buildConditionalTree(List<TR::TreeTop> *nullCheckTrees, L
                   }
 
                if(isInductionVar &&
-                 (conditionalNode->isVersionableIfWithMaxExpr() && isAddition ||
-                  conditionalNode->isVersionableIfWithMinExpr() && !isAddition ))
+                 ((conditionalNode->isVersionableIfWithMaxExpr() && isAddition) ||
+                  (conditionalNode->isVersionableIfWithMinExpr() && !isAddition) ))
                   {
                   replaceIndexWithExpr=true;
                   //replace ind var with max value;
@@ -6678,7 +6743,14 @@ void TR_LoopVersioner::buildBoundCheckComparisonsTree(List<TR::TreeTop> *nullChe
 
             if (!foundInductionVariable)
                {
-               indexChild = isDependentOnInductionVariable(indexChild, changedIndexSymRefAtSomePoint, isIndexChildMultiplied, mulNode, strideNode);
+               indexChild = isDependentOnInductionVariable(
+                  indexChild,
+                  changedIndexSymRefAtSomePoint,
+                  isIndexChildMultiplied,
+                  mulNode,
+                  strideNode,
+                  indVarOccursAsSecondChildOfSub);
+
                if (!indexChild ||
                    !indexChild->getOpCode().hasSymbolReference() ||
                    !indexChild->getSymbolReference()->getSymbol()->isAutoOrParm() ||
@@ -7254,21 +7326,21 @@ void TR_LoopVersioner::buildBoundCheckComparisonsTree(List<TR::TreeTop> *nullChe
                      TR::Node *storeRhs = storeNode->getFirstChild()->duplicateTree();
                      TR::Node *replacementLoad = TR::Node::createWithSymRef(storeNode, comp()->il.opCodeForDirectLoad(storeNode->getDataType()), 0, indexSymRef);
                      //printf("Changing test in %s\n", comp()->signature());
+                     if (!storeRhs->getOpCode().isLoad())
+                        {
+                        int visitCount = comp()->incVisitCount();
+                        replaceInductionVariable(NULL, storeRhs, -1, origIndexSymRef->getReferenceNumber(), replacementLoad, visitCount);
+                        }
+                     else
+                        storeRhs = replacementLoad;
+
                      if (!firstChild->getOpCode().isLoad())
                         {
-  	                     if (!storeRhs->getOpCode().isLoad())
-                           {
-                           int visitCount = comp()->incVisitCount();
-                           replaceInductionVariable(NULL, storeRhs, -1, origIndexSymRef->getReferenceNumber(), replacementLoad, visitCount);
-			                  }
-                        else
-			                  storeRhs = replacementLoad;
-
                         visitCount = comp()->incVisitCount();
                         replaceInductionVariable(NULL, firstChild, -1, origIndexSymRef->getReferenceNumber(), storeRhs, visitCount);
                         }
                      else
-                        firstChild = replacementLoad; //storeRhs;
+                        firstChild = storeRhs;
                      }
                   }
                if(!isIndexChildMultiplied)
@@ -7543,10 +7615,18 @@ void TR_LoopVersioner::collectAllExpressionsToBeChecked(List<TR::TreeTop> *nullC
                TR::Node *duplicateCheckedValue = node->getFirstChild()->duplicateTreeForCodeMotion();
                TR::Node *vftLoad = TR::Node::createWithSymRef(TR::aloadi, 1, 1, duplicateCheckedValue, comp()->getSymRefTab()->findOrCreateVftSymbolRef());
                //TR::Node *componentTypeLoad = TR::Node::create(TR::aloadi, 1, vftLoad, comp()->getSymRefTab()->findOrCreateArrayComponentTypeSymbolRef());
-               TR::Node *romClassLoad = TR::Node::createWithSymRef(TR::aloadi, 1, 1, vftLoad, comp()->getSymRefTab()->findOrCreateClassRomPtrSymbolRef());
-               TR::Node *isArrayField = TR::Node::createWithSymRef(TR::iloadi, 1, 1, romClassLoad, comp()->getSymRefTab()->findOrCreateClassIsArraySymbolRef());
-               TR::Node *andConstNode = TR::Node::create(isArrayField, TR::iconst, 0, TR::Compiler->cls.flagValueForArrayCheck(comp()));
-               TR::Node * andNode   = TR::Node::create(TR::iand, 2, isArrayField, andConstNode);
+               TR::Node *classFlag = NULL;
+               if (TR::Compiler->target.is32Bit())
+                  {
+                  classFlag = TR::Node::createWithSymRef(TR::iloadi, 1, 1, vftLoad, comp()->getSymRefTab()->findOrCreateClassAndDepthFlagsSymbolRef());
+                  }
+               else
+                  {
+                  classFlag = TR::Node::createWithSymRef(TR::lloadi, 1, 1, vftLoad, comp()->getSymRefTab()->findOrCreateClassAndDepthFlagsSymbolRef());
+                  classFlag = TR::Node::create(TR::l2i, 1, classFlag);
+                  }
+               TR::Node *andConstNode = TR::Node::create(classFlag, TR::iconst, 0, TR::Compiler->cls.flagValueForArrayCheck(comp()));
+               TR::Node * andNode   = TR::Node::create(TR::iand, 2, classFlag, andConstNode);
                TR::Node *cmp = TR::Node::createif(TR::ificmpne, andNode, andConstNode, exitGotoBlock->getEntry());
                comparisonTrees->add(cmp);
                dumpOptDetails(comp(), "The node %p has been created for testing if object is of array type\n", cmp);
@@ -8409,7 +8489,20 @@ bool TR_LoopVersioner::isStoreInRequiredForm(int32_t symRefNum, TR_Structure *lo
    TR::Node *secondChild = _constNode;
    if (!secondChild->getOpCode().isLoadConst() && (secondChild->getType().isInt32() || secondChild->getType().isInt64()))
       {
-      if (secondChild->getOpCode().isLoadVarDirect())
+      // This case is currently not handled correctly:
+      // 1. Versioning tests think the step is zero, and they divide by zero.
+      // 2. The initial versioning test (that checks the sign of the variable
+      // loaded by _constNode) always checks that the step is positive, even if
+      // it should be negative in order to agree with the direction of the loop
+      // test comparison.
+      static const bool allowVariableStep =
+         feGetEnv("TR_loopVersionerAllowVariableStep") != NULL;
+      if (!allowVariableStep)
+         return false;
+
+      // This requires isAutoOrParm() because other threads can write to statics
+      if (secondChild->getOpCode().isLoadVarDirect()
+          && secondChild->getSymbol()->isAutoOrParm())
          {
          int32_t timesWritten = 0;
          if (!isSymbolReferenceWrittenNumberOfTimesInStructure(loopStructure, secondChild->getSymbolReference()->getReferenceNumber(), &timesWritten, 0))

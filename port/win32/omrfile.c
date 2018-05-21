@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -558,7 +562,7 @@ omrfile_open(struct OMRPortLibrary *portLibrary, const char *path, int32_t flags
 	shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 
 	/* this flag allows files to be deleted/renamed while they are still open, which more in line with unix semantics */
-	if (J9_ARE_ALL_BITS_SET(flags, EsOpenShareDelete)) {
+	if (OMR_ARE_ALL_BITS_SET(flags, EsOpenShareDelete)) {
 		shareMode = shareMode | FILE_SHARE_DELETE;
 	}
 
@@ -679,15 +683,13 @@ omrfile_read(struct OMRPortLibrary *portLibrary, intptr_t fd, void *buf, intptr_
 int64_t
 omrfile_seek(struct OMRPortLibrary *portLibrary, intptr_t fd, int64_t offset, int32_t whence)
 {
-	DWORD moveMethod, moveResult;
-	DWORD lowerOffset, upperOffset;
+	DWORD moveMethod;
+	LARGE_INTEGER liOffset;
 	int64_t result;
 	int32_t error;
 
 	Trc_PRT_file_seek_Entry(fd, offset, whence);
-
-	lowerOffset = (DWORD)(offset & 0xFFFFFFFF);
-	upperOffset = (DWORD)(offset >> 32);
+	liOffset.QuadPart = offset;
 
 	if ((whence < EsSeekSet) || (whence > EsSeekEnd)) {
 		Trc_PRT_file_seek_Exit(-1);
@@ -702,8 +704,8 @@ omrfile_seek(struct OMRPortLibrary *portLibrary, intptr_t fd, int64_t offset, in
 	if (whence == EsSeekCur) {
 		moveMethod = FILE_CURRENT;
 	}
-	moveResult = SetFilePointer((HANDLE)fd, lowerOffset, &upperOffset, moveMethod);
-	if (INVALID_SET_FILE_POINTER == moveResult) {
+	liOffset.LowPart = SetFilePointer((HANDLE)fd, liOffset.LowPart, &liOffset.HighPart, moveMethod);
+	if (INVALID_SET_FILE_POINTER == liOffset.LowPart) {
 		error = GetLastError();
 		if (error != NO_ERROR) {
 			portLibrary->error_set_last_error(portLibrary, error, findError(error));
@@ -712,8 +714,7 @@ omrfile_seek(struct OMRPortLibrary *portLibrary, intptr_t fd, int64_t offset, in
 		}
 	}
 
-	result = (int64_t)upperOffset << 32;
-	result |= moveResult;
+	result = (int64_t)liOffset.QuadPart;
 
 	Trc_PRT_file_seek_Exit(result);
 
@@ -864,7 +865,7 @@ omrfile_vprintf(struct OMRPortLibrary *portLibrary, intptr_t fd, const char *for
 }
 
 intptr_t
-omrfile_write(struct OMRPortLibrary *portLibrary, intptr_t fd, void *buf, intptr_t nbytes)
+omrfile_write(struct OMRPortLibrary *portLibrary, intptr_t fd, const void *buf, intptr_t nbytes)
 {
 	DWORD	nCharsWritten;
 	intptr_t toWrite, offset = 0;

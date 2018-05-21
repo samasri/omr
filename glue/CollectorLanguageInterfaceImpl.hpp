@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef COLLECTORLANGUAGEINTERFACEIMPL_HPP_
@@ -60,38 +64,8 @@ public:
 	static MM_CollectorLanguageInterfaceImpl *newInstance(MM_EnvironmentBase *env);
 	virtual void kill(MM_EnvironmentBase *env);
 
-#if defined(OMR_GC_MODRON_CONCURRENT_MARK)
-	virtual MM_ConcurrentSafepointCallback* concurrentGC_createSafepointCallback(MM_EnvironmentBase *env);
-	virtual omrsig_handler_fn concurrentGC_getProtectedSignalHandler(void **signalHandlerArg) {*signalHandlerArg = NULL; return NULL;}
-	virtual void concurrentGC_concurrentInitializationComplete(MM_EnvironmentStandard *env) {}
-	virtual bool concurrentGC_forceConcurrentKickoff(MM_EnvironmentBase *env, uintptr_t gcCode, uintptr_t *languageKickoffReason)
-	{
-		if (NULL != languageKickoffReason) {
-			*languageKickoffReason = NO_LANGUAGE_KICKOFF_REASON;
-		}
-		return false;
-	}
-	virtual uintptr_t concurrentGC_getNextTracingMode(uintptr_t executionMode);
-	virtual uintptr_t concurrentGC_collectRoots(MM_EnvironmentStandard *env, uintptr_t concurrentStatus, bool *collectedRoots, bool *paidTax);
-	virtual void concurrentGC_signalThreadsToTraceStacks(MM_EnvironmentStandard *env) {}
-	virtual void concurrentGC_signalThreadsToDirtyCards(MM_EnvironmentStandard *env) {}
-	virtual void concurrentGC_signalThreadsToStopDirtyingCards(MM_EnvironmentStandard *env) {}
-	virtual void concurrentGC_kickoffCardCleaning(MM_EnvironmentStandard *env) {}
-	virtual void concurrentGC_flushRegionReferenceLists(MM_EnvironmentBase *env) {}
-	virtual void concurrentGC_flushThreadReferenceBuffer(MM_EnvironmentBase *env) {}
-	virtual bool concurrentGC_isThreadReferenceBufferEmpty(MM_EnvironmentBase *env) {return true;}
-	virtual bool concurrentGC_startConcurrentScanning(MM_EnvironmentStandard *env, uintptr_t *bytesTraced, bool *collectedRoots) {*bytesTraced = 0; *collectedRoots = false; return false;}
-	virtual void concurrentGC_concurrentScanningStarted(MM_EnvironmentStandard *env, bool isConcurrentScanningComplete) {}
-	virtual bool concurrentGC_isConcurrentScanningComplete(MM_EnvironmentBase *env) {return true;}
-	virtual uintptr_t concurrentGC_reportConcurrentScanningMode(MM_EnvironmentBase *env) {return 0;}
-	virtual void concurrentGC_scanThread(MM_EnvironmentBase *env) {}
-#endif /* OMR_GC_MODRON_CONCURRENT_MARK */
-
 #if defined(OMR_GC_MODRON_COMPACTION)
-	virtual void compactScheme_languageMasterSetupForGC(MM_EnvironmentBase *env);
-	virtual void compactScheme_fixupRoots(MM_EnvironmentBase *env, MM_CompactScheme *compactScheme);
-	virtual void compactScheme_workerCleanupAfterGC(MM_EnvironmentBase *env);
-	virtual void compactScheme_verifyHeap(MM_EnvironmentBase *env, MM_MarkMap *markMap);
+	virtual CompactPreventedReason parallelGlobalGC_checkIfCompactionShouldBePrevented(MM_EnvironmentBase *env) {return COMPACT_PREVENTED_NONE;}
 #endif /* OMR_GC_MODRON_COMPACTION */
 
 #if defined(OMR_GC_MODRON_SCAVENGER)

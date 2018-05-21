@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /*
@@ -23,7 +26,7 @@
 
 
       // BAD
-   0,
+   S390OpProp_None,
 
       // A
    S390OpProp_Is32Bit |
@@ -51,7 +54,6 @@
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
    S390OpProp_SetsSignFlag |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // AEB
@@ -73,7 +75,6 @@
    S390OpProp_SetsOverflowFlag |
    S390OpProp_UsesTarget |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate |
    S390OpProp_SetsOperand1,
 
       // AG
@@ -100,7 +101,6 @@
    S390OpProp_SetsOverflowFlag |
    S390OpProp_UsesTarget |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate |
    S390OpProp_SetsOperand1,
 
       // AGFR
@@ -188,7 +188,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsCC,
 
@@ -198,7 +197,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_TargetHW |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate |
    S390OpProp_SetsOperand1,
 
       // AL
@@ -207,7 +205,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALC
@@ -217,7 +214,6 @@
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALCG
@@ -227,7 +223,6 @@
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALCGR
@@ -235,7 +230,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALCR
@@ -243,7 +237,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALFI
@@ -251,7 +244,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALG
@@ -260,7 +252,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALGF
@@ -269,7 +260,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALGFI
@@ -277,20 +267,17 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALGFR
    S390OpProp_Is32To64Bit |
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALGHSIK
    S390OpProp_Is64Bit |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_IsExtendedImmediate |
    S390OpProp_SetsOperand1,
 
@@ -298,19 +285,16 @@
    S390OpProp_Is64Bit |
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALGRK
    S390OpProp_Is64Bit |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALHHHR
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_TargetHW |
    S390OpProp_SrcHW |
    S390OpProp_Src2HW |
@@ -319,7 +303,6 @@
       // ALHHLR
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_TargetHW |
    S390OpProp_SrcHW |
    S390OpProp_Src2LW |
@@ -328,7 +311,6 @@
       // ALHSIK
    S390OpProp_Is32Bit |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_IsExtendedImmediate |
    S390OpProp_SetsOperand1,
 
@@ -336,19 +318,16 @@
    S390OpProp_Is32Bit |
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALRK
    S390OpProp_Is32Bit |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // ALSIH
    S390OpProp_SetsZeroFlag |
    S390OpProp_UsesTarget |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_IsExtendedImmediate |
    S390OpProp_TargetHW |
    S390OpProp_SetsOperand1,
@@ -365,8 +344,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsCarryFlag |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // AR
@@ -386,7 +363,6 @@
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
    S390OpProp_SetsSignFlag |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1,
@@ -398,7 +374,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // BAL
@@ -460,10 +435,10 @@
    S390OpProp_SetsOperand1,
 
       // BPP
-   S390OpProp_IsExecutionHint,
+   S390OpProp_None,
 
       // BPRP
-   S390OpProp_IsExecutionHint,
+   S390OpProp_None,
 
       // BRAS
    S390OpProp_BranchOp |
@@ -587,7 +562,6 @@
       // CDGTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // CDLFBR
@@ -680,8 +654,7 @@
    S390OpProp_Is32Bit |
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
-   S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate,
+   S390OpProp_IsExtendedImmediate,
 
       // CG
    S390OpProp_Is64Bit |
@@ -703,7 +676,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_SetsSignFlag |
    S390OpProp_SetsOverflowFlag |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // CGEBR
@@ -724,8 +696,7 @@
    S390OpProp_Is32To64Bit |
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
-   S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate,
+   S390OpProp_IsExtendedImmediate,
 
       // CGFR
    S390OpProp_Is32To64Bit |
@@ -797,7 +768,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_SetsSignFlag |
    S390OpProp_SetsOverflowFlag |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_SetsOperand1,
 
@@ -837,8 +807,7 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
       // CIB
    S390OpProp_Is32Bit |
@@ -849,8 +818,7 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_TargetHW |
-   S390OpProp_IsSignedImmediate,
+   S390OpProp_TargetHW,
 
       // CIJ
    S390OpProp_Is32Bit |
@@ -875,16 +843,12 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_SSSchedulingCandidate |
-   S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefTwoIsLoad,
+   S390OpProp_HasTwoMemoryReferences,
 
       // CLCL
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_SetsOperand1 |
@@ -895,7 +859,6 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_SetsOperand1 |
@@ -906,7 +869,6 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_SetsOperand1 |
@@ -1064,8 +1026,7 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
       // CLI
    S390OpProp_IsCompare |
@@ -1109,8 +1070,7 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
       // CLR
    S390OpProp_Is32Bit |
@@ -1145,7 +1105,6 @@
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_UsesTarget,
 
       // CPYA
@@ -1192,7 +1151,6 @@
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_UsesTarget |
    S390OpProp_SetsOperand3 |
@@ -1252,7 +1210,6 @@
       // CXGTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1,
@@ -1282,8 +1239,7 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
       // D
    S390OpProp_Is32Bit |
@@ -1311,7 +1267,6 @@
       // DDTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsFPC |
    S390OpProp_SetsOperand1,
 
@@ -1401,7 +1356,6 @@
       // DXTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsFPC |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
@@ -1411,7 +1365,7 @@
    S390OpProp_SetsOperand1,
 
       // ECAG
-   0,
+   S390OpProp_None,
 
       // EEDTR
    S390OpProp_DoubleFP |
@@ -1445,7 +1399,7 @@
    S390OpProp_SetsOperand1,
 
       // ETND
-   0,
+   S390OpProp_None,
 
       // EX
    S390OpProp_IsStore |
@@ -1507,7 +1461,6 @@
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_UsesTarget,
 
@@ -1515,7 +1468,6 @@
    S390OpProp_TargetLW |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_UsesTarget,
 
@@ -1576,9 +1528,7 @@
       // KIMD
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1587,9 +1537,7 @@
       // KLMD
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1598,9 +1546,7 @@
       // KM
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1609,9 +1555,7 @@
       // KMAC
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1620,9 +1564,7 @@
       // KMC
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1631,9 +1573,7 @@
       // KMCTR
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1642,9 +1582,7 @@
       // KMF
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1653,9 +1591,7 @@
       // KMO
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -1704,7 +1640,6 @@
    S390OpProp_IsLoad |
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOperand1,
 
@@ -1713,22 +1648,18 @@
    S390OpProp_IsLoad |
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOperand1,
 
       // LAM
    S390OpProp_IsLoad |
-   S390OpProp_ReadsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2,
 
       // LAMY
    S390OpProp_IsLoad |
-   S390OpProp_ReadsMultipleRegs |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2,
 
@@ -1798,7 +1729,6 @@
 
       // LAY
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // LB
@@ -1877,7 +1807,6 @@
    S390OpProp_DoubleFP |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // LDGR
@@ -1893,7 +1822,6 @@
       // LDY
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // LE
@@ -1908,7 +1836,6 @@
       // LEDTR
    S390OpProp_SingleFP |
    S390OpProp_DoubleFP |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // LER
@@ -1918,7 +1845,6 @@
       // LEY
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // LFH
@@ -1973,7 +1899,6 @@
       // LGFI
    S390OpProp_Is32To64Bit |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate |
    S390OpProp_SetsOperand1,
 
       // LGFR
@@ -2039,7 +1964,6 @@
    S390OpProp_Is32Bit |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // LLC
@@ -2163,7 +2087,6 @@
       // LM
    S390OpProp_IsLoad |
    S390OpProp_Is32Bit |
-   S390OpProp_ReadsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_UsesRegRangeForTarget |
    S390OpProp_SetsOperand1 |
@@ -2172,7 +2095,6 @@
       // LMG
    S390OpProp_IsLoad |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_UsesRegRangeForTarget |
    S390OpProp_SetsOperand1 |
@@ -2181,10 +2103,8 @@
       // LMY
    S390OpProp_IsLoad |
    S390OpProp_Is32Bit |
-   S390OpProp_ReadsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_UsesRegRangeForTarget |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2,
 
@@ -2281,11 +2201,8 @@
    S390OpProp_Is32Bit |
    S390OpProp_IsLoad |
    S390OpProp_UsesRegPairForTarget |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
    S390OpProp_SetsCC |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // LPDBR
@@ -2302,11 +2219,8 @@
    S390OpProp_Is64Bit |
    S390OpProp_IsLoad |
    S390OpProp_UsesRegPairForTarget |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
    S390OpProp_SetsCC |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // LPEBR
@@ -2452,7 +2366,6 @@
    S390OpProp_IsLoad |
    S390OpProp_Is32Bit |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // LZDR
@@ -2488,7 +2401,6 @@
    S390OpProp_IsLoad |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // MADB
@@ -2527,7 +2439,6 @@
       // MDTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // MEEB
@@ -2557,7 +2468,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // MHI
@@ -2606,7 +2516,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // MSDB
@@ -2663,18 +2572,13 @@
       // MVC
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVCL
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -2698,13 +2602,11 @@
       // MVIY
    S390OpProp_IsStore |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // MXTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1,
@@ -2722,11 +2624,7 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // NG
@@ -2757,7 +2655,7 @@
    S390OpProp_SetsOperand1,
 
       // NIAI
-   S390OpProp_IsExecutionHint,
+   S390OpProp_None,
 
       // NIHF
    S390OpProp_TargetHW |
@@ -2803,7 +2701,6 @@
    S390OpProp_IsStore |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // NR
@@ -2828,7 +2725,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // O
@@ -2844,11 +2740,7 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // OG
@@ -2922,7 +2814,6 @@
    S390OpProp_IsStore |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // OR
@@ -2942,7 +2833,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // PFD
@@ -2959,20 +2849,17 @@
    S390OpProp_SetsOperand1,
 
       // PPA
-   S390OpProp_IsExecutionHint |
    S390OpProp_UsesTarget,
 
       // QADTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsFPC |
    S390OpProp_SetsOperand1,
 
       // QAXTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsFPC |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
@@ -3031,13 +2918,11 @@
       // RRDTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // RRXTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1,
@@ -3077,7 +2962,6 @@
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
    S390OpProp_SetsSignFlag |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_SetsOperand1,
 
       // SEB
@@ -3171,7 +3055,6 @@
    S390OpProp_SetsOverflowFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // SL
@@ -3180,8 +3063,7 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsOperand1 |
-   S390OpProp_SetsCarryFlag,
+   S390OpProp_SetsOperand1,
 
       // SLA
    S390OpProp_Is32Bit |
@@ -3211,7 +3093,6 @@
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLBG
@@ -3221,7 +3102,6 @@
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLBGR
@@ -3229,7 +3109,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLBR
@@ -3237,7 +3116,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
    S390OpProp_ReadsCC |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLDA
@@ -3269,7 +3147,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLG
@@ -3278,7 +3155,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLGF
@@ -3287,7 +3163,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLGFI
@@ -3295,27 +3170,23 @@
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLGFR
    S390OpProp_Is32To64Bit |
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLGR
    S390OpProp_Is64Bit |
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLGRK
    S390OpProp_Is64Bit |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLHHHR
@@ -3323,7 +3194,6 @@
    S390OpProp_TargetHW |
    S390OpProp_SrcHW |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLHHLR
@@ -3331,7 +3201,6 @@
    S390OpProp_TargetHW |
    S390OpProp_SrcLW |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLL
@@ -3353,13 +3222,11 @@
    S390OpProp_Is32Bit |
    S390OpProp_UsesTarget |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLRK
    S390OpProp_Is32Bit |
    S390OpProp_SetsZeroFlag |
-   S390OpProp_SetsCarryFlag |
    S390OpProp_SetsOperand1,
 
       // SLY
@@ -3368,8 +3235,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsCarryFlag |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // SQDB
@@ -3460,7 +3325,6 @@
       // SRST
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
    S390OpProp_UsesTarget |
@@ -3469,7 +3333,6 @@
       // SRSTU
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
    S390OpProp_UsesTarget |
@@ -3477,8 +3340,7 @@
 
       // SRNMT
    S390OpProp_DoubleFP |
-   S390OpProp_Is64Bit |
-   S390OpProp_SetsDFPRoundingMode,
+   S390OpProp_Is64Bit,
 
       // ST
    S390OpProp_IsStore |
@@ -3488,15 +3350,12 @@
 
       // STAM
    S390OpProp_IsStore |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOperand3,
 
       // STAMY
    S390OpProp_IsStore |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand3,
 
       // STC
@@ -3542,14 +3401,12 @@
    S390OpProp_Is32Bit |
    S390OpProp_IsStore |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand3,
 
       // STCY
    S390OpProp_Is32Bit |
    S390OpProp_IsStore |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand2,
 
       // STD
@@ -3559,8 +3416,7 @@
 
       // STDY
    S390OpProp_IsStore |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
       // STE
    S390OpProp_IsStore |
@@ -3569,8 +3425,7 @@
 
       // STEY
    S390OpProp_IsStore |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
       // STFH
    S390OpProp_IsStore |
@@ -3602,13 +3457,11 @@
    S390OpProp_Is32Bit |
    S390OpProp_IsStore |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand2,
 
       // STM
    S390OpProp_IsStore |
    S390OpProp_Is32Bit |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_UsesRegRangeForTarget |
    S390OpProp_SetsOperand3,
@@ -3616,7 +3469,6 @@
       // STMG
    S390OpProp_IsStore |
    S390OpProp_Is64Bit |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_UsesRegRangeForTarget |
    S390OpProp_SetsOperand3,
@@ -3624,10 +3476,8 @@
       // STMY
    S390OpProp_IsStore |
    S390OpProp_Is32Bit |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_UsesRegRangeForTarget |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand3,
 
       // STOC
@@ -3681,14 +3531,12 @@
    S390OpProp_IsStore |
    S390OpProp_Is32Bit |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand2,
 
       // SXTR
    S390OpProp_DoubleFP |
    S390OpProp_Is64Bit |
    S390OpProp_SetsSignFlag |
-   S390OpProp_ReadsDFPRoundingMode |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1,
@@ -3700,7 +3548,6 @@
    S390OpProp_SetsOverflowFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // TABORT
@@ -3783,27 +3630,20 @@
       // TMY
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
       // TR
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // TRE
    S390OpProp_SetsCC |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1,
 
@@ -3815,9 +3655,7 @@
    S390OpProp_SetsCC |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_ImplicitlyUsesGPR1 |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
@@ -3828,9 +3666,7 @@
    S390OpProp_SetsCC |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_ImplicitlyUsesGPR1 |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
@@ -3840,20 +3676,15 @@
    S390OpProp_ImplicitlySetsGPR2 |
    S390OpProp_ImplicitlySetsGPR1 |
    S390OpProp_SetsCC |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_IsLoad |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefTwoIsLoad,
+   S390OpProp_IsLoad,
 
       // TRTO
    S390OpProp_UsesTarget |
    S390OpProp_SetsCC |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_ImplicitlyUsesGPR1 |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
@@ -3864,9 +3695,7 @@
    S390OpProp_SetsCC |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_ImplicitlyUsesGPR1 |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
@@ -3877,7 +3706,6 @@
    S390OpProp_SetsCC |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_ImplicitlyUsesGPR1 |
    S390OpProp_SetsOperand1,
 
@@ -3886,7 +3714,6 @@
    S390OpProp_SetsCC |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_ImplicitlyUsesGPR1 |
    S390OpProp_SetsOperand1,
 
@@ -3909,11 +3736,7 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // XG
@@ -3963,7 +3786,6 @@
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // XR
@@ -3983,7 +3805,6 @@
    S390OpProp_SetsZeroFlag |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // ASI
@@ -4151,14 +3972,12 @@
    S390OpProp_Is32Bit |
    S390OpProp_UsesTarget |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate |
    S390OpProp_SetsOperand1,
 
       // MSGFI
    S390OpProp_Is64Bit |
    S390OpProp_UsesTarget |
    S390OpProp_IsExtendedImmediate |
-   S390OpProp_IsSignedImmediate |
    S390OpProp_SetsOperand1,
 
       // AP
@@ -4167,11 +3986,7 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // BASSM
@@ -4211,7 +4026,6 @@
    S390OpProp_LongDispSupported |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_UsesRegPairForSource |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_UsesTarget |
    S390OpProp_SetsOperand3 |
@@ -4241,7 +4055,6 @@
    S390OpProp_SetsCC |
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2,
@@ -4249,7 +4062,6 @@
       // CKSM
    S390OpProp_UsesRegPairForSource |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_SetsCC |
    S390OpProp_SetsOperand1,
 
@@ -4257,10 +4069,7 @@
    S390OpProp_IsCompare |
    S390OpProp_SetsCompareFlag |
    S390OpProp_IsLoad |
-   S390OpProp_SSSchedulingCandidate |
-   S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefTwoIsLoad,
+   S390OpProp_HasTwoMemoryReferences,
 
       // CPSDR
    S390OpProp_SingleFP |
@@ -4272,9 +4081,7 @@
 
       // CUUTF
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsCC |
@@ -4283,9 +4090,7 @@
 
       // CUTFU
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsCC |
@@ -4294,36 +4099,28 @@
 
       // CU14
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsCC,
 
       // CU24
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsCC,
 
       // CU41
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsCC,
 
       // CU42
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsCC,
@@ -4331,7 +4128,6 @@
       // CUSE
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2 |
    S390OpProp_ImplicitlyUsesGPR0 |
@@ -4345,7 +4141,6 @@
       // CVBY
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // CVBG
@@ -4357,11 +4152,7 @@
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_UsesTarget |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // ED
@@ -4369,11 +4160,7 @@
    S390OpProp_IsStore |
    S390OpProp_UsesTarget |
    S390OpProp_SetsCC |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // EDMK
@@ -4382,11 +4169,7 @@
    S390OpProp_IsStore |
    S390OpProp_UsesTarget |
    S390OpProp_SetsCC |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // ESAR
@@ -4397,14 +4180,12 @@
 
       // EREG
    S390OpProp_Is32Bit |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_UsesRegRangeForTarget |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2,
 
       // EREGG
    S390OpProp_Is64Bit |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_UsesRegRangeForTarget |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2,
@@ -4430,12 +4211,10 @@
 
       // IVSK
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_SetsOperand1,
 
       // ISKE
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_SetsOperand1,
 
       // LAE
@@ -4444,7 +4223,6 @@
 
       // LAEY
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // LCBB
@@ -4498,17 +4276,14 @@
       // LRAY
    S390OpProp_LongDispSupported |
    S390OpProp_SetsCC |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1,
 
       // LURA
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_SetsOperand1,
 
       // LURAG
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_SetsOperand1,
 
       // MC
@@ -4518,11 +4293,7 @@
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_UsesTarget |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MSCH
@@ -4538,8 +4309,6 @@
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVCSK
@@ -4548,8 +4317,6 @@
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVCK
@@ -4557,16 +4324,12 @@
    S390OpProp_IsStore |
    S390OpProp_SetsCC |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVCLU
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -4576,9 +4339,7 @@
       // MVCLE
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_UsesRegPairForSource |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
@@ -4590,8 +4351,6 @@
    S390OpProp_IsStore |
    S390OpProp_SetsCC |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVCS
@@ -4599,46 +4358,30 @@
    S390OpProp_IsStore |
    S390OpProp_SetsCC |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVN
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVO
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVZ
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // MVST
    S390OpProp_IsLoad |
    S390OpProp_UsesTarget |
-   S390OpProp_IsImplicitLoad |
    S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore |
    S390OpProp_SetsCC |
    S390OpProp_ImplicitlyUsesGPR0 |
    S390OpProp_SetsOperand1 |
@@ -4647,14 +4390,11 @@
       // PACK
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // PALB
-   0,
+   S390OpProp_None,
 
       // PC
    S390OpProp_ImplicitlySetsGPR3 |
@@ -4675,29 +4415,23 @@
       // PKA
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // PKU
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // PR
-   0,
+   S390OpProp_None,
 
       // PT
-   0,
+   S390OpProp_None,
 
       // PFDRL
-   0,
+   S390OpProp_None,
 
       // RCHP
    S390OpProp_SetsCC |
@@ -4708,7 +4442,7 @@
    S390OpProp_ImplicitlyUsesGPR1,
 
       // SAC
-   0,
+   S390OpProp_None,
 
       // SAL
    S390OpProp_ImplicitlyUsesGPR1,
@@ -4726,7 +4460,7 @@
    S390OpProp_IsLoad,
 
       // SIGP
-   S390OpProp_MayUseRegPairForTarget |
+   S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1,
 
       // SP
@@ -4735,15 +4469,11 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // SPKA
-   0,
+   S390OpProp_None,
 
       // SPM
    S390OpProp_SetsCC,
@@ -4758,17 +4488,14 @@
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefOneIsStore |
    S390OpProp_SetsOperand1,
 
       // SRNM
-   0,
+   S390OpProp_None,
 
       // SSAR
-   0,
+   S390OpProp_None,
 
       // SSCH
    S390OpProp_SetsCC |
@@ -4818,7 +4545,6 @@
 
       // STMH
    S390OpProp_IsStore |
-   S390OpProp_SetsMultipleRegs |
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOperand3,
 
@@ -4842,8 +4568,6 @@
    S390OpProp_IsStore |
    S390OpProp_Is64Bit |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // STSCH
@@ -4853,15 +4577,13 @@
    S390OpProp_SetsOperand1,
 
       // STURA
-   S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore,
+   S390OpProp_IsStore,
 
       // STURG
-   S390OpProp_IsStore |
-   S390OpProp_IsImplicitStore,
+   S390OpProp_IsStore,
 
       // SVC
-   0,
+   S390OpProp_None,
 
       // TAR
    S390OpProp_SetsCC,
@@ -4890,10 +4612,7 @@
    S390OpProp_SetsCC |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
-   S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsLoad |
-   S390OpProp_MemRefTwoIsLoad,
+   S390OpProp_HasTwoMemoryReferences,
 
       // TPROT
    S390OpProp_IsLoad |
@@ -4909,30 +4628,21 @@
       // UNPK
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // UNPKA
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_SetsCC |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // UNPKU
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
    S390OpProp_SetsCC |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // UPT
@@ -4951,10 +4661,7 @@
    S390OpProp_SetsSignFlag |
    S390OpProp_IsLoad |
    S390OpProp_IsStore |
-   S390OpProp_SSSchedulingCandidate |
    S390OpProp_HasTwoMemoryReferences |
-   S390OpProp_MemRefOneIsStore |
-   S390OpProp_MemRefTwoIsLoad |
    S390OpProp_SetsOperand1,
 
       // AXBR
@@ -5735,16 +5442,16 @@
    S390OpProp_SetsOperand1,
 
       // SAM24
-   0,
+   S390OpProp_None,
 
       // SAM31
-   0,
+   S390OpProp_None,
 
       // SAM64
-   0,
+   S390OpProp_None,
 
       // TAM
-   0,
+   S390OpProp_None,
 
       // CDZT
    S390OpProp_DoubleFP |
@@ -6037,7 +5744,6 @@
 
       // VLM
    S390OpProp_IsLoad |
-   S390OpProp_ReadsMultipleRegs |
    S390OpProp_UsesRegRangeForTarget |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOperand2,
@@ -6118,7 +5824,6 @@
 
       // VSTM
    S390OpProp_IsStore |
-   S390OpProp_ReadsMultipleRegs |
    S390OpProp_UsesRegRangeForTarget,
 
       // VSTL
@@ -6437,61 +6142,55 @@
    S390OpProp_SetsCC,
 
       // RINEXT
-   0,
+   S390OpProp_None,
 
       // ASSOCREGS
-   0,
+   S390OpProp_None,
 
       // DEPEND
-   0,
+   S390OpProp_None,
 
       // DS
-   0,
+   S390OpProp_None,
 
       // FENCE
-   0,
+   S390OpProp_None,
 
       // SCHEDFENCE
-   0,
+   S390OpProp_None,
 
       // PROC
-   0,
+   S390OpProp_None,
 
       // RET
-   0,
+   S390OpProp_None,
 
       // DIRECTIVE
-   0,
+   S390OpProp_None,
 
       // WRTBAR
-   0,
+   S390OpProp_None,
 
       // XPCALLDESC
-   0,
+   S390OpProp_None,
 
       // DC
-   0,
+   S390OpProp_None,
 
       // DC2
-   0,
+   S390OpProp_None,
 
       // VGNOP
-   0,
+   S390OpProp_None,
 
       // NOP
-   0,
+   S390OpProp_None,
 
       // ASM
-   0,
-
-      // LOCK
-   0,
-
-      // UNLOCK
-   0,
+   S390OpProp_None,
 
       // LABEL
-   0,
+   S390OpProp_None,
 
       // TAILCALL
    S390OpProp_IsCall,
@@ -6620,7 +6319,7 @@
    S390OpProp_SetsCC,
 
    // PRNO
-   0,
+   S390OpProp_None,
 
    // LGG
    S390OpProp_IsLoad |
@@ -6660,7 +6359,6 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsCC,
 
@@ -6668,16 +6366,14 @@
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
    S390OpProp_BranchOp |
-   S390OpProp_ReadsCC |
-   S390OpProp_IsYForm,
+   S390OpProp_ReadsCC,
 
    // MG
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_UsesRegPairForTarget |
    S390OpProp_SetsOperand1 |
-   S390OpProp_LongDispSupported |
-   S390OpProp_IsYForm,
+   S390OpProp_LongDispSupported,
 
    // MGRK
    S390OpProp_UsesRegPairForTarget |
@@ -6687,8 +6383,7 @@
    S390OpProp_UsesTarget |
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
-   S390OpProp_SetsOperand1 |
-   S390OpProp_IsYForm,
+   S390OpProp_SetsOperand1,
 
    // MSC
    S390OpProp_Is32Bit |
@@ -6697,8 +6392,7 @@
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOverflowFlag |
-   S390OpProp_SetsCC |
-   S390OpProp_IsYForm,
+   S390OpProp_SetsCC,
 
    // MSRKC
    S390OpProp_Is32Bit |
@@ -6713,8 +6407,7 @@
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOperand1 |
    S390OpProp_SetsOverflowFlag |
-   S390OpProp_SetsCC |
-   S390OpProp_IsYForm,
+   S390OpProp_SetsCC,
 
    // MSGRKC
    S390OpProp_Is64Bit |
@@ -6728,6 +6421,4 @@
    S390OpProp_IsLoad |
    S390OpProp_LongDispSupported |
    S390OpProp_SetsOverflowFlag |
-   S390OpProp_SetsCC |
-   S390OpProp_IsYForm,
-
+   S390OpProp_SetsCC,

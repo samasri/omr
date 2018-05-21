@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <math.h>                                   // for exp
@@ -558,7 +561,7 @@ generic32BitAddEvaluator(TR::Node * node, TR::CodeGenerator * cg)
          targetRegister = childTargetReg;
          }
 
-      if (!findPreviousAGIDef(comp->getAppendInstruction(), delay, childTargetReg, comp))
+      if (!findPreviousAGIDef(cg->getAppendInstruction(), delay, childTargetReg, comp))
          {
          useLA = false;
          }
@@ -709,9 +712,6 @@ lDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision
    TR::Instruction *cursor=NULL;
    TR::Compilation *comp = cg->comp();
 
-   // div uses reg pairs that can interfeer with currently clobbered reg
-   cg->clearCurrentlyClobberedRestrictedRegister();
-
    TR::RegisterPair * dividendPair = (TR::RegisterPair *) cg->gprClobberEvaluate(firstChild);
 
    int32_t shiftAmnt;
@@ -807,7 +807,7 @@ lDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision
       else if ((shiftAmnt = TR::TreeEvaluator::checkPositiveOrNegativePowerOfTwo(denominator)) > 0 &&
             performTransformation(comp, "O^O Denominator is powerOfTwo (%d) for ldir/lrem.\n",denominator))
          {
-         int64_t absValueOfDenomintor = denominator>0 ? denominator : -denominator;
+         int64_t absValueOfDenominator = denominator>0 ? denominator : -denominator;
          TR::LabelSymbol * done = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
 
          //setup dependencies for shift instructions for division or remainder
@@ -826,7 +826,7 @@ lDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision
                cursor->setStartInternalControlFlow();
 
                //adjustment to dividend if dividend is negative
-               dividendPair = laddConst(node, cg, dividendPair,absValueOfDenomintor-1, dep);
+               dividendPair = laddConst(node, cg, dividendPair,absValueOfDenominator-1, dep);
 
                generateS390LabelInstruction(cg, TR::InstOpCode::LABEL, node, skipSet, dep);
                skipSet->setEndInternalControlFlow();
@@ -860,13 +860,13 @@ lDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision
                generateRRInstruction(cg, TR::InstOpCode::LR, node, tempRegisterPair1->getLowOrder(), dividendPair->getLowOrder());
                generateRRInstruction(cg, TR::InstOpCode::LR, node, tempRegisterPair1->getHighOrder(), dividendPair->getHighOrder());
                generateRSInstruction(cg, TR::InstOpCode::SRDA, node, tempRegisterPair2, 63);
-               generateRILInstruction(cg, TR::InstOpCode::NILF, node, tempRegisterPair2->getLowOrder(), (int32_t) (absValueOfDenomintor-1) );
-               generateRILInstruction(cg, TR::InstOpCode::NILF, node, tempRegisterPair2->getHighOrder(), (int32_t) ((absValueOfDenomintor-1)>>32) );
+               generateRILInstruction(cg, TR::InstOpCode::NILF, node, tempRegisterPair2->getLowOrder(), static_cast<int32_t>(absValueOfDenominator-1) );
+               generateRILInstruction(cg, TR::InstOpCode::NILF, node, tempRegisterPair2->getHighOrder(), static_cast<int32_t>((absValueOfDenominator-1)>>32) );
                generateRRInstruction(cg, TR::InstOpCode::ALR, node, dividendPair->getLowOrder(), tempRegisterPair2->getLowOrder());
                generateRRInstruction(cg, TR::InstOpCode::ALCR, node, dividendPair->getHighOrder(), tempRegisterPair2->getHighOrder());
-               generateRILInstruction(cg, TR::InstOpCode::NILF, node, dividendPair->getLowOrder(), (int32_t) ((int64_t) CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenomintor +1) );
-               if (absValueOfDenomintor != (int32_t) absValueOfDenomintor)
-                  generateRILInstruction(cg, TR::InstOpCode::NILF, node, dividendPair->getHighOrder(), (int32_t) (((int64_t) CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenomintor +1)>>32) );
+               generateRILInstruction(cg, TR::InstOpCode::NILF, node, dividendPair->getLowOrder(), static_cast<int32_t>( CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenominator +1) );
+               if (absValueOfDenominator != static_cast<int32_t>(absValueOfDenominator))
+                  generateRILInstruction(cg, TR::InstOpCode::NILF, node, dividendPair->getHighOrder(), static_cast<int32_t>(( CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenominator +1)>>32) );
                generateRRInstruction(cg, TR::InstOpCode::SLR, node, tempRegisterPair1->getLowOrder(), dividendPair->getLowOrder());
                generateRRInstruction(cg, TR::InstOpCode::SLBR, node, tempRegisterPair1->getHighOrder(), dividendPair->getHighOrder());
                generateRRInstruction(cg, TR::InstOpCode::LR, node, dividendPair->getLowOrder(), tempRegisterPair1->getLowOrder());
@@ -1105,8 +1105,6 @@ lDivRemGenericEvaluator64(TR::Node * node, TR::CodeGenerator * cg, bool isDivisi
    TR::Node * firstChild = node->getFirstChild();
    TR::Node * secondChild = node->getSecondChild();
    TR::Instruction * cursor = NULL;
-   // div uses reg pairs that can interfeer with currently clobbered reg
-   cg->clearCurrentlyClobberedRestrictedRegister();
 
    int32_t shiftAmnt;
    // A/A, return 1 (div) or 0 (rem).
@@ -1201,7 +1199,7 @@ lDivRemGenericEvaluator64(TR::Node * node, TR::CodeGenerator * cg, bool isDivisi
          {
          TR::Register * firstRegister = NULL;
 
-         int64_t absValueOfDenomintor = denominator>0 ? denominator : -denominator;
+         int64_t absValueOfDenominator = denominator>0 ? denominator : -denominator;
 
          if (isDivision)
             {
@@ -1216,7 +1214,7 @@ lDivRemGenericEvaluator64(TR::Node * node, TR::CodeGenerator * cg, bool isDivisi
                //adjustment to dividend if dividend is negative
                TR::RegisterDependencyConditions *deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 2, cg);
                deps->addPostCondition(firstRegister, TR::RealRegister::AssignAny);
-               generateS390ImmOp(cg, TR::InstOpCode::AG, node, firstRegister, firstRegister, absValueOfDenomintor-1, deps);
+               generateS390ImmOp(cg, TR::InstOpCode::AG, node, firstRegister, firstRegister, absValueOfDenominator-1, deps);
                skipSet->setEndInternalControlFlow();
                generateS390LabelInstruction(cg, TR::InstOpCode::LABEL, node, skipSet, deps);
                }
@@ -1243,12 +1241,12 @@ lDivRemGenericEvaluator64(TR::Node * node, TR::CodeGenerator * cg, bool isDivisi
                TR::Register * tempRegister2 = cg->allocate64bitRegister();
                generateRSInstruction(cg, TR::InstOpCode::SRAG, node, tempRegister2, firstRegister, 63);
                generateRRInstruction(cg, TR::InstOpCode::LGR, node, tempRegister1, firstRegister);
-               generateRILInstruction(cg, TR::InstOpCode::NIHF, node, tempRegister2, (int32_t)((absValueOfDenomintor-1)>>32) );
-               generateRILInstruction(cg, TR::InstOpCode::NILF, node, tempRegister2, (int32_t)(absValueOfDenomintor-1));
+               generateRILInstruction(cg, TR::InstOpCode::NIHF, node, tempRegister2, static_cast<int32_t>((absValueOfDenominator-1)>>32) );
+               generateRILInstruction(cg, TR::InstOpCode::NILF, node, tempRegister2, static_cast<int32_t>(absValueOfDenominator-1));
                generateRRInstruction(cg, TR::InstOpCode::AGR, node, firstRegister, tempRegister2);
-               if (denominator != (int32_t) absValueOfDenomintor)
-                  generateRILInstruction(cg, TR::InstOpCode::NIHF, node, firstRegister, (int32_t) (((int64_t) CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenomintor +1)>>32));
-               generateRILInstruction(cg, TR::InstOpCode::NILF, node, firstRegister, (int32_t) ((int64_t) CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenomintor +1));
+               if (denominator != static_cast<int32_t>(absValueOfDenominator))
+                  generateRILInstruction(cg, TR::InstOpCode::NIHF, node, firstRegister, static_cast<int32_t>(( CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenominator +1)>>32));
+               generateRILInstruction(cg, TR::InstOpCode::NILF, node, firstRegister, static_cast<int32_t>( CONSTANT64(0xFFFFFFFFFFFFFFFF) - absValueOfDenominator +1));
                generateRRInstruction(cg, TR::InstOpCode::SGR, node, tempRegister1, firstRegister);
                generateRRInstruction(cg, TR::InstOpCode::LGR, node, firstRegister, tempRegister1);
                cg->stopUsingRegister(tempRegister1);
@@ -1356,7 +1354,7 @@ lDivRemGenericEvaluator64(TR::Node * node, TR::CodeGenerator * cg, bool isDivisi
 
          if (value <= TR::getMaxSigned<TR::Int32>())
             {
-            generateRILInstruction(cg, TR::InstOpCode::CLGFI, node, absDividendReg, value);
+            generateRILInstruction(cg, TR::InstOpCode::CLGFI, node, absDividendReg, static_cast<int32_t>(value));
             }
          else
             {
@@ -1368,7 +1366,7 @@ lDivRemGenericEvaluator64(TR::Node * node, TR::CodeGenerator * cg, bool isDivisi
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, skipDiv); // branch to done on <
          }
 
-   // Do divison
+   // Do division
    if (isUnsigned)
       {
       if (doConditionalRemainder)
@@ -1464,7 +1462,6 @@ iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision
       }
    else if ( secondChild->getRegister()==NULL && secondChild->getReferenceCount()==1 &&
              secondChild->getOpCode().isMemoryReference() &&
-             !secondChild->getSymbolReference()->getSymbol()->isRegisterSymbol() &&
              !needCheck)
       {
       sourceMR = generateS390MemoryReference(secondChild, cg);
@@ -1544,7 +1541,7 @@ iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision
    else
       generateRSInstruction(cg, TR::InstOpCode::SRDA, node, targetRegisterPair, 32);
 
-   // Do divison
+   // Do division
    if (sourceMR)
       {
       if (node->getOpCode().isUnsigned())
@@ -1645,15 +1642,15 @@ genericLongShiftSingle(TR::Node * node, TR::CodeGenerator * cg, TR::InstOpCode::
                {
                srcReg = cg->evaluate(firstChild->getFirstChild());
                auto mnemonic = cg->getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_zEC12) ? TR::InstOpCode::RISBGN : TR::InstOpCode::RISBG;
-               
+
                generateRIEInstruction(cg, mnemonic, node, trgReg, srcReg, (int8_t)(32-value), (int8_t)((63-value)|0x80), (int8_t)value);
-               
+
                node->setRegister(trgReg);
-               
+
                cg->decReferenceCount(firstChild->getFirstChild());
                cg->decReferenceCount(firstChild);
                cg->decReferenceCount(secondChild);
-               
+
                return trgReg;
                }
             }
@@ -1898,27 +1895,9 @@ TR::Register *
 OMR::Z::TreeEvaluator::addrAddHelper(TR::Node *node, TR::CodeGenerator *cg)
    {
    if (node->getOpCodeValue() == TR::aiadd)
-      {
-      if (cg->getCurrentRegisterPressure() < CODEGEN_REGPRESSURE_THRESHOLD)
-         return generic32BitAddEvaluator(node, cg);
-      else
-         {
-         TR_S390BinaryCommutativeAnalyser temp(cg);
-         temp.integerAddAnalyser(node, TR::InstOpCode::ALR, TR::InstOpCode::AL, TR::InstOpCode::LR);
-         return node->getRegister();
-         }
-      }
+      return generic32BitAddEvaluator(node, cg);
    else if (node->getOpCodeValue() == TR::aladd)
-      {
-      if (cg->getCurrentRegisterPressure() < CODEGEN_REGPRESSURE_THRESHOLD)
-         return TR::TreeEvaluator::laddEvaluator(node, cg);
-      else
-         {
-         TR_S390BinaryCommutativeAnalyser temp(cg);
-         temp.integerAddAnalyser(node, TR::InstOpCode::ALGR, TR::InstOpCode::ALG, TR::InstOpCode::LGR);
-         return node->getRegister();
-         }
-      }
+      return TR::TreeEvaluator::laddEvaluator(node, cg);
    else
       TR_ASSERT(0,"Wrong il-opCode for calling addAddHelper!\n");
 
@@ -2464,35 +2443,38 @@ genericRotateAndInsertHelper(TR::Node * node, TR::CodeGenerator * cg)
    }
 
 TR::Register *
-genericLongAndAsRotateHelper(TR::Node * node, TR::CodeGenerator * cg)
+OMR::Z::TreeEvaluator::tryToReplaceLongAndWithRotateInstruction(TR::Node * node, TR::CodeGenerator * cg)
    {
    if (cg->getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z10))
       {
       TR::Node * firstChild = node->getFirstChild();
       TR::Node * secondChild = node->getSecondChild();
-      TR::Node * skipedConversion = NULL;
       TR::Compilation *comp = cg->comp();
 
-      // Transform land into RISBG as it may be better than discrete pair of ands
+      // Given the right case, transform land into RISBG as it may be better than discrete pair of ands
       if (node->getOpCodeValue() == TR::land && secondChild->getOpCode().isLoadConst())
          {
-         uint64_t value = secondChild->getLongInt();
+         uint64_t longConstValue = secondChild->getLongInt();
 
-         if ((firstChild->getOpCodeValue() == TR::i2l || firstChild->getOpCodeValue() == TR::iu2l)
-               && firstChild->getReferenceCount()==1 && firstChild->getRegister() == NULL && firstChild->isHighWordZero() )
-            {
-            skipedConversion = firstChild;
-            firstChild = firstChild->getFirstChild();
-            value &= 0x00000000FFFFFFFFL;
-            }
+         int32_t tZeros = trailingZeroes(longConstValue);
+         int32_t lZeros = leadingZeroes(longConstValue);
+         int32_t tOnes  = trailingZeroes(~longConstValue);
+         int32_t lOnes  = leadingZeroes(~longConstValue);
+         int32_t popCnt = populationCount(longConstValue);
 
-         int32_t tZeros = trailingZeroes(value);
-         int32_t lZeros = leadingZeroes(value);
-         int32_t tOnes  = trailingZeroes(~value);
-         int32_t lOnes  = leadingZeroes(~value);
-         int32_t popCnt = populationCount(value);
-         int32_t msBit = -1;
-         int32_t lsBit = -1;
+         // if the population count is 0 then the result of the AND will also be 0,
+         // because a popCnt=0 means there are no overlapping bits between the two AND
+         // operands. We cannot generate a RISBG for this case as RISBG cannot be
+         // used to zero out the contents of the entire register. The starting and ending
+         // positions are inclusive, so even if start=end, we will preserve at least one bit.
+         if (popCnt == 0)
+            return NULL;
+
+         // the minimum value for the bit positions is 0, and lsBit can equal msBit iff popCnt = 1
+         // if popCnt == 0 then we cannot generate a RISBG instruction because RISBG preserves at
+         // least one bit position
+         int32_t msBit = 0;
+         int32_t lsBit = 0;
 
          if (comp->getOption(TR_TraceCG))
             {
@@ -2500,29 +2482,73 @@ genericLongAndAsRotateHelper(TR::Node * node, TR::CodeGenerator * cg)
             traceMsg(comp,"          => rotated-and-insert: lOnes %d, tOnes %d\n", lOnes, tOnes);
             }
 
-         bool doIt = false;
+         bool doTransformation = false;
+
+         // We now try to detect if the lconst's bit pattern is such that we can use a single RISBG
+         // instead of multiple AND instructions
+
+         // The first block will catch all cases where the lConstValue is a series of contiguous ones
+         // surrounded by zeros
+         // ex: 0001111000, 011110, 111111, 001111, 11100 etc...
+         //
+         // The 'else if' block will consider all cases where we have a series of contiguous zeros
+         // surrounded by ones
+         // ex: 1110000111, 1000001
          if (popCnt == (64 - lZeros - tZeros))
             {
             msBit = lZeros;
             lsBit = 63 - tZeros;
-            if (firstChild->getReferenceCount()>1 || skipedConversion != NULL   // Better of with non-destructive RISBG as AND?
-                  || lZeros > 31 || tZeros > 31 || (lZeros > 0 && tZeros > 0))  // Better off with a single AND?
+            // The below checks make sure we are not better off using one of Z architecture's
+            // 16-bit AND immediate instructions (NILF,NILH,NILL, NIHF,NIHH, NIHL).
+            // Details for each check below:
+            //
+            // "firstChild->getReferenceCount() > 1"
+            //    If the firstChild's refCount>1, we will need to clobber evaluate this case
+            //    because we cannot destroy the value. In such a case we're better off with
+            //    RISBG because RISBG won't clobber anything and hence can do the operation
+            //    faster.
+            //
+            // "|| lZeros > 31 || tZeros > 31"
+            //    If there are more than 31 contiguous zeros, then we must use RISBG because
+            //    no NI** instruction do zero out that many bits in a single instruction.
+            //
+            // "|| (lZeros > 0 && tZeros > 0"
+            //    NI** instructions need to explicitly specify which bit positions to zero out.
+            //    If our constant at minimum looks like 0111...110 (there are zeros in the top
+            //    half and bottom half of the register), then it's better to use RISBG.
+            //    This is because there are no NI** instructions allowing us to specify bits in
+            //    the top half and bottom half of the register to zero out.
+
+            if (firstChild->getReferenceCount() > 1 || lZeros > 31 || tZeros > 31
+                || (lZeros > 0 && tZeros > 0))
                {
-               doIt = true;
+               doTransformation = true;
                }
             }
          else if (popCnt == (lOnes + tOnes))
             {
             msBit = 64 - tOnes;
             lsBit = lOnes - 1;
-            if (firstChild->getReferenceCount()>1 || skipedConversion != NULL // Better of with non-destructive RISBG as AND?
-                  || (lOnes < 32 && tOnes < 32) )                             // Better off with a single AND?
+            // The below checks make sure we are not better off using one of Z architecture's
+            // 16-bit AND immediate instructions (NILF,NILH,NILL, NIHF,NIHH, NIHL).
+            // Details for each check below:
+            //
+            // "firstChild->getReferenceCount() > 1"
+            //    same as above
+            //
+            // "(lOnes < 32 && tOnes < 32)"
+            //    This case implies there are zeros at the high/low boundary of the register.
+            //    Example value: 11111000011111. The NI** instructions can only operate on
+            //    the top half or bottom half of a register at a time. So such a case
+            //    will require two NI** instructions. Hence we are better off using a single RISBG
+
+            if (firstChild->getReferenceCount()> 1 || (lOnes < 32 && tOnes < 32))
                {
-               doIt = true;
+               doTransformation = true;
                }
             }
 
-         if (doIt && performTransformation(comp, "O^O Use RISBG instead of 2 ANDs for %p.\n", node) )
+         if (doTransformation && performTransformation(comp, "O^O Use RISBG instead of 2 ANDs for %p.\n", node))
             {
             TR::Register * targetReg = NULL;
             TR::Register * sourceReg = cg->evaluate(firstChild);
@@ -2536,19 +2562,18 @@ genericLongAndAsRotateHelper(TR::Node * node, TR::CodeGenerator * cg)
                targetReg = sourceReg;
                }
 
-            TR::InstOpCode::Mnemonic opCode = cg->getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_zEC12) ? TR::InstOpCode::RISBGN : TR::InstOpCode::RISBG;
+               // if possible then use the instruction that doesn't set the CC as it's faster
+               TR::InstOpCode::Mnemonic opCode = cg->getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_zEC12) ? TR::InstOpCode::RISBGN : TR::InstOpCode::RISBG;
+
+               // this instruction sets the rotation factor to 0 and sets the zero bit(0x80).
+               // So it's effectively zeroing out every bit except the inclusive range of lsBit to msBit
+               // The bits in that range are preserved as is
                generateRIEInstruction(cg, opCode, node, targetReg, sourceReg, msBit, 0x80 + lsBit, 0);
 
-            if (skipedConversion)
-               {
-               skipedConversion->setRegister(targetReg);
-               cg->decReferenceCount(firstChild);
-               }
             return targetReg;
             }
          }
       }
-
    return NULL;
    }
 
@@ -3687,7 +3712,7 @@ OMR::Z::TreeEvaluator::mulhEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    bool isUnsigned = (node->getOpCodeValue() == TR::iumulh);
    PRINT_ME("imulh", node, cg);
    TR::Node * firstChild = node->getFirstChild();
-   TR::Node * secondChild = node->getSecondChild();   
+   TR::Node * secondChild = node->getSecondChild();
    TR::Register * firstRegister = cg->gprClobberEvaluate(firstChild);
    TR::Register * targetRegister = cg->allocateRegister();
    TR::Instruction * cursor = NULL;
@@ -3951,7 +3976,7 @@ OMR::Z::TreeEvaluator::idivEvaluator(TR::Node * node, TR::CodeGenerator * cg)
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, skipDiv);
          // Label to do the division
          generateS390LabelInstruction(cg, TR::InstOpCode::LABEL, node, doDiv);
-         // Do divison by -1 (take complement)
+         // Do division by -1 (take complement)
          generateRRInstruction(cg, TR::InstOpCode::LCR, node, targetRegister, targetRegister);
          // Label to skip the division
          cursor = generateS390LabelInstruction(cg, TR::InstOpCode::LABEL, node, skipDiv, dependencies);
@@ -4722,7 +4747,7 @@ OMR::Z::TreeEvaluator::landEvaluator(TR::Node * node, TR::CodeGenerator * cg)
 
    if ((TR::Compiler->target.is64Bit() || cg->use64BitRegsOn32Bit()) &&
        ((targetRegister = genericRotateAndInsertHelper(node, cg))
-             || (targetRegister = genericLongAndAsRotateHelper(node, cg)))     )
+             || (targetRegister = TR::TreeEvaluator::tryToReplaceLongAndWithRotateInstruction(node, cg))))
       {
       node->setRegister(targetRegister);
 

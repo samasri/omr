@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OMR_SYMBOLREFERENCETABLE_INCL
 #define OMR_SYMBOLREFERENCETABLE_INCL
@@ -28,7 +31,6 @@ namespace OMR { class SymbolReferenceTable; }
 namespace OMR { typedef OMR::SymbolReferenceTable SymbolReferenceTableConnector; }
 #endif
 
-#include "infra/HashTab.hpp"
 #include "il/symbol/ResolvedMethodSymbol.hpp"
 
 #include <map>                                 // for std::map
@@ -95,9 +97,6 @@ class SymbolReferenceTable
 
       firstArrayShadowSymbol,
 
-      lastWCodeNonhelperSymbol = firstArrayShadowSymbol + TR::NumTypes,
-      lastWCodeNonhelperSymbolX,
-
       firstArrayletShadowSymbol = firstArrayShadowSymbol + TR::NumTypes,
 
       firstCommonNonhelperNonArrayShadowSymbol = firstArrayletShadowSymbol + TR::NumTypes,
@@ -114,6 +113,7 @@ class SymbolReferenceTable
       componentClassAsPrimitiveSymbol,
       isArraySymbol,
       isClassAndDepthFlagsSymbol,
+      initializeStatusFromClassSymbol,
       isClassFlagsSymbol,
       vftSymbol,
       currentThreadSymbol,
@@ -167,15 +167,17 @@ class SymbolReferenceTable
        *  This symbol is used by the code generator to recognize and inline a call which emulates the following
        *  tree sequence:
        *
-       *  <code>
+       *  \code
        *  monent
        *    object
-       *  aloadi / iloadi
+       *  ...
+       *  aloadi / iloadi / lloadi
        *    ==>object
-       *  monexit
+       *  ...
        *  monexitfence
+       *  monexit
        *    ==>object
-       *  </code>
+       *  \endcode
        *
        *  Where <c>object</c> is a valid object reference. The sequence represents a field load within a
        *  synchronized region. Since a full monent / monexit operation for a single load is expensive, some code
@@ -242,7 +244,7 @@ class SymbolReferenceTable
    int32_t getNonhelperIndex(CommonNonhelperSymbol s);
    int32_t getNumHelperSymbols()                      { return _numHelperSymbols; }
    int32_t getArrayShadowIndex(TR::DataType t)        { return _numHelperSymbols + firstArrayShadowSymbol + t; }
-   int32_t getArrayletShadowIndex(TR::DataType t) { return _numHelperSymbols + firstArrayShadowSymbol + TR::NumTypes + t; }
+   int32_t getArrayletShadowIndex(TR::DataType t) { return _numHelperSymbols + firstArrayletShadowSymbol + t; }
 
    template <class BitVector>
    void getAllSymRefs(BitVector &allSymRefs)
@@ -268,11 +270,11 @@ class SymbolReferenceTable
 
    TR::SymbolReference * findOrCreateCodeGenInlinedHelper(CommonNonhelperSymbol index);
 
-   TR::ParameterSymbol * createParameterSymbol(TR::ResolvedMethodSymbol * owningMethodSymbol, int32_t slot, TR::DataType, bool isUnsigned);
+   TR::ParameterSymbol * createParameterSymbol(TR::ResolvedMethodSymbol * owningMethodSymbol, int32_t slot, TR::DataType);
    TR::SymbolReference * findOrCreateAutoSymbol(TR::ResolvedMethodSymbol * owningMethodSymbol, int32_t slot, TR::DataType, bool isReference = true,
          bool isInternalPointer = false, bool reuseAuto = true, bool isAdjunct = false, size_t size = 0);
    TR::SymbolReference * createTemporary(TR::ResolvedMethodSymbol * owningMethodSymbol, TR::DataType, bool isInternalPointer = false, size_t size = 0);
-   TR::SymbolReference * createCoDependententTemporary(TR::ResolvedMethodSymbol * owningMethodSymbol, TR::DataType, bool isInternalPointer, size_t size,
+   TR::SymbolReference * createCoDependentTemporary(TR::ResolvedMethodSymbol * owningMethodSymbol, TR::DataType, bool isInternalPointer, size_t size,
          TR::Symbol *coDependent, int32_t offset);
    TR::SymbolReference * findStaticSymbol(TR_ResolvedMethod * owningMethod, int32_t cpIndex, TR::DataType);
 
@@ -360,6 +362,7 @@ class SymbolReferenceTable
    TR::SymbolReference * findThisRangeExtensionSymRef(TR::ResolvedMethodSymbol *owningMethodSymbol = 0);
 
    TR::SymbolReference * findOrCreateSymRefWithKnownObject(TR::SymbolReference *original, uintptrj_t *referenceLocation);
+   TR::SymbolReference * findOrCreateSymRefWithKnownObject(TR::SymbolReference *original, uintptrj_t *referenceLocation, bool isArrayWithConstantElements);
    TR::SymbolReference * findOrCreateSymRefWithKnownObject(TR::SymbolReference *original, TR::KnownObjectTable::Index objectIndex);
    TR::SymbolReference * findOrCreateThisRangeExtensionSymRef(TR::ResolvedMethodSymbol *owningMethodSymbol = 0);
    TR::SymbolReference * findOrCreateContiguousArraySizeSymbolRef();
@@ -368,6 +371,8 @@ class SymbolReferenceTable
    TR::SymbolReference * findOrCreateNewObjectNoZeroInitSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
    TR::SymbolReference * findOrCreateArrayStoreExceptionSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
    TR::SymbolReference * findOrCreateArrayShadowSymbolRef(TR::DataType, TR::Node * baseAddress = 0);
+   TR::SymbolReference * findOrCreateImmutableArrayShadowSymbolRef(TR::DataType);
+   TR::SymbolReference * createImmutableArrayShadowSymbolRef(TR::DataType, TR::Symbol *sym);
    TR::SymbolReference * findOrCreateArrayletShadowSymbolRef(TR::DataType type);
    TR::SymbolReference * findOrCreateAsyncCheckSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol = 0);
    TR::SymbolReference * findOrCreateExcpSymbolRef();
@@ -419,16 +424,7 @@ class SymbolReferenceTable
    TR::SymbolReference * createRefinedArrayShadowSymbolRef(TR::DataType);
    TR::SymbolReference * createRefinedArrayShadowSymbolRef(TR::DataType, TR::Symbol *); // TODO: to be changed to a special sym ref
    bool                 isRefinedArrayShadow(TR::SymbolReference *symRef);
-
-
-   // A RegisterSymbol is a pseudo memory location that represents some machine
-   // register or a value we would like the register allocator to map to a register.
-   // Such a RegisterSymbol belongs to a method as its conceptual life span is the
-   // life of a procedure. A set of hardware registers is pre-created for each method.
-   //
-   void initRegisterSymbols(TR::ResolvedMethodSymbol *);
-   TR::SymbolReference * createRegisterSymbol(TR::ResolvedMethodSymbol *, TR_RegisterKinds, TR::DataType, TR_GlobalRegisterNumber grn);
-   TR::SymbolReference * getRegisterSymbol(TR_GlobalRegisterNumber grn);
+   bool                 isImmutableArrayShadow(TR::SymbolReference *symRef);
 
    /*
     * --------------------------------------------------------------------------
@@ -443,7 +439,7 @@ class SymbolReferenceTable
     * For union type support
     */
 
-   // Mark two symbol references as shared aliases of each other 
+   // Mark two symbol references as shared aliases of each other
    void makeSharedAliases(TR::SymbolReference *sr1, TR::SymbolReference *sr2);
    // Retrieve shared aliases bitvector for a given symbol reference
    TR_BitVector *getSharedAliases(TR::SymbolReference *sr);
@@ -475,14 +471,8 @@ class SymbolReferenceTable
    List<TR::SymbolReference>            _classStaticsSymbolRefs;
    List<TR::SymbolReference>            _classDLPStaticsSymbolRefs;
    List<TR::SymbolReference>            _debugCounterSymbolRefs;
-   TR::Symbol                           *_currentThreadDebugEventDataSymbol;
-   List<TR::SymbolReference>            _currentThreadDebugEventDataSymbolRefs;
 
    uint32_t                            _nextRegShadowIndex;
-   TR_Array<TR::SymbolReference *>      *_registerSymbolRefs;
-
-   CS2::HashTable<uint32_t, TR::Symbol *, TR::Allocator> _aggregateShadowSymbolMap;
-   CS2::HashTable<TR::SparseBitVector *, TR::SymbolReference *, TR::Allocator> _aggregateShadowSymbolReferenceMap;
    int32_t                             _numUnresolvedSymbols;
    uint32_t                            _numHelperSymbols;
    uint32_t                            _numPredefinedSymbols;
@@ -492,15 +482,13 @@ class SymbolReferenceTable
 
    size_t                              _size_hint;
 
-   TR_HashTab *_genericCallHash;
-
    typedef CS2::CompoundHashKey<mcount_t, const char *> OwningMethodAndString;
    typedef CS2::HashTable<OwningMethodAndString, TR::SymbolReference *, TR::Allocator> SymrefsByOwningMethodAndString;
 
    SymrefsByOwningMethodAndString      _methodsBySignature;
 
    // Aliasmap is keyed by a symbol reference's reference number
-   typedef TR::typed_allocator<std::pair<int32_t, TR_BitVector *>, TR::Allocator> AliasMapAllocator;
+   typedef TR::typed_allocator<std::pair<int32_t const, TR_BitVector * >, TR::Allocator> AliasMapAllocator;
    typedef std::map<int32_t, TR_BitVector *, std::less<int32_t>, AliasMapAllocator> AliasMap;
    AliasMap                            *_sharedAliasMap;
 

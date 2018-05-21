@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stddef.h>                                 // for NULL, size_t
@@ -63,6 +66,7 @@
 #include "z/codegen/S390GenerateInstructions.hpp"
 #include "z/codegen/S390Instruction.hpp"
 #include "z/codegen/S390OutOfLineCodeSection.hpp"
+#include "z/codegen/OMRLinkage.hpp"
 
 static TR::InstOpCode::Mnemonic getIntToFloatLogicalConversion(TR::CodeGenerator *cg, TR::InstOpCode::Mnemonic convertOpCode)
    {
@@ -312,12 +316,12 @@ generateExtendedFloatConstantReg(TR::Node *node, TR::CodeGenerator *cg, int64_t 
       mrHi->stopUsingMemRefRegister(cg);
       mrLo->stopUsingMemRefRegister(cg);
       }
-      
+
    if (cg->isLiteralPoolOnDemandOn())
       {
       cg->stopUsingRegister(litBase);
       }
-      
+
    return trgReg;
    }
 
@@ -444,7 +448,7 @@ convertToFixed(TR::Node * node, TR::CodeGenerator * cg)
          generateRRFInstruction(cg, convertOp, node, targetRegister, srcRegCpy, (int8_t) 0x5, true);
 
          //4) Handle the sign bit by XOR
-         generateRILInstruction(cg, TR::InstOpCode::XILF, node, targetRegister, (uintptrj_t)0x80000000);
+         generateRILInstruction(cg, TR::InstOpCode::XILF, node, targetRegister, 0x80000000);
 
          //5) Convert the targetRegister value to appropriate integer type, if needed
          generateValueConversionToIntType(cg, node, targetRegister);
@@ -751,7 +755,7 @@ commonLong2FloatEvaluator(TR::Node * node, TR::CodeGenerator * cg)
          if (two_pow_64_lo)
             two_pow_64_lo->stopUsingMemRefRegister(cg);
          }
-         
+
       if (cg->isLiteralPoolOnDemandOn())
          {
          cg->stopUsingRegister(litBase);
@@ -881,41 +885,26 @@ OMR::Z::TreeEvaluator::dconstEvaluator(TR::Node * node, TR::CodeGenerator * cg)
 TR::Register *
 OMR::Z::TreeEvaluator::floadEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-
-   //traceMsg(comp,"In fload evaluator for Node %p. isRegisterSymbol = %d\n",node,node->getSymbolReference()->getSymbol()->isRegisterSymbol());
-
-   if (node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     return TR::TreeEvaluator::fRegLoadEvaluator(node, cg);
-   else
-     return floadHelper(node, cg, NULL);
+   return floadHelper(node, cg, NULL);
    }
 
 TR::Register *
 OMR::Z::TreeEvaluator::dloadEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     return TR::TreeEvaluator::dRegLoadEvaluator(node, cg);
-   else
-     return dloadHelper(node, cg, NULL);
+   return dloadHelper(node, cg, NULL);
    }
 
 TR::Register *
 OMR::Z::TreeEvaluator::fstoreEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     TR::TreeEvaluator::fRegStoreEvaluator(node, cg);
-   else
-     fstoreHelper(node, cg);
+   fstoreHelper(node, cg);
    return NULL;
    }
 
 TR::Register *
 OMR::Z::TreeEvaluator::dstoreEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     TR::TreeEvaluator::dRegStoreEvaluator(node, cg);
-   else
-     dstoreHelper(node, cg);
+   dstoreHelper(node, cg);
    return NULL;
    }
 
@@ -1056,14 +1045,11 @@ OMR::Z::TreeEvaluator::ddivEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    return node->getRegister();
    }
 
-/**
- * Generate code for a % b for both float and double.
- * The code calls out to an assembler version of fmod that uses standard
- * JIT linkage, except that it is known that the function does not kill
- * any registers other than FPR0/FPR1/FPR2/GPR-ra
- * The call-out does not always happen - in fact, it is hopefully rare.
- * The DIxBR instruction is used to do a divide-to-integer. The call-out is
- * only done if the result is not exact.
+/** \brief Generates code for a % b for both float and double values
+ *  \details
+ *  The code uses divide-to-integer instructions DIxBR to get remainder of two double/float values.
+ *  In rare cases when result of DIxBR is not exact it calls out to double/float remainder helper which
+ *  calls fmod to get remainder and uses System linkage.
  */
 TR::Register *
 OMR::Z::TreeEvaluator::floatRemHelper(TR::Node * node, TR::CodeGenerator * cg)
@@ -1073,15 +1059,9 @@ OMR::Z::TreeEvaluator::floatRemHelper(TR::Node * node, TR::CodeGenerator * cg)
    TR::Register * secondRegister = cg->fprClobberEvaluate(node->getSecondChild());
    TR::Register * tempRegister = cg->allocateRegister(TR_FPR);
    TR::Register * targetRegister = cg->allocateRegister(TR_FPR);
-   TR::Register * dummyRegister3 = cg->allocateRegister(TR_FPR);
-   TR::Register * dummyRegister4 = cg->allocateRegister(TR_FPR);
-   TR::Register * dummyRegister5 = cg->allocateRegister(TR_FPR);
-   TR::Register * dummyRegister6 = cg->allocateRegister(TR_FPR);
-   TR::Register * dummyRegister7 = cg->allocateRegister(TR_FPR);
    TR::LabelSymbol * labelNotExact = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
    TR::LabelSymbol * labelOK = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
-   TR::Register * raReg = cg->allocateRegister();
-
+   TR::ILOpCodes opCode = node->getOpCodeValue();
    //
    // Algorithm: c = a rem b;
    //              target = a;
@@ -1090,6 +1070,8 @@ OMR::Z::TreeEvaluator::floatRemHelper(TR::Node * node, TR::CodeGenerator * cg)
    //              if (target is +0 AND a is < +0) then target is -0;
    // The check for the special case of 0's should be on rare path code, not in the mainline
 
+   // callNode is used as dangling node used to pass to buildSystemLInkageDispatch to generate a call to fmod helper
+   TR::Node *callNode = NULL;
 
    if (node->getDataType() == TR::Float)
       {
@@ -1104,6 +1086,8 @@ OMR::Z::TreeEvaluator::floatRemHelper(TR::Node * node, TR::CodeGenerator * cg)
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, labelOK);        // it is not < +0
       generateRRInstruction(cg, TR::InstOpCode::LCEBR, node, targetRegister, targetRegister); // negate answer to be -0
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, labelOK);        // it is not < +0
+      TR::SymbolReference *helperCallSymRef = cg->symRefTab()->findOrCreateRuntimeHelper(TR_S390jitMathHelperFREM, false, false, false);
+      callNode = TR::Node::createWithSymRef(node, TR::fcall, 2, helperCallSymRef);
       }
    else
       {
@@ -1118,45 +1102,38 @@ OMR::Z::TreeEvaluator::floatRemHelper(TR::Node * node, TR::CodeGenerator * cg)
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, labelOK);        // it is not < +0
       generateRRInstruction(cg, TR::InstOpCode::LCDBR, node, targetRegister, targetRegister); // negate answer to be -0
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, labelOK);        // it is not < +0
+      TR::SymbolReference *helperCallSymRef = cg->symRefTab()->findOrCreateRuntimeHelper(TR_S390jitMathHelperDREM, false, false, false);
+      callNode = TR::Node::createWithSymRef(node, TR::dcall, 2, helperCallSymRef);
       }
+
+   // Putting call-out part in the OOL as we only need to call helper when result is not exact which is very rare.
+   TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(labelNotExact,labelOK,cg);
+   cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+   outlinedSlowPath->swapInstructionListsWithCompilation();
+
    generateS390LabelInstruction(cg, TR::InstOpCode::LABEL, node, labelNotExact);
+   callNode->setChild(0, node->getFirstChild());
+   callNode->setChild(1, node->getSecondChild());
+   TR::Linkage *linkage = cg->createLinkage(TR_System);
+   TR::Register *helperReturnRegister = linkage->buildSystemLinkageDispatch(callNode);
+   generateRRInstruction(cg, node->getDataType() == TR::Float ? TR::InstOpCode::LER : TR::InstOpCode::LDR, node,  targetRegister, helperReturnRegister);
 
-   void * remHelper ;
-   if (node->getDataType() == TR::Float)
-     remHelper = (void *) cg->symRefTab()->findOrCreateRuntimeHelper(TR_S390floatRemainder, false, false, false)->getMethodAddress();
-   else
-     remHelper = (void *) cg->symRefTab()->findOrCreateRuntimeHelper(TR_S390doubleRemainder, false, false, false)->getMethodAddress();
+   // buildSystemLinkageDispatch sets a helperReturnRegister to callNode.
+   // Artificially setting reference count of callNode to 1 and decreasing it makes sure that this register is no longer live in the method.
+   callNode->setReferenceCount(1);
+   cg->decReferenceCount(callNode);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, labelOK);
+   outlinedSlowPath->swapInstructionListsWithCompilation();
 
-   TR::RegisterDependencyConditions * postDeps = generateRegisterDependencyConditions(0, 12, cg);
-
-   genLoadAddressConstant(cg, node, (uintptrj_t) remHelper, raReg, NULL, postDeps, NULL);
-
-   cursor = generateRRInstruction(cg, TR::InstOpCode::BASR, node, raReg, raReg);
-
-   TR::Linkage * linkage = cg->getS390Linkage();
-   postDeps->addPostCondition(raReg, linkage->getReturnAddressRegister());
-   postDeps->addPostCondition(targetRegister, TR::RealRegister::FPR0);
-   postDeps->addPostCondition(firstRegister, TR::RealRegister::FPR1);
-   postDeps->addPostCondition(secondRegister, TR::RealRegister::FPR2);
-   postDeps->addPostCondition(dummyRegister3, TR::RealRegister::FPR3);
-   postDeps->addPostCondition(dummyRegister4, TR::RealRegister::FPR4);
-   postDeps->addPostCondition(dummyRegister5, TR::RealRegister::FPR5);
-   postDeps->addPostCondition(dummyRegister6, TR::RealRegister::FPR6);
-   postDeps->addPostCondition(dummyRegister7, TR::RealRegister::FPR7);
+   TR::RegisterDependencyConditions * postDeps = generateRegisterDependencyConditions(0, 4, cg);
+   postDeps->addPostCondition(targetRegister, TR::RealRegister::AssignAny);
+   postDeps->addPostCondition(firstRegister, TR::RealRegister::AssignAny);
+   postDeps->addPostCondition(secondRegister, TR::RealRegister::AssignAny);
    postDeps->addPostCondition(tempRegister, TR::RealRegister::AssignAny);
    generateS390LabelInstruction(cg, TR::InstOpCode::LABEL, node, labelOK,postDeps);
-
    node->setRegister(targetRegister);
-   cg->decReferenceCount(node->getFirstChild());
-   cg->decReferenceCount(node->getSecondChild());
-   cg->stopUsingRegister(raReg);
    cg->stopUsingRegister(firstRegister);
    cg->stopUsingRegister(secondRegister);
-   cg->stopUsingRegister(dummyRegister3);
-   cg->stopUsingRegister(dummyRegister4);
-   cg->stopUsingRegister(dummyRegister5);
-   cg->stopUsingRegister(dummyRegister6);
-   cg->stopUsingRegister(dummyRegister7);
    cg->stopUsingRegister(tempRegister);
    return targetRegister;
    }
@@ -1301,12 +1278,12 @@ OMR::Z::TreeEvaluator::fbits2iEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    cg->decReferenceCount(node->getFirstChild());
    if (node->getNumChildren() == 2)
       cg->decReferenceCount(node->getSecondChild());
-      
+
    if (cg->isLiteralPoolOnDemandOn())
       {
       cg->stopUsingRegister(litBase);
       }
-      
+
    return targetReg;
    }
 
@@ -1551,12 +1528,12 @@ OMR::Z::TreeEvaluator::dbits2lEvaluator(TR::Node * node, TR::CodeGenerator * cg)
          }
       cg->decReferenceCount(firstChild);
       }
-      
+
    if (cg->isLiteralPoolOnDemandOn())
       {
       cg->stopUsingRegister(litBase);
       }
-      
+
    return targetReg;
    }
 
@@ -2321,13 +2298,7 @@ OMR::Z::TreeEvaluator::fRegLoadEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    if(globalReg == NULL)
      {
-      if (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-        {
-        TR::AutomaticSymbol *regSym=node->getSymbolReference()->getSymbol()->castToRegisterSymbol();
-        globalRegNum = regSym->getGlobalRegisterNumber();
-        }
-      else
-        globalRegNum = node->getGlobalRegisterNumber();
+     globalRegNum = node->getGlobalRegisterNumber();
      }
 
    if (globalReg == NULL)
@@ -2347,13 +2318,7 @@ OMR::Z::TreeEvaluator::dRegLoadEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    if(globalReg == NULL)
      {
-      if (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-        {
-        TR::AutomaticSymbol *regSym=node->getSymbolReference()->getSymbol()->castToRegisterSymbol();
-        globalRegNum = regSym->getGlobalRegisterNumber();
-        }
-      else
-        globalRegNum = node->getGlobalRegisterNumber();
+     globalRegNum = node->getGlobalRegisterNumber();
      }
 
    if (globalReg == NULL)
@@ -2371,14 +2336,7 @@ OMR::Z::TreeEvaluator::fRegStoreEvaluator(TR::Node * node, TR::CodeGenerator * c
    TR::Node * child = node->getFirstChild();
 
    TR::Register * globalReg=NULL;
-   TR_GlobalRegisterNumber globalRegNum;
-   if (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     {
-     TR::AutomaticSymbol *regSym=node->getSymbolReference()->getSymbol()->castToRegisterSymbol();
-     globalRegNum = regSym->getGlobalRegisterNumber();
-     }
-   else
-     globalRegNum = node->getGlobalRegisterNumber();
+   TR_GlobalRegisterNumber globalRegNum = node->getGlobalRegisterNumber();
 
    globalReg = cg->evaluate(child);
 
@@ -2392,14 +2350,7 @@ OMR::Z::TreeEvaluator::dRegStoreEvaluator(TR::Node * node, TR::CodeGenerator * c
    TR::Node * child = node->getFirstChild();
 
    TR::Register * globalReg=NULL;
-   TR_GlobalRegisterNumber globalRegNum;
-   if (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     {
-     TR::AutomaticSymbol *regSym=node->getSymbolReference()->getSymbol()->castToRegisterSymbol();
-     globalRegNum = regSym->getGlobalRegisterNumber();
-     }
-   else
-     globalRegNum = node->getGlobalRegisterNumber();
+   TR_GlobalRegisterNumber globalRegNum = node->getGlobalRegisterNumber();
 
    globalReg = cg->evaluate(child);
 

@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OMR_VMENV_INCL
 #define OMR_VMENV_INCL
@@ -104,6 +107,33 @@ public:
    uintptrj_t OSRFrameSizeInBytes(TR::Compilation *comp, TR_OpaqueMethodBlock* method) { return 0; }
    bool ensureOSRBufferSize(TR::Compilation *comp, uintptrj_t osrFrameSizeInBytes, uintptrj_t osrScratchBufferSizeInBytes, uintptrj_t osrStackFrameSizeInBytes) { return false; }
    uintptrj_t thisThreadGetOSRReturnAddressOffset(TR::Compilation *comp) { return 0; }
+
+   /**
+    * @brief Returns offset from the current thread to the intermediate result field.
+    * The field contains intermediate result from the latest guarded load during concurrent scavenge.
+    */
+   uintptrj_t thisThreadGetGSIntermediateResultOffset(TR::Compilation *comp) { return 0; }
+   /**
+    * @brief Returns offset from the current thread to the flags to check if concurrent scavenge is active
+    */
+   uintptrj_t thisThreadGetConcurrentScavengeActiveByteAddressOffset(TR::Compilation *comp) { return 0; }
+   /**
+    * @brief Returns offset from the current thread to the field with the base address of the evacuate memory region
+    */
+   uintptrj_t thisThreadGetEvacuateBaseAddressOffset(TR::Compilation *comp) { return 0; }
+   /**
+    * @brief Returns offset from the current thread to the field with the top address of the evacuate memory region
+    */
+   uintptrj_t thisThreadGetEvacuateTopAddressOffset(TR::Compilation *comp) { return 0; }
+   /**
+    * @brief Returns offset from the current thread to the operand address field.
+    * It contains data from the most recent guarded load during concurrent scavenge
+    */
+   uintptrj_t thisThreadGetGSOperandAddressOffset(TR::Compilation *comp) { return 0; }
+   /**
+    * @brief Returns offset from the current thread to the filed with the read barrier handler address
+    */
+   uintptrj_t thisThreadGetGSHandlerAddressOffset(TR::Compilation *comp) { return 0; }
 
    };
 

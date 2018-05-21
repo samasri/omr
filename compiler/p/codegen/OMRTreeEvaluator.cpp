@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stdint.h>                                  // for int32_t, etc
@@ -150,7 +153,7 @@ TR::Instruction *loadConstant(TR::CodeGenerator *cg, TR::Node * node, int32_t va
    TR::Instruction *temp = cursor;
 
    if (cursor == NULL)
-      cursor = comp->getAppendInstruction();
+      cursor = cg->getAppendInstruction();
 
    if ((LOWER_IMMED <= localVal.getValue()) && (localVal.getValue() <= UPPER_IMMED))
       {
@@ -180,7 +183,7 @@ TR::Instruction *loadConstant(TR::CodeGenerator *cg, TR::Node * node, int32_t va
       }
 
    if (temp == NULL)
-      comp->setAppendInstruction(cursor);
+      cg->setAppendInstruction(cursor);
 
    return(cursor);
    }
@@ -196,7 +199,7 @@ TR::Instruction *loadConstant(TR::CodeGenerator *cg, TR::Node * node, int64_t va
    TR::Instruction *temp = cursor;
 
    if (cursor == NULL)
-      cursor = comp->getAppendInstruction();
+      cursor = cg->getAppendInstruction();
 
    int32_t offset = PTOC_FULL_INDEX;
 
@@ -273,7 +276,7 @@ TR::Instruction *loadConstant(TR::CodeGenerator *cg, TR::Node * node, int64_t va
       }
 
    if (temp == NULL)
-      comp->setAppendInstruction(cursor);
+      cg->setAppendInstruction(cursor);
 
    return cursor;
    }
@@ -290,7 +293,7 @@ TR::Instruction *fixedSeqMemAccess(TR::CodeGenerator *cg, TR::Node *node, intptr
 
    nibbles[2] = nibbles[3] = NULL;
    if (cursor == NULL)
-      cursor = comp->getAppendInstruction();
+      cursor = cg->getAppendInstruction();
 
    if (TR::Compiler->target.is32Bit())
       {
@@ -342,7 +345,7 @@ TR::Instruction *fixedSeqMemAccess(TR::CodeGenerator *cg, TR::Node *node, intptr
       }
 
    if (cursorCopy == NULL)
-      comp->setAppendInstruction(cursor);
+      cg->setAppendInstruction(cursor);
 
    return cursor;
    }
@@ -688,7 +691,7 @@ TR::Register *OMR::Power::TreeEvaluator::lloadEvaluator(TR::Node *node, TR::Code
                }
             else
                {
-               if (TR::Compiler->target.cpu.id() == TR_PPCp8)
+               if (TR::Compiler->target.cpu.id() >= TR_PPCp8)
                   {
                   TR::Register * tmp1 = cg->allocateRegister(TR_FPR);
                   generateMvFprGprInstructions(cg, node, fpr2gprHost32, false, highReg, lowReg, doubleReg, tmp1);
@@ -1247,7 +1250,7 @@ TR::Register *OMR::Power::TreeEvaluator::lstoreEvaluator(TR::Node *node, TR::Cod
                   tempMRStore2->forceIndexedForm(node, cg);
                   TR::Register *highReg = cg->allocateRegister();
                   TR::Register *lowReg = cg->allocateRegister();
-                  if (TR::Compiler->target.cpu.id() == TR_PPCp8)
+                  if (TR::Compiler->target.cpu.id() >= TR_PPCp8)
                      {
                      TR::Register * tmp1 = cg->allocateRegister(TR_FPR);
                      generateMvFprGprInstructions(cg, node, fpr2gprHost32, false, highReg, lowReg, doubleReg, tmp1);
@@ -1269,7 +1272,7 @@ TR::Register *OMR::Power::TreeEvaluator::lstoreEvaluator(TR::Node *node, TR::Cod
                }
             else
                {
-               if (TR::Compiler->target.cpu.id() == TR_PPCp8)
+               if (TR::Compiler->target.cpu.id() >= TR_PPCp8)
                   {
                   TR::Register * tmp1 = cg->allocateRegister(TR_FPR);
                   generateMvFprGprInstructions(cg, node, gpr2fprHost32, false, doubleReg, valueReg->getHighOrder(), valueReg->getLowOrder(), tmp1);
@@ -5904,7 +5907,7 @@ TR::Register *OMR::Power::TreeEvaluator::BBEndEvaluator(TR::Node *node, TR::Code
 
    if (NULL == block->getNextBlock())
       {
-      TR::Instruction *lastInstruction = comp->getAppendInstruction();
+      TR::Instruction *lastInstruction = cg->getAppendInstruction();
       if (lastInstruction->getOpCodeValue() == TR::InstOpCode::bl
               && lastInstruction->getNode()->getSymbolReference()->getReferenceNumber() == TR_aThrow)
          {
@@ -5994,7 +5997,7 @@ void OMR::Power::TreeEvaluator::postSyncConditions(
       {
       if (TR::Compiler->target.is64Bit() && symRef->getSymbol()->isStatic())
          {
-         iPtr = comp->getAppendInstruction()->getPrev();
+         iPtr = cg->getAppendInstruction()->getPrev();
          if (syncOp == TR::InstOpCode::sync)  // This is a store
             iPtr = iPtr->getPrev();
          memRef = iPtr->getMemoryReference();
@@ -6190,7 +6193,7 @@ TR::Register *OMR::Power::TreeEvaluator::longBitCount(TR::Node *node, TR::CodeGe
 
 void OMR::Power::TreeEvaluator::preserveTOCRegister(TR::Node *node, TR::CodeGenerator *cg, TR::RegisterDependencyConditions *dependencies)
 {
-   TR::Instruction *cursor = cg->comp()->getAppendInstruction();
+   TR::Instruction *cursor = cg->getAppendInstruction();
    TR::Compilation* comp = cg->comp();
 
    //We need to preserve the JIT TOC whenever we call out. We're saving this on the caller TOC slot as defined by the ABI.
@@ -6201,7 +6204,7 @@ void OMR::Power::TreeEvaluator::preserveTOCRegister(TR::Node *node, TR::CodeGene
 
    cursor = generateMemSrc1Instruction(cg,TR::InstOpCode::Op_st, node, new (cg->trHeapMemory()) TR::MemoryReference(grSysStackReg, callerSaveTOCOffset, TR::Compiler->om.sizeofReferenceAddress(), cg), grTOCReg, cursor);
 
-   comp->setAppendInstruction(cursor);
+   cg->setAppendInstruction(cursor);
 }
 
 void OMR::Power::TreeEvaluator::restoreTOCRegister(TR::Node *node, TR::CodeGenerator *cg, TR::RegisterDependencyConditions *dependencies)

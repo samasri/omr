@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -62,7 +66,7 @@
 #define INVALID_KEY -1
 
 #if 0
-#define J9VMEM_DEBUG
+#define OMRVMEM_DEBUG
 #endif
 
 #define VMEM_MEMINFO_SIZE_MAX	2048
@@ -541,7 +545,7 @@ omrvmem_commit_memory(struct OMRPortLibrary *portLibrary, void *address, uintptr
 			0 != (identifier->mode & OMRPORT_VMEM_MEMORY_MODE_EXECUTE)
 		) {
 			if (0 == mprotect(address, byteAmount, get_protectionBits(identifier->mode))) {
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 				printf("\t\t omrvmem_commit_memory called mprotect, returning 0x%zx\n", address);
 				fflush(stdout);
 #endif
@@ -558,7 +562,7 @@ omrvmem_commit_memory(struct OMRPortLibrary *portLibrary, void *address, uintptr
 		portLibrary->error_set_last_error(portLibrary,  -1, OMRPORT_ERROR_VMEM_INVALID_PARAMS);
 	}
 
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\t\t omrvmem_commit_memory returning 0x%x\n", rc);
 	fflush(stdout);
 #endif
@@ -713,7 +717,7 @@ omrvmem_reserve_memory_ex(struct OMRPortLibrary *portLibrary, struct J9PortVmemI
 		if (NULL == memoryPointer) {
 			/* If strict page size flag is not set try again with default page size */
 			if (0 == (OMRPORT_VMEM_STRICT_PAGE_SIZE & params->options)) {
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 				printf("\t\t\t NULL == memoryPointer, reverting to default pages\n");
 				fflush(stdout);
 #endif
@@ -740,7 +744,7 @@ omrvmem_reserve_memory_ex(struct OMRPortLibrary *portLibrary, struct J9PortVmemI
 	}
 #endif
 
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\tomrvmem_reserve_memory_ex returning %p\n", memoryPointer);
 	fflush(stdout);
 #endif
@@ -803,7 +807,7 @@ reserveLargePages(struct OMRPortLibrary *portLibrary, struct J9PortVmemIdentifie
 		update_vmemIdentifier(identifier, NULL, NULL, 0, 0, 0, 0, 0, NULL);
 	}
 
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\treserveLargePages returning 0x%zx\n", memoryPointer);
 	fflush(stdout);
 #endif
@@ -1204,7 +1208,7 @@ getMemoryInRangeForDefaultPages(struct OMRPortLibrary *portLibrary, struct J9Por
 	}
 
 	/* check if we should use quick search for fast performance */
-	if (J9_ARE_ANY_BITS_SET(vmemOptions, OMRPORT_VMEM_ALLOC_QUICK)) {
+	if (OMR_ARE_ANY_BITS_SET(vmemOptions, OMRPORT_VMEM_ALLOC_QUICK)) {
 
 		void *smartAddress = NULL;
 		void *allocatedAddress = NULL;
@@ -1214,14 +1218,18 @@ getMemoryInRangeForDefaultPages(struct OMRPortLibrary *portLibrary, struct J9Por
 		} else {
 			smartAddress = findAvailableMemoryBlockNoMalloc(portLibrary, startAddress, currentAddress, byteAmount, TRUE);
 		}
-
-		allocatedAddress = default_pageSize_reserve_memory(portLibrary, smartAddress, byteAmount, identifier, mode, PPG_vmem_pageSize[0], category);
-
+		/* only allocate when smartAddress is not NULL */
+		if (NULL != smartAddress) {
+			allocatedAddress = default_pageSize_reserve_memory(portLibrary, smartAddress, byteAmount, identifier, mode, PPG_vmem_pageSize[0], category);
+		}
 		if (NULL != allocatedAddress) {
-			/* If the memoryPointer located outside of the range, free it and set the pointer to NULL */
-			if ((startAddress <= allocatedAddress) && (endAddress >= allocatedAddress)) {
+			/* if OMRPORT_VMEM_STRICT_ADDRESS is not set we accept whatever we get back */
+			if (0 == (vmemOptions & OMRPORT_VMEM_STRICT_ADDRESS)) {
+				return allocatedAddress;
+			} else if ((startAddress <= allocatedAddress) && (endAddress >= allocatedAddress)) {
 				memoryPointer = allocatedAddress;
 			} else if (0 != omrvmem_free_memory(portLibrary, allocatedAddress, byteAmount, identifier)) {
+				/* If the memoryPointer located outside of the range, free it and set the pointer to NULL */
 				return NULL;
 			}
 		}
@@ -1233,6 +1241,10 @@ getMemoryInRangeForDefaultPages(struct OMRPortLibrary *portLibrary, struct J9Por
 	}
 
 	if (NULL == memoryPointer) {
+		/* return after first attempt when OMRPORT_VMEM_ADDRESS_HINT is set */
+		if (0 != (vmemOptions & OMRPORT_VMEM_ADDRESS_HINT)) {
+			return default_pageSize_reserve_memory(portLibrary, currentAddress, byteAmount, identifier, mode, PPG_vmem_pageSize[0], category);			
+		}
 		/* try all addresses within range */
 		while ((startAddress <= currentAddress) && (endAddress >= currentAddress)) {
 			memoryPointer = default_pageSize_reserve_memory(portLibrary, currentAddress, byteAmount, identifier, mode, PPG_vmem_pageSize[0], category);
@@ -1500,7 +1512,6 @@ omrvmem_numa_get_node_details(struct OMRPortLibrary *portLibrary, J9MemoryNodeDe
 		} else {
 			uintptr_t arraySize = *nodeCount;
 			uintptr_t populatedNodeCount = 0;
-			struct dirent nodeStorage;
 			struct dirent *node = NULL;
 
 			/* by default, set the SET and CLEAR states to the same value since "default" NUMA mode has all nodes cleared */
@@ -1525,7 +1536,15 @@ omrvmem_numa_get_node_details(struct OMRPortLibrary *portLibrary, J9MemoryNodeDe
 			}
 
 			/* walk through the /sys/devices/system/node/ directory to find each individual node */
-			while ((0 == readdir_r(nodes, &nodeStorage, &node)) && (NULL != node)) {
+			
+			/*
+			from readdir man page: 
+			If the end of the directory stream is reached, 
+			NULL is returned and errno is not changed. If an error occurs, 
+			NULL is returned and errno is set appropriately. 
+			*/
+			errno = 0;
+			while (NULL != (node = readdir(nodes))) {
 				unsigned long nodeIndex = 0;
 				if (1 == sscanf(node->d_name, "node%lu", &nodeIndex)) {
 					if (nodeIndex < PPG_numa_max_node_bits) {
@@ -1542,10 +1561,9 @@ omrvmem_numa_get_node_details(struct OMRPortLibrary *portLibrary, J9MemoryNodeDe
 
 								/* find each CPU and check to see if it is part of our global mask */
 								uintptr_t allowedCPUCount = 0;
-								struct dirent cpuStorage;
 								struct dirent *fileEntry = NULL;
 								uint64_t memoryOnNodeInKibiBytes = 0;
-								while ((0 == readdir_r(oneNode, &cpuStorage, &fileEntry)) && (NULL != fileEntry)) {
+								while (NULL != (fileEntry = readdir(oneNode))) {
 									unsigned long cpuIndex = 0;
 									const char *fileName = fileEntry->d_name;
 									if ((1 == sscanf(fileName, "cpu%lu", &cpuIndex)) && (CPU_ISSET(cpuIndex, &PPG_process_affinity))) {
@@ -1588,10 +1606,18 @@ omrvmem_numa_get_node_details(struct OMRPortLibrary *portLibrary, J9MemoryNodeDe
 					}
 				}
 			}
-			/* save back how many entries we saw (the caller knows that the number of entries we populated is the minimum of how many we were given and how many we found) */
-			*nodeCount = populatedNodeCount;
-			result = 0;
-			closedir(nodes);
+			//when error occurs, node is null and errno is changed (!=0)
+			if(node == NULL && errno != 0)
+			{
+				result = OMRPORT_ERROR_VMEM_OPFAILED;
+			}
+			else
+			{
+				/* save back how many entries we saw (the caller knows that the number of entries we populated is the minimum of how many we were given and how many we found) */
+				*nodeCount = populatedNodeCount;
+				result = 0;
+				closedir(nodes);
+			}
 		}
 	}
 #endif /* OMR_PORT_NUMA_SUPPORT */

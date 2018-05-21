@@ -1,73 +1,90 @@
 ###############################################################################
+# Copyright (c) 2017, 2017 IBM Corp. and others
 #
-# (c) Copyright IBM Corp. 2017
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
 #
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
+
+# TODO: OMR_RTTI flag
+# TODO: Version things
 
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
-# Warn user that CMake support is currently experimental
-message(WARNING
-"CMake support is currently experimental.\n\
-Various components may fail to compile with default configuration options, and some are not even attempted.")
+message(STATUS "Starting with CMake version ${CMAKE_VERSION}")
 
-include(cmake/versions.cmake) # Required for OMR_VERSION 
+include(cmake/versions.cmake) # Required for OMR_VERSION
 
 project(omr VERSION ${OMR_VERSION} LANGUAGES CXX C)
-set(OMR_ROOT ${CMAKE_CURRENT_LIST_DIR} CACHE INTERNAL "Root of OMR")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
 
+set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
+
 include(OmrAssert)
 include(OmrFindFiles)
+include(OmrHookgen)
+include(OmrPlatform)
+include(OmrTracegen)
+include(OmrSanitizerSupport)
 
 ###
-### Getting the glue target
+### Set up the global platform configuration
 ###
-if (NOT DEFINED OMR_GLUE_TARGET)
-	set(OMR_GLUE_TARGET "omr_example_glue" CACHE STRING "The glue target, must be an interface library")
-    message(STATUS "Glue not set, defaulting to example glue")
+
+if(NOT OMR_PLATFORM_GLOBALLY_INITIALIZED)
+	omr_platform_global_setup()
 endif()
-add_subdirectory(example/glue)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# TODO: OMR_EXAMPLE flag
-# TODO: OMR_RTTI flag
-
-# TODO: Version things
+###
+### Set up install path stuff
+###
+# Note the paths are a bit odd compared to standard gnu install paths
+# This is because we arent expecting to actually be installing globally
+# since we don't have a good story for installing OMR system-wide
+set(CMAKE_INSTALL_BINDIR ".")
+set(CMAKE_INSTALL_LIBDIR ".")
+set(OMR_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "Root path where to install OMR")
+set(CMAKE_INSTALL_PREFIX "${OMR_INSTALL_PREFIX}")
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_RPATH "\$ORIGIN")
+add_custom_target(omr_install_tooling
+	COMMAND ${CMAKE_COMMAND} --build tools --target preinstall
+	COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=tooling -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+)
 
 ###
 ### Versions and stuff
 ###
 
-include(cmake/platform.cmake)
 include(cmake/config.cmake)
 
 enable_testing()
 
-#include current source dir and current bin dir automatically
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 include_directories(
-  ${PROJECT_BINARY_DIR}
-  ./include/
-  ./include_core/
-  ./third_party/
+	${PROJECT_BINARY_DIR}
+	./include/
+	./include_core/
+	./third_party/
 )
 
 add_definitions(
-  -DUT_DIRECT_TRACE_REGISTRATION # TODO:  Deal with that stupid jni issue in tracegen
+	-DUT_DIRECT_TRACE_REGISTRATION # TODO:  Deal with that stupid jni issue in tracegen
 )
 
 # Check for existing omrcfg in the source tree since this can cause alot of headaches
@@ -85,22 +102,32 @@ endif()
 configure_file(./omrcfg.CMakeTemplate.h omrcfg.h)
 configure_file(./omrversionstrings.CMakeTemplate.h omrversionstrings.h)
 
-add_library(omrglue STATIC)
-# Link as private since we dont want the interface sources to propagate
-target_link_libraries(omrglue
-	PUBLIC
-	omrgc
-	PRIVATE
-	${OMR_GLUE_TARGET}
-)
-#but we need to propagate the include paths
-target_include_directories(omrglue INTERFACE $<TARGET_PROPERTY:${OMR_GLUE_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
+###
+### Native Tooling
+###
 
-add_subdirectory(tools)
-# Yeah, its dumb doing this here. Read note in tools/CMakeLists.txt
-if(CMAKE_CROSSCOMPILING)
-	include(${OMR_TOOLS_IMPORTFILE})
+if(OMR_TOOLS_IMPORTFILE)
+	include("${OMR_TOOLS_IMPORTFILE}")
+elseif(OMR_TOOLS)
+	add_subdirectory(tools)
+else()
+	message(FATAL_ERROR "OMR: Build tools are required. See OMR_TOOLS and OMR_TOOLS_IMPORTFILE")
 endif()
+
+
+###
+### Built-in OMR Applications.
+###
+
+# Each application provides it's own glue, so must be included before subdirectories.
+# The example and om are not yet compatible.
+if (OMR_EXAMPLE)
+	add_subdirectory(example)
+endif (OMR_EXAMPLE)
+
+###
+### Core OMR components
+###
 
 add_subdirectory(thread)
 add_subdirectory(port)
@@ -110,16 +137,24 @@ add_subdirectory(omr)
 add_subdirectory(third_party)
 add_subdirectory(omrsigcompat)
 
-if(OMR_FVTEST)
-  add_subdirectory(fvtest)
-endif()
-
 if(OMR_GC)
-  add_subdirectory(gc)
-  # if we are building the gc, add gc headers to omrglue
-  target_include_directories(omrglue PRIVATE $<TARGET_PROPERTY:omrgc,INCLUDE_DIRECTORIES>)
+	add_subdirectory(gc)
 endif(OMR_GC)
+
+if(OMR_DDR)
+	add_subdirectory(ddr)
+endif(OMR_DDR)
+
+if(OMR_JIT)
+	add_subdirectory(compiler)
+endif()
 
 if(OMR_JITBUILDER)
 	add_subdirectory(jitbuilder)
 endif(OMR_JITBUILDER)
+
+# This should come last to ensure dependencies
+# are defined
+if(OMR_FVTEST)
+	add_subdirectory(fvtest)
+endif()

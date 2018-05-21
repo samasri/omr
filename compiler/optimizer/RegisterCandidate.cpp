@@ -1,20 +1,27 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+
+#ifdef OMRZTPF
+#define __TPF_DO_NOT_MAP_ATOE_REMOVE
+#endif
 
 #include "optimizer/RegisterCandidate.hpp"
 
@@ -35,7 +42,6 @@
 #include "cs2/bitvectr.h"                      // for ABitVector<>::Cursor, etc
 #include "cs2/hashtab.h"                       // for HashTable, HashIndex
 #include "cs2/sparsrbit.h"                     // for ASparseBitVector, etc
-#include "cs2/tableof.h"                       // for TableOf, TableIndex
 #include "env/CompilerEnv.hpp"
 #include "env/TRMemory.hpp"                    // for SparseBitVector, etc
 #include "il/AliasSetInterface.hpp"
@@ -59,8 +65,9 @@
 #include "infra/Cfg.hpp"                       // for CFG, TR_SuccessorIterator
 #include "infra/Link.hpp"                      // for TR_LinkHead
 #include "infra/List.hpp"                      // for ListIterator, List, etc
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
-#include "infra/TRCfgNode.hpp"                 // for CFGNode
+#include "infra/Checklist.hpp"                 // for NodeChecklist
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
+#include "infra/CfgNode.hpp"                   // for CFGNode
 #include "optimizer/Optimizations.hpp"
 #include "optimizer/Optimizer.hpp"             // for Optimizer
 #include "optimizer/Structure.hpp"             // for TR_RegionStructure, etc
@@ -75,97 +82,72 @@
 
 #define OPT_DETAILS "O^O GLOBAL REGISTER ASSIGNER: "
 
-//static TR_BitVector *availableOnExit = NULL;
 //static TR_BitVector *blocksVisited = NULL;
 
 // Duplicated in GlobalRegisterAllocator.cpp. TODO try and factor this out
 #define keepAllStores false
 
 TR::GlobalSet::GlobalSet(TR::Compilation * comp, TR::Region &region)
-   :_refAutosPerBlock((RefMapComparator()),(RefMapAllocator(region))),
-    _comp(comp),_maxEntries(0)
+   :_region(region),
+    _blocksPerAuto((RefMapComparator()),(RefMapAllocator(region))),
+    _EMPTY(region),
+    _collected(false),
+    _comp(comp)
    {
    }
 
-
-void TR::GlobalSet::DenseSet::print(TR::Compilation * comp)
+void TR::GlobalSet::collectBlocks()
    {
-   TR_BitVectorIterator bits(_refs);
-   for (int32_t bit = bits.getFirstElement(); bits.hasMoreElements(); bit = bits.getNextElement())
-     {
-     traceMsg(comp,"%d ",bit);
-     }
-   traceMsg(comp,"\n");
-   }
+   TR::StackMemoryRegion stackMemoryRegion(*_comp->trMemory());
 
-void TR::GlobalSet::SparseSet::print(TR::Compilation * comp)
-   {
-   TR_BitVectorIterator bits(_refs);
-   for (int32_t bit = bits.getFirstElement(); bits.hasMoreElements(); bit = bits.getNextElement())
-     {
-     traceMsg(comp,"%d ",bit);
-     }
-   traceMsg(comp,"\n");
+   TR_BitVector references(0, _comp->trMemory(), stackAlloc);
+   TR_BitVectorIterator bvi(references);
+   TR::NodeChecklist visited(_comp);
 
-   }
-
-void TR::GlobalSet::collectReferencedAutoSymRefs(TR::Block * BB)
-   {
-   TR_ASSERT(_maxEntries > 0, " Entries unknown\n");
-   if (!(BB->getEntry() && BB->getExit()))
-        return;
-
-   Set * refAutos = NULL;
-   TR::Allocator alloc = _comp->allocator();
-   if (_maxEntries > MB50)
-     refAutos  = new (_comp->trStackMemory()) SparseSet(_comp->trMemory()->currentStackRegion());
-   else
-     refAutos  = new (_comp->trStackMemory()) DenseSet(_comp->trMemory()->currentStackRegion());
-
-   _refAutosPerBlock[BB->getNumber()] = refAutos;
-
-   vcount_t visitCount = _comp->incVisitCount();
-   for (TR::TreeTop * tt = BB->getFirstRealTreeTop(); tt != BB->getExit(); tt = tt->getNextTreeTop())
-     collectReferencedAutoSymRefs(tt->getNode(), refAutos, visitCount);
-   }
-
-void TR::GlobalSet::collectReferencedAutoSymRefs(TR::Node * node, Set * referencedAutoSymRefs, vcount_t visitCount)
-   {
-   if (node->getVisitCount() == visitCount)
-      return;
-
-   node->setVisitCount(visitCount);
-
-   if (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isAutoOrParm())
+   for (TR::CFGNode *node = _comp->getFlowGraph()->getFirstNode(); node; node = node->getNext())
       {
-      TR::SymbolReference* symRef = node->getSymbolReference();
-      if (symRef->getSymbol()->isAutoOrParm() || symRef->getSymbol()->isMethodMetaData())
-         referencedAutoSymRefs->set(symRef->getReferenceNumber());
-      else if (_comp->getOptLevel() > warm)
+      TR::Block *block = toBlock(node);
+      if (!block)
+         continue;
+
+      // Collect all autos/parms used in this block
+      references.empty();
+      visited.remove(visited);
+      for (TR::TreeTop * tt = block->getEntry(); tt && tt != block->getExit(); tt = tt->getNextTreeTop())
+         collectReferencedAutoSymRefs(tt->getNode(), references, visited);
+
+      // Set this block as referencing the collected autos/params
+      // Also set any blocks that extend this one
+      bvi.setBitVector(references);
+      while (bvi.hasMoreElements())
          {
-         TR::SparseBitVector indirectMethodMetaUses(_comp->allocator());
-         symRef->getUseDefAliases(node->getOpCode().isCallDirect()).getAliases(indirectMethodMetaUses);
-         if (!indirectMethodMetaUses.IsZero())
+         uint32_t symRefNum = bvi.getNextElement();
+         auto lookup = _blocksPerAuto.find(symRefNum);
+         if (lookup != _blocksPerAuto.end())
+            lookup->second->set(block->getNumber());
+         else
             {
-            TR::SparseBitVector::Cursor aliasesCursor(indirectMethodMetaUses);
-            for (aliasesCursor.SetToFirstOne(); aliasesCursor.Valid(); aliasesCursor.SetToNextOne())
-               {
-               int32_t usedSymbolIndex;
-               TR::SymbolReference *usedSymRef = _comp->getSymRefTab()->getSymRef(aliasesCursor);
-               TR::RegisterMappedSymbol *usedSymbol = usedSymRef->getSymbol()->getMethodMetaDataSymbol();
-               if (usedSymbol && usedSymbol->getDataType() != TR::NoType)
-                  {
-                  usedSymbolIndex = usedSymbol->getLiveLocalIndex();
-                  referencedAutoSymRefs->set(usedSymbolIndex);
-                  }
-               }
+            TR_BitVector *blocks = new (_region) TR_BitVector(_region);
+            blocks->set(block->getNumber());
+            _blocksPerAuto[symRefNum] = blocks;
             }
          }
       }
 
+   _collected = true;
+   }
+
+void TR::GlobalSet::collectReferencedAutoSymRefs(TR::Node *node, TR_BitVector &referencedAutoSymRefs, TR::NodeChecklist &visited)
+   {
+   if (visited.contains(node))
+      return;
+   visited.add(node);
+
+   if (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isAutoOrParm())
+      referencedAutoSymRefs.set(node->getSymbolReference()->getReferenceNumber());
 
    for (int32_t i = 0; i < node->getNumChildren(); ++i)
-      collectReferencedAutoSymRefs(node->getChild(i), referencedAutoSymRefs, visitCount);
+      collectReferencedAutoSymRefs(node->getChild(i), referencedAutoSymRefs, visited);
    }
 
 // Duplicated in GlobalRegisterAllocator.cpp. TODO try and factor this out
@@ -184,25 +166,15 @@ int32_t TR_RegisterCandidates::_candidateTypeWeights[TR_NumRegisterCandidateType
    };
 
 TR_RegisterCandidate::TR_RegisterCandidate(TR::SymbolReference * sr, TR::Region &r)
-   : _symRef(sr), _splitSymRef(NULL), _restoreSymRef(NULL), _lowRegNumber(-1), _highRegNumber(-1), _allBlocks(false),
-     _failedToAssignToARegister(false),
+   : _symRef(sr), _splitSymRef(NULL), _restoreSymRef(NULL), _lowRegNumber(-1), _highRegNumber(-1),
      _liveOnEntry(), _liveOnExit(), _originalLiveOnEntry(),
-     _8BitGlobalGPR(false),
      _reprioritized(0),
      _blocks(r),
-     _valueModified(false),
-     _liveAcrossExceptionEdge(false),
      _loopExitBlocks(r),
      _stores(r),
      _loopsWithHoles(r),
      _mostRecentValue(NULL),
-     _lastLoad(NULL),
-     _highWordZero(false),
-     _dontAssignVMThreadRegister(false),
-     _initialBlocksWeightComputed(false),
-     _extendedLiveRange(false),
-     _availableOnExit(NULL),
-     _blocksVisited(NULL)
+     _lastLoad(NULL)
    {
    }
 
@@ -239,12 +211,6 @@ TR_RegisterCandidate::getRegisterKinds()
     return TR_GPR;
   }
 
-TR::Symbol *
-TR_RegisterCandidate::getSymbol()
-   {
-   return _symRef->getSymbol();
-   }
-
 void TR_RegisterCandidate::addAllBlocksInStructure(TR_Structure *structure, TR::Compilation *comp, const char *description, vcount_t count, bool recursiveCall)
    {
    if (!recursiveCall)
@@ -255,7 +221,7 @@ void TR_RegisterCandidate::addAllBlocksInStructure(TR_Structure *structure, TR::
       TR_BlockStructure *blockStructure = structure->asBlock();
       TR::Block *block = blockStructure->getBlock();
 
-      addBlock(block, 0, comp->trMemory());
+      addBlock(block, 0);
 
       if (description)
          traceMsg(comp, "\nAdded %s #%d (symRef %p) as global reg candidate in block_%d\n", description, getSymbolReference()->getReferenceNumber(), getSymbolReference(), block->getNumber());
@@ -281,10 +247,9 @@ void TR_RegisterCandidate::addAllBlocksInStructure(TR_Structure *structure, TR::
 
 TR_RegisterCandidates::TR_RegisterCandidates(TR::Compilation *comp)
   : _compilation(comp), _trMemory(comp->trMemory()), _candidateRegion(_trMemory->heapMemoryRegion()),
-    _referencedAutoSymRefsInBlock(comp,_trMemory->heapMemoryRegion())
+    _referencedAutoSymRefsInBlock(NULL)
    {
    _candidateForSymRefs = 0;
-   _candidateForSymRefsSize      = 0;
    }
 
  TR_RegisterCandidate *TR_RegisterCandidates::newCandidate(TR::SymbolReference *ref) {
@@ -295,18 +260,18 @@ TR_RegisterCandidate *
 TR_RegisterCandidates::findOrCreate(TR::SymbolReference * symRef)
    {
    TR_RegisterCandidate * rc;
-   if (rc = find(symRef))
+   if ((rc = find(symRef)))
       {
       if (_candidateForSymRefs)
          {
-         _candidateForSymRefs[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] = rc;
+         (*_candidateForSymRefs)[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] = rc;
          }
 
       return rc;
       }
    _candidates.add(rc = newCandidate(symRef));
    if (_candidateForSymRefs)
-      _candidateForSymRefs[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] = rc;
+      (*_candidateForSymRefs)[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] = rc;
 
    TR_ASSERT(comp()->cg()->considerTypeForGRA(symRef),"should create a registerCandidate for symRef #%d with datatype %s\n",symRef->getReferenceNumber(),rc->getDataType().toString());
 
@@ -316,20 +281,15 @@ TR_RegisterCandidates::findOrCreate(TR::SymbolReference * symRef)
 TR_RegisterCandidate *
 TR_RegisterCandidates::find(TR::SymbolReference * symRef)
    {
-   if (_candidateForSymRefsSize && symRef->getReferenceNumber() > _candidateForSymRefsSize) // some spots in GRA add more candidates after _candidateForSymRefs was created in certain cases (ex if there are unused parameters, offerAllAutos may create a new symref)
-      {
-      TR_ASSERT(0, "should not be indexing out of bounds!\n");
-      return NULL;
-      }
    if (symRef->getSymbol()->isAutoOrParm())
       {
-      TR_RegisterCandidate* rc= (_candidateForSymRefs) ? _candidateForSymRefs[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] : NULL;
+      TR_RegisterCandidate* rc= (_candidateForSymRefs) ? (*_candidateForSymRefs)[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] : NULL;
       // two symrefs can point to same symbols so it is possible that we have an rc for symref->getSymbol but not have it added to the cache
       if(rc==NULL)
          {
          rc = find(symRef->getSymbol());
          if (_candidateForSymRefs)
-            _candidateForSymRefs[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] = rc;
+            (*_candidateForSymRefs)[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(symRef)] = rc;
          }
          return rc;
       }
@@ -355,18 +315,13 @@ TR_RegisterCandidates::find(TR::Symbol* sym)
 bool
 TR_RegisterCandidate::find(TR::Block * b)
    {
-     return _blocks.find(b->getNumber());
+   return _blocks.find(b->getNumber());
    }
 
 void
-TR_RegisterCandidate::addBlock(TR::Block * block, int32_t numberOfLoadsAndStores, TR_Memory * m,
-                               bool ifNotFound)
+TR_RegisterCandidate::addBlock(TR::Block * block, int32_t numberOfLoadsAndStores)
    {
-     if (find(block)) {
-       if (!ifNotFound)
-         _blocks.incNumberOfLoadsAndStores(block->getNumber(), numberOfLoadsAndStores);
-     } else
-         _blocks.setNumberOfLoadsAndStores(block->getNumber(), numberOfLoadsAndStores);
+   _blocks.incNumberOfLoadsAndStores(block->getNumber(), numberOfLoadsAndStores);
    }
 
 int32_t
@@ -374,9 +329,9 @@ TR_RegisterCandidate::removeBlock(TR::Block * block)
    {
    if (find(block))
       {
-        int32_t numLoadsAndStores = _blocks.getNumberOfLoadsAndStores(block->getNumber());
-        _blocks.removeBlock(block->getNumber());
-        return numLoadsAndStores;
+      int32_t numLoadsAndStores = _blocks.getNumberOfLoadsAndStores(block->getNumber());
+      _blocks.removeBlock(block->getNumber());
+      return numLoadsAndStores;
       }
    return 0;
    }
@@ -610,10 +565,6 @@ bool TR_RegisterCandidates::aliasesPreventAllocation(TR::Compilation *comp, TR::
       return true;
     }
 
-  // exclude symbols that can be used by  other symbols (WCode only)
-  TR::SparseBitVector use_aliases(comp->allocator());
-
-  symRef->getUseonlyAliases().getAliases(use_aliases);
   return false;
   }
 
@@ -633,91 +584,51 @@ TR_RegisterCandidate::setWeight(TR::Block * * blocks, int32_t *blockStructureWei
    _liveOnEntry.init(numberOfBlocks, comp->trMemory(), stackAlloc, growable);
    _liveOnExit.init(numberOfBlocks, comp->trMemory(), stackAlloc, growable);
    _originalLiveOnEntry.init(numberOfBlocks, comp->trMemory(), stackAlloc, growable);
-   _loadsAndStores = new (comp->trStackMemory()) TR_Array<uint32_t>(comp->trMemory(), numberOfBlocks, true, stackAlloc);
 
    TR::CodeGenerator * cg = comp->cg();
-
-   for (auto itr = _blocks.begin(), end = _blocks.end(); itr != end; ++itr) {
-      int32_t blockNumber = itr->first;
+   BlockInfo::iterator itr = _blocks.getIterator();
+   while (itr.hasMoreElements())
+      {
+      int32_t blockNumber = itr.getNextElement();
       TR_ASSERT(blockNumber < cfg->getNextNodeNumber(), "Overflow on candidate BB numbers");
       TR::Block * b = blocks[blockNumber];
       if (!b) continue;
 
       TR_ASSERT(blockNumber == b->getNumber(),"blocks[x]->getNumber() != x");
-      bool firstBlock = firstBlocks.isSet(blockNumber);
-      bool hasLoadNearStart = !isExtensionOfPreviousBlock.isSet(blockNumber) && findLoadNearStartOfBlock(b, getSymbolReference());
       TR_ASSERT((blockNumber < cfg->getNextNodeNumber()) && (blocks[blockNumber] == b),"blockNumber is wrong");
 
-      static char *disableGRAChange = feGetEnv("TR_disableGRAChange");
-      if (((firstBlock && _allBlocks && cg->getSupportsGlRegDepOnFirstBlock()) ||
-            (!firstBlock /* && (symbolIsLive(b) || hasLoopExitBlock(b)) */)) ||
-           !disableGRAChange)
+      int32_t blockWeight = _blocks.getNumberOfLoadsAndStores(blockNumber);
+      bool firstBlock = firstBlocks.isSet(blockNumber);
+      if ((firstBlock && isAllBlocks() && cg->getSupportsGlRegDepOnFirstBlock()) ||
+           (!firstBlock && (((blockWeight == 0) && hasLoopExitBlock(b)) || symbolIsLive(b))))
+         _liveOnEntry.set(blockNumber);
+
+      TR_BlockStructure * blockStructure = b->getStructureOf();
+      int32_t blockFreq = 1;
+      if (blockStructure)
          {
-         int32_t blockWeight = _blocks.getNumberOfLoadsAndStores(blockNumber);
+         blockFreq = blockStructureWeight[blockNumber];
+         }
 
-         static bool recalcWeights = feGetEnv("TR_GRA_RecalculateBlockWeights") ? true : false;
+      TR_ASSERT(comp->getOptimizer()->cachedExtendedBBInfoValid(), "Incorrect value in _startOfExtendedBBForBB");
+      TR::Block * extendedBlock = startOfExtendedBBForBB[blockNumber];
+      int32_t extendedBlockFreq = 1;
+      TR_BlockStructure *extendedBlockStructure = extendedBlock->getStructureOf();
+      if (extendedBlockStructure)
+         {
+         extendedBlockFreq = blockStructureWeight[extendedBlock->getNumber()];
+         }
 
-         TR_BlockStructure * blockStructure;
-         if (recalcWeights && blockWeight > 0 && (blockStructure = b->getStructureOf()))
-            {
-            blockWeight = blockStructureWeight[blockNumber];
-
-
-            // blockWeight = 1;
-            // blockStructure->calculateFrequencyOfExecution(&blockWeight);
-            int32_t origWeight = blockWeight;
-            if (blockStructure->getParent())
-               {
-               if (blockStructure->getWeight() < 0)
-                  blockStructure->getParent()->setConditionalityWeight(&blockWeight);
-               blockWeight = blockStructure->getWeight();
-               }
-
-            if (blockWeight < origWeight)
-               blockWeight = std::max(1, origWeight*9/10);
-
-            }
-
-         blockStructure = b->getStructureOf();
-         int32_t blockFreq = 1;
-         if (blockStructure)
-            {
-            blockFreq = blockStructureWeight[blockNumber];
-            }
-
-         TR_ASSERT(comp->getOptimizer()->cachedExtendedBBInfoValid(), "Incorrect value in _startOfExtendedBBForBB");
-         TR::Block * extendedBlock = startOfExtendedBBForBB[blockNumber];
-         int32_t extendedBlockFreq = 1;
-         TR_BlockStructure *extendedBlockStructure = extendedBlock->getStructureOf();
-         if (extendedBlockStructure)
-            {
-            // extendedBlockStructure->calculateFrequencyOfExecution(&extendedBlockFreq);
-            extendedBlockFreq = blockStructureWeight[extendedBlock->getNumber()];
-            }
-
-         //traceMsg(comp, "for cand %d blockWeight %d b %d extended b %d live %d\n", getSymbolReference()->getReferenceNumber(), blockWeight, b->getNumber(), extendedBlock->getNumber(), symbolIsLive(b));
-
-         //if (b == extendedBlock)
-          if (disableGRAChange ||
-              (firstBlock && _allBlocks && cg->getSupportsGlRegDepOnFirstBlock()) ||
-              (!firstBlock && (symbolIsLive(b)  || (hasLoopExitBlock(b) && (_blocks.getNumberOfLoadsAndStores(blockNumber)==0)))))
-            _liveOnEntry.set(b->getNumber());
-
-          // We should not mark a candidate as being referenced in the extended block if the
-          // only references to it are in the portion of the extended block that is outside a loop
-          // This is important as we cannot recognize that a candidate is not referenced at all in a loop
-          // otherwise. We see a 'false' use in the extended basic block that started inside the loop because
-          // of the portion of the extended basic block outside the loop.
-          //
-         if (extendedBlockFreq <= blockFreq)
-            {
-            //dumpOptDetails(comp(), "Reached here for b %d\n", b->getNumber());
-            //dumpOptDetails(comp(), "blockWeight %d ext loadsStores %d\n", blockWeight, (*_loadsAndStores)[extendedBlock->getNumber()]);
-            if ((uint32_t)blockWeight > (*_loadsAndStores)[extendedBlock->getNumber()])
-               (*_loadsAndStores)[extendedBlock->getNumber()] = blockWeight;
-            }
-         if ((uint32_t)blockWeight > (*_loadsAndStores)[blockNumber])
-            (*_loadsAndStores)[blockNumber] = blockWeight;
+       // We should not mark a candidate as being referenced in the extended block if the
+       // only references to it are in the portion of the extended block that is outside a loop
+       // This is important as we cannot recognize that a candidate is not referenced at all in a loop
+       // otherwise. We see a 'false' use in the extended basic block that started inside the loop because
+       // of the portion of the extended basic block outside the loop.
+       //
+      if (extendedBlockFreq <= blockFreq)
+         {
+         if ((uint32_t)blockWeight > _blocks.getNumberOfLoadsAndStores(extendedBlock->getNumber()))
+            _blocks.setNumberOfLoadsAndStores(extendedBlock->getNumber(), blockWeight);
          }
       }
 
@@ -800,7 +711,7 @@ bool TR_RegisterCandidate::rcNeeds2Regs(TR::Compilation *comp)
 bool
 TR_RegisterCandidate::hasSameGlobalRegisterNumberAs(TR::Node *node, TR::Compilation *comp)
    {
-   if (comp->nodeNeeds2Regs(node))
+   if (node->requiresRegisterPair(comp))
       return (getLowGlobalRegisterNumber() == node->getLowGlobalRegisterNumber())
           && (getHighGlobalRegisterNumber() == node->getHighGlobalRegisterNumber());
    else
@@ -845,7 +756,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
    referencedBlocks->empty();
    vcount_t visitCount = comp->incVisitCount();
    TR_BitVectorIterator bvi;
-   bool lookForBlocksToRemove = !_allBlocks;
+   bool lookForBlocksToRemove = !isAllBlocks();
    // TODO take this all out
    // used for MetaData that are live on entry in blocks, just to mark that they can escape via return but there is no real loads
    // so we do not want such live on entry blocks to contribute to weigh of the candidate
@@ -859,7 +770,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
          int32_t blockNumber = bvi.getNextElement();
 
          if (trace)
-            dumpOptDetails(comp, "Examining original live-on-entry block_%d with loads and stores = %d\n", blockNumber, (*_loadsAndStores)[blockNumber]);
+            dumpOptDetails(comp, "Examining original live-on-entry block_%d with loads and stores = %d\n", blockNumber, _blocks.getNumberOfLoadsAndStores(blockNumber));
 
          TR::Block * block = blocks[blockNumber];
          bool referencedInPred = false;
@@ -897,7 +808,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
                   // Fixed by Nakaike
                   // if (predBlock && !predBlock->isExtensionOfPreviousBlock())
                   if (parentPredBlock == predBlock ||
-                      parentPredBlock->getNextBlock() && ( parentPredBlock->getNextBlock() == block || !parentPredBlock->getNextBlock()->isExtensionOfPreviousBlock()))
+                      (parentPredBlock->getNextBlock() && ( parentPredBlock->getNextBlock() == block || !parentPredBlock->getNextBlock()->isExtensionOfPreviousBlock())))
                      break;
                   parentPredBlock = parentPredBlock->getNextBlock();
                   }
@@ -932,9 +843,9 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
          int32_t blockNumber = bvi.getNextElement();
 
          if (trace)
-            traceMsg(comp, "\tExamining live-on-entry block_%d with loads and stores = %d\n", blockNumber, (*_loadsAndStores)[blockNumber]);
+            traceMsg(comp, "\tExamining live-on-entry block_%d with loads and stores = %d\n", blockNumber, _blocks.getNumberOfLoadsAndStores(blockNumber));
 
-         if ((*_loadsAndStores)[blockNumber] == 0)
+         if (_blocks.getNumberOfLoadsAndStores(blockNumber) == 0)
             {
             TR::Block * block = blocks[blockNumber];
             bool liveOnExit = false;
@@ -972,7 +883,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
      {
       int32_t blockNumber = bvi.getNextElement();
       if (trace)
-         dumpOptDetails(comp, "Examining live-on-entry block_%d with loads and stores = %d to find maxFrequency\n", blockNumber, (*_loadsAndStores)[blockNumber]);
+         dumpOptDetails(comp, "Examining live-on-entry block_%d with loads and stores = %d to find maxFrequency\n", blockNumber, _blocks.getNumberOfLoadsAndStores(blockNumber));
       TR::Block * block = blocks[blockNumber];
       TR_BlockStructure *blockStructure = block->getStructureOf();
       int32_t blockWeight = 1;
@@ -1039,7 +950,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
 
                if (blockWeight == frequency)
                   {
-                  if ((*_loadsAndStores)[blockNumber] == 0)
+                  if (_blocks.getNumberOfLoadsAndStores(blockNumber) == 0)
                      {
                      numUnreferencedBlocksAtThisFrequency++;
                      break;
@@ -1104,7 +1015,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
                      }
 
                   if (!referencedInNearestLoop  &&
-                      (((*_loadsAndStores)[blockNumber] == 0) ||
+                      ((_blocks.getNumberOfLoadsAndStores(blockNumber) == 0) ||
                        (dontAssignInColdBlocks(comp) && block->isCold())  /*||
                                                                             block->isRare(comp) */ ))
                      {
@@ -1141,7 +1052,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
                                     TR::Block *liveBlock = startOfExtendedBBForBB[nextBlock->getNumber()];
                                     if (_liveOnEntry.get(liveBlock->getNumber()))
                                        {
-                                       if (((*_loadsAndStores)[liveBlock->getNumber()] != 0) &&
+                                       if ((_blocks.getNumberOfLoadsAndStores(blockNumber) == 0) &&
                                             (!dontAssignInColdBlocks(comp) || !nextBlock->isCold()))
                                           {
                                           referencedInNearestLoop = true;
@@ -1304,7 +1215,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
          ++origNumberOfBlocks;
 
       if (!ignoreBlock)
-         origLoadsAndStores += (*_loadsAndStores)[bnum];
+         origLoadsAndStores += _blocks.getNumberOfLoadsAndStores(bnum);
 
       if (trace && !performTransformation(comp, "%s Candidate %d live on entry at block_%d\n", OPT_DETAILS, getSymbolReference()->getReferenceNumber(), bnum))
          {
@@ -1339,7 +1250,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
          }
 
       if (!ignoreBlock)
-         loadsAndStores += (*_loadsAndStores)[blockNumber];
+         loadsAndStores += _blocks.getNumberOfLoadsAndStores(blockNumber);
 
 
 
@@ -1407,8 +1318,8 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
          if (((predWeight > blockWeight) &&
               !liveOnExitFromPred &&
               !_liveOnEntry.get(pred->getNumber())) &&
-              (*_loadsAndStores)[startOfExtendedBBForBB[pred->getNumber()]->getNumber()] == 0 &&
-              (*_loadsAndStores)[pred->getNumber()] == 0)
+              _blocks.getNumberOfLoadsAndStores(startOfExtendedBBForBB[pred->getNumber()]->getNumber()) == 0 &&
+              _blocks.getNumberOfLoadsAndStores(pred->getNumber()) == 0)
             {
             bool reset = true;
             if (useProfilingFrequencies && (pred->getFrequency() > 0) &&
@@ -1465,10 +1376,10 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
             if (!_liveOnEntry.get(pred->getNumber()) && (!dontAssignInColdBlocks(comp) || !pred->isCold()))
                {
                //++numberOfBlocks;  // TODO: try uncomment this
-               loadsAndStores += (*_loadsAndStores)[pred->getNumber()];
+               loadsAndStores += _blocks.getNumberOfLoadsAndStores(pred->getNumber());
                if (trace)
                   dumpOptDetails(comp, "\n    Adding %d loads and stores to pred  block_%d ",
-                                         (*_loadsAndStores)[pred->getNumber()], pred->getNumber());
+                                         _blocks.getNumberOfLoadsAndStores(pred->getNumber()), pred->getNumber());
 
                }
             }
@@ -1493,7 +1404,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
       {
       int32_t blockNumber = bvi.getNextElement();
       if (!_liveOnEntry.get(blockNumber) &&
-         ((*_loadsAndStores)[blockNumber] > 0))
+         (_blocks.getNumberOfLoadsAndStores(blockNumber) > 0))
          {
          int32_t blockWeight = blockStructureWeight[blockNumber];
          loadsAndStores = loadsAndStores + blockWeight;
@@ -1511,8 +1422,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
 
       do {
          blockNumber = block->getNumber();
-         if (((*_loadsAndStores)[blockNumber] == 0) &&
-             ((*_loadsAndStores)[blockNumber] == 0))
+         if (_blocks.getNumberOfLoadsAndStores(blockNumber) > 0)
             {
             bool foundEndOfRange = false;
             for (auto succ = block->getSuccessors().begin(); succ != block->getSuccessors().end(); ++succ)
@@ -1581,11 +1491,11 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
 
       if (!_liveOnEntry.get(extBlockNumber) &&
           (block != comp->getFlowGraph()->getStart()) &&
-          ((*_loadsAndStores)[extBlockNumber] == 0))
+          (_blocks.getNumberOfLoadsAndStores(extBlockNumber) == 0))
           {
           //do {
-             if (((*_loadsAndStores)[extBlockNumber] == 0) &&
-                 ((*_loadsAndStores)[blockNumber] == 0))
+             if ((_blocks.getNumberOfLoadsAndStores(extBlockNumber) == 0) &&
+                 (_blocks.getNumberOfLoadsAndStores(blockNumber) == 0))
                 {
                 bool foundEndOfRange = false;
                 for (auto succ = block->getSuccessors().begin(); succ != block->getSuccessors().end(); ++succ)
@@ -1654,7 +1564,7 @@ TR_RegisterCandidate::processLiveOnEntryBlocks(TR::Block * * blocks, int32_t *bl
       {
       if (rcNeeds2Regs(comp))
          {
-         if (!highWordZero())
+         if (!isHighWordZero())
             {
             loadsAndStores = 2*loadsAndStores;
             }
@@ -1716,20 +1626,18 @@ TR_RegisterCandidate::extendLiveRangesForLiveOnExit(TR::Compilation *comp, TR::B
    LexicalTimer t("extendLiveRangesForLiveOnExit", comp->phaseTimer());
 
    bool trace = comp->getOptions()->trace(OMR::tacticalGlobalRegisterAllocator);
-
    if (trace)
       traceMsg(comp, "Extending live ranges due to live on exits\n");
 
-   getAvailableOnExit()->empty();
-   getBlocksVisited()->empty();
+   TR_BitVector blocksVisited(comp->trMemory()->currentStackRegion());
+   TR_BitVector *blocksReferencing = comp->getGlobalRegisterCandidates()->getBlocksReferencingSymRef(getSymbolReference()->getReferenceNumber());
 
    _liveOnExit.empty();  // this function will recalculate
 
    // TODO: move allocation of working bitvectors out
    //    don't visit the same ext block more than once
    //    save all liveOnEntry that were added
-   TR_BitVectorIterator bvi;
-   bvi.setBitVector(_liveOnEntry);
+   TR_BitVectorIterator bvi(_liveOnEntry);
    while (bvi.hasMoreElements())
       {
       int32_t blockNumber = bvi.getNextElement();
@@ -1742,7 +1650,7 @@ TR_RegisterCandidate::extendLiveRangesForLiveOnExit(TR::Compilation *comp, TR::B
             if (pred == comp->getFlowGraph()->getStart())
                continue;
 
-            if (getBlocksVisited()->get(pred->getNumber()))
+            if (blocksVisited.get(pred->getNumber()))
                continue;
 
             TR_ASSERT(comp->getOptimizer()->cachedExtendedBBInfoValid(), "Incorrect value in _startOfExtendedBBForBB");
@@ -1752,18 +1660,11 @@ TR_RegisterCandidate::extendLiveRangesForLiveOnExit(TR::Compilation *comp, TR::B
             // Top-down pass through the extended block:
             //       find all blocks where candidate is available to be used on exit
             //
-            getAvailableOnExit()->empty();
             TR::Block *currBlock = extPred;
             TR::Block *lastBlock;
             do
                {
-               getBlocksVisited()->set(currBlock->getNumber());
-
-               TR::GlobalSet::Set *autosInBlock = comp->getGlobalRegisterCandidates()->getReferencedAutoSymRefsInBlock(currBlock->getNumber());
-               if (autosInBlock &&
-                  autosInBlock->get(getSymbolReference()->getReferenceNumber()))
-                  getAvailableOnExit()->set(currBlock->getNumber());
-
+               blocksVisited.set(currBlock->getNumber());
                lastBlock = currBlock;
                currBlock = currBlock->getNextBlock();
                } while (currBlock && currBlock->isExtensionOfPreviousBlock());
@@ -1784,14 +1685,13 @@ TR_RegisterCandidate::extendLiveRangesForLiveOnExit(TR::Compilation *comp, TR::B
                      break;
                      }
                   }
-               bool availableInPrevBlock = false;
-               if (currBlock->isExtensionOfPreviousBlock())
-                  availableInPrevBlock = getAvailableOnExit()->get(currBlock->getPrevBlock()->getNumber()) != 0;
 
                if (!_liveOnEntry.get(currBlock->getNumber()) &&  // not set already
                   _liveOnExit.get(currBlock->getNumber()) &&
-                  availableInPrevBlock &&
-                  !getAvailableOnExit()->get(currBlock->getNumber()))
+                  currBlock->isExtensionOfPreviousBlock() &&
+                  blocksReferencing &&
+                  blocksReferencing->get(currBlock->getPrevBlock()->getNumber()) &&
+                  !blocksReferencing->get(currBlock->getNumber()))
                   {
                   if (trace)
                      traceMsg(comp, "\tFor candidate #%d, set live on block_%d entry due to live on exit\n", getSymbolReference()->getReferenceNumber(), currBlock->getNumber());
@@ -2104,7 +2004,7 @@ scanPressureSimulatorCacheForConflicts(TR_RegisterCandidate *rc, TR_BitVector &b
    int32_t i;
    for (i = firstRegister; i <= lastRegister; ++i)
    {
-     if ((i == comp->cg()->getVMThreadGlobalRegisterNumber()) && rc->dontAssignVMThreadRegister())
+     if ((i == comp->cg()->getVMThreadGlobalRegisterNumber()) && rc->isDontAssignVMThreadRegister())
        continue;
 
      if(trace)
@@ -2239,9 +2139,6 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
 
    // Init scratch bitvectors for extendLiveRangesForLiveOnExit
 
-   TR_BitVector *availableOnExit = new (comp()->trStackMemory()) TR_BitVector(comp()->getFlowGraph()->getNextNodeNumber(), comp()->trMemory());
-   TR_BitVector *blocksVisited = new (comp()->trStackMemory()) TR_BitVector(comp()->getFlowGraph()->getNextNodeNumber(), comp()->trMemory());
-
    bool useProfilingFrequencies = comp()->getUsesBlockFrequencyInGRA();
    double freqRatio;
    if(useProfilingFrequencies)
@@ -2285,7 +2182,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
          {
          if (node->getType().isInt64())
             {
-            if (node->getSymbolReference()->getSymbol()->isAutoOrParm() || 0 && node->getSymbolReference()->getSymbol()->isMethodMetaData())
+            if (node->getSymbolReference()->getSymbol()->isAutoOrParm() || (0 && node->getSymbolReference()->getSymbol()->isMethodMetaData()))
                {
                if ((!node->getFirstChild()->isHighWordZero() &&
                     !node->getFirstChild()->getOpCode().isLoadConst()) ||
@@ -2393,7 +2290,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
       maxGPRsLiveOnExit[blockNumber] = cg->getMaximumNumberOfGPRsAllowedAcrossEdge(b);
       maxFPRsLiveOnExit[blockNumber] = cg->getMaximumNumberOfFPRsAllowedAcrossEdge(node);
       maxVRFsLiveOnExit[blockNumber] = cg->getMaximumNumberOfVRFsAllowedAcrossEdge(node);
-      } while (b = b->getNextBlock());
+      } while ((b = b->getNextBlock()));
 
    int32_t numCandidates = 0;
    TR_Array<int32_t> totalGPRCount(trMemory(), numberOfBlocks,true,stackAlloc);
@@ -2423,12 +2320,6 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
    for (; rc; rc = next)
       {
       next = rc->getNext();
-
-      if (!rc->getAvailableOnExit())
-         {
-         rc->setAvailableOnExit(availableOnExit);
-         rc->setBlocksVisited(blocksVisited);
-         }
 
       rc->setWeight(blocks, blockStructureWeight, comp(), totalGPRCount,totalFPRCount, totalVRFCount, &referencedBlocks, _startOfExtendedBBForBB,
                     _firstBlock, _isExtensionOfPreviousBlock);
@@ -2599,7 +2490,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
    // and create loop info for each candidate
    //
    _candidates.setFirst(0);
-   memset(_candidateForSymRefs, 0, (_candidateForSymRefsSize*sizeof(TR_RegisterCandidates *));
+   _candidateForSymRefs->clear();
    for (rc = first; rc; rc = rc->getNext())
       {
       rc->countNumberOfLoadsAndStoresInLoops(trMemory());
@@ -2611,7 +2502,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
    // assign the register candidates to global registers
    //
    _candidates.setFirst(0);
-   memset(_candidateForSymRefs, 0, _candidateForSymRefsSize*sizeof(TR_RegisterCandidates *));
+   _candidateForSymRefs->clear();
    unsigned iterationCount = 0;
    int32_t conflictingRegister = -1;
    int32_t numAssigns = 0;
@@ -2638,13 +2529,6 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
 
             continue;
             }
-         }
-
-      if (rc->getFailedToAssignToARegister())
-         {
-         if (trace)
-            traceMsg(comp(),"Leaving candidate because rc->getFailedToAssignToARegister()\n");
-         continue;
          }
 
       if (((++iterationCount & 0xf) == 0))
@@ -3175,7 +3059,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
                  traceMsg(comp(),"Searching for blocks/structures with max frequency for reg: %d\n",i);
                  }
               if ((!useRegisterPressureInfo && availableRegisters.get(i)) ||
-                  ((i == comp()->cg()->getVMThreadGlobalRegisterNumber()) && rc->dontAssignVMThreadRegister()))
+                  ((i == comp()->cg()->getVMThreadGlobalRegisterNumber()) && rc->isDontAssignVMThreadRegister()))
                  {
                  // Without register pressure information, we have no idea
                  // what to do to make pickRegister pick an availableRegister,
@@ -3211,7 +3095,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
                     TR::Block * block = blocks[blockNumber];
                     TR_BlockStructure *blockStructure = block->getStructureOf();
                     int32_t blockWeight = 1;
-                    TR::GlobalSet::Set *autosInBlock = getReferencedAutoSymRefsInBlock(block->getNumber());
+                    TR_BitVector *autosInBlock = getBlocksReferencingSymRef(rc->getSymbolReference()->getReferenceNumber());
 
                     if (blockStructure)
                        {
@@ -3233,10 +3117,10 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
                              }
                           }
 #endif
-                       if (autosInBlock && autosInBlock->get(rc->getSymbolReference()->getReferenceNumber()))
+                       if (autosInBlock && autosInBlock->get(block->getNumber()))
                           {
                           // blockWeight = blockStructureWeight[block->getNumber()];
-                          blockWeight = (*rc->_loadsAndStores)[block->getNumber()];
+                          blockWeight = rc->_blocks.getNumberOfLoadsAndStores(block->getNumber());
 
                           if (blockWeight > maxFrequency)
                              {
@@ -3308,7 +3192,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
                           if (blockStructure)
                              {
                              // blockWeight = blockStructureWeight[block->getNumber()];
-                             blockWeight = (*rc->_loadsAndStores)[block->getNumber()];
+                             blockWeight = rc->_blocks.getNumberOfLoadsAndStores(block->getNumber());
                              if (blockWeight > maxFrequency)
                                 {
                                 maxFrequency = blockWeight;
@@ -3526,7 +3410,7 @@ TR_RegisterCandidates::assign(TR::Block ** cfgBlocks, int32_t numberOfBlocks, in
      _candidates.add(rc);
      TR_ASSERT(rc->getSymbolReference()->getSymbol()->isAutoOrParm()
            , "expecting auto or parm");
-     _candidateForSymRefs[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(rc->getSymbolReference())] = rc;
+     (*_candidateForSymRefs)[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(rc->getSymbolReference())] = rc;
 
      if (needs2Regs)
         {
@@ -3804,79 +3688,89 @@ TR_RegisterCandidates::computeAvailableRegisters(TR_RegisterCandidate *rc, int32
    int8_t i;
    for (i = firstRegister; i <= lastRegister; ++i)
       {
-      _liveOnEntryConflicts[i].empty();
-      _liveOnEntryConflicts[i] = _liveOnEntryUsage[i];
-      _liveOnEntryConflicts[i] &= rc->getBlocksLiveOnEntry();
+      TR_BitVector &liveOnEntryConflicts = _liveOnEntryConflicts[i];
+      liveOnEntryConflicts = _liveOnEntryUsage[i];
+      liveOnEntryConflicts &= rc->getBlocksLiveOnEntry();
 
-      _liveOnExitConflicts[i].empty();
-      _liveOnExitConflicts[i] = _liveOnExitUsage[i];
-      _liveOnExitConflicts[i] &= rc->getBlocksLiveOnExit();
+      TR_BitVector &liveOnExitConflicts = _liveOnExitConflicts[i];
+      liveOnExitConflicts = _liveOnExitUsage[i];
+      liveOnExitConflicts &= rc->getBlocksLiveOnExit();
 
-      _entryExitConflicts[i].empty();
-      _entryExitConflicts[i] = _liveOnEntryUsage[i];
-      _entryExitConflicts[i] &= rc->getBlocksLiveOnExit();
+      TR_BitVector &entryExitConflicts = _entryExitConflicts[i];
+      entryExitConflicts = _liveOnEntryUsage[i];
+      entryExitConflicts &= rc->getBlocksLiveOnExit();
 
-      _exitEntryConflicts[i].empty();
-      _exitEntryConflicts[i] = _liveOnExitUsage[i];
-      _exitEntryConflicts[i] &= rc->getBlocksLiveOnEntry();
+      TR_BitVector &exitEntryConflicts = _exitEntryConflicts[i];
+      exitEntryConflicts = _liveOnExitUsage[i];
+      exitEntryConflicts &= rc->getBlocksLiveOnEntry();
 
       comp()->incOrResetVisitCount();
 
-      TR_BitVectorIterator bvi(_entryExitConflicts[i]);
+      TR_BitVectorIterator bvi(entryExitConflicts);
       while (bvi.hasMoreElements())
          {
          int32_t blockNumber = bvi.getNextElement();
          TR::Block * b = blocks[blockNumber];
 
-         if (overlapTable->find(blockNumber) == overlapTable->end())
+         auto overlapLookup = overlapTable->find(blockNumber);
+         Coordinates *overlaps = NULL;
+         if (overlapLookup == overlapTable->end())
             {
-            Coordinates *c = new (comp()->trMemory()->currentStackRegion()) Coordinates((CoordinatesComparator()), (CoordinatesAllocator(comp()->trMemory()->currentStackRegion())));
-            (*overlapTable)[blockNumber] = c;
-            ComputeOverlaps(b, comp(), *c);
+            overlaps = new (comp()->trMemory()->currentStackRegion()) Coordinates((CoordinatesComparator()), (CoordinatesAllocator(comp()->trMemory()->currentStackRegion())));
+            (*overlapTable)[blockNumber] = overlaps;
+            ComputeOverlaps(b, comp(), *overlaps);
             }
-         Coordinates &overlaps = *(*overlapTable)[blockNumber];
+         else
+            {
+            overlaps = overlapLookup->second;
+            }
          CS2::HashIndex hi1, hi2;
 
          TR_RegisterCandidate *rc1 = b->getGlobalRegisters(comp())[i].getRegisterCandidateOnEntry();
          if (rc1)
             {
-            Coordinates::iterator rc1Itr = overlaps.find(rc1->getSymbolReference()->getReferenceNumber());
-            Coordinates::iterator rcItr = overlaps.find(rc->getSymbolReference()->getReferenceNumber());
+            Coordinates::iterator rc1Itr = overlaps->find(rc1->getSymbolReference()->getReferenceNumber());
+            Coordinates::iterator rcItr = overlaps->find(rc->getSymbolReference()->getReferenceNumber());
 
-            if (rc1Itr == overlaps.end() ||
-                rcItr == overlaps.end() ||
+            if (rc1Itr == overlaps->end() ||
+                rcItr == overlaps->end() ||
                 rc1Itr->second.last < rcItr->second.first)
                {
-               _entryExitConflicts[i].reset(blockNumber);
+               entryExitConflicts.reset(blockNumber);
                }
             }
          }
 
       comp()->incVisitCount();
-      bvi.setBitVector(_exitEntryConflicts[i]);
+      bvi.setBitVector(exitEntryConflicts);
       while (bvi.hasMoreElements())
          {
          int32_t blockNumber = bvi.getNextElement();
          TR::Block * b = blocks[blockNumber];
 
-         if (overlapTable->find(blockNumber) == overlapTable->end())
+         auto overlapLookup = overlapTable->find(blockNumber);
+         Coordinates *overlaps = NULL;
+         if (overlapLookup == overlapTable->end())
             {
-            Coordinates *c = new (comp()->trMemory()->currentStackRegion()) Coordinates((CoordinatesComparator()), (CoordinatesAllocator(comp()->trMemory()->currentStackRegion())));
-            (*overlapTable)[blockNumber] = c;
-            ComputeOverlaps(b, comp(), *c);
+            overlaps = new (comp()->trMemory()->currentStackRegion()) Coordinates((CoordinatesComparator()), (CoordinatesAllocator(comp()->trMemory()->currentStackRegion())));
+            (*overlapTable)[blockNumber] = overlaps;
+            ComputeOverlaps(b, comp(), *overlaps);
             }
-         Coordinates &overlaps = *(*overlapTable)[blockNumber];
+         else
+            {
+            overlaps = overlapLookup->second;
+            }
 
-         TR_RegisterCandidate *rc2 = b->getGlobalRegisters(comp())[i].getRegisterCandidateOnEntry();
+         TR_RegisterCandidate *rc2 = b->getGlobalRegisters(comp())[i].getRegisterCandidateOnExit();
          if (rc2)
             {
-            Coordinates::iterator rcItr = overlaps.find(rc->getSymbolReference()->getReferenceNumber());
-            Coordinates::iterator rc2Itr = overlaps.find(rc2->getSymbolReference()->getReferenceNumber());
-            if (rcItr == overlaps.end() ||
-                rc2Itr == overlaps.end()  ||
+            Coordinates::iterator rcItr = overlaps->find(rc->getSymbolReference()->getReferenceNumber());
+            Coordinates::iterator rc2Itr = overlaps->find(rc2->getSymbolReference()->getReferenceNumber());
+            if (rcItr == overlaps->end() ||
+                rc2Itr == overlaps->end()  ||
                 rcItr->second.last < rc2Itr->second.first)
                {
-               _exitEntryConflicts[i].reset(blockNumber);
+               exitEntryConflicts.reset(blockNumber);
                }
             }
          }
@@ -3908,21 +3802,21 @@ TR_RegisterCandidates::computeAvailableRegisters(TR_RegisterCandidate *rc, int32
          {
          traceMsg(comp(), "For candidate %d real register %d : \n", rc->getSymbolReference()->getReferenceNumber(), i);
          traceMsg(comp(), "live on entry conflicts : ");
-         _liveOnEntryConflicts[i].print(comp());
+         liveOnEntryConflicts.print(comp());
          traceMsg(comp(), "\nlive on exit conflicts : ");
-         _liveOnExitConflicts[i].print(comp());
+         liveOnExitConflicts.print(comp());
          traceMsg(comp(), "\nentry exit conflicts : ");
-         _entryExitConflicts[i].print(comp());
+         entryExitConflicts.print(comp());
          traceMsg(comp(), "\nexit entry conflicts : ");
-         _exitEntryConflicts[i].print(comp());
+         exitEntryConflicts.print(comp());
          traceMsg(comp(), "\n");
          }
 
-      if (_liveOnEntryConflicts[i].isEmpty() && _liveOnExitConflicts[i].isEmpty() &&
-          _exitEntryConflicts[i].isEmpty() &&
-          _entryExitConflicts[i].isEmpty() &&
+      if (liveOnEntryConflicts.isEmpty() && liveOnExitConflicts.isEmpty() &&
+          exitEntryConflicts.isEmpty() &&
+          entryExitConflicts.isEmpty() &&
           comp()->cg()->isGlobalRegisterAvailable(i, rc->getDataType()) &&
-          ((i != comp()->cg()->getVMThreadGlobalRegisterNumber()) || !rc->dontAssignVMThreadRegister()))
+          ((i != comp()->cg()->getVMThreadGlobalRegisterNumber()) || !rc->isDontAssignVMThreadRegister()))
          {
          availableRegisters->set(i);
          }

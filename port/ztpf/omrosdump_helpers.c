@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
- *    Multiple authors (IBM Corp.) - refactoring and modifications for z/TPF platform
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -52,10 +55,21 @@ extern void masterSynchSignalHandler(int nbr, siginfo_t *siginfo,
 #define    KEY0(a)    do { cinfc(CINFC_WRITE, CINFC_CMMJDB); } while(0)
 #define    UNKEY(a) do { keyrc(); } while(0)
 
-char javaPgmsToDump[][5] = { "DJBV", "DJHK", "DJNC", "DJVB", "DJCK", "DJHS",
-		"DJPR", "DJVM", "DJDD", "DJHT", "DJRD", "DJZL", "DJDP", "DJHV", "DJSG",
-		"D9VM", "DJDY", "DJHY", "DJSH", "DJ7B", "DJGC", "DJIT", "DJTH", "DJAR",
-		"DJGK", "DJMT", "DJTR" };
+char javaPgmsToDump[][5] =
+{
+		/* JVM 2.9 programs */
+		"DJHK", "DJNC", "DJVB", "DJCK", "DJHS", "DJPR", "DJVM",
+		"DJDD", "DJHT", "DJRD", "DJZL", "DJDP", "DJHV", "DJSG",
+		"D9VM", "DJHY", "DJSH", "DJ7B", "DJGC", "DJIT", "DJTH",
+		"DJAR", "DJGK", "DJMT", "DJTR", "DJFF", "DJXT", "DJOR",
+
+		/* JCL programs */
+		"DJVA", "DJRM", "DJNM", "DJAT", "DJAW", "DJAH", "DJDB",
+		"DJDC", "DJDS", "DJFM", "DJHP", "DJIN", "DJAV", "DJCD",
+		"DJJW", "DJWP", "DJLI", "DJPG", "DJSD", "DJSN", "DJKC",
+		"DJLC", "DJMN", "DJML", "DJNT", "DJIO", "DJPT", "DJTK",
+		"DJUN", "DJVR", "DJWR", "DJZP"
+};
 
 /**
  * The ELF program header permission bits for read, write, and execute combined
@@ -114,7 +128,7 @@ errMsg(args *argv, uint8_t *message, ...)
 	va_list plist;
 
 	va_start(plist, message);
-	vsprintf(workSpace(argv), message, plist);
+	vsprintf((char *)workSpace(argv), (char *)message, plist);
 	va_end(plist);
 	dumpFlags(argv) |= J9TPF_ERRMSG_IN_WKSPC;
 	return;
@@ -138,7 +152,7 @@ calcGap(DBFITEM *curr, DBFITEM *next, uint64_t *gap)
  * \internal Make sure the DBF table, which points to all the memory regions collected
  * by CCCPSE, is as compact as possible. The goal is to cut the number of ELF
  * Phdrs down as much as possible by merging adjoining memory regions. In order to do
- * this, it needs to mark each DBFITEM, which is in protected memory, SPK=0. This 
+ * this, it needs to mark each DBFITEM, which is in protected memory, SPK=0. This
  * function is therefore in SPK=0 for its duration, and restores SPK1 prior to return.
  *
  * \param[in] dbfHdr Address of the Java dump buffer as returned from CCCPSE.
@@ -215,7 +229,7 @@ adjustDBFTable(DBFHDR *dbfHdr)
 }
 
 /*
- * \internal   Calculate the path to where the dump should be written, 
+ * \internal   Calculate the path to where the dump should be written,
  *               isolating it into the <TT>fullpath</TT> parameter, and
  *               placing the filename portion of the path string into the
  *               <TT>filename</TT> argument.
@@ -255,7 +269,7 @@ splitPathName(char *finalname, char *pathname)
 		strcpy(&tempPath[0], "/tmp/");
 	}
 	strcpy(pathname, &tempPath[0]);
-	return pathname;
+	return (uint8_t *)pathname;
 }
 
 /**
@@ -263,13 +277,13 @@ splitPathName(char *finalname, char *pathname)
  *
  * First figure out the absolute file path (starts with a '/' and
  * ends with a file suffix) we are to write the dump to, then ensure we
- * have enough room left over in the Java dump buffer left for us by 
+ * have enough room left over in the Java dump buffer left for us by
  * CCCPSE. If we do not, return an error. Otherwise, section the buffer
  * space off, building in order:
  *    - The ELF64 header
  *    - The ELF64 Program Header section
  *    - The ELF64 NOTE section
- *      
+ *
  * Finally, write all the above to the indicated filename, and follow it
  * with a copy of storage contents from the Java dump buffer, which is
  * laid out in ascending address order, with the ELF64_Phdrs created to
@@ -277,11 +291,11 @@ splitPathName(char *finalname, char *pathname)
  * of megabytes.
  *
  * As a matter of protocol, set the first 8 bytes of the Java Dump
- * Buffer (struct ijavdbf) to zeros so CCCPSE knows it's okay to 
+ * Buffer (struct ijavdbf) to zeros so CCCPSE knows it's okay to
  * write over its contents once we're done working with it.
  *
  * The arg block is used for the bi-directional passing of data. Those of its
- * members which are pointers (most of them, in fact) are used mainly for 
+ * members which are pointers (most of them, in fact) are used mainly for
  * output or at least have an output role. The fields of <arg> which are
  * required are shown as input parameters below. The fields of <arg> which
  * are used for output are detailed as return values.
@@ -290,13 +304,13 @@ splitPathName(char *finalname, char *pathname)
  * function's input, and the function is required to return a void pointer, this
  * function will take the address of the <arg> block as the input parameter, and
  * will return a pointer to type char which represents the file name which now
- * contains the full path name of the ELF-format core dump file. There are also 
+ * contains the full path name of the ELF-format core dump file. There are also
  * fields in <arg> that will be updated as described below.
  *
  * \param[in][out]     arg   pointer to a user-created datatype 'args', declared
  *                           in header file j9osdump_helpers.h
  * \param[in]        arg->OSFilename        Pointer to scratch storage for a path +
- *                                        file name string. It will be presumed 
+ *                                        file name string. It will be presumed
  *                                        to be at least PATH_MAX+1 in size.
  * \param[in]        arg->wkspcSize        32-bit quantity representing the size in
  *                                        bytes of the wkSpace field, following.
@@ -306,11 +320,11 @@ splitPathName(char *finalname, char *pathname)
  *                                        path names will be built in this space.
  * \param[in][out]    arg->flags            Indicators as to what is present and what
  *                                        is not.
- * \param[in]        arg->sii            Pointer to scratch storage to be used 
+ * \param[in]        arg->sii            Pointer to scratch storage to be used
  *                                        forever more as a siginfo_t block
- * \param[in]        arg->uct            Pointer to scratch storage to be used 
+ * \param[in]        arg->uct            Pointer to scratch storage to be used
  *                                        forever more as a ucontext_t block
- * \param[in]        arg->sct            Pointer to scratch storage to be used 
+ * \param[in]        arg->sct            Pointer to scratch storage to be used
  *                                        forever more as a sigcontext block
  * \param[in]        arg->portLibrary    Pointer to an initialized OMRPortLibrary
  *                                        block. If there isn't one at call time,
@@ -318,10 +332,10 @@ splitPathName(char *finalname, char *pathname)
  *                                        J9ZTPF_NO_PORT_LIBRARY
  * \param[in]        arg->dibPtr            Address of the DIB attached to the faulting
  *                                        UOW at post-interrupt time.
- * 
+ *
  * \returns    Pointer to a hz-terminated string representing the absolute path
  *               name at which the core dump file was written.
- *            
+ *
  * \returns    arg->sii                   Filled in.
  * \returns    arg->uct                   Filled in.
  * \returns    arg->sct                   Filled in.
@@ -342,7 +356,7 @@ ztpfBuildCoreFile(void *argv_block)
 	Elf64_Phdr *phdrp; /* Pointer to Elf64_Phdr block                */
 	Elf64_Nhdr *narea; /* Pointer to the ELF NOTE data                */
 	char pathName[PATH_MAX]; /* Working buffer for core.* fname.*/
-	char *ofn = dumpFilename(arg); /* Output dump file path    */
+	char *ofn = (char *)dumpFilename(arg); /* Output dump file path    */
 	uint32_t ofd; /* File descriptor for output dump            */
 	uintptr_t rc; /* Working return code d.o.                    */
 	uintptr_t wPtr; /* Working byte-sized pointer d.o.            */
@@ -395,7 +409,7 @@ ztpfBuildCoreFile(void *argv_block)
 		buffer = malloc64(octetsToWrite); /*  anywhere. We're desperate.    */
 		if (!buffer) { /* If we can't buffer our I/Os,    */
 			returnCode (arg) = -1; /*  we are done. Indicate error */
-			errMsg(arg, "Cannot buffer dump file, out of memory");
+			errMsg(arg, (uint8_t *)"Cannot buffer dump file, out of memory");
 			dumpFlags(arg) |= J9TPF_OUT_OF_BUFFERSPACE;
 			KEY0();
 			dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
@@ -418,16 +432,13 @@ ztpfBuildCoreFile(void *argv_block)
 	/*
 	 *    The "OS filename" will look like ${path}/core.${TOD_in_hex}.${pid}
 	 */
-	sprintf(workSpace(arg), "core.%lX.%d", dibPtr->dstckf,
+	sprintf((char *)workSpace(arg), "core.%lX.%d", dibPtr->dstckf,
 			dumpSiginfo(arg)->si_pid);
 	{
-		int pathLen = strlen(pathName);
-		char ebcdicPath[pathLen + 1];
-		a2e_len(pathName, ebcdicPath, strlen(pathName));
-		int fsystype = pathconf(ebcdicPath, _TPF_PC_FS_TYPE);
+		int fsystype = pathconf(pathName, _TPF_PC_FS_TYPE);
 		if (fsystype == MOUNT_TFS) {
-			errMsg(arg, "Cannot use the tfs for java dumps: path used='%s'\n",
-					pathName);
+			errMsg(arg, (uint8_t *)"Cannot use the tfs for java dumps: path used='%s'\n",
+					(uint8_t *)pathName);
 			returnCode (arg) = -1;
 			KEY0();
 			dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
@@ -436,11 +447,11 @@ ztpfBuildCoreFile(void *argv_block)
 			//dir_path_name is within the TFS
 		}
 	}
-	strcat(pathName, workSpace(arg));
+	strcat(pathName, (const char *)workSpace(arg));
 	ofd = open(pathName, O_WRONLY | O_CREAT | O_EXCL);
 
 	if (-1 == ofd) {
-		errMsg(arg, "Cannot open() filename %s: %s\n", strerror(errno));
+		errMsg(arg, (uint8_t *)"Cannot open() filename %s: %s\n", strerror(errno));
 		returnCode (arg) = -1;
 		KEY0();
 		dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
@@ -474,7 +485,7 @@ ztpfBuildCoreFile(void *argv_block)
 	 */
 	octetsWritten = writeDumpFile(ofd, buffer, octetsToWrite);
 	if (-1 == octetsWritten) {
-		errMsg(arg, "Error writing dump file %s: %s", ofn, strerror(errno));
+		errMsg(arg, (uint8_t *)"Error writing dump file %s: %s", ofn, strerror(errno));
 		dumpFlags(arg) |= J9TPF_FILE_SYSTEM_ERROR;
 		KEY0();
 		dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
@@ -487,7 +498,7 @@ ztpfBuildCoreFile(void *argv_block)
 	imageBuffer = (uint8_t *) cinfc_fast(CINFC_CMMJDB);
 	octetsWritten = writeDumpFile(ofd, imageBuffer, numBytes);
 	if (-1 == octetsWritten) {
-		errMsg(arg, "Error writing dump file %s: %s", ofn, strerror(errno));
+		errMsg(arg, (uint8_t *)"Error writing dump file %s: %s", ofn, strerror(errno));
 		dumpFlags(arg) |= J9TPF_FILE_SYSTEM_ERROR;
 		KEY0();
 		dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
@@ -497,21 +508,23 @@ ztpfBuildCoreFile(void *argv_block)
 	int i = 0;
 	for (i = 0; i < numJavaPgms; i++) {
 		struct pat * pgmpat = progc(javaPgmsToDump[i], PROGC_PBI);
-		struct ifetch *pgmbase = pgmpat->patgca;
-		if (pgmbase != NULL) {
-			int offset = pgmbase->_iftch_txt_off + pgmbase->_iftch_txt_size
+		if (pgmpat != NULL) {
+			struct ifetch *pgmbase = pgmpat->patgca;
+			if (pgmbase != NULL) {
+				int offset = pgmbase->_iftch_txt_off + pgmbase->_iftch_txt_size
 					+ 0x1000;
-			char * text = ((char*) pgmbase) + offset;
-			uint64_t size = pgmpat->patpsize - offset;
-			octetsWritten = writeDumpFile(ofd, text, size);
-			if (-1 == octetsWritten) {
-				errMsg(arg, "Error writing dump file %s: %s", ofn,
+				char * text = ((char*) pgmbase) + offset;
+				uint64_t size = pgmpat->patpsize - offset;
+				octetsWritten = writeDumpFile(ofd, (uint8_t *)text, size);
+				if (-1 == octetsWritten) {
+					errMsg(arg, (uint8_t *)"Error writing dump file %s: %s", ofn,
 						strerror(errno));
-				dumpFlags(arg) |= J9TPF_FILE_SYSTEM_ERROR;
-				KEY0();
-				dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
-				UNKEY();
-				return NULL;
+					dumpFlags(arg) |= J9TPF_FILE_SYSTEM_ERROR;
+					KEY0();
+					dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
+					UNKEY();
+					return NULL;
+				}
 			}
 		}
 	}
@@ -521,7 +534,7 @@ ztpfBuildCoreFile(void *argv_block)
 	 */
 	rc = close(ofd); /* Only try to close() the file once    */
 	if (-1 == rc) {
-		errMsg(arg, "I/O error attempting to close %s:%s\n", ofn,
+		errMsg(arg, (uint8_t *)"I/O error attempting to close %s:%s\n", ofn,
 				strerror(errno));
 		KEY0();
 		dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
@@ -532,7 +545,7 @@ ztpfBuildCoreFile(void *argv_block)
 	 * Make sure we have a recognizable IPC permission on the OS filename,
 	 *  then make sure the JDB buffer is unlocked in case CPSE needs it again.
 	 */
-	rc = chmod(workSpace(arg), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+	rc = chmod((const char *)workSpace(arg), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 	KEY0();
 	dbfptr->ijavcnt = 0L; /* Unlock the JDB so CCCPSE can reuse it*/
 	UNKEY();
@@ -541,7 +554,7 @@ ztpfBuildCoreFile(void *argv_block)
 	 * it is non-JVM-managed heap space and should be free()d back to it to
 	 * avoid a mem leak.
 	 */
-	strcpy(dumpFilename(arg), ofn); /* Store it in the args block so the */
+	strcpy((char *)dumpFilename(arg), ofn); /* Store it in the args block so the */
 	return (void *) ofn; /*  caller always has it, and goback.*/
 }
 
@@ -579,7 +592,7 @@ buildELFHeader(Elf64_Ehdr *buffer)
  *
  * Build the ELF64 program header block in memory.
  *
- * The Elf64_Phdr looks like this:<b><tt> 
+ * The Elf64_Phdr looks like this:<b><tt>
  * 0000 0004    p_type        Type of memory this Phdr represents.<b>
  * 0004 0004    p_flags        Phdr flags (permissions +OS_specific bits)<b>
  * 0008 0008    p_offset    Offset in file (0-relative) of memory image<b>
@@ -591,7 +604,7 @@ buildELFHeader(Elf64_Ehdr *buffer)
  * ---- ----<b>
  * 0038 0038    Total length (56 decimal), natural alignment/size.<b></tt>
  *
- *    p_type should be obvious. Unlike relocatable/absolute ELF forms, the 
+ *    p_type should be obvious. Unlike relocatable/absolute ELF forms, the
  *    The 0th element does not have to be a PT_NULL. In fact, observed core
  *    files often are of type PT_NOTE; we'll follow that pattern. The 2nd
  *    through last elements are PT_LOAD.
@@ -600,18 +613,18 @@ buildELFHeader(Elf64_Ehdr *buffer)
  *    they're zero (not loaded to memory), and the PT_LOADs are rwx (7).
  *
  *    p_offset is the offset from zero in the file at which the image starts.
- *    Each file-resident image runs continuously & sequentially for p_filesz. 
+ *    Each file-resident image runs continuously & sequentially for p_filesz.
  *    We'll have to calculate the offset value and keep a running total, starting
  *    from p_offset for the PT_NOTE segment, then incrementing it by each
  *    p_filesz value.
- *    
- *    p_vaddr is the virtual address at which the segment resides. It's truly 
- *    meant more for executables & shared objects, its content of of little 
- *    consequence; but we'll take a policy of making it the physical address. 
+ *
+ *    p_vaddr is the virtual address at which the segment resides. It's truly
+ *    meant more for executables & shared objects, its content of of little
+ *    consequence; but we'll take a policy of making it the physical address.
  *    Same for p_addr, which is meant to describe the physical address. App-
  *    ropriate for a core file, not so much for a typical executable/DSO.
  *
- *    p_memsz is the image's size when loaded to memory. For a core file, 
+ *    p_memsz is the image's size when loaded to memory. For a core file,
  *    p_filesz = p_memsz. This would make a difference for an executable or
  *    DSO (this is how the .bss segment, for example, is described: memsz as
  *    required, 0 filesz.
@@ -620,8 +633,8 @@ buildELFHeader(Elf64_Ehdr *buffer)
  *    by this phdr. A value of 0 or 1 means no alignment required. Otherwise,
  *    the value should be modulo of a page size. For a core file, just use 1.
  *
- * 
- * \param[in]  buffer    Address of writeable memory large enough to house all 
+ *
+ * \param[in]  buffer    Address of writeable memory large enough to house all
  *                        required Phdr elements (phnum * sizeof(Elf64_Phdr)).
  * \param[in]  dbfHdr    Address of the Java dump buffer given to us by CCCPSE
  * \param[in]  phnum    The number of program headers to write
@@ -712,20 +725,20 @@ buildELFPheaderBlk(Elf64_Phdr *buffer, DBFHDR *dbfHdr,
 
 /**
  * \internal
- *      
+ *
  * \details Build the data (in the user-passed <TT>buffer</TT> address)
- * block to which an Elf64_Phdr will point. Its role is to extract 
+ * block to which an Elf64_Phdr will point. Its role is to extract
  * information passed to it in CE2DIB and IJAVDBF and put them in the
- * proper places. Sometimes these values require translation to put 
+ * proper places. Sometimes these values require translation to put
  * them into proper contextual meaning, for example, a hardware PIC code
  * can infer a signal value. As long as we get close enough, it's good.
  * The contents of the NOTE section are very poorly documented.
  *
- * \note The final sub-section, tagged <i><tt>NT_ZTPF_SERRC</tt></i>, is invented 
- * for this routine's purposes: its role is to express the SE number associated 
- * with the already-written traditional SERRC dump as requested during design. Its 
- * existence may require addition of a method to the Java class which processes 
- * ELF NOTEs in <b><tt>jdmpview</tt></b> - there is no ELF NOTE tag otherwise 
+ * \note The final sub-section, tagged <i><tt>NT_ZTPF_SERRC</tt></i>, is invented
+ * for this routine's purposes: its role is to express the SE number associated
+ * with the already-written traditional SERRC dump as requested during design. Its
+ * existence may require addition of a method to the Java class which processes
+ * ELF NOTEs in <b><tt>jdmpview</tt></b> - there is no ELF NOTE tag otherwise
  * suited for this purpose. Otherwise, this information stays buried.
  *
  * This function returns the total size of the buffer as its Elf64_Phdr
@@ -848,15 +861,15 @@ buildELFNoteArea(Elf64_Nhdr *buffer, DIB *dibPtr)
 	 * fractional. Does it really matter? Nah. But if you're gonna do it, you might
 	 * as well do it right ....
 	 */
-	prstat->stime.tv_usec = ecbptr()->ce1istim / 4098; /* Used CPU time    */
-	wDest = (char *) &(prstat->reg); /* Point at offset +0 of reg fld    */
+	prstat->stime.tv_usec = *((unsigned long long *)(tpf_get_ecb_field(CE1ISTIM_FIELD)))/4098;
+	wDest = (uint8_t *) &(prstat->reg); /* Point at offset +0 of reg fld    */
 	/*
 	 *     The PGM/O PSW is followed by a 16-wide array of ULONGs which
 	 *     represent the values of all 16 general registers, 0 through 15,
 	 *     as they were at the time the PGM/N PSW fired. Prepare to copy
 	 *     them into the NT_PRSTATUS section, lth=128+16 (144).
 	 */
-	wSrc = (char *) (dibPtr->dispw); /* Point @ PSW & general regs        */
+	wSrc = (unsigned char *) (dibPtr->dispw); /* Point @ PSW & general regs        */
 	memcpy(wDest, wSrc, 144); /* Preserve all that data.            */
 	prstat->fpvalid = TRUE; /* Yes, we have floating point        */
 	/*
@@ -873,10 +886,10 @@ buildELFNoteArea(Elf64_Nhdr *buffer, DIB *dibPtr)
 	prinfo->uid = pIPROC->iproc_uid; /* User id &                */
 	prinfo->gid = pIPROC->iproc_gid; /*  group id.                */
 	memcpy(&prinfo->pid, &prstat->pid, 16); /* Process ID set again        */
-	strcpy(prinfo->fname, "main"); /* Just like Linux does it    */
-	wSrc = getenv("IBM_JAVA_COMMAND_LINE");
+	strcpy((char *)prinfo->fname, "main"); /* Just like Linux does it    */
+	wSrc = (unsigned char *)getenv("IBM_JAVA_COMMAND_LINE");
 	if (wSrc) {
-		strncpy(prinfo->psargs, wSrc, PRARGSZ);
+		strncpy((char *)prinfo->psargs, (const char *)wSrc, (size_t)PRARGSZ);
 		prinfo->psargs[PRARGSZ - 1] = '\0';
 	}
 	/*
@@ -917,7 +930,7 @@ buildELFNoteArea(Elf64_Nhdr *buffer, DIB *dibPtr)
 	nsh_lastbr->n_type = 0x306; /* Type = NT_S390_LAST_BR    */
 	wDest = (uint8_t *) NOTE_DATA_OFFSET(nsh_lastbr);
 	memcpy(nsh_lastbr + 1, "LINUX", 6); /* Set "LINUX" name            */
-	wSrc = (char *) (dibPtr->dbrevn); /* Get NOTE data source ptr */
+	wSrc = (unsigned char *) (dibPtr->dbrevn); /* Get NOTE data source ptr */
 	memcpy(wDest, wSrc, 8); /*  and move it in.            */
 	UNKEY();
 	return tableSize; /* We're done.                */
@@ -932,7 +945,7 @@ buildELFNoteArea(Elf64_Nhdr *buffer, DIB *dibPtr)
 	nsh_lastbr->n_type = 0x500; /* Type = 500                */
 	memcpy(nsh_lastbr + 1, "ZTPF", 5); /* Set "ZTPF" name ...        */
 	wDest += 0x14; /*  and point at data        */
-	sprintf(wDest, "SE-%4.4d OPR-%c%6.6X PGM-%4.4s %5.5c %8.8s", eriPtr->eriseq,
+	sprintf((char *)wDest, "SE-%4.4d OPR-%c%6.6X PGM-%4.4s %5.5c %8.8s", eriPtr->eriseq,
 			eriPtr->eridpfx, eriPtr->eridnum, eriPtr->eridate, eriPtr->eritime);
 	UNKEY();
 	return tableSize; /* We're done.                */

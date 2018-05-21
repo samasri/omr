@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
- *    Multiple authors (IBM Corp.) - refactoring and modifications for z/TPF platform
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -46,7 +49,7 @@
 #include <tpf/c_eb0eb.h>
 #include <tpf/c_proc.h>
 #include "omrport.h"
-#include "portpriv.h"
+#include "omrportpriv.h"
 #include "omrosdump_helpers.h"
 #include "omrsignal.h"
 #include <signal.h>
@@ -121,7 +124,7 @@ uintptr_t
 omrdump_create(struct OMRPortLibrary *portLibrary, char *filename, char *dumpType, void *userData)
 {
 	uint8_t workspace[PATH_MAX];
-	uint8_t *errMsg = "";
+	char *errMsg = NULL;
 	uint8_t *JVMfn = NULL;
 	uint8_t holdkey = 0;
 
@@ -138,7 +141,7 @@ omrdump_create(struct OMRPortLibrary *portLibrary, char *filename, char *dumpTyp
 		return 1; /* Return Failure. */
 	}
 	s->argv.portLibrary = portLibrary;
-	s->argv.OSFilename = filename;
+	s->argv.OSFilename = (unsigned char *)filename;
 
 	/*
 	 * First, figure out whether or not we have to generate the dump buffer contents.
@@ -219,7 +222,7 @@ omrdump_create(struct OMRPortLibrary *portLibrary, char *filename, char *dumpTyp
 	 */
 	if (!JVMfn) { /* Uh oh. There was an error. What to say?      */
 		if (s->argv.flags & J9TPF_ERRMSG_IN_WKSPC) {
-			errMsg = s->argv.wkSpace; /* The thread told us what to say ...           */
+			errMsg = (char *)s->argv.wkSpace; /* The thread told us what to say ...           */
 		} else { /* How do we come up with a message?            */
 			switch (s->argv.flags & J9TPF_FLAGS_ERR_MASK) {
 			case (J9TPF_JDUMPBUFFER_LOCKED + J9TPF_NO_JAVA_DUMPBUFFER):
@@ -233,8 +236,8 @@ omrdump_create(struct OMRPortLibrary *portLibrary, char *filename, char *dumpTyp
 				if (s->argv.rc) { /* If the thread left us an errno,      */
 					errMsg = strerror(s->argv.rc); /*see if we can get a decent   */
 				} /* reason out of strerror().    */
-				else if (strlen(s->argv.wkSpace)) { /* Otherwise, see if there's     */
-					errMsg = s->argv.wkSpace; /*	 a message left by the dump writer	*/
+				else if (strlen((char *)s->argv.wkSpace)) { /* Otherwise, see if there's     */
+					errMsg = (char *)s->argv.wkSpace; /*	 a message left by the dump writer	*/
 				} /* If there is, use it.                 */
 				break;
 			case J9TPF_OUT_OF_BUFFERSPACE:
@@ -242,10 +245,10 @@ omrdump_create(struct OMRPortLibrary *portLibrary, char *filename, char *dumpTyp
 						"insufficient free buffer space to write the core file";
 				break;
 			default:
-				sprintf(workspace,
+				sprintf((const char *)workspace,
 						"unantipated err flag value (0x%X). errno=%x.",
 						s->argv.flags, s->argv.rc);
-				errMsg = workspace;
+				errMsg = (char *)workspace;
 				strcat(errMsg, "\nThere is no system dump to work with.");
 				break;
 			}
@@ -254,24 +257,24 @@ omrdump_create(struct OMRPortLibrary *portLibrary, char *filename, char *dumpTyp
 				"unable to write ELF core dump: %s\n", errMsg);
 		return 1; /* Report failure, get outta here.      */
 	} else {
-		s->argv.rc = rename(s->argv.wkSpace, JVMfn); /* Success. Return.                     */
+		s->argv.rc = rename((const char *)s->argv.wkSpace, (const char *)JVMfn); /* Success. Return.                     */
 		if ((s->argv.rc < 0) && (errno == ENOENT)) {
 			//Current working directory may be different from target Dump Directory.
 			//In this scenario the dump is already in the target directory.
 			//Therefore re-issue the command using an absolute path name for old
 			//name.
-			targetDirectory = dirname(JVMfn);
+			targetDirectory = dirname((char *)JVMfn);
 			if (targetDirectory == NULL) {
 				portLibrary->tty_err_printf(portLibrary,
 						"Problem determining directory for %s\n", JVMfn);
 			}
 			// +2 for terminating Null and joining path seperator
 			oldPath = alloca(
-					strlen(targetDirectory) + strlen(s->argv.wkSpace) + 2);
+					strlen(targetDirectory) + strlen((const char *)s->argv.wkSpace) + 2);
 			strcpy(oldPath, targetDirectory);
 			strcat(oldPath, "/");
-			strcat(oldPath, s->argv.wkSpace);
-			s->argv.rc = rename(oldPath, JVMfn); /* Success. Return. */
+			strcat(oldPath, (const char *)s->argv.wkSpace);
+			s->argv.rc = rename(oldPath, (const char *)JVMfn); /* Success. Return. */
 			if (s->argv.rc < 0) {
 				portLibrary->tty_err_printf(portLibrary,
 						"Failed to rename: %s\n", oldPath);

@@ -1,40 +1,28 @@
 ###############################################################################
+# Copyright (c) 2017, 2018 IBM Corp. and others
+# 
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
+#      
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
+#    
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-# (c) Copyright IBM Corp. 2017
-#
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
-#
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
-#
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
-#    James Johnston (IBM Corp.) - initial z/TPF Port Updates
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
 ###
 ### Helpers
 ###
-
-ifeq (s390,$(OMR_HOST_ARCH))
-	ifeq (0,$(OMR_ENV_DATA64))
-		J9M31:=-m31
-	endif
-endif
-
-## Header File Dependencies
-ifeq (gcc,$(OMR_TOOLCHAIN))
-	ifeq (x86,$(OMR_HOST_ARCH))
-		#-- GCC compilers support dependency generation --
-		GLOBAL_CFLAGS+=-MMD -MP
-		GLOBAL_CXXFLAGS+=-MMD -MP
-	endif
-endif
 
 ###
 ### Global Flags
@@ -42,58 +30,19 @@ endif
 
 GLOBAL_CPPFLAGS += -DLINUX -D_REENTRANT
 
-ifeq (s390,$(OMR_HOST_ARCH))
-	GLOBAL_CXXFLAGS+=$(J9M31)
-	GLOBAL_CFLAGS+=$(J9M31)
-	GLOBAL_LDFLAGS+=$(J9M31)
-endif
-ifeq (ppc,$(OMR_HOST_ARCH))
-	ifeq (xlc,$(OMR_TOOLCHAIN))
-		ifeq ($(OMR_ENV_DATA64),1)
-			GLOBAL_LDFLAGS+=-q64
-		endif
-	endif
-endif
-
-
 # Compile without exceptions
 ifeq (gcc,$(OMR_TOOLCHAIN))
-ifeq (1,$(OMR_RTTI))
-	GLOBAL_CXXFLAGS+=-fno-exceptions -fno-threadsafe-statics
-else
-	GLOBAL_CXXFLAGS+=-fno-exceptions -fno-rtti -fno-threadsafe-statics
-endif
-else
-ifeq (1,$(OMR_RTTI))
-	GLOBAL_CXXFLAGS+=-qrtti -qnoeh
-else
-	GLOBAL_CXXFLAGS+=-qnortti -qnoeh
-endif
+	ifeq (1,$(OMR_RTTI))
+		GLOBAL_CXXFLAGS+=-fno-exceptions -fno-threadsafe-statics
+	else
+		GLOBAL_CXXFLAGS+=-fno-exceptions -fno-rtti -fno-threadsafe-statics
+	endif
 endif
 
 ## Position Independent compile flag
 ifeq (gcc,$(OMR_TOOLCHAIN))
-	ifeq (ppc,$(OMR_HOST_ARCH))
-		# Used for GOT's under 4k, should we just go -fPIC for everyone?
-		GLOBAL_CFLAGS+=-fpic
-		GLOBAL_CXXFLAGS+=-fpic
-	else
-		ifeq (x86,$(OMR_HOST_ARCH))
-			ifeq (1,$(OMR_ENV_DATA64))
-				GLOBAL_CFLAGS+=-fPIC
-				GLOBAL_CXXFLAGS+=-fPIC
-			else
-				GLOBAL_CFLAGS+=-fpic
-				GLOBAL_CXXFLAGS+=-fpic
-			endif
-		else
-			GLOBAL_CFLAGS+=-fPIC
-			GLOBAL_CXXFLAGS+=-fPIC
-		endif
-	endif
-else
-	GLOBAL_CFLAGS+=-qpic=large
-	GLOBAL_CXXFLAGS+=-qpic=large
+	GLOBAL_CFLAGS+=-fPIC
+	GLOBAL_CXXFLAGS+=-fPIC
 endif
 
 ## ASFLAGS
@@ -101,151 +50,35 @@ endif
 # option, it is silently ignored.
 GLOBAL_ASFLAGS+=-noexecstack
 
-ifeq (ppc,$(OMR_HOST_ARCH))
-	ifeq (gcc,$(OMR_TOOLCHAIN))
-		ifeq (1,$(OMR_ENV_DATA64))
-			GLOBAL_ASFLAGS+=-a64 -mppc64
-		else
-			GLOBAL_ASFLAGS+=-a32 -mppc64
-		endif
-	else
-		GLOBAL_ASFLAGS+=-c -o $*.o -qpic=large
-		ifeq (1,$(OMR_ENV_DATA64))
-			GLOBAL_ASFLAGS+=-q64
-			ifeq ($(OMR_ENV_LITTLE_ENDIAN),1)
-				GLOBAL_ASFLAGS+=-qarch=pwr7
-			else
-				GLOBAL_ASFLAGS+=-qarch=ppc64
-			endif
-		else
-			GLOBAL_ASFLAGS+=-qarch=ppc
-		endif
+ifeq (s390,$(OMR_HOST_ARCH))
+	ifeq (0,$(OMR_ENV_DATA64))
+		GLOBAL_ASFLAGS+= -mzarch
 	endif
-else
-	ifeq (s390,$(OMR_HOST_ARCH))
-		ifeq (0,$(OMR_ENV_DATA64))
-			GLOBAL_ASFLAGS+= -mzarch
-		endif
-		GLOBAL_ASFLAGS+= -march=z9-109 $(J9M31) -o $*.o
-	else
-		ifeq (x86,$(OMR_HOST_ARCH))
-			ifeq (0,$(OMR_ENV_DATA64))
-				GLOBAL_ASFLAGS+=-32
-			else
-				GLOBAL_ASFLAGS+=-64
-			endif
-		else
-			ifeq (arm,$(OMR_HOST_ARCH))
-				GLOBAL_ASFLAGS+=-march=armv6 -mfpu=vfp -mfloat-abi=hard
-			else
-			# Nothing
-			endif
-		endif
-	endif
+	GLOBAL_ASFLAGS+= -march=z9-109 $(J9M31) -o $*.o
 endif
 
 ###
 ### Platform Flags
 ###
 
-## Debugging Infomation
-# Indicate that GNU debug symbols are being used
-ifeq (gcc,$(OMR_TOOLCHAIN))
-	ifeq (arm,$(OMR_HOST_ARCH))
-		USE_GNU_DEBUG:=1
-	endif
-	ifeq (x86,$(OMR_HOST_ARCH))
-		USE_GNU_DEBUG:=1
-	endif
-endif
-
-ifeq (1,$(OMR_DEBUG))
-	ifeq (1,$(USE_GNU_DEBUG))
-		GLOBAL_ASFLAGS+=-gddb
-		GLOBAL_CXXFLAGS+=-ggdb
-		GLOBAL_CFLAGS+=-ggdb
-		GLOBAL_LDFLAGS+=-ggdb
-	else
-		GLOBAL_ASFLAGS+=-g
-		GLOBAL_CXXFLAGS+=-g
-		GLOBAL_CFLAGS+=-g
-		GLOBAL_LDFLAGS+=-g
-	endif
-endif
-
-#-- Add Platform flags
-ifeq (x86,$(OMR_HOST_ARCH))
+#-- Add Platform flags		
+ifeq (s390,$(OMR_HOST_ARCH))
+	GLOBAL_CFLAGS+=$(J9M31) -fno-strict-aliasing
+	GLOBAL_CXXFLAGS+=$(J9M31) -fno-strict-aliasing
+	GLOBAL_CPPFLAGS+=-DS390 -D_LONG_LONG -DJ9VM_TIERED_CODE_CACHE
 	ifeq (1,$(OMR_ENV_DATA64))
-		GLOBAL_CFLAGS+= -m64
-		GLOBAL_CXXFLAGS+=-m64
-		GLOBAL_CPPFLAGS+=-DJ9HAMMER
-	else
-		GLOBAL_CFLAGS+=-m32 -msse2
-		GLOBAL_CXXFLAGS+=-m32 -msse2 -I/usr/include/nptl
-		GLOBAL_CPPFLAGS+=-DJ9X86
-    endif
-else
-	ifeq (arm,$(OMR_HOST_ARCH))
-		GLOBAL_CPPFLAGS+=-DJ9ARM -DARMGNU -DARM -DFIXUP_UNALIGNED
-	else
-		ifeq (ppc,$(OMR_HOST_ARCH))
-			GLOBAL_CPPFLAGS+=-DLINUXPPC
-
-			ifeq (gcc,$(OMR_TOOLCHAIN))
-				ifeq (1,$(OMR_ENV_DATA64))
-					GLOBAL_CFLAGS+=-m64
-					GLOBAL_CXXFLAGS+=-m64
-					GLOBAL_CPPFLAGS+=-DLINUXPPC64 -DPPC64
-				else
-					GLOBAL_CFLAGS+=-m32
-					GLOBAL_CXXFLAGS+=-m32
-				endif
-			else
-				GLOBAL_CFLAGS+=-qalias=noansi -qxflag=LTOL:LTOL0 -qxflag=selinux
-				GLOBAL_CXXFLAGS+=-qalias=noansi -qxflag=LTOL:LTOL0 -qxflag=selinux -qsuppress=1540-1087:1540-1088:1540-1090
-				ifeq (1,$(OMR_ENV_DATA64))
-					ifeq ($(OMR_ENV_LITTLE_ENDIAN),1)
-						GLOBAL_CFLAGS+=-qarch=pwr7
-						GLOBAL_CXXFLAGS+=-qarch=pwr7
-					else
-						GLOBAL_CFLAGS+=-qarch=ppc64
-						GLOBAL_CXXFLAGS+=-qarch=ppc64
-					endif # endian
-					GLOBAL_CFLAGS+=-q64
-					GLOBAL_CXXFLAGS+=-q64
-					GLOBAL_CPPFLAGS+=-DLINUXPPC64 -DPPC64
-				else
-					GLOBAL_CFLAGS+=-qarch=ppc
-					GLOBAL_CXXFLAGS+=-qarch=ppc
-				endif # proc size
-			endif # cc type
-
-		else
-			ifeq (s390,$(OMR_HOST_ARCH))
-				GLOBAL_CFLAGS+=$(J9M31) -fno-strict-aliasing
-				GLOBAL_CXXFLAGS+=$(J9M31) -fno-strict-aliasing
-				GLOBAL_CPPFLAGS+=-DS390 -D_LONG_LONG -DJ9VM_TIERED_CODE_CACHE
-				ifeq (1,$(OMR_ENV_DATA64))
-					GLOBAL_CPPFLAGS+=-DS39064
-				endif
-			endif
-		endif
+		GLOBAL_CPPFLAGS+=-DS39064
 	endif
 endif
 
 ifneq (,$(findstring executable,$(ARTIFACT_TYPE)))
-	ifeq (x86,$(OMR_HOST_ARCH))
-		ifeq (1,$(OMR_ENV_DATA64))
-		else
-			GLOBAL_LDFLAGS+=-m32
-    	endif
-	endif
-
 	## Default Libraries
-	#DEFAULT_LIBS:=-lm -lpthread -lc -lrt -ldl -lutil -Wl,-z,origin,-rpath,\$$ORIGIN,--disable-new-dtags,-rpath-link,$(top_srcdir)
+	DEFAULT_LIBS:=-lCTIS -lCISO -lCLBM -lCTAL -lCFVS -lCTBX -lCTXO -lCJ00 -lCTDF -lCOMX -lCOMS -lCTHD -lCPP1 -lCTAD -lTPFSTUB -Wl,--disable-new-dtags,$(top_srcdir)
 	GLOBAL_LDFLAGS+=$(DEFAULT_LIBS)
 endif
 
+ZTPF_ROOT?=/ztpf/commit
+PROJECT_ROOT?=/projects/jvmport/userfiles
 
 ###
 ### Shared Libraries
@@ -258,58 +91,40 @@ ifneq (,$(findstring shared,$(ARTIFACT_TYPE)))
 # includes xlc. The default rules create a gcc style version script.
 $(MODULE_NAME)_LINKER_EXPORT_SCRIPT := $(MODULE_NAME).exp
 
-ifeq (xlc,$(OMR_TOOLCHAIN))
-	ifeq ($(OMR_ENV_DATA64),1)
-		GLOBAL_LDFLAGS+=-q64
-	endif
-	GLOBAL_LDFLAGS+=-qmkshrobj -qxflag=selinux -Wl,-Map=$(MODULE_NAME).map
-	GLOBAL_LDFLAGS+=-Wl,-soname=$(LIBPREFIX)$(MODULE_NAME)$(SOLIBEXT),--version-script=$($(MODULE_NAME)_LINKER_EXPORT_SCRIPT)
-
-	# UMA_DLL_LINK_POSTFLAGS+=-Wl,--start-group $(UMA_LINK_STATIC_LIBRARIES) -Wl,--end-group
-	# UMA_DLL_LINK_POSTFLAGS+=$(UMA_LINK_SHARED_LIBRARIES)
-	GLOBAL_LDFLAGS+=-lm -lpthread -lc -Wl,-z,origin,-rpath,\$$ORIGIN,--disable-new-dtags,-rpath-link,$(exe_output_dir)
-
-else
 # assuming a gcc environment
 
 	GLOBAL_LDFLAGS+=-shared
 	GLOBAL_LDFLAGS+=-Wl,-Map=$(MODULE_NAME).map
 	GLOBAL_LDFLAGS+=-Wl,--version-script,$($(MODULE_NAME)_LINKER_EXPORT_SCRIPT)
+	GLOBAL_LDFLAGS+=-Wl,-script=$(ZTPF_ROOT)/base/util/tools/tpfscript
 	GLOBAL_LDFLAGS+=-Wl,-soname=lib$(MODULE_NAME)$(SOLIBEXT)
-	GLOBAL_LDFLAGS+=-Xlinker -z -Xlinker origin -Xlinker -rpath -Xlinker \$$ORIGIN -Xlinker --disable-new-dtags
+	GLOBAL_LDFLAGS+=-Xlinker --disable-new-dtags
+	GLOBAL_LDFLAGS+=-Wl,-entry=0 
 
 	ifeq (s390,$(OMR_HOST_ARCH))
 		GLOBAL_LDFLAGS+=-Xlinker -rpath-link -Xlinker $(exe_output_dir)
 	endif
-	ifeq ($(OMR_HOST_ARCH),x86)
-		ifneq ($(OMR_ENV_DATA64),1)
-			GLOBAL_LDFLAGS+=-m32
-		else
-			GLOBAL_LDFLAGS+=-m64
-		endif
-	endif
-
-	ifeq ($(OMR_HOST_ARCH),ppc)
-		ifeq ($(OMR_ENV_DATA64),1)
-			GLOBAL_LDFLAGS+=-m64
-		else
-			GLOBAL_LDFLAGS+=-m32
-		endif
-	endif
-
-	ifeq ($(OMR_HOST_ARCH),x86)
-		ifneq ($(OMR_ENV_DATA64),1)
-			GLOBAL_LDFLAGS+=-lc -lm -ldl
-		else
-			ifneq (,$(findstring CXX,$(ARTIFACT_TYPE)))
-				GLOBAL_LDFLAGS+=-lc
-			endif
-			GLOBAL_LDFLAGS+=-lm
-		endif
-	endif
-
-endif # OMR_TOOLCHAIN is not "xlc"
-
+	
+	GLOBAL_LDFLAGS+=-lCTOE
+	
+	GLOBAL_LDFLAGS+=-lCISO
+	GLOBAL_LDFLAGS+=-lCIV1 
+	GLOBAL_LDFLAGS+=-lCLC1 
+	GLOBAL_LDFLAGS+=-lCTIS 
+	GLOBAL_LDFLAGS+=-lCLBM 
+	GLOBAL_LDFLAGS+=-lCTAL 
+	GLOBAL_LDFLAGS+=-lCFVS 
+	GLOBAL_LDFLAGS+=-lCTBX 
+	GLOBAL_LDFLAGS+=-lCTXO 
+	GLOBAL_LDFLAGS+=-lCTDF 
+	GLOBAL_LDFLAGS+=-lCOMX 
+	GLOBAL_LDFLAGS+=-lCOMS 
+	GLOBAL_LDFLAGS+=-lCTHD 
+	GLOBAL_LDFLAGS+=-lCPP1
+	GLOBAL_LDFLAGS+=-lCTAD 
+	GLOBAL_LDFLAGS+=-lTPFSTUB
+	
+	GLOBAL_LDFLAGS+=-L$(ZTPF_ROOT)/base/lib/
 endif # ARTIFACT_TYPE contains "shared"
 
 
@@ -349,41 +164,21 @@ endif
 ###
 
 ifeq ($(OMR_OPTIMIZE),1)
-	ifeq (x86,$(OMR_HOST_ARCH))
-		ifeq ($(OMR_ENV_DATA64),1)
-			OPTIMIZATION_FLAGS+=-O3 -fno-strict-aliasing
-		else
-			OPTIMIZATION_FLAGS+=-O3 -fno-strict-aliasing -march=pentium4 -mtune=prescott
-		endif
+	ifeq (s390x,$(OMR_HOST_ARCH))
+		OPTIMIZATION_FLAGS+=-O3 -march=z10 -mtune=z9-109 -mzarch
 	else
-		ifeq (arm,$(OMR_HOST_ARCH))
-			OPTIMIZATION_FLAGS+=-O3 -fno-strict-aliasing -march=armv6 -mfpu=vfp -mfloat-abi=hard -Wno-unused-but-set-variable
-		else
-			ifeq (ppc,$(OMR_HOST_ARCH))
-				OPTIMIZATION_FLAGS+=-O3
-				ifeq ($(OMR_ENV_LITTLE_ENDIAN),1)
-					OPTIMIZATION_FLAGS+=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1
-					ifeq (xlc,$(OMR_TOOLCHAIN))
-						OPTIMIZATION_FLAGS+=-qsimd=noauto
-					endif
-				endif
-			else
-				ifeq (s390x,$(OMR_HOST_ARCH))
-					OPTIMIZATION_FLAGS+=-O3 -march=z10 -mtune=z9-109 -mzarch
-				else
-					OPTIMIZATION_FLAGS+=-O
-				endif
-			endif
-		endif
-	endif
+		OPTIMIZATION_FLAGS+=-O
+	endif		
 else
 	OPTIMIZATION_FLAGS+=-O0
 endif
+
 GLOBAL_CFLAGS+=$(OPTIMIZATION_FLAGS)
 GLOBAL_CXXFLAGS+=$(OPTIMIZATION_FLAGS)
 
-GLOBAL_CFLAGS+=-D_TPF_SOURCE -DOMRZTPF -DJ9ZTPF -DLINUX -DS390 -DS39064 -DFULL_ANSI -DMAXMOVE -DZTPF_POSIX_SOCKET -fPIC -fno-strict-aliasing -D_GNU_SOURCE -fexec-charset=ISO-8859-1 -fmessage-length=0 -funsigned-char -Wno-format-extra-args  -fverbose-asm -fno-builtin-abort -fno-builtin-exit -fno-builtin-sprintf -fno-builtin-isdigit -ffloat-store -DIBM_ATOE -Wno-unknown-pragmas -Wreturn-type -Wno-unused -Wno-uninitialized -Wno-parentheses -gdwarf-2 -Wno-unused-but-set-variable -Wno-unknown-pragmas -DZTPF -D_TPF_THREADS -mtpf-trace -I/ztpf/commit/base/a2e/headers -I/ztpf/commit/base/include -I/ztpf/commit/opensource/include46 -I/ztpf/commit/opensource/include46/g++ -I/ztpf/commit/opensource/include -I/ztpf/commit
-GLOBAL_CXXFLAGS+=-D_TPF_SOURCE -DOMRZTPF -DJ9ZTPF -DLINUX -DS390 -DS39064 -DFULL_ANSI -DMAXMOVE -DZTPF_POSIX_SOCKET -fPIC -fno-strict-aliasing -D_GNU_SOURCE -fexec-charset=ISO-8859-1 -fmessage-length=0 -funsigned-char -Wno-format-extra-args  -fverbose-asm -fno-builtin-abort -fno-builtin-exit -fno-builtin-sprintf -fno-builtin-isdigit -ffloat-store -DIBM_ATOE -Wno-unknown-pragmas -Wreturn-type -Wno-unused -Wno-uninitialized -Wno-parentheses -gdwarf-2 -Wno-unused-but-set-variable -Wno-unknown-pragmas -DZTPF -D_TPF_THREADS -mtpf-trace -I/ztpf/commit/base/a2e/headers -I/ztpf/commit/base/include -I/ztpf/commit/opensource/include46 -I/ztpf/commit/opensource/include46/g++ -I/ztpf/commit/opensource/include -I/ztpf/commit
+GLOBAL_CFLAGS+=-D_TPF_SOURCE -DOMRZTPF -DJ9ZTPF -DOMRPORT_JSIG_SUPPORT -DLINUX -DS390 -DS39064 -DFULL_ANSI -DMAXMOVE -DZTPF_POSIX_SOCKET -fPIC -fno-strict-aliasing -D_GNU_SOURCE -fexec-charset=ISO-8859-1 -fmessage-length=0 -funsigned-char -Wno-format-extra-args  -fverbose-asm -fno-builtin-abort -fno-builtin-exit -fno-builtin-sprintf -ffloat-store -DIBM_ATOE -Wno-unknown-pragmas -Wreturn-type -Wno-unused -Wno-uninitialized -Wno-parentheses -gdwarf-2 -Wno-unused-but-set-variable -Wno-unknown-pragmas -DZTPF -D_TPF_THREADS -mtpf-trace -I$(PROJECT_ROOT)/base/a2e/headers -I$(ZTPF_ROOT)/base/a2e/headers -I$(PROJECT_ROOT)/base/include -I$(ZTPF_ROOT)/base/include -I$(PROJECT_ROOT)/opensource/include -I$(ZTPF_ROOT)/opensource/include -isystem $(PROJECT_ROOT)/base/a2e/headers -isystem $(ZTPF_ROOT)/base/a2e/headers -isystem $(PROJECT_ROOT)/base/include -isystem $(ZTPF_ROOT)/base/include -isystem $(PROJECT_ROOT)/opensource/include -isystem $(ZTPF_ROOT)/opensource/include -isystem $(PROJECT_ROOT)/noship/include -isystem $(ZTPF_ROOT)/noship/include -isystem $(ZTPF_ROOT)
+GLOBAL_CXXFLAGS+=-D_TPF_SOURCE -DOMRZTPF -DJ9ZTPF -DOMRPORT_JSIG_SUPPORT -DLINUX -DS390 -DS39064 -DFULL_ANSI -DMAXMOVE -DZTPF_POSIX_SOCKET -fPIC -fno-strict-aliasing -D_GNU_SOURCE -fexec-charset=ISO-8859-1 -fmessage-length=0 -funsigned-char -Wno-format-extra-args  -fverbose-asm -fno-builtin-abort -fno-builtin-exit -fno-builtin-sprintf -ffloat-store -DIBM_ATOE -Wno-unknown-pragmas -Wreturn-type -Wno-unused -Wno-uninitialized -Wno-parentheses -gdwarf-2 -Wno-unused-but-set-variable -Wno-unknown-pragmas -DZTPF -D_TPF_THREADS -mtpf-trace -I$(PROJECT_ROOT)/base/a2e/headers -I$(ZTPF_ROOT)/base/a2e/headers -I$(PROJECT_ROOT)/base/include -I$(ZTPF_ROOT)/base/include -I$(PROJECT_ROOT)/opensource/include -I$(ZTPF_ROOT)/opensource/include -I$(PROJECT_ROOT)/opensource/include46/g++ -I$(ZTPF_ROOT)/opensource/include46/g++ -I$(PROJECT_ROOT)/opensource/include46/g++/backward -I$(ZTPF_ROOT)/opensource/include46/g++/backward -isystem $(PROJECT_ROOT)/base/a2e/headers -isystem $(ZTPF_ROOT)/base/a2e/headers -isystem $(PROJECT_ROOT)/base/include -isystem $(ZTPF_ROOT)/base/include -isystem $(PROJECT_ROOT)/opensource/include -isystem $(ZTPF_ROOT)/opensource/include -isystem $(PROJECT_ROOT)/opensource/include46/g++ -isystem $(ZTPF_ROOT)/opensource/include46/g++ -isystem $(PROJECT_ROOT)/opensource/include46/g++/backward -isystem $(ZTPF_ROOT)/opensource/include46/g++/backward -isystem $(PROJECT_ROOT)/noship/include -isystem $(ZTPF_ROOT)/noship/include -isystem $(ZTPF_ROOT)
+
 
 # Override the default recipe if we are using USE_GNU_DEBUG, so that we strip out the
 # symbols and store them seperately.
@@ -393,16 +188,16 @@ ifneq (,$(findstring shared,$(ARTIFACT_TYPE)))
 
 			define LINK_C_SHARED_COMMAND
 				$(CCLINKSHARED) -o $@ $(OBJECTS) $(LDFLAGS) $(MODULE_LDFLAGS) $(GLOBAL_LDFLAGS)
-				cp $@ $@.dbg
+				$(OBJCOPY) --only-keep-debug $@ $@.dbg
 				$(OBJCOPY) --strip-debug $@
-				$(OBJCOPY) --add-gnu-debuglink=$@ $@.dbg
+				$(OBJCOPY) --add-gnu-debuglink=$@.dbg $@
 			endef
 
 			define LINK_CXX_SHARED_COMMAND
 				$(CXXLINKSHARED) -o $@ $(OBJECTS) $(LDFLAGS) $(MODULE_LDFLAGS) $(GLOBAL_LDFLAGS)
-				cp $@ $@.dbg
+				$(OBJCOPY) --only-keep-debug $@ $@.dbg
 				$(OBJCOPY) --strip-debug $@
-				$(OBJCOPY) --add-gnu-debuglink=$@ $@.dbg
+				$(OBJCOPY) --add-gnu-debuglink=$@.dbg $@
 			endef
 
 			## Files to clean

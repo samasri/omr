@@ -1,47 +1,54 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "Forge.hpp"
 
 #include "omrcomp.h"
 #include "EnvironmentBase.hpp"
 
-typedef struct MM_MemoryHeader {
-	uintptr_t allocatedBytes;
-	MM_AllocationCategory::Enum category;
-} MM_MemoryHeader;
+namespace OMR {
+namespace GC {
 
-typedef union MM_AlignedMemoryHeader {
+struct MemoryHeader {
+	uintptr_t allocatedBytes;
+	OMR::GC::AllocationCategory::Enum category;
+};
+
+union AlignedMemoryHeader {
 	double forAlignment;
-	MM_MemoryHeader header;
-} MM_AlignedMemoryHeader;
+	MemoryHeader header;
+};
 
 bool
-MM_Forge::initialize(MM_EnvironmentBase* env)
+Forge::initialize(OMRPortLibrary* port)
 {
-	_portLibrary = env->getPortLibrary();
+	_portLibrary = port;
 
-	if (0 != omrthread_monitor_init_with_name(&_mutex, 0, "MM_Forge")) {
+	if (0 != omrthread_monitor_init_with_name(&_mutex, 0, "OMR::GC::Forge")) {
 		return false;
 	}	
 
-	for (uintptr_t i = 0; i < MM_AllocationCategory::CATEGORY_COUNT; i++) {
-		_statistics[i].category = (MM_AllocationCategory::Enum) i;
+	for (uintptr_t i = 0; i < OMR::GC::AllocationCategory::CATEGORY_COUNT; i++) {
+		_statistics[i].category = (OMR::GC::AllocationCategory::Enum) i;
 		_statistics[i].allocated = 0;
 		_statistics[i].highwater = 0;
 	}
@@ -50,7 +57,7 @@ MM_Forge::initialize(MM_EnvironmentBase* env)
 }
 
 void 
-MM_Forge::tearDown(MM_EnvironmentBase* env)
+Forge::tearDown()
 {
 	_portLibrary = NULL;
 	
@@ -70,11 +77,11 @@ MM_Forge::tearDown(MM_EnvironmentBase* env)
  * @return a pointer to the allocated memory, or NULL if the request could not be performed
  */
 void* 
-MM_Forge::allocate(uintptr_t bytesRequested, MM_AllocationCategory::Enum category, const char* callsite)
+Forge::allocate(std::size_t bytesRequested, OMR::GC::AllocationCategory::Enum category, const char* callsite)
 {
-	MM_AlignedMemoryHeader* memoryPointer;
+	AlignedMemoryHeader* memoryPointer;
 
-	memoryPointer = (MM_AlignedMemoryHeader *) _portLibrary->mem_allocate_memory(_portLibrary, bytesRequested + sizeof(MM_AlignedMemoryHeader), callsite, OMRMEM_CATEGORY_MM);
+	memoryPointer = (AlignedMemoryHeader *) _portLibrary->mem_allocate_memory(_portLibrary, bytesRequested + sizeof(AlignedMemoryHeader), callsite, OMRMEM_CATEGORY_MM);
 	if (NULL != memoryPointer) {
 		memoryPointer->header.allocatedBytes = bytesRequested;
 		memoryPointer->header.category = category;
@@ -100,13 +107,13 @@ MM_Forge::allocate(uintptr_t bytesRequested, MM_AllocationCategory::Enum categor
  * @param[in] memoryPointer - a pointer to the memory that will be freed
  */
 void 
-MM_Forge::free(void* memoryPointer)
+Forge::free(void* memoryPointer)
 {	
 	if (NULL == memoryPointer) {
 		return;
 	}
 
-	MM_AlignedMemoryHeader* alignedHeader = (MM_AlignedMemoryHeader *) memoryPointer;
+	AlignedMemoryHeader* alignedHeader = (AlignedMemoryHeader *) memoryPointer;
 	alignedHeader -= 1;
 
 
@@ -122,10 +129,13 @@ MM_Forge::free(void* memoryPointer)
  * Returns the current memory usage statistics for the garbage collector.  Each entry in the array corresponds to a memory usage category type.
  * To locate memory usage statistics for a particular category, use the enumeration value as the array index (e.g. stats[REFERENCES]).
  *
- * @return an array of memory usage statistics indexed using the MM_AllocationCategory enumeration
+ * @return an array of memory usage statistics indexed using the OMR::GC::AllocationCategory enumeration
  */
-MM_MemoryStatistics*
-MM_Forge::getCurrentStatistics()
+OMR_GC_MemoryStatistics*
+Forge::getCurrentStatistics()
 {
 	return _statistics;
 }
+
+} // namespace GC
+} // namespace OMR

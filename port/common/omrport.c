@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2015, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2015, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -63,6 +67,7 @@ static OMRPortLibrary MasterPortLibraryTable = {
 	omrsysinfo_get_memory_info, /* sysinfo_get_memory_info */
 	omrsysinfo_get_processor_info, /* sysinfo_get_processor_info */
 	omrsysinfo_destroy_processor_info, /* sysinfo_destroy_processor_info */
+	omrsysinfo_get_addressable_physical_memory, /* sysinfo_get_addressable_physical_memory */
 	omrsysinfo_get_physical_memory, /* sysinfo_get_physical_memory */
 	omrsysinfo_get_OS_version, /* sysinfo_get_OS_version */
 	omrsysinfo_get_env, /* sysinfo_get_env */
@@ -211,6 +216,10 @@ static OMRPortLibrary MasterPortLibraryTable = {
 	omrsig_protect,  /* sig_protect */
 	omrsig_can_protect, /* sig_can_protect */
 	omrsig_set_async_signal_handler, /* sig_set_async_signal_handler */
+	omrsig_set_single_async_signal_handler, /* sig_set_single_async_signal_handler */
+	omrsig_map_os_signal_to_portlib_signal, /* sig_map_os_signal_to_portlib_signal */
+	omrsig_map_portlib_signal_to_os_signal, /* sig_map_portlib_signal_to_os_signal */
+	omrsig_register_os_handler, /* sig_register_os_handler */
 	omrsig_info, /* sig_info */
 	omrsig_info_count, /* sig_info_count */
 	omrsig_set_options, /* sig_set_options */
@@ -251,10 +260,13 @@ static OMRPortLibrary MasterPortLibraryTable = {
 	omrsysinfo_get_os_description, /* sysinfo_get_os_description */
 	omrsysinfo_os_has_feature, /* sysinfo_os_has_feature */
 	omrsysinfo_os_kernel_info, /* sysinfo_os_kernel_info */
-	omrsysinfo_cgroup_is_limits_supported, /* sysinfo_cgroup_is_limits_supported */
-	omrsysinfo_cgroup_is_limits_enabled, /* sysinfo_cgroup_is_limits_enabled */
-	omrsysinfo_cgroup_enable_limits, /* sysinfo_cgroup_enable_limits */
-	omrsysinfo_cgroup_get_memlimit, /* sysinfo_cgroup_get_memlimit */	
+	omrsysinfo_cgroup_is_system_available, /* sysinfo_cgroup_is_system_available */
+	omrsysinfo_cgroup_get_available_subsystems, /* sysinfo_cgroup_get_available_subsystems */
+	omrsysinfo_cgroup_are_subsystems_available, /* sysinfo_cgroup_are_subsystems_available */
+	omrsysinfo_cgroup_get_enabled_subsystems, /* sysinfo_cgroup_get_enabled_subsystems */
+	omrsysinfo_cgroup_enable_subsystems, /* sysinfo_cgroup_enable_subsystems */
+	omrsysinfo_cgroup_are_subsystems_enabled, /* sysinfo_cgroup_are_subsystems_enabled */
+	omrsysinfo_cgroup_get_memlimit, /* sysinfo_cgroup_get_memlimit */
 	omrport_init_library, /* port_init_library */
 	omrport_startup_library, /* port_startup_library */
 	omrport_create_library, /* port_create_library */

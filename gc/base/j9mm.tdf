@@ -1,19 +1,23 @@
 ////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 1998, 2018 IBM Corp. and others
 //
-// (c) Copyright IBM Corp. 1998, 2015
+// This program and the accompanying materials are made available under
+// the terms of the Eclipse Public License 2.0 which accompanies this
+// distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+// or the Apache License, Version 2.0 which accompanies this distribution and
+// is available at https://www.apache.org/licenses/LICENSE-2.0.
 //
-//  This program and the accompanying materials are made available
-//  under the terms of the Eclipse Public License v1.0 and
-//  Apache License v2.0 which accompanies this distribution.
+// This Source Code may also be made available under the following
+// Secondary Licenses when the conditions for such availability set
+// forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+// General Public License, version 2 with the GNU Classpath
+// Exception [1] and GNU General Public License, version 2 with the
+// OpenJDK Assembly Exception [2].
 //
-//      The Eclipse Public License is available at
-//      http://www.eclipse.org/legal/epl-v10.html
+// [1] https://www.gnu.org/software/classpath/license.html
+// [2] http://openjdk.java.net/legal/assembly-exception.html
 //
-//      The Apache License v2.0 is available at
-//      http://www.opensource.org/licenses/apache2.0.php
-//
-// Contributors:
-//    Multiple authors (IBM Corp.) - initial implementation and documentation
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ////////////////////////////////////////////////////////////////////////////////
 
 Executable=j9mm
@@ -122,7 +126,7 @@ TraceEvent=Trc_MM_GlobalGCEndOld2 Obsolete Overhead=1 Level=1 Group=gclogger Tem
 
 TraceEntry=Trc_MM_MemorySubSpaceUniSpace_calculateCollectorExpandSize_Entry Overhead=1 Level=1 Group=resize Template="MM_MemorySubSpace_calculateCollectorExpandSize Entry Bytes required = %zu"
 TraceExit=Trc_MM_MemorySubSpaceUniSpace_calculateCollectorExpandSize_Exit1 Overhead=1 Level=1 Group=resize Template="MM_MemorySubSpace_calculateCollectorExpandSize Exit1 returning expand size of %zu bytes"
-//Redefine Trc_MM_ClassUnloadingEnd to add class loader and classes unload counts 
+//Redefine Trc_MM_ClassUnloadingEnd to add class loader and classes unload counts
 TraceEvent=Trc_MM_ClassUnloadingEnd Overhead=1 Level=1 Group=gclogger Template="Class unloading end: classloadersunloaded=%zu classesunloaded=%zu"
 
 TraceEvent=Trc_MM_ObjectArrayAllocationFailedDueToOverflow Group=gclogger Overhead=1 Level=1 Template="J9AllocateIndexableObject() failed because object array is too large to ever allocate (length=%u)"
@@ -743,7 +747,7 @@ TraceEvent=Trc_MM_CopyForwardScheme_setAllocationAgeForMergedRegion Overhead=1 L
 TraceEvent=Trc_MM_SchedulingDelegate_updateGMPStats Overhead=1 Level=1 Group=reclaim Template="historicTotalIncrementalScanTimePerGMP: %lluus, incrementalScanTime:%lluus, historicBytesScannedConcurrentlyPerGMP:%zu, concurrentBytesScanned:%zu"
 
 TraceEvent=Trc_MM_SchedulingDelegate_copyForwardCompleted_efficiency Overhead=1 Level=1 Group=reclaim Template="bytesCopied=%zu, bytesDiscarded=%zu, lost=%0.2f; avgBytesCopied=%0.2f, avgBytesDiscarded=%0.2f, avgLost=%0.2f survivorRegions=%zu (incl. %zu failed evacuate regions and %zu compact regions) avgSurvivorRegions=%0.2f copyForwardRate:%0.5f avgCopyForwardRate:%0.5f"
-TraceEvent=Trc_MM_SchedulingDelegate_calculatePGCCompactionRate_liveToFreeRatio Overhead=1 Level=1 Group=reclaim Template="bytesCompacted/freeBytes ratio %f (totalLiveData %zu, totalFreeMemory %zu, fullyCompactedData %zu, reservedFreeMemory %zu, emptinessThreshold=%0.2f) surivivorSize=%zu, defragmentedMemory=%zu, freeRegionMemory=%zu, edenSizeInBytes=%zu"
+TraceEvent=Trc_MM_SchedulingDelegate_calculatePGCCompactionRate_liveToFreeRatio Obsolete Overhead=1 Level=1 Group=reclaim Template="bytesCompacted/freeBytes ratio %f (totalLiveData %zu, totalFreeMemory %zu, fullyCompactedData %zu, reservedFreeMemory %zu, emptinessThreshold=%0.2f) surivivorSize=%zu, defragmentedMemory=%zu, freeRegionMemory=%zu, edenSizeInBytes=%zu"
 
 TraceEvent=Trc_MM_CompactGroupPersistentStats_decayProjectedLiveBytesForRegions Overhead=1 Level=1 Group=aging Template="decay region %zu projectedLiveBytes %.4fM->%.4fM regionCompactGroup %zu bytesRemaining %.2fM currentAge %.2fM multiply with PrISR %f (baseSurvivalRate  %f, ageUnitsInThisGroup %f)  group %zu"
 TraceEntry=Trc_MM_CompactGroupPersistentStats_updateProjectedSurvivalRate_Entry Overhead=1 Level=1 Group=aging Template="compactGroup %zu projectedLiveBytesForNonEdenNew  %.4fM projectedLiveBytesSelectedPreviousPGC  %.4fM measuredLiveBytesAfter %.4fM (%.4fM - %.4fM) projectedLiveBytesForNonEden %.4fM"
@@ -855,3 +859,8 @@ TraceEvent=Trc_MM_ParallelDispatcher_adjustThreadCount_ReducedCPU noEnv Overhead
 
 TraceEvent=Trc_MM_Scavenger_switchConcurrentOld Obsolete Overhead=1 Level=1 Group=scavenger Template="Concurrent switch %zu"
 TraceEvent=Trc_MM_Scavenger_switchConcurrent Overhead=1 Level=1 Group=scavenger Template="Concurrent switch state %zu global/local count %zu/%zu"
+
+TraceEvent=Trc_MM_SchedulingDelegate_calculatePGCCompactionRate_liveToFreeRatio1 Overhead=1 Level=1 Group=reclaim Template="totalLiveData %zu (totalLiveDataInCollectableRegions %zu, totalLiveDataInNonCollectibleRegions %zu, fullyCompactedData %zu)"
+TraceEvent=Trc_MM_SchedulingDelegate_calculatePGCCompactionRate_liveToFreeRatio2 Overhead=1 Level=1 Group=reclaim Template="totalFreeMemory %zu (freeMemoryInCollectibleRegions %zu, freeMemoryInNonCollectibleRegions %zu, freeRegionMemory %zu, freeMemoryInFullyCompactedRegions %zu)"
+TraceEvent=Trc_MM_SchedulingDelegate_calculatePGCCompactionRate_liveToFreeRatio3 Overhead=1 Level=1 Group=reclaim Template="totalRegions %zu (collectibleRegions %zu, nonCollectibleRegions %zu, fullyCompactedRegions %zu, freeRegions %zu)"
+TraceEvent=Trc_MM_SchedulingDelegate_calculatePGCCompactionRate_liveToFreeRatio4 Overhead=1 Level=1 Group=reclaim Template="bytesCompacted/freeBytes ratio %f (edenSizeInBytes %zu, surivivorSize %zu, reservedFreeMemory %zu), emptinessThreshold %0.2f, defragmentedMemory %zu, estimatedFreeMemory %zu"

@@ -1,22 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
-
 
 /*
  * $RCSfile: si.c,v $
@@ -2109,51 +2110,35 @@ TEST(PortSysinfoTest, sysinfo_cgroup_get_memlimit)
 	OMRPORT_ACCESS_FROM_OMRPORT(portTestEnv->getPortLibrary());
 	const char *testName = "omrsysinfo_cgroup_get_memlimit";
 	uint64_t cgroupMemLimit = 0;
-	int32_t cgroupLimitEnabled = 0;
 	int32_t rc = 0;
+	uint64_t enabledSubsystems = 0;
 	
 	reportTestEntry(OMRPORTLIB, testName);
 
-	/* Call omrsysinfo_cgroup_get_memlimit without enabling cgroup limits */
 	rc = omrsysinfo_cgroup_get_memlimit(&cgroupMemLimit);
 
-#if defined(LINUX)
-	if (OMRPORT_ERROR_SYSINFO_CGROUP_LIMITS_DISABLED != rc) {
-		outputErrorMessage(PORTTEST_ERROR_ARGS, "omrsysinfo_cgroup_get_memlimit returned %d, expected %d\n", rc, OMRPORT_ERROR_SYSINFO_CGROUP_LIMITS_DISABLED);
-	}
-#else
+#if !defined(LINUX)
 	if (OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM != rc) {
-		outputErrorMessage(PORTTEST_ERROR_ARGS, "omrsysinfo_cgroup_get_memlimit returned %d, exptected %d on platform that does not support cgroups\n", rc, OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM);
+		outputErrorMessage(PORTTEST_ERROR_ARGS, "omrsysinfo_cgroup_get_memlimit returned %d, expected %d on platform that does not support cgroups\n", rc, OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM);
 	}
 #endif
 
-	/* Call omrsysinfo_cgroup_get_memlimit after enabling cgroup limits */
-	cgroupLimitEnabled = omrsysinfo_cgroup_enable_limits();
-
-	rc = omrsysinfo_cgroup_get_memlimit(&cgroupMemLimit);
-
-#if defined(LINUX)
-	if (0 == cgroupLimitEnabled) {
-		if (OMRPORT_ERROR_SYSINFO_CGROUP_LIMITS_DISABLED == rc) {
-			outputErrorMessage(PORTTEST_ERROR_ARGS, "omrsysinfo_cgroup_get_memlimit returned %d when cgroup limits was enabled successfully\n", rc);
+	/* Compare sysinfo_get_physical_memory and sysinfo_cgroup_get_memlimit after enabling memory subsystem */
+	enabledSubsystems = omrsysinfo_cgroup_enable_subsystems(OMR_CGROUP_SUBSYSTEM_MEMORY);
+	if (OMR_ARE_ALL_BITS_SET(enabledSubsystems, OMR_CGROUP_SUBSYSTEM_MEMORY)) {
+		rc = omrsysinfo_cgroup_get_memlimit(&cgroupMemLimit);
+		if ((0 != rc) && (OMRPORT_ERROR_SYSINFO_CGROUP_MEMLIMIT_NOT_SET != rc)) {
+			outputErrorMessage(PORTTEST_ERROR_ARGS, "omrsysinfo_cgroup_get_memlimit failed with error code %d\n", rc);
 		} else if (0 == rc) {
 			uint64_t physicalMemLimit = 0;
 
 			physicalMemLimit = omrsysinfo_get_physical_memory();
 			if (cgroupMemLimit != physicalMemLimit) {
-				outputErrorMessage(PORTTEST_ERROR_ARGS, "Expected omrsysinfo_cgroup_get_memlimit and omrsysinfo_get_physical_memory to return same value, but omrsysinfo_cgroup_get_memlimit returned %ld and omrsysinfo_get_physical_memory returned %ld\n");
+				outputErrorMessage(PORTTEST_ERROR_ARGS, "Expected omrsysinfo_cgroup_get_memlimit and omrsysinfo_get_physical_memory to return same value, but omrsysinfo_cgroup_get_memlimit returned %ld and omrsysinfo_get_physical_memory returned %ld\n", cgroupMemLimit, physicalMemLimit);
 			}
 		}
-	} else {
-		if (OMRPORT_ERROR_SYSINFO_CGROUP_LIMITS_DISABLED != rc) {
-			outputErrorMessage(PORTTEST_ERROR_ARGS, "omrsysinfo_cgroup_get_memlimit returned %d, expected %d\n", rc, OMRPORT_ERROR_SYSINFO_CGROUP_LIMITS_DISABLED);
-        	}
 	}
-#else
-	if (OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM != rc) {
-		outputErrorMessage(PORTTEST_ERROR_ARGS, "omrsysinfo_cgroup_get_memlimit returned %d, exptected %d on platform that does not support cgroups\n", rc, OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM);
-	}
-#endif
+
 	reportTestExit(OMRPORTLIB, testName);
 	return;
 }

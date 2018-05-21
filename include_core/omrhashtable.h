@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMRHASHTABLE_H
@@ -27,15 +31,17 @@
 extern "C" {
 #endif
 
-
 /* DO NOT DIRECTLY INCLUDE THIS FILE! */
 /* Include hashtable_api.h instead */
-
 
 #include "omravl.h"
 #include "omrcomp.h"
 #include "omrport.h"
 #include "pool_api.h"
+
+/*
+ * @ddr_namespace: map_to_type=J9HashtableConstants
+ */
 
 /**
  * Hash table flags
@@ -46,7 +52,11 @@ extern "C" {
 #define J9HASH_TABLE_ALLOW_SIZE_OPTIMIZATION	0x00000008	/*!< Allow space optimized hashTable, some functions not supported */
 #define J9HASH_TABLE_DO_NOT_REHASH	0x00000010	/*!< Do not rehash the table while set */
 
-#define J9HASH_TABLE_AVL_TREE_TAG_BIT ((uintptr_t)0x00000001) /*!< Bit to indicate that hastable slot contains a pointer to an AVL tree */
+/*
+ * This used to include a cast to uintptr_t, but ddrgen doesn't
+ * handle casts; that cast has been moved to hashtable.c.
+ */
+#define J9HASH_TABLE_AVL_TREE_TAG_BIT 0x00000001 /*!< Bit to indicate that hastable slot contains a pointer to an AVL tree */
 
 /**
  * Hash Table state constants for iteration
@@ -54,6 +64,10 @@ extern "C" {
 #define J9HASH_TABLE_ITERATE_STATE_LIST_NODES 0
 #define J9HASH_TABLE_ITERATE_STATE_TREE_NODES 1
 #define J9HASH_TABLE_ITERATE_STATE_FINISHED  2
+
+/*
+ * @ddr_namespace: default
+ */
 
 /**
  * Macros for getting at data directly from AVLTreeNodes

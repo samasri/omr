@@ -1,38 +1,40 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_CODECACHE_INCL
 #define OMR_CODECACHE_INCL
 
-#include "env/defines.h"                    // for HOST_OS, OMR_LINUX, etc
-
 /*
  * The following #defines and typedefs must appear before any #includes in this file
  */
 
-#ifndef OMR_CODECACHE_COMPOSED
-#define OMR_CODECACHE_COMPOSED
+#ifndef OMR_CODECACHE_CONNECTOR
+#define OMR_CODECACHE_CONNECTOR
 namespace OMR { class CodeCache; }
 namespace OMR { typedef CodeCache CodeCacheConnector; }
 #endif
 
 #include <stddef.h>                            // for size_t
 #include <stdint.h>                            // for uint8_t, int32_t, etc
+#include "env/defines.h"                       // for HOST_OS, OMR_LINUX, etc
 #include "il/DataTypes.hpp"                    // for TR_YesNoMaybe
 #include "infra/CriticalSection.hpp"           // for CriticalSection
 #include "runtime/CodeCacheConfig.hpp"         // for CodeCacheConfig
@@ -205,6 +207,76 @@ public:
                                                         uint8_t *end,
                                                         char *file,
                                                         uint32_t lineNumber);
+
+   /**
+    * @brief Getter for cached CodeCacheManager object
+    *
+    * @returns The cached CodeCacheManager object
+    */
+   TR::CodeCacheManager *manager() { return _manager; }
+
+   /**
+    * @brief Setter for CodeCacheManager object
+    *
+    * @param[in] m : The CodeCacheManager object
+    */
+   void setManager(TR::CodeCacheManager *m) { _manager = m; }
+
+   /**
+    * @brief Getter for trampolineSyncList
+    *
+    * @returns The head of the trampolineSyncList
+    */
+   CodeCacheTempTrampolineSyncBlock *trampolineSyncList() { return _trampolineSyncList; }
+
+   /**
+    * @brief Setter for trampolineSyncList
+    *
+    * @param[in] sl : A CodeCacheTempTrampolineSyncBlock to be the new head of the trampolineSyncList
+    */
+   void setTrampolineSyncList(CodeCacheTempTrampolineSyncBlock *sl) { _trampolineSyncList = sl; }
+
+   /**
+    * @brief Getter for the current hashEntrySlab
+    *
+    * @returns The head of the hashEntrySlab list (i.e., the current hashEntrySlab)
+    */
+   CodeCacheHashEntrySlab *hashEntrySlab() { return _hashEntrySlab; }
+
+   /**
+    * @brief Setter for hashEntrySlab
+    *
+    * @param[in] hes : A CodeCacheHashEntrySlab to be the new head of the hashEntrySlab list
+    */
+   void setHashEntrySlab(CodeCacheHashEntrySlab *hes) { _hashEntrySlab = hes; }
+
+   /**
+    * @brief Getter for the current hashEntryFreeList
+    *
+    * @returns The head of the hashEntryFreeList list
+    */
+   CodeCacheHashEntry *hashEntryFreeList() { return _hashEntryFreeList; }
+
+   /**
+    * @brief Setter for hashEntryFreeList
+    *
+    * @param[in] : The new head of the list of free CodeCacheHashEntry's
+    */
+   void setHashEntryFreeList(CodeCacheHashEntry *fl) { _hashEntryFreeList = fl; }
+
+   /**
+    * @brief Getter for the current freeBlockList
+    *
+    * @returns The head of the freeBlockList list
+    */
+   CodeCacheFreeCacheBlock *freeBlockList() { return _freeBlockList; }
+
+   /**
+    * @brief Setter for freeBlockList
+    *
+    * @param[in] : The new head of the CodeCacheFreeCacheBlock list
+    */
+   void setFreeBlockList(CodeCacheFreeCacheBlock *fcb) { _freeBlockList = fcb; }
 
    TR::CodeCacheManager *_manager;
 

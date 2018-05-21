@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef REGISTERCANDIDATE_INCL
@@ -23,23 +26,25 @@
 #include <stdint.h>                       // for int32_t, uint32_t, uint8_t
 #include "codegen/RegisterConstants.hpp"  // for TR_GlobalRegisterNumber, etc
 #include "env/TRMemory.hpp"               // for Allocator, TR_Memory, etc
+#include "il/Block.hpp"                   // for TR::Block
 #include "il/DataTypes.hpp"               // for TR::DataType, DataTypes
 #include "il/Node.hpp"                    // for Node (ptr only), etc
+#include "il/SymbolReference.hpp"         // for TR::SymbolReference
 #include "infra/Array.hpp"                // for TR_Array
 #include "infra/Assert.hpp"               // for TR_ASSERT
 #include "infra/BitVector.hpp"            // for TR_BitVector, etc
 #include "infra/Cfg.hpp"                  // for CFG, CFGBase::::EndBlock, etc
+#include "infra/Flags.hpp"                // for flags16_t
 #include "infra/Link.hpp"                 // for TR_LinkHead, TR_Link
 #include "infra/List.hpp"                 // for List
 #include <map>
 
 class TR_GlobalRegisterAllocator;
 class TR_Structure;
-namespace TR { class Block; }
 namespace TR { class Compilation; }
 namespace TR { class Symbol; }
-namespace TR { class SymbolReference; }
 namespace TR { class TreeTop; }
+namespace TR { class NodeChecklist; }
 
 namespace TR
 {
@@ -49,71 +54,34 @@ class GlobalSet
 public:
    GlobalSet(TR::Compilation * comp, TR::Region &region);
 
-   class Set;
-   Set * operator[](uint32_t blockNum)
-   {
-    if(blockNum == TR::CFG::StartBlock || blockNum == TR::CFG::EndBlock)
-        return NULL;
-    
-    return _refAutosPerBlock[blockNum];
-   }
-
-   void collectReferencedAutoSymRefs(TR::Block * BB);
-   bool isEmpty() { return _refAutosPerBlock.empty(); }
-   void makeEmpty() { _refAutosPerBlock.clear(); }
-   void initialize(uint32_t numSymRefs, int32_t numBlocks) {_maxEntries = numSymRefs * numBlocks;}
-
-   //Set, SparseSet and DenseSet
-   class Set
+   TR_BitVector *operator[](uint32_t symRefNum)
       {
-   public:
-      virtual bool get(uint32_t refNum)            = 0;
-      virtual void set(uint32_t symRefNum)         = 0;
-      virtual void print(TR::Compilation* comp)    = 0;
-   };
+      if (!_collected)
+         collectBlocks();
+
+      auto lookup = _blocksPerAuto.find(symRefNum);
+      if (lookup != _blocksPerAuto.end())
+         return lookup->second; 
+      return &_EMPTY;
+      }
+
+   bool isEmpty() { return _blocksPerAuto.empty(); }
+   void makeEmpty() { _collected = false; _blocksPerAuto.clear(); }
 
 private:
 
-   class SparseSet: public Set
-   {
-   public:
-   TR_ALLOC(TR_Memory::RegisterCandidates);
-   SparseSet(TR::Region &region):_refs(region){}
-   virtual bool get(uint32_t refId) {return _refs.get(refId); }
-   virtual void set(uint32_t refId) {_refs.set(refId);     }
-   virtual void print(TR::Compilation * comp);
-   private:
-   TR_BitVector _refs;
-   };
+   void collectBlocks();
+   void collectReferencedAutoSymRefs(TR::Node *node, TR_BitVector &referencedAutoSymRefs, TR::NodeChecklist &visited);
 
-   class DenseSet: public Set
-   {
-   public:
-   TR_ALLOC(TR_Memory::RegisterCandidates);
-   DenseSet(TR::Region &region):_refs(region){}
-   virtual bool get(uint32_t refId) {return _refs.get(refId); }
-   virtual void set(uint32_t refId) {_refs.set(refId); }
-   virtual void print(TR::Compilation * comp);
-   private:
-   TR_BitVector _refs;
-   };
-
-
-
-   enum
-   {
-     MB50     = 0x19000000,
-     MB100    = 0x32000000
-   };
-
-   void collectReferencedAutoSymRefs(TR::Node * node, Set * referencedAutos, vcount_t visitCount);
-
-   typedef TR::typed_allocator<std::pair<uint32_t, Set*>, TR::Region&> RefMapAllocator;
+   TR::Region &_region;
+   TR_BitVector _empty;
+   typedef TR::typed_allocator<std::pair<uint32_t const, TR_BitVector*>, TR::Region&> RefMapAllocator;
    typedef std::less<uint32_t> RefMapComparator;
-   typedef std::map<uint32_t, Set *, RefMapComparator, RefMapAllocator> RefMap;
-   RefMap _refAutosPerBlock;
+   typedef std::map<uint32_t, TR_BitVector*, RefMapComparator, RefMapAllocator> RefMap;
+   RefMap _blocksPerAuto;
+   TR_BitVector _EMPTY;
+   bool _collected;
    TR::Compilation * _comp;
-   uint32_t _maxEntries;
    };
 
 }
@@ -133,37 +101,53 @@ public:
    TR_RegisterCandidate(TR::SymbolReference *, TR::Region &r);
 
    class BlockInfo {
-     typedef TR::typed_allocator<std::pair<uint32_t, uint32_t>, TR::Region &> InfoMapAllocator;
+     typedef TR::typed_allocator<std::pair<uint32_t const, uint32_t>, TR::Region &> InfoMapAllocator;
      typedef std::less<uint32_t> InfoMapComparator;
      typedef std::map<uint32_t, uint32_t, InfoMapComparator, InfoMapAllocator> InfoMap;
      InfoMap _blockMap;
+     TR_BitVector _candidateBlocks;
 
    public:
-     typedef InfoMap::iterator InfoMapIterator;
+     typedef TR_BitVectorIterator iterator;
 
      BlockInfo(TR::Region &region)
-        : _blockMap((InfoMapComparator()), (InfoMapAllocator(region))) { }
+        : _blockMap((InfoMapComparator()), (InfoMapAllocator(region))),
+          _candidateBlocks(region) { }
 
      void setNumberOfLoadsAndStores(uint32_t block, uint32_t count) {
-       _blockMap[block] = count;
+       _candidateBlocks.set(block);
+
+       auto lookup = _blockMap.find(block);
+       if (lookup != _blockMap.end())
+          lookup->second = count;
+       else if (count > 0)
+          _blockMap[block] = count;
      }
      void incNumberOfLoadsAndStores(uint32_t block, uint32_t count) {
-       _blockMap[block] += count;
+       _candidateBlocks.set(block);
+       if (count > 0)
+          _blockMap[block] += count;
      }
      void removeBlock(uint32_t block) {
+       _candidateBlocks.reset(block);
        _blockMap.erase(block);
      }
 
      bool find(uint32_t block) {
-       return _blockMap.find(block) != _blockMap.end();
+       return _candidateBlocks.get(block);
      }
      uint32_t getNumberOfLoadsAndStores(uint32_t block) {
-       auto result = _blockMap.find(block);
-       return result != _blockMap.end() ? result->second : 0;
+       if (_candidateBlocks.get(block))
+          {
+          auto result = _blockMap.find(block);
+          return result != _blockMap.end() ? result->second : 0;
+          }
+       return 0;
      }
 
-     InfoMapIterator begin() { return _blockMap.begin(); }
-     InfoMapIterator end() { return _blockMap.end(); }
+     TR_BitVector& getCandidateBlocks() { return _candidateBlocks; }
+
+     iterator getIterator() { return iterator(_candidateBlocks); }    
    };
 
    struct LoopInfo : TR_Link<LoopInfo>
@@ -173,9 +157,9 @@ public:
       int32_t _numberOfLoadsAndStores;
       };
 
-   void addAllBlocks()         { _allBlocks = true; }
+   void addAllBlocks()         { setAllBlocks(true); }
 
-   void addBlock(TR::Block * b, int32_t numberOfLoadsAndStores, TR_Memory *, bool ifNotFound = false);
+   void addBlock(TR::Block * b, int32_t numberOfLoadsAndStores);
 
    void addLoopExitBlock(TR::Block *b);
    int32_t removeBlock(TR::Block * b);
@@ -210,8 +194,7 @@ public:
 
    TR_BitVector &          getBlocksLiveOnEntry()     { return _liveOnEntry; }
    TR_BitVector &          getBlocksLiveOnExit()      { return _liveOnExit; }
-   TR_BitVector &          getBlocksLiveWithinGenSetsOnly() { return _liveWithinGenSetsOnly; }
-   TR::Symbol *            getSymbol();
+   TR::Symbol *            getSymbol()                { return _symRef->getSymbol(); }
 
    TR::DataType           getDataType();
    TR::DataType            getType();
@@ -219,18 +202,9 @@ public:
    TR_RegisterKinds        getRegisterKinds();
 
    uint32_t                getWeight()                { return _weight; }
-   int32_t                 is8BitGlobalGPR()          { return _8BitGlobalGPR; }
-   int32_t                 getFailedToAssignToARegister() { return _failedToAssignToARegister; }
 
    bool symbolIsLive(TR::Block *);
    bool canBeReprioritized() { return (_reprioritized > 0); }
-   bool getValueModified() { return _valueModified; }
-
-   bool isLiveAcrossExceptionEdge() { return _liveAcrossExceptionEdge; }
-   void setLiveAcrossExceptionEdge(bool b) { _liveAcrossExceptionEdge = b; }
-
-   bool highWordZero() { return _highWordZero; }
-   void setHighWordZero(bool b) { _highWordZero = b; }
 
    void setGlobalRegisterNumber(TR_GlobalRegisterNumber n) { _lowRegNumber = n; }
    void setLowGlobalRegisterNumber(TR_GlobalRegisterNumber n) { _lowRegNumber = n; }
@@ -239,11 +213,9 @@ public:
    void setWeight(TR::Block * *, int32_t *, TR::Compilation *,
                   TR_Array<int32_t>&,TR_Array<int32_t>&, TR_Array<int32_t>&,
                   TR_BitVector *, TR_Array<TR::Block *>& startOfExtendedBB, TR_BitVector &, TR_BitVector &);
-   void setIs8BitGlobalGPR(bool b) { _8BitGlobalGPR = b; }
    void setReprioritized() { _reprioritized--; }
    void setMaxReprioritized(uint8_t n) { _reprioritized = n;}
    uint8_t getReprioritized() { return  _reprioritized; }
-   void setValueModified(bool b) { _valueModified = b; }
    void processLiveOnEntryBlocks(TR::Block * *, int32_t *, TR::Compilation *,
                                  TR_Array<int32_t>&,TR_Array<int32_t>&, TR_Array<int32_t>&,
                                  TR_BitVector *, TR_Array<TR::Block *>& startOfExtendedBB, bool removeUnusedLoops = false);
@@ -252,11 +224,6 @@ public:
 
    void extendLiveRangesForLiveOnExit(TR::Compilation *, TR::Block **, TR_Array<TR::Block *>& startOfExtendedBBForBB);
 
-   TR_BitVector *          getAvailableOnExit()     { return _availableOnExit; }
-   TR_BitVector *          getBlocksVisited()       { return _blocksVisited; }
-
-   void          setAvailableOnExit(TR_BitVector *b)     { _availableOnExit = b; }
-   void          setBlocksVisited(TR_BitVector *b)       { _blocksVisited = b; }
 
    void recalculateWeight(TR::Block * *, int32_t *, TR::Compilation *,
                           TR_Array<int32_t>&,TR_Array<int32_t>&,TR_Array<int32_t>&,TR_BitVector *, TR_Array<TR::Block *>& startOfExtendedBB);
@@ -265,15 +232,6 @@ public:
 
    List<TR_Structure> & getLoopsWithHoles() { return _loopsWithHoles; }
    void addLoopWithHole(TR_Structure *s) { if (!_loopsWithHoles.find(s)) _loopsWithHoles.add(s); }
-
-   bool dontAssignVMThreadRegister() { return _dontAssignVMThreadRegister; }
-   void setDontAssignVMThreadRegister(bool b) { _dontAssignVMThreadRegister = b; }
-
-   bool extendedLiveRange() { return _extendedLiveRange; }
-   void setExtendedLiveRange(bool b) { _extendedLiveRange = b; }
-
-   bool initialBlocksWeightComputed() { return _initialBlocksWeightComputed; }
-   void setInitialBlocksWeightComputed(bool b) { _initialBlocksWeightComputed = b; }
 
    void addStore(TR::TreeTop * tt)
       { _stores.add(tt); }
@@ -285,9 +243,28 @@ public:
 
    bool canAllocateDespiteAliases(TR::Compilation *);
 
+   bool extendedLiveRange()             { return _flags.testAny(extendLiveRange); }
+   bool is8BitGlobalGPR()               { return _flags.testAny(eightBitGlobalGPR); }
+   bool initialBlocksWeightComputed()   { return _flags.testAny(initialBlocksWeightComputedFlag); }
+   bool getValueModified()              { return _flags.testAny(valueModified); }
+   bool isHighWordZero()                { return _flags.testAny(highWordZero); }
+   bool isLiveAcrossExceptionEdge()     { return _flags.testAny(liveAcrossExceptionEdge); }
+   bool isDontAssignVMThreadRegister()  { return _flags.testAny(dontAssignVMThreadRegister); }
+
+   void setExtendedLiveRange(bool b)    { _flags.set(extendLiveRange, b); }
+   void setValueModified(bool b)        { _flags.set(valueModified, b); }
+   void setHighWordZero(bool b)         { _flags.set(highWordZero, b); }
+   void setLiveAcrossExceptionEdge(bool b) { _flags.set(liveAcrossExceptionEdge, b); }
+   void setDontAssignVMThreadRegister(bool b) { _flags.set(dontAssignVMThreadRegister, b); }
 private:
    friend class TR_RegisterCandidates;
    friend class TR_GlobalRegisterAllocator;
+
+   bool isAllBlocks() { return _flags.testAny(allBlocks); }
+
+   void setAllBlocks(bool b)                   { _flags.set(allBlocks, b); }
+   void setIs8BitGlobalGPR(bool b)             { _flags.set(eightBitGlobalGPR, b); }
+   void setInitialBlocksWeightComputed(bool b) { _flags.set(initialBlocksWeightComputedFlag, b); }
 
    TR::SymbolReference *    _symRef;
    TR::SymbolReference *    _splitSymRef;
@@ -300,24 +277,25 @@ private:
    TR_BitVector            _liveOnEntry;
    TR_BitVector            _liveOnExit;
    TR_BitVector            _originalLiveOnEntry;
-   TR_BitVector            _liveWithinGenSetsOnly;
-   TR_BitVector           *_availableOnExit;
-   TR_BitVector           *_blocksVisited;
-   TR_Array<uint32_t> *    _loadsAndStores;
    List<TR::TreeTop>        _stores;
    List<TR_Structure>      _loopsWithHoles;
    TR::Node                *_mostRecentValue;
    TR::Node                *_lastLoad;
-   bool                    _allBlocks;
-   bool                    _failedToAssignToARegister;
-   bool                    _8BitGlobalGPR;
+   flags16_t                _flags;
+
+   enum
+      {
+      allBlocks                   = 0x0001,
+      eightBitGlobalGPR           = 0x0002,
+      valueModified               = 0x0004,
+      liveAcrossExceptionEdge     = 0x0008,
+      highWordZero                = 0x0010,
+      dontAssignVMThreadRegister  = 0x0020,
+      extendLiveRange             = 0x0040,
+      initialBlocksWeightComputedFlag = 0x0080,
+      };
+
    uint8_t                 _reprioritized;
-   bool                    _valueModified;
-   bool                    _liveAcrossExceptionEdge;
-   bool                    _highWordZero;
-   bool                    _dontAssignVMThreadRegister;
-   bool                    _extendedLiveRange;
-   bool                    _initialBlocksWeightComputed;
 
 #ifdef TRIM_ASSIGNED_CANDIDATES
    TR_LinkHead<LoopInfo>   _loops; // loops candidate is used in
@@ -342,12 +320,20 @@ public:
    TR_RegisterCandidate * find(TR::SymbolReference * symRef);
    TR_RegisterCandidate * find(TR::Symbol * sym);
 
-   TR::GlobalSet&      getReferencedAutoSymRefs() { return _referencedAutoSymRefsInBlock; }
-   TR::GlobalSet::Set *getReferencedAutoSymRefsInBlock(int32_t i)
+   TR::GlobalSet& getReferencedAutoSymRefs(TR::Region &region)
       {
-      if (_referencedAutoSymRefsInBlock.isEmpty())
-         return 0;
-      return _referencedAutoSymRefsInBlock[i];
+      if (_referencedAutoSymRefsInBlock == NULL)
+         {
+         void *memory = region.allocate(sizeof(TR::GlobalSet));
+         _referencedAutoSymRefsInBlock = new (memory) TR::GlobalSet(comp(), region);
+         }
+      return *_referencedAutoSymRefsInBlock;
+      }
+   TR_BitVector *getBlocksReferencingSymRef(uint32_t symRefNum)
+      {
+      if (_referencedAutoSymRefsInBlock == NULL)
+         return NULL;
+      return (*_referencedAutoSymRefsInBlock)[symRefNum];
       }
 
    bool assign(TR::Block **, int32_t, int32_t &, int32_t &);
@@ -388,9 +374,13 @@ private:
    TR_LinkHead<TR_RegisterCandidate> _candidates;
 
    static int32_t                    _candidateTypeWeights[TR_NumRegisterCandidateTypes];
-   TR::GlobalSet            _referencedAutoSymRefsInBlock;
-   TR_RegisterCandidate **  _candidateForSymRefs;
-   uint32_t                 _candidateForSymRefsSize;
+   TR::GlobalSet            *_referencedAutoSymRefsInBlock;
+
+   typedef TR::typed_allocator<std::pair<uint32_t const, TR_RegisterCandidate*>, TR::Region&> SymRefCandidateMapAllocator;
+   typedef std::less<uint32_t> SymRefCandidateMapComparator;
+   typedef std::map<uint32_t, TR_RegisterCandidate*, SymRefCandidateMapComparator, SymRefCandidateMapAllocator> SymRefCandidateMap;
+
+   SymRefCandidateMap    *  _candidateForSymRefs;
    TR_Array<TR::Block *> _startOfExtendedBBForBB;
 
    // scratch arrays for calculating register conflicts
@@ -414,11 +404,11 @@ public:
      uint32_t first, last;
    };
 
-   typedef TR::typed_allocator<std::pair<int32_t, struct coordinates>, TR::Region &> CoordinatesAllocator;
+   typedef TR::typed_allocator<std::pair<int32_t const, struct coordinates>, TR::Region &> CoordinatesAllocator;
    typedef std::less<int32_t> CoordinatesComparator;
    typedef std::map<int32_t, struct coordinates, CoordinatesComparator, CoordinatesAllocator> Coordinates;
 
-   typedef TR::typed_allocator<std::pair<uint32_t, Coordinates *>, TR::Region &> ReferenceTableAllocator;
+   typedef TR::typed_allocator<std::pair<uint32_t const, Coordinates *>, TR::Region &> ReferenceTableAllocator;
    typedef std::less<uint32_t> ReferenceTableComparator;
    typedef std::map<uint32_t, Coordinates *, ReferenceTableComparator, ReferenceTableAllocator> ReferenceTable;
 private:

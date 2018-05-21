@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -394,7 +398,7 @@ default_pageSize_reserve_low_memory(struct OMRPortLibrary *portLibrary, uintptr_
 
 	Trc_PRT_vmem_default_reserve_entry(0, byteAmount);
 
-	if (J9_ARE_ANY_BITS_SET(OMRPORT_VMEM_MEMORY_MODE_VIRTUAL, mode)) {
+	if (OMR_ARE_ANY_BITS_SET(OMRPORT_VMEM_MEMORY_MODE_VIRTUAL, mode)) {
 		/* No need to make byteAmount pagesize (=4K) aligned, as the caller omrvmem_reserve_memory_ex() already ensures that */
 		allocSize = byteAmount;
 		Trc_PRT_vmem_default_reserve_low_using_4K_pages_below_bar(byteAmount);
@@ -698,7 +702,7 @@ default_pageSize_reserve_memory(struct OMRPortLibrary *portLibrary, uintptr_t by
 
 	Trc_PRT_vmem_default_reserve_entry(FOUR_GIG_LIMIT, byteAmount);
 
-	if (J9_ARE_ANY_BITS_SET(OMRPORT_VMEM_MEMORY_MODE_VIRTUAL, mode)) {
+	if (OMR_ARE_ANY_BITS_SET(OMRPORT_VMEM_MEMORY_MODE_VIRTUAL, mode)) {
 #if defined(OMR_ENV_DATA64)
 		/* Need to make byteAmount 1M aligned as __moservices()/IARV64 macro allocates memory in 1M chunks */
 		uintptr_t numSegments = ((byteAmount + ONE_M - 1) & (~(ONE_M - 1))) / ONE_M;
@@ -801,13 +805,13 @@ reserve_memory_with_moservices(struct OMRPortLibrary *portLibrary, struct J9Port
 	mymopl.__moplrequestsize = numSegments;
 	switch (params->pageSize) {
 	case FOUR_K: /* 0 == __moplgetstorflags means 4k */
-		if (!J9_ARE_ANY_BITS_SET(params->pageFlags, OMRPORT_VMEM_PAGE_FLAG_PAGEABLE)) {
+		if (!OMR_ARE_ANY_BITS_SET(params->pageFlags, OMRPORT_VMEM_PAGE_FLAG_PAGEABLE)) {
 			Trc_PRT_vmem_reserve_memory_using_moservices_invalid_page_flags(params->pageSize, params->pageFlags);
 			rc =-1;
 		}
 		break;
 	case ONE_M:
-		if (J9_ARE_ANY_BITS_SET(params->pageFlags, OMRPORT_VMEM_PAGE_FLAG_PAGEABLE)) {
+		if (OMR_ARE_ANY_BITS_SET(params->pageFlags, OMRPORT_VMEM_PAGE_FLAG_PAGEABLE)) {
 			mymopl.__moplgetstorflags = __MOPL_PAGEFRAMESIZE_PAGEABLE1MEG;
 			/* If pageable 1MB page frames are not available at first reference, pageable 4K page frames will be used. */
 		} else {
@@ -815,7 +819,7 @@ reserve_memory_with_moservices(struct OMRPortLibrary *portLibrary, struct J9Port
 		}
 		break;
 	case TWO_G:
-		if (J9_ARE_ANY_BITS_SET(params->pageFlags, OMRPORT_VMEM_PAGE_FLAG_PAGEABLE)) {
+		if (OMR_ARE_ANY_BITS_SET(params->pageFlags, OMRPORT_VMEM_PAGE_FLAG_PAGEABLE)) {
 			Trc_PRT_vmem_reserve_memory_using_moservices_invalid_page_flags(params->pageSize, params->pageFlags);
 			rc =-1;
 		} else {
@@ -845,7 +849,7 @@ reserve_memory_with_moservices(struct OMRPortLibrary *portLibrary, struct J9Port
 		omrmem_categories_increment_counters(category, allocSize);
 		/* Update identifier and commit memory if required, else return reserved memory */
 		update_vmemIdentifier(identifier, (void *)ptr, (void *)ptr, allocSize, params->mode, params->pageSize, OMRPORT_VMEM_PAGE_FLAG_PAGEABLE, OMRPORT_VMEM_RESERVE_USED_MOSERVICES, category);
-		if (J9_ARE_ANY_BITS_SET(params->mode, OMRPORT_VMEM_MEMORY_MODE_COMMIT)) {
+		if (OMR_ARE_ANY_BITS_SET(params->mode, OMRPORT_VMEM_MEMORY_MODE_COMMIT)) {
 			ptr = omrvmem_commit_memory(portLibrary, (void *)ptr, allocSize, identifier);
 		}
 	}
@@ -954,7 +958,7 @@ omrvmem_reserve_memory_ex(struct OMRPortLibrary *portLibrary, struct J9PortVmemI
 		if (((UDATA) params.startAddress >= TWO_G)
 				&& isRmode64Supported()
 				&& !use2To32GArea
-				&& J9_ARE_ALL_BITS_SET(params.mode, OMRPORT_VMEM_MEMORY_MODE_EXECUTE)
+				&& OMR_ARE_ALL_BITS_SET(params.mode, OMRPORT_VMEM_MEMORY_MODE_EXECUTE)
 		) {
 			baseAddress = reserve_memory_with_moservices(portLibrary, identifier, &params, category);
 		} else
@@ -1571,7 +1575,7 @@ isRmode64Supported()
 {
 	J9CVT * __ptr32 cvtp = ((J9PSA * __ptr32)0)->flccvt;
 	uint8_t cvtoslvl6 = cvtp->cvtoslvl[6];
-	if (J9_ARE_ANY_BITS_SET(cvtoslvl6, 0x10)) {
+	if (OMR_ARE_ANY_BITS_SET(cvtoslvl6, 0x10)) {
 		return TRUE;
 	}
 	return FALSE;

@@ -1,20 +1,23 @@
 ###############################################################################
+# Copyright (c) 2015, 2018 IBM Corp. and others
+# 
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
+#      
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
+#    
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
 #
-# (c) Copyright IBM Corp. 2015, 2017
-#
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
-#
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
-#
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
-#    James Johnston (IBM Corp.)   - initial z/TPF Port Updates
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
 
 # This makefile fragment defines logic that is common to building both shared and static libraries.
@@ -39,16 +42,16 @@ endif
 
 ifeq (zos,$(OMR_HOST_OS))
   # 31- and 64-bit
-  OBJECTS += j9generate_ieat_dump
+  OBJECTS += omrgenerate_ieat_dump
   OBJECTS += omrget_large_pageable_pages_supported
-  OBJECTS += j9wto
-  OBJECTS += j9pgser_release
+  OBJECTS += omrwto
+  OBJECTS += omrpgser_release
   OBJECTS += omrgetuserid
-  OBJECTS += j9sysinfo_get_number_CPUs
-  OBJECTS += j9jobname
-  OBJECTS += j9userid
-  OBJECTS += j9zfs
-  OBJECTS += j9lpdat
+  OBJECTS += omrsysinfo_get_number_CPUs
+  OBJECTS += omrjobname
+  OBJECTS += omruserid
+  OBJECTS += omrzfs
+  OBJECTS += omrlpdat
 
   ifeq (1,$(OMR_ENV_DATA64))
     # 64-bit only
@@ -56,7 +59,7 @@ ifeq (zos,$(OMR_HOST_OS))
     OBJECTS += omrget_large_2gb_pages_supported
     OBJECTS += omrvmem_support_above_bar
     OBJECTS += omrvmem_support_below_bar_64
-    OBJECTS += j9ipt_ttoken64
+    OBJECTS += omript_ttoken64
   else
     # 31-bit only
     OBJECTS += omrvmem_support_below_bar_31
@@ -146,7 +149,7 @@ endif
 OBJECTS += omrsl
 OBJECTS += omrstr
 OBJECTS += omrsysinfo
-ifeq ($(OMR_HOST_OS),$(filter $(OMR_HOST_OS),zos linux_ztpf))
+ifeq (zos,$(OMR_HOST_OS))
   OBJECTS += omrsysinfo_helpers
 endif
 OBJECTS += omrsyslog
@@ -162,7 +165,7 @@ OBJECTS += omrmemtag_checks
 ifeq (aix,$(OMR_HOST_OS))
   OBJECTS += omrosdump_helpers
 else
-  ifeq (linux,$(OMR_HOST_OS))
+  ifeq ($(OMR_HOST_OS),$(filter $(OMR_HOST_OS),linux linux_ztpf))
     OBJECTS += omrosdump_helpers
   endif
   ifeq (osx,$(OMR_HOST_OS))
@@ -174,6 +177,10 @@ ifeq (zos,$(OMR_HOST_OS))
     OBJECTS += omrsignal_ceehdlr
     OBJECTS += omrsignal_context_ceehdlr
   endif
+endif
+
+ifeq (linux_ztpf,$(OMR_HOST_OS))
+    OBJECTS += omrloadfpc
 endif
 
 ifeq (ppc,$(OMR_HOST_ARCH))
@@ -221,7 +228,7 @@ ifeq (aix,$(OMR_HOST_OS))
   vpath % $(PORT_SRCDIR)aix
   MODULE_INCLUDES += $(PORT_SRCDIR)aix
 endif
-ifeq (linux,$(OMR_HOST_OS))
+ifeq ($(OMR_HOST_OS),$(filter $(OMR_HOST_OS),linux linux_ztpf))
   ifeq (ppc,$(OMR_HOST_ARCH))
     ifeq (1,$(OMR_ENV_DATA64))
       ifeq (1,$(OMR_ENV_LITTLE_ENDIAN))
@@ -235,7 +242,12 @@ ifeq (linux,$(OMR_HOST_OS))
     MODULE_INCLUDES += $(PORT_SRCDIR)linuxppc
   endif
 
-  ifeq (s390,$(OMR_HOST_ARCH))
+  ifeq (linux_ztpf,$(OMR_HOST_OS))
+    vpath % $(PORT_SRCDIR)ztpf
+    MODULE_INCLUDES += $(PORT_SRCDIR)ztpf
+  endif
+
+  ifeq ($(OMR_HOST_ARCH),$(filter $(OMR_HOST_ARCH), s390 s390x))
     ifeq (1,$(OMR_ENV_DATA64))
       vpath % $(PORT_SRCDIR)linuxs39064
       MODULE_INCLUDES += $(PORT_SRCDIR)linuxs39064
@@ -247,6 +259,11 @@ ifeq (linux,$(OMR_HOST_OS))
   ifeq (arm,$(OMR_HOST_ARCH))
     vpath % $(PORT_SRCDIR)linuxarm
     MODULE_INCLUDES += $(PORT_SRCDIR)linuxarm
+  endif
+  
+  ifeq (aarch64,$(OMR_HOST_ARCH))
+    vpath % $(PORT_SRCDIR)linuxaarch64
+    MODULE_INCLUDES += $(PORT_SRCDIR)linuxaarch64
   endif
 
   ifeq (x86,$(OMR_HOST_ARCH))

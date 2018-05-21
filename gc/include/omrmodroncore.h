@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2014, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2014, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMRMODRONCORE_H_
@@ -34,10 +38,11 @@
  */
 typedef U_8 Card;
 
-enum {
-	CARD_SIZE_SHIFT	= 9,	/* base2 log of CARD_SIZE, used to change division into shift */
-	CARD_SIZE = 512	/* size of a "card" of the heap - in a sense:  the granule of deferred mark map update */
-};
+/* base2 log of CARD_SIZE, used to change division into shift */
+#define CARD_SIZE_SHIFT 9
+
+/* size of a "card" of the heap - in a sense:  the granule of deferred mark map update */
+#define CARD_SIZE 512
 
 /*
  * The following definitions are duplicated in j9modron.h.
@@ -68,7 +73,7 @@ enum {
 /**
  * The following definitions are duplicated in j9modron.h.
  * Both versions of each definition must match exactly.
- * 
+ *
  * #defines representing the vmState that should be set during various GC activities
  * @note J9VMSTATE_GC is the "major mask" representing a "GC" activity - we OR in a minor mask
  * representing the specific activity.

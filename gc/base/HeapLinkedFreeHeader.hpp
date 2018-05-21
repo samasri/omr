@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #if !defined(HEAPLINKEDFREEHEADER_HPP_)
 #define HEAPLINKEDFREEHEADER_HPP_
@@ -24,6 +28,10 @@
 /* #include "ModronAssertions.h" -- removed for now because it causes a compile error in TraceOutput.cpp on xlC */
 
 #include"AtomicOperations.hpp"
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+#include "MemcheckWrapper.hpp"
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 
 /* Split pointer for all compressed platforms */
 #if defined(OMR_INTERP_COMPRESSED_OBJECT_HEADER)
@@ -82,15 +90,25 @@ private:
 	MMINLINE uintptr_t
 	getNextImpl()
 	{
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemDefined((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+
 #if defined(SPLIT_NEXT_POINTER)		
 		uintptr_t lowBits = _next;
 		uintptr_t highBits = _nextHighBits;
-		return (highBits << 32) | lowBits;
+		uintptr_t result = (highBits << 32) | lowBits;
 #else /* defined(SPLIT_NEXT_POINTER) */
-		return _next;
+		uintptr_t result = _next;
 #endif /* defined(SPLIT_NEXT_POINTER) */
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemNoaccess((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+
+		return result;
 	}
-	
+
 	/**
 	 * Encoded the specified value as the next pointer.
 	 * Since the encoding may be different depending on the header shape
@@ -102,12 +120,20 @@ private:
 	MMINLINE void
 	setNextImpl(uintptr_t value)
 	{
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemDefined((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+
 #if defined(SPLIT_NEXT_POINTER)
 		_next = (uint32_t)value;
 		_nextHighBits = (uint32_t)(value >> 32);
 #else /* defined(SPLIT_NEXT_POINTER) */
 		_next = value;
 #endif /* defined(SPLIT_NEXT_POINTER) */
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemNoaccess((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 	}
 
 public:
@@ -142,20 +168,43 @@ public:
 	 * from the beginning of the header.
 	 * @return size in bytes
 	 */
-	MMINLINE uintptr_t getSize() { return _size; }
+	MMINLINE uintptr_t getSize()
+	{
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemDefined((uintptr_t)this, sizeof(*this));
+		uintptr_t size = _size;
+		valgrindMakeMemNoaccess((uintptr_t)this, sizeof(*this));
+		return size;
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+		return _size;
+	}
 
 	/**
 	 * Set the size in bytes of this free entry.
 	 */
-	MMINLINE void setSize(uintptr_t size) {
+	MMINLINE void setSize(uintptr_t size)
+	{
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemDefined((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 		_size = size;
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemNoaccess((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 	}
 
 	/**
 	 * Expand this entry by the specified number of bytes.
 	 */
-	MMINLINE void expandSize(uintptr_t increment) {
+	MMINLINE void expandSize(uintptr_t increment)
+	{
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemDefined((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 		_size += increment;
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemNoaccess((uintptr_t)this, sizeof(*this));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 	}
 
 	/**
@@ -173,6 +222,10 @@ public:
 	MMINLINE static void
 	fillWithSingleSlotHoles(void* addrBase, uintptr_t freeEntrySize)
 	{
+#if defined(OMR_VALGRIND_MEMCHECK)
+		uintptr_t vgSizeUnchanged = freeEntrySize;
+		valgrindMakeMemDefined((uintptr_t)addrBase, vgSizeUnchanged);
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */	
 #if defined(SPLIT_NEXT_POINTER)
 		uint32_t *freeSlot = (uint32_t *) addrBase;
 		while(freeEntrySize) {
@@ -186,6 +239,9 @@ public:
 			freeEntrySize -= sizeof(uintptr_t);
 		}
 #endif /* defined(SPLIT_NEXT_POINTER) */
+#if defined(OMR_VALGRIND_MEMCHECK)
+		valgrindMakeMemNoaccess((uintptr_t)addrBase, vgSizeUnchanged);
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 	}
 
 	/**
@@ -202,11 +258,17 @@ public:
 			/* Entry will be abandoned. Recycle the remainder as single slot entries */
 			fillWithSingleSlotHoles(addrBase, freeEntrySize);
 		} else {
+#if defined(OMR_VALGRIND_MEMCHECK)
+			valgrindMakeMemDefined((uintptr_t)addrBase, sizeof(MM_HeapLinkedFreeHeader));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 			/* this is too big to use single slot holes so generate an AOL-style hole (note that this is not correct for other allocation schemes) */
 			freeEntry = (MM_HeapLinkedFreeHeader *)addrBase;
 
 			freeEntry->setNext(NULL);
 			freeEntry->setSize(freeEntrySize);
+#if defined(OMR_VALGRIND_MEMCHECK)
+			valgrindMakeMemNoaccess((uintptr_t)addrBase, sizeof(MM_HeapLinkedFreeHeader));
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */	
 		}
 		return freeEntry;
 	}
@@ -237,3 +299,4 @@ private:
 #undef SPLIT_NEXT_POINTER
 
 #endif /* HEAPLINKEDFREEHEADER_HPP_ */
+

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <algorithm>                               // for std::find, etc
@@ -58,6 +61,7 @@
 #include "x/codegen/X86Instruction.hpp"
 #include "x/codegen/X86Ops.hpp"                    // for TR_X86OpCode, etc
 #include "x/codegen/X86Ops_inlines.hpp"
+#include "codegen/StaticRelocation.hpp"
 
 #ifdef J9_PROJECT_SPECIFIC
 #include "env/CHTable.hpp"
@@ -627,40 +631,6 @@ int32_t TR::X86LabelInstruction::estimateBinaryLength(int32_t currentEstimate)
       }
    else if (getOpCodeValue() == LABEL)
       {
-      if (!comp->getOption(TR_DisableLateEdgeSplitting) && _symbol->getVMThreadRestoringLabel() && _symbol->isVMThreadLive())
-         {
-         // If this label is the second of a split pair, and vmThread is live at this label,
-         // then we need a load of the vmThread immediately before this label.
-         // Generate it, and include its size estimate.
-         //
-         TR::Register         *vmThreadVirtualReg = cg()->getVMThreadRegister();
-         TR::RealRegister     *vmThreadRealReg    = cg()->machine()->getX86RealRegister(cg()->getProperties().getMethodMetaDataRegister());
-         if (vmThreadRealReg->getHasBeenAssignedInMethod() || !performTransformation(comp, "O^O LATE EDGE SPLITTING: Skip vmThread reload at %p because ebp was never assigned\n", this)) // TODO: could we use getModified instead?
-            {
-            if (vmThreadVirtualReg->getBackingStorage() == NULL)
-               {
-               // copied from RegisterDependency.cpp
-               vmThreadVirtualReg->setBackingStorage(cg()->allocateVMThreadSpill());
-               cg()->getSpilledIntRegisters().push_front(vmThreadVirtualReg);
-               }
-            // Set spill instruction to the "spill in prolog" value.
-            cg()->setVMThreadSpillInstruction((TR::Instruction *)0xffffffff);
-            if (cg()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-               traceMsg(comp, "LATE EDGE SPLITTING: Store ebp in prologue\n");
-
-            TR::Instruction *ebpLoad = generateRegMemInstruction(getPrev(), LRegMem(), vmThreadRealReg,
-                                                                  generateX86MemoryReference(vmThreadVirtualReg->getBackingStorage()->getSymbolReference(), cg()), cg());
-            currentEstimate = ebpLoad->estimateBinaryLength(currentEstimate);
-            if (cg()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-               traceMsg(comp, "LATE EDGE SPLITTING: Added vmThread rematerialization %s before label %s\n",
-                  cg()->getDebug()->getName(ebpLoad),
-                  cg()->getDebug()->getName(_symbol));
-
-            TR::Instruction *bump = cg()->generateDebugCounter(ebpLoad, "cg.lateSplitEdges:reloaded", 1, TR::DebugCounter::Expensive);
-            if (bump != ebpLoad)
-               currentEstimate = bump->estimateBinaryLength(currentEstimate);
-            }
-         }
       getLabelSymbol()->setEstimatedCodeLocation(currentEstimate);
       }
    else // assume absolute code reference
@@ -724,50 +694,6 @@ uint8_t *TR::X86FenceInstruction::generateBinaryEncoding()
    return instructionStart;
    }
 
-
-// -----------------------------------------------------------------------------
-// TR::X86RestoreVMThreadInstruction:: member functions
-
-int32_t TR::X86RestoreVMThreadInstruction::estimateBinaryLength(int32_t currentEstimate)
-   {
-   if (TR::Compiler->target.is64Bit())
-      setEstimatedBinaryLength(9);
-   else
-      setEstimatedBinaryLength(7);
-   return currentEstimate + getEstimatedBinaryLength();
-   }
-
-uint8_t TR::X86RestoreVMThreadInstruction::getBinaryLengthLowerBound()
-   {
-   if (TR::Compiler->target.is64Bit())
-      return 9;
-   else
-      return 7;
-   }
-
-uint8_t *TR::X86RestoreVMThreadInstruction::generateBinaryEncoding()
-   {
-   uint8_t *instructionStart = cg()->getBinaryBufferCursor();
-   uint8_t *cursor           = instructionStart;
-
-   if (TR::Compiler->target.is64Bit())
-      {
-      // mov  rbp,qword ptr fs:[00000000h] ; 64 48 8B 2C 25 00 00 00 00
-      *cursor++ = 0x64; *cursor++ = 0x48; *cursor++ = 0x8b; *cursor++ = 0x2c; *cursor++ = 0x25;
-      *cursor++ = 0x00; *cursor++ = 0x00; *cursor++ = 0x00; *cursor++ = 0x00;
-      }
-   else
-      {
-      // mov ebp,dword ptr fs:[0] ; 64 8b 2d 00 00 00 00
-      *cursor++ = 0x64; *cursor++ = 0x8b; *cursor++ = 0x2d;
-      *cursor++ = 0x00; *cursor++ = 0x00; *cursor++ = 0x00; *cursor++ = 0x00;
-      }
-
-   setBinaryLength(cursor - instructionStart);
-   setBinaryEncoding(instructionStart);
-   cg()->addAccumulatedInstructionLengthError(getEstimatedBinaryLength() - getBinaryLength());
-   return cursor;
-   }
 
 #ifdef J9_PROJECT_SPECIFIC
 // -----------------------------------------------------------------------------
@@ -844,7 +770,7 @@ uint8_t *TR::X86VirtualGuardNOPInstruction::generateBinaryEncoding()
       }
 
    // guards that do not require atomic patching have a more relaxed sizing constraing since they are only patched while all threads are stopped
-   bool requiresAtomicPatching = cg()->requiresAtomicPatching(this);
+   bool requiresAtomicPatching = this->requiresAtomicPatching();
    uint8_t next = requiresAtomicPatching ?
                   cg()->sizeOfInstructionToBePatched(this) :
                   cg()->sizeOfInstructionToBePatchedHCRGuard(this);
@@ -949,8 +875,8 @@ TR::X86ImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
                   __FILE__, __LINE__, getNode());
                break;
             case TR_MethodPointer:
-               if (getNode() && getNode()->getInlinedSiteIndex() == -1 && 
-                  (void *) getSourceImmediate() == cg()->comp()->getCurrentMethod()->resolvedMethodAddress())
+               if (getNode() && getNode()->getInlinedSiteIndex() == -1 &&
+                  (void *)(uintptr_t) getSourceImmediate() == cg()->comp()->getCurrentMethod()->resolvedMethodAddress())
                   setReloKind(TR_RamMethod);
                // intentional fall-through
             case TR_RamMethod:
@@ -960,8 +886,8 @@ TR::X86ImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
                                                                            (uint8_t*)getNode(),
                                                                            (TR_ExternalRelocationTargetKind) _reloKind,
                                                                            cg()),
-                  __FILE__, 
-                  __LINE__, 
+                  __FILE__,
+                  __LINE__,
                   getNode());
                   break;
             default:
@@ -974,7 +900,7 @@ TR::X86ImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
       if (std::find(cg()->comp()->getStaticHCRPICSites()->begin(), cg()->comp()->getStaticHCRPICSites()->end(), this) != cg()->comp()->getStaticHCRPICSites()->end())
          {
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
       }
 
@@ -1049,7 +975,7 @@ TR::X86ImmSnippetInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
       {
       if (std::find(cg()->comp()->getStaticHCRPICSites()->begin(), cg()->comp()->getStaticHCRPICSites()->end(), this) != cg()->comp()->getStaticHCRPICSites()->end())
          {
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
       }
 
@@ -1115,7 +1041,7 @@ TR::X86ImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
       if (std::find(comp->getStaticHCRPICSites()->begin(), comp->getStaticHCRPICSites()->end(), this) != comp->getStaticHCRPICSites()->end())
          {
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
 
       if (getOpCode().isCallImmOp() || getOpCode().isBranchOp())
@@ -1162,7 +1088,7 @@ TR::X86ImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
          {
          cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                 (uint8_t *)(uintptrj_t)getSourceImmediate(),
-                                                                getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                TR_ConstantPool,
                                                                cg()),
                              __FILE__, __LINE__, getNode());
@@ -1174,7 +1100,7 @@ TR::X86ImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
             {
             cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                   (uint8_t *)getSymbolReference()->getOwningMethod(comp)->constantPool(),
-                                                                  getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                  getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                   TR_ConstantPool,
                                                                   cg()),
                                    __FILE__, __LINE__, getNode());
@@ -1185,7 +1111,7 @@ TR::X86ImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
                {
                cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                 (uint8_t *)getSymbolReference(),
-                                                                getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                 TR_ClassAddress,
                                                                 cg()), __FILE__,__LINE__, getNode());
                }
@@ -1194,7 +1120,7 @@ TR::X86ImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
             {
             cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                   (uint8_t *)getSymbolReference(),
-                                                                  getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                  getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                   TR_MethodObject,
                                                                   cg()),
                                    __FILE__,__LINE__, getNode());
@@ -1211,7 +1137,7 @@ TR::X86ImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
                                       __FILE__, __LINE__, getNode());
             else
                cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
-                                   (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_DataAddress, cg()),
+                                   (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_DataAddress, cg()),
                                        __FILE__, __LINE__, getNode());
             }
 
@@ -1373,7 +1299,7 @@ uint8_t* TR::X86ImmSymInstruction::generateOperand(uint8_t* cursor)
                   }
                else
                   {
-                  *(int32_t *)cursor = (int32_t)TR::Compiler->cls.persistentClassPointerFromClassPointer(cg()->comp(), (TR_OpaqueClassBlock*)getSourceImmediate());
+                  *(int32_t *)cursor = (int32_t)TR::Compiler->cls.persistentClassPointerFromClassPointer(cg()->comp(), (TR_OpaqueClassBlock*)(uintptr_t)getSourceImmediate());
                   }
                }
             }
@@ -1426,15 +1352,18 @@ OMR::X86::EnlargementResult
 TR::X86RegInstruction::enlarge(int32_t requestedEnlargementSize, int32_t maxEnlargementSize, bool allowPartialEnlargement)
    {
    static char *disableRexExpansion = feGetEnv("TR_DisableREXInstructionExpansion");
-   if (disableRexExpansion || TR::comp()->getOption(TR_DisableZealousCodegenOpts))
+   if (disableRexExpansion || cg()->comp()->getOption(TR_DisableZealousCodegenOpts))
       return OMR::X86::EnlargementResult(0, 0);
+
+   if (getOpCode().info().supportsAVX() && cg()->getX86ProcessorInfo().supportsAVX())
+      return OMR::X86::EnlargementResult(0, 0); // REX expansion isn't allowed for AVX instructions
 
    if ((maxEnlargementSize < requestedEnlargementSize && !allowPartialEnlargement) || requestedEnlargementSize < 1)
       return OMR::X86::EnlargementResult(0, 0);
 
    int32_t enlargementSize = std::min(requestedEnlargementSize, maxEnlargementSize);
 
-   TR::Compilation *comp = TR::comp();
+   TR::Compilation *comp = cg()->comp();
    if (  TR::Compiler->target.is64Bit()
       && !getOpCode().info().hasMandatoryPrefix()
       && performTransformation(comp, "O^O Enlarging instruction %p by %d bytes by repeating the REX prefix\n", this, enlargementSize))
@@ -1500,18 +1429,18 @@ TR::X86RegImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
       if (staticPIC)
          {
-         cg()->jitAdd32BitPicToPatchOnClassUnload(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassUnload(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
 
       if (staticHCRPIC)
          {
-         cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation((uint8_t *)cursor, (uint8_t *)getSourceImmediate(), TR_HCR, cg()), __FILE__,__LINE__, getNode());
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation((uint8_t *)cursor, (uint8_t *)(uintptr_t)getSourceImmediate(), TR_HCR, cg()), __FILE__,__LINE__, getNode());
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
 
       if (staticMethodPIC)
          {
-         void *classPointer = (void *) cg()->fe()->createResolvedMethod(cg()->trMemory(), (TR_OpaqueMethodBlock *) getSourceImmediateAsAddress(), comp->getCurrentMethod())->classOfMethod();
+         void *classPointer = (void *) cg()->fe()->createResolvedMethod(cg()->trMemory(), (TR_OpaqueMethodBlock *)(uintptr_t) getSourceImmediateAsAddress(), comp->getCurrentMethod())->classOfMethod();
          cg()->jitAdd32BitPicToPatchOnClassUnload(classPointer, (void *) cursor);
          }
 
@@ -1556,7 +1485,7 @@ TR::X86RegImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
          case TR_MethodPointer:
             if (getNode() && getNode()->getInlinedSiteIndex() == -1 &&
-               (void *) getSourceImmediate() == cg()->comp()->getCurrentMethod()->resolvedMethodAddress())
+               (void *)(uintptr_t) getSourceImmediate() == cg()->comp()->getCurrentMethod()->resolvedMethodAddress())
                setReloKind(TR_RamMethod);
             // intentional fall-through
          case TR_RamMethod:
@@ -1646,7 +1575,7 @@ TR::X86RegImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
    if (std::find(comp->getStaticHCRPICSites()->begin(), comp->getStaticHCRPICSites()->end(), this) != comp->getStaticHCRPICSites()->end())
       {
-      cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+      cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
       }
 
    TR::Symbol *symbol = getSymbolReference()->getSymbol();
@@ -1657,7 +1586,7 @@ TR::X86RegImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
          TR_ASSERT(symbol->isConst(), "assertion failure");
          cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                                    (uint8_t *)getSymbolReference()->getOwningMethod(comp)->constantPool(),
-                                                                                   getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                                   getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                                    (TR_ExternalRelocationTargetKind)getReloKind(),
                                                                                    cg()),
                                 __FILE__,
@@ -1672,10 +1601,10 @@ TR::X86RegImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
                 //udeshs: this should be temporary??
             TR_ASSERT(!(getSymbolReference()->isUnresolved() && !symbol->isClassObject()), "expecting a resolved symbol for this instruction class!\n");
 
-            *(int32_t *)cursor = (int32_t)TR::Compiler->cls.persistentClassPointerFromClassPointer(cg()->comp(), (TR_OpaqueClassBlock*)getSourceImmediate());
+            *(int32_t *)cursor = (int32_t)TR::Compiler->cls.persistentClassPointerFromClassPointer(cg()->comp(), (TR_OpaqueClassBlock*)(uintptr_t)getSourceImmediate());
              cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                                    (uint8_t *)getSymbolReference(),
-                                                                                   getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                                   getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                                    (TR_ExternalRelocationTargetKind)getReloKind(),
                                                                                    cg()),
                                 __FILE__,
@@ -1690,7 +1619,7 @@ TR::X86RegImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
          cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                                    (uint8_t *)getSymbolReference(),
-                                                                                   getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                                   getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                                    (TR_ExternalRelocationTargetKind)getReloKind(),
                                                                                    cg()),
                                 __FILE__,
@@ -1699,7 +1628,7 @@ TR::X86RegImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
          break;
       case TR_MethodPointer:
          if (getNode() && getNode()->getInlinedSiteIndex() == -1 &&
-            (void *) getSourceImmediate() == cg()->comp()->getCurrentMethod()->resolvedMethodAddress())
+            (void *)(uintptr_t) getSourceImmediate() == cg()->comp()->getCurrentMethod()->resolvedMethodAddress())
             setReloKind(TR_RamMethod);
          // intentional fall-through
       case TR_ClassPointer:
@@ -1749,7 +1678,7 @@ void TR::X86RegRegImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
       {
       if (std::find(cg()->comp()->getStaticHCRPICSites()->begin(), cg()->comp()->getStaticHCRPICSites()->end(), this) != cg()->comp()->getStaticHCRPICSites()->end())
          {
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
       }
    }
@@ -1867,7 +1796,7 @@ int32_t TR::X86MemInstruction::estimateBinaryLength(int32_t currentEstimate)
 OMR::X86::EnlargementResult
 TR::X86MemInstruction::enlarge(int32_t requestedEnlargementSize, int32_t maxEnlargementSize, bool allowPartialEnlargement)
    {
-   TR::Compilation *comp = TR::comp();
+   TR::Compilation *comp = cg()->comp();
    if ((maxEnlargementSize < requestedEnlargementSize && !allowPartialEnlargement) || requestedEnlargementSize < 1)
       return OMR::X86::EnlargementResult(0, 0);
 
@@ -1914,15 +1843,15 @@ TR::X86MemImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
       if (staticPIC)
          {
-         cg()->jitAdd32BitPicToPatchOnClassUnload(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassUnload(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
       if (staticHCRPIC)
          {
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
       if (staticMethodPIC)
          {
-         void *classPointer = (void *) cg()->fe()->createResolvedMethod(cg()->trMemory(), (TR_OpaqueMethodBlock *) getSourceImmediateAsAddress(), comp->getCurrentMethod())->classOfMethod();
+         void *classPointer = (void *) cg()->fe()->createResolvedMethod(cg()->trMemory(), (TR_OpaqueMethodBlock *)(uintptr_t) getSourceImmediateAsAddress(), comp->getCurrentMethod())->classOfMethod();
          cg()->jitAdd32BitPicToPatchOnClassUnload(classPointer, (void *) cursor);
          }
 
@@ -1931,7 +1860,7 @@ TR::X86MemImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
          TR_ASSERT(getNode(), "node expected to be non-NULL here");
          cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                        (uint8_t *)getNode()->getSymbolReference(),
-                                                       (uint8_t *)getNode()->getInlinedSiteIndex(),
+                                                       (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex(),
                                                        TR_ClassAddress,
                                                        cg()),
                         __FILE__,__LINE__, getNode());
@@ -2052,7 +1981,7 @@ TR::X86MemImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
 
    if (std::find(comp->getStaticHCRPICSites()->begin(), comp->getStaticHCRPICSites()->end(), this) != comp->getStaticHCRPICSites()->end())
       {
-      cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+      cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
       }
 
    TR::Symbol *symbol = getSymbolReference()->getSymbol();
@@ -2065,7 +1994,7 @@ TR::X86MemImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
       cg()->addAOTRelocation(
             new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                   (uint8_t *)getSymbolReference()->getOwningMethod(comp)->constantPool(),
-                                                                   getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                   getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                    TR_ConstantPool,
                                                                    cg()),
                  __FILE__, __LINE__, getNode()
@@ -2077,20 +2006,20 @@ TR::X86MemImmSymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
       TR_ASSERT(getNode(), "No node where expected!");
       if (cg()->needClassAndMethodPointerRelocations())
          {
-         *(int32_t *)cursor = (int32_t)TR::Compiler->cls.persistentClassPointerFromClassPointer(cg()->comp(), (TR_OpaqueClassBlock*)getSourceImmediate());
-         cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor, (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_ClassAddress, cg()),
+         *(int32_t *)cursor = (int32_t)TR::Compiler->cls.persistentClassPointerFromClassPointer(cg()->comp(), (TR_OpaqueClassBlock*)(uintptr_t)getSourceImmediate());
+         cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor, (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_ClassAddress, cg()),
                                                                                       __FILE__, __LINE__, getNode());
 
          }
       }
    else if (symbol->isMethod())
       {
-      cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor, (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_MethodObject, cg()),
+      cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor, (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_MethodObject, cg()),
                               __FILE__, __LINE__, getNode());
       }
    else
       {
-      cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor, (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_DataAddress, cg()),
+      cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor, (uint8_t *)getSymbolReference(), getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_DataAddress, cg()),
                               __FILE__, __LINE__, getNode());
       }
    }
@@ -2136,7 +2065,7 @@ void TR::X86MemRegImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
       {
       if (std::find(cg()->comp()->getStaticHCRPICSites()->begin(), cg()->comp()->getStaticHCRPICSites()->end(), this) != cg()->comp()->getStaticHCRPICSites()->end())
          {
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
       }
    }
@@ -2272,7 +2201,7 @@ int32_t TR::X86RegMemInstruction::estimateBinaryLength(int32_t currentEstimate)
 OMR::X86::EnlargementResult
 TR::X86RegMemInstruction::enlarge(int32_t requestedEnlargementSize, int32_t maxEnlargementSize, bool allowPartialEnlargement)
    {
-   TR::Compilation *comp = TR::comp();
+   TR::Compilation *comp = cg()->comp();
    if ((maxEnlargementSize < requestedEnlargementSize && !allowPartialEnlargement) || requestedEnlargementSize < 1)
       return OMR::X86::EnlargementResult(0, 0);
 
@@ -2293,7 +2222,7 @@ void TR::X86RegMemImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
       {
       if (std::find(cg()->comp()->getStaticHCRPICSites()->begin(), cg()->comp()->getStaticHCRPICSites()->end(), this) != cg()->comp()->getStaticHCRPICSites()->end())
          {
-         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *) getSourceImmediateAsAddress()), (void *) cursor);
+         cg()->jitAdd32BitPicToPatchOnClassRedefinition(((void *)(uintptr_t) getSourceImmediateAsAddress()), (void *) cursor);
          }
       }
    }
@@ -2685,7 +2614,7 @@ TR::AMD64RegImm64SymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
          case TR_ConstantPool:
             cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                                       (uint8_t *)getSymbolReference()->getOwningMethod(comp)->constantPool(),
-                                                                                       getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                                       getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                                        (TR_ExternalRelocationTargetKind) getReloKind(),
                                                                                        cg()),
                                    __FILE__,
@@ -2697,13 +2626,22 @@ TR::AMD64RegImm64SymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
             {
             cg()->addAOTRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
                                                                                       (uint8_t *) getSymbolReference(),
-                                                                                      (uint8_t *)getNode() ? (uint8_t *) getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
+                                                                                      (uint8_t *)getNode() ? (uint8_t *)(uintptr_t) getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
                                                                                       (TR_ExternalRelocationTargetKind) getReloKind(),
                                                                                       cg()),
                                                                                       __FILE__,
                                                                                       __LINE__,
                                                                                       getNode());
 
+            break;
+            }
+         case TR_NativeMethodAbsolute:
+            {
+            if (cg()->comp()->getOption(TR_EnableObjectFileGeneration))
+               {
+               TR_ResolvedMethod *target = getSymbolReference()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod();
+               cg()->addStaticRelocation(TR::StaticRelocation(cursor, target->externalName(cg()->trMemory()), TR::StaticRelocationSize::word64, TR::StaticRelocationType::Absolute));
+               }
             break;
             }
          default:
@@ -2792,7 +2730,7 @@ TR::AMD64Imm64SymInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
    {
    if (getOpCodeValue() == DQImm64)
       {
-      cg()->addProjectSpecializedRelocation(cursor, (uint8_t *)(uint64_t)getSourceImmediate(), getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_Thunks,
+      cg()->addProjectSpecializedRelocation(cursor, (uint8_t *)(uint64_t)getSourceImmediate(), getNode() ? (uint8_t *)(uintptr_t)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_Thunks,
                              __FILE__,
                              __LINE__,
                              getNode());

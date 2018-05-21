@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 
@@ -34,6 +38,10 @@
 #include "MemorySubSpaceRegionIterator.hpp"
 #include "MemorySubSpaceSemiSpace.hpp"
 #include "PhysicalSubArena.hpp"
+
+#if defined(OMR_VALGRIND_MEMCHECK)
+#include "MemcheckWrapper.hpp"
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 
 #if defined(OMR_GC_MODRON_SCAVENGER)
 
@@ -285,7 +293,7 @@ uintptr_t
 MM_MemorySubSpaceSemiSpace::getActualActiveFreeMemorySize(uintptr_t includeMemoryType)
 {
 	if (includeMemoryType & MEMORY_TYPE_NEW){ 
-		return _memorySubSpaceAllocate->getActualActiveFreeMemorySize() + getActualActiveFreeSurvivorMemorySize(includeMemoryType);
+		return _memorySubSpaceAllocate->getActualActiveFreeMemorySize();
 	} else {
 		return 0;
 	}	
@@ -309,7 +317,7 @@ uintptr_t
 MM_MemorySubSpaceSemiSpace::getApproximateActiveFreeMemorySize(uintptr_t includeMemoryType)
 {
 	if (includeMemoryType & MEMORY_TYPE_NEW){ 
-		return _memorySubSpaceAllocate->getApproximateActiveFreeMemorySize() + getApproximateActiveFreeSurvivorMemorySize(includeMemoryType);
+		return _memorySubSpaceAllocate->getApproximateActiveFreeMemorySize();
 	} else {
 		return 0;
 	}	
@@ -328,19 +336,21 @@ MM_MemorySubSpaceSemiSpace::getActiveSurvivorMemorySize(uintptr_t includeMemoryT
 uintptr_t
 MM_MemorySubSpaceSemiSpace::getApproximateActiveFreeSurvivorMemorySize(uintptr_t includeMemoryType)
 {
-	/* If we ask directly MemorySubSpaceSurvivor, we'll get as answer: everything is free. While it is true literally,
-	 * this memory is unavaliable for user allocation
-	 */
-	return 0;
+	if (includeMemoryType & MEMORY_TYPE_NEW){
+		return _memorySubSpaceSurvivor->getApproximateActiveFreeMemorySize();
+	} else {
+		return 0;
+	}
 }
 
 uintptr_t
 MM_MemorySubSpaceSemiSpace::getActualActiveFreeSurvivorMemorySize(uintptr_t includeMemoryType)
 {
-	/* If we ask directly MemorySubSpaceSurvivor, we'll get as answer: everything is free. While it is true literally,
-	 * this memory is unavaliable for user allocation
-	 */
-	return 0;
+	if (getTypeFlags() & MEMORY_TYPE_NEW) {
+		return _memorySubSpaceSurvivor->getActiveMemorySize(MEMORY_TYPE_NEW);
+	} else {
+		return 0;
+	}
 }
 
 void
@@ -375,7 +385,7 @@ MM_MemorySubSpaceSemiSpace::newInstance(MM_EnvironmentBase *env, MM_Collector *c
 {
 	MM_MemorySubSpaceSemiSpace *memorySubSpace;
 	
-	memorySubSpace = (MM_MemorySubSpaceSemiSpace *)env->getForge()->allocate(sizeof(MM_MemorySubSpaceSemiSpace), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	memorySubSpace = (MM_MemorySubSpaceSemiSpace *)env->getForge()->allocate(sizeof(MM_MemorySubSpaceSemiSpace), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (memorySubSpace) {
 		new(memorySubSpace) MM_MemorySubSpaceSemiSpace(env, collector, physicalSubArena, memorySubSpaceAllocate, memorySubSpaceSurvivor, usesGlobalCollector, minimumSize, initialSize, maximumSize);
 		if (!memorySubSpace->initialize(env)) {
@@ -403,8 +413,10 @@ MM_MemorySubSpaceSemiSpace::initialize(MM_EnvironmentBase *env)
 
 	_memorySubSpaceSurvivor->isAllocatable(false);
 
+	/* this memoryPool can be used by scavenger, maximum tlh size should be max(_extensions->tlhMaximumSize, _extensions->scavengerScanCacheMaximumSize) */
+	uintptr_t tlhMaximumSize = OMR_MAX(_extensions->tlhMaximumSize, _extensions->scavengerScanCacheMaximumSize);
 	_largeObjectAllocateStats = MM_LargeObjectAllocateStats::newInstance(env, (uint16_t)_extensions->largeObjectAllocationProfilingTopK, _extensions->largeObjectAllocationProfilingThreshold, _extensions->largeObjectAllocationProfilingVeryLargeObjectThreshold, (float)_extensions->largeObjectAllocationProfilingSizeClassRatio / (float)100.0,
-			_extensions->heap->getMaximumMemorySize(), _extensions->tlhMaximumSize + _extensions->minimumFreeEntrySize, _extensions->tlhMinimumSize);
+			_extensions->heap->getMaximumMemorySize(), tlhMaximumSize + _extensions->minimumFreeEntrySize, _extensions->tlhMinimumSize);
 	if (NULL == _largeObjectAllocateStats) {
 		return false;
 	}
@@ -444,9 +456,6 @@ MM_MemorySubSpaceSemiSpace::flip(MM_EnvironmentBase *env, Flip_step step)
 		_memorySubSpaceAllocate->isAllocatable(true);
 		/* Let know MemorySpace about new default MemorySubSpace */
 		getMemorySpace()->setDefaultMemorySubSpace(getDefaultMemorySubSpace());
-#if defined(OMR_GC_CONCURRENT_SCAVENGER)
-		_bytesAllocatedAtConcurrentStart = _extensions->allocationStats.bytesAllocated();
-#endif
 		break;
 	case disable_allocation:
 		_memorySubSpaceAllocate->isAllocatable(false);
@@ -455,10 +464,9 @@ MM_MemorySubSpaceSemiSpace::flip(MM_EnvironmentBase *env, Flip_step step)
 		_memorySubSpaceAllocate->isAllocatable(true);
 		_memorySubSpaceSurvivor = _memorySubSpaceEvacuate;
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
-		_bytesAllocatedAtConcurrentEnd = _extensions->allocationStats.bytesAllocated();
-		Assert_MM_true(_bytesAllocatedAtConcurrentStart <= _bytesAllocatedAtConcurrentEnd);
+		_bytesAllocatedDuringConcurrent = _extensions->allocationStats.bytesAllocated();
 		_avgBytesAllocatedDuringConcurrent = (uintptr_t)MM_Math::weightedAverage((float)_avgBytesAllocatedDuringConcurrent,
-											 (float)(_bytesAllocatedAtConcurrentEnd - _bytesAllocatedAtConcurrentStart), 0.5);
+											 (float)(_bytesAllocatedDuringConcurrent), 0.5);
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
 		break;
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
@@ -500,8 +508,17 @@ MM_MemorySubSpaceSemiSpace::flip(MM_EnvironmentBase *env, Flip_step step)
 	{
 		Assert_MM_true(_extensions->concurrentScavenger);
 		uintptr_t lastFreeEntrySize = 0;
-		if (NULL != getDefaultMemorySubSpace()->getMemoryPool()->getLastFreeEntry()) {
-			lastFreeEntrySize = getDefaultMemorySubSpace()->getMemoryPool()->getLastFreeEntry()->getSize();
+		MM_HeapLinkedFreeHeader *lastFreeEntry = getDefaultMemorySubSpace()->getMemoryPool()->getLastFreeEntry();
+		if (NULL != lastFreeEntry) {
+			lastFreeEntrySize = lastFreeEntry->getSize();
+			if(debug) {
+				omrtty_printf("tilt restore_tilt_after_percolate last free entry %llx size %llx\n",
+						lastFreeEntry, lastFreeEntrySize);
+			}
+			/* rely on the last free entry only if at the very end of SemiSpace (no objects after it) */
+			if (((uintptr_t)lastFreeEntry + lastFreeEntrySize) != OMR_MAX((uintptr_t)_allocateSpaceTop, (uintptr_t)_survivorSpaceTop)) {
+				lastFreeEntrySize = 0;
+			}
 		}
 		/* Make Survivor space from the last free entry in the unified Nursery */
 		uintptr_t heapAlignedLastFreeEntrySize = MM_Math::roundToFloor(_extensions->heapAlignment, lastFreeEntrySize);
@@ -514,7 +531,7 @@ MM_MemorySubSpaceSemiSpace::flip(MM_EnvironmentBase *env, Flip_step step)
 					lastFreeEntrySize, _extensions->getConcurrentScavengerPageSectionSize(), heapAlignedLastFreeEntrySize);
 		}
 
-		/* allocate/survivor base/top still hold the values from before we did 100% tilt */
+		/* allocate/survivor base/top still hold the values from before when we did 100% tilt */
 		uintptr_t allocateSize = (uintptr_t)_allocateSpaceTop - (uintptr_t)_allocateSpaceBase;
 		uintptr_t survivorSize = (uintptr_t)_survivorSpaceTop - (uintptr_t)_survivorSpaceBase;
 		if (allocateSize < survivorSize) {
@@ -577,10 +594,22 @@ MM_MemorySubSpaceSemiSpace::poisonEvacuateSpace()
 	uintptr_t* current = (uintptr_t*) _allocateSpaceBase;
 	uintptr_t* end = (uintptr_t*) _allocateSpaceTop;
 
+#if defined(OMR_VALGRIND_MEMCHECK)
+	//clear dead objects before getting their size bits overwritten.	
+	valgrindClearRange(_extensions,(uintptr_t) _allocateSpaceBase, (uintptr_t) _allocateSpaceTop - (uintptr_t) _allocateSpaceBase);
+		
+	//The space is already dead (objects).... lets redefine so it can be poisoned!
+	valgrindMakeMemDefined((uintptr_t) _allocateSpaceBase, (uintptr_t) _allocateSpaceTop - (uintptr_t) _allocateSpaceBase);	
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+	
 	while (current < end) {
 		*current = pattern;
 		current += 1;
 	}
+
+#if defined(OMR_VALGRIND_MEMCHECK)			
+	valgrindMakeMemNoaccess((uintptr_t) _allocateSpaceBase, (uintptr_t) _allocateSpaceTop - (uintptr_t) _allocateSpaceBase);	
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */	
 }
 
 void
@@ -720,8 +749,7 @@ MM_MemorySubSpaceSemiSpace::checkSubSpaceMemoryPostCollectTilt(MM_EnvironmentBas
 			/* Account for mutator allocated objects in hybrid survivor/allocated during concurrent phase of Concurrent Scavenger */
 			desiredSurvivorSize += _avgBytesAllocatedDuringConcurrent * 1.2 + extensions->concurrentScavengerSlack;
 			if (debug) {
-				omrtty_printf("\tmutator bytesAllocated current %zu average %zu\n", _bytesAllocatedAtConcurrentEnd - _bytesAllocatedAtConcurrentStart,
-																					_avgBytesAllocatedDuringConcurrent);
+				omrtty_printf("\tmutator bytesAllocated current %zu average %zu\n", _bytesAllocatedDuringConcurrent, _avgBytesAllocatedDuringConcurrent);
 			}
 		}
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
@@ -830,6 +858,21 @@ MM_MemorySubSpaceSemiSpace::checkSubSpaceMemoryPostCollectResize(MM_EnvironmentB
 			
 			if(debug) {
 				omrtty_printf("\tTime scav:%llu interval:%llu ratio:%lf\n", scavengeTime, intervalTime, timeRatio);
+			}
+
+#if defined(OMR_GC_CONCURRENT_SCAVENGER)
+			if (_extensions->isConcurrentScavengerEnabled()) {
+				/* In CS world, we cannot easily measure GC overhead. This is just a simple adjustment, which is somewhat ok for light to medium
+				 * loaded systems. In overloaded systems (where GC background threads are starved and GC prolonged), we may expand more than necessary.
+				 * Multi JVM configuration may skew this even more (perhaps it's better to base it on CPU count, rather than GC thread count?). */
+				timeRatio = timeRatio * _extensions->concurrentScavengerBackgroundThreads / _extensions->dispatcher->activeThreadCount();
+				if(debug) {
+					omrtty_printf("\tCS adjusted ratio:%lf\n", timeRatio);
+				}
+			}
+#endif /* OMR_GC_CONCURRENT_SCAVENGER */
+
+			if(debug) {
 				omrtty_printf("\tAverage scavenge time ratio: %lf -> ", _averageScavengeTimeRatio);
 			}
 
@@ -878,7 +921,7 @@ MM_MemorySubSpaceSemiSpace::checkSubSpaceMemoryPostCollectResize(MM_EnvironmentB
 				_averageScavengeTimeRatio -= adjustedExpansionFactor;
 
 				_expansionSize = MM_Math::roundToCeiling(extensions->heapAlignment, (uintptr_t)(getCurrentSize() * adjustedExpansionFactor));
-				_expansionSize = MM_Math::roundToCeiling(regionSize, _expansionSize);
+				_expansionSize = MM_Math::roundToCeiling(2 * regionSize, _expansionSize);
 
 				if(debug) {
 					omrtty_printf("\tExpand decision - expandFactor desired: %lf adjusted: %lf size: %u\n", desiredExpansionFactor, adjustedExpansionFactor, _expansionSize);

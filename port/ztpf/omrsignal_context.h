@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
- *    Multiple authors (IBM Corp.) - z/TPF platform initial port to OMR environment
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 #ifndef _OMR_SIGNAL_CONTEXT_H_INCLUDED
 #define _OMR_SIGNAL_CONTEXT_H_INCLUDED
@@ -27,7 +30,7 @@
 #include <unistd.h>
 #include <sys/ucontext.h>
 
-#define MAX_UNIX_SIGNAL_TYPES  32
+#define MAX_UNIX_SIGNAL_TYPES  MNSIG
 
 #define __USE_GNU 1
 #include <dlfcn.h>
@@ -46,13 +49,13 @@ typedef struct J9PlatformSignalInfo {
 /*
  * This structure declaration came in this file in this format from J9
  */
-typedef struct J9UnixSignalInfo {
+typedef struct OMRUnixSignalInfo {
 	struct J9PlatformSignalInfo	platformSignalInfo;
 	uint32_t portLibrarySignalType;
 	void* handlerAddress;
 	void* handlerAddress2;
 	siginfo_t *sigInfo;
-} J9UnixSignalInfo;
+} OMRUnixSignalInfo;
 
 
 /*
@@ -112,16 +115,16 @@ static const inline uint8_t  s390FetchDXC(uint8_t* b) { return *(b+0x93); }
 void translateInterruptContexts( args *argv ) __attribute__((nonnull));
 void ztpfDeriveSiginfo( siginfo_t *build ) __attribute__((nonnull));
 #endif
-uint32_t infoForFPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo* info, int32_t index, const char **name, void **value)
+uint32_t infoForFPR(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo* info, int32_t index, const char **name, void **value)
  __attribute__((nonnull(1,2,4,5)));
 
-uint32_t infoForGPR(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
+uint32_t infoForGPR(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
 
-uint32_t infoForModule(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
+uint32_t infoForModule(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
 
-uint32_t infoForControl(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
+uint32_t infoForControl(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
 
-uint32_t infoForSignal(struct OMRPortLibrary *portLibrary, struct J9UnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
+uint32_t infoForSignal(struct OMRPortLibrary *portLibrary, struct OMRUnixSignalInfo* info, int32_t index, const char **name, void **value) __attribute__((nonnull(1,2,4,5)));
 
-void fillInUnixSignalInfo(struct OMRPortLibrary *portLibrary, void *contextInfo, struct J9UnixSignalInfo *j9Info)  __attribute__((nonnull));
+void fillInUnixSignalInfo(struct OMRPortLibrary *portLibrary, void *contextInfo, struct OMRUnixSignalInfo *j9Info)  __attribute__((nonnull));
 #endif

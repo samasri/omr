@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_CODEGENERATOR_INCL
@@ -63,6 +66,7 @@ namespace OMR { typedef OMR::CodeGenerator CodeGeneratorConnector; }
 #include "optimizer/Dominators.hpp"             // for TR_Dominators
 #include "ras/DebugCounter.hpp"
 #include "runtime/Runtime.hpp"
+#include "codegen/StaticRelocation.hpp"
 
 #define OPT_DETAILS_CA "O^O COMPLETE ALIASING: "
 
@@ -106,8 +110,6 @@ namespace TR { class SymbolReferenceTable; }
 namespace TR { class TreeTop; }
 
 typedef TR::SparseBitVector SharedSparseBitVector;
-
-extern int32_t bitCount32(uint32_t w);
 
 enum TR_SpillKinds // For register pressure simulation
    {
@@ -229,47 +231,8 @@ class TR_ClobberEvalData
 
    };
 
-enum MonitorInBlock
-   {
-   NoMonitor = 0,
-   MonitorEnter,
-   MonitorExit
-   };
-
-
-class TR_SetMonitorStateOnBlockEntry
-   {
-public:
-   typedef TR::typed_allocator<std::pair<int32_t , TR_Stack<TR::SymbolReference *>*>, TR::Region&> LiveMonitorStacksAllocator;
-   typedef std::less<int32_t> LiveMonitorStacksComparator;
-   typedef std::map<int32_t, TR_Stack<TR::SymbolReference *>*, LiveMonitorStacksComparator, LiveMonitorStacksAllocator> LiveMonitorStacks;
-   TR_SetMonitorStateOnBlockEntry(TR::Compilation * c, LiveMonitorStacks *liveMonitorStacks)
-      : _blocksToVisit(c->trMemory(), 8, false, stackAlloc)
-      {
-      _comp = c;
-      _visitCount = c->incVisitCount();
-      _liveMonitorStacks = liveMonitorStacks;
-      }
-
-   void set(bool& lmmdFailed, bool traceIt = false);
-
-private:
-   int32_t addSuccessors(TR::CFGNode * cfgNode, TR_Stack<TR::SymbolReference *> *, bool traceIt, bool dontPropagateMonitor = false, MonitorInBlock monitorType = NoMonitor, int32_t callerIndex = -1, bool walkOnlyExceptionSuccs = false);
-   bool isMonitorStateConsistentForBlock(TR::Block *block, TR_Stack<TR::SymbolReference *> *newMonitorStack, bool popMonitor);
-
-   TR_Memory *        trMemory()  { return comp()->trMemory(); }
-   TR_HeapMemory   trHeapMemory() { return trMemory(); }
-
-   TR::Compilation * comp() { return _comp; }
-
-   TR::Compilation *     _comp;
-   vcount_t             _visitCount;
-   TR_Stack<TR::Block *> _blocksToVisit;
-   LiveMonitorStacks *_liveMonitorStacks;
-   };
 
 TR::Node* generatePoisonNode(TR::Compilation *comp, TR::Block *currentBlock, TR::SymbolReference *liveAutoSymRef);
-
 
 
 
@@ -280,9 +243,10 @@ class OMR_EXTENSIBLE CodeGenerator
    {
    private:
 
-   TR::Machine *_machine;
    TR::Compilation *_compilation;
    TR_Memory *_trMemory;
+
+   TR::Machine *_machine;
 
    TR_BitVector *_liveLocals;
    TR::TreeTop *_currentEvaluationTreeTop;
@@ -291,7 +255,7 @@ class OMR_EXTENSIBLE CodeGenerator
    uint32_t _prePrologueSize;
 
    TR::Instruction *_implicitExceptionPoint;
-
+   bool areMergeableGuards(TR::Instruction *earlierGuard, TR::Instruction *laterGuard);
 
    protected:
 
@@ -355,6 +319,38 @@ class OMR_EXTENSIBLE CodeGenerator
 
    TR_BitVector *getLiveLocals() {return _liveLocals;}
    TR_BitVector *setLiveLocals(TR_BitVector *v) {return (_liveLocals = v);}
+
+   /**
+    * @brief Returns the first TR::Instruction in the stream of instructions for
+    *        this method.  This instruction's "previous" link should be NULL.
+    *
+    * @return The first instruction in this method; NULL if not yet set.
+    */
+   TR::Instruction *getFirstInstruction() {return _firstInstruction;}
+
+   /**
+    * @brief Sets the first TR::Instruction in the stream of instructions for
+    *        this method.  This instruction's "previous" link should be NULL.
+    *
+    * @return The instruction being set.
+    */
+   TR::Instruction *setFirstInstruction(TR::Instruction *fi) {return (_firstInstruction = fi);}
+
+   /**
+    * @brief Returns the last TR::Instruction in the stream of instructions for
+    *        this method.  This instruction's "next" link should be NULL.
+    *
+    * @return The last instruction in this method; NULL if not yet set.
+    */
+   TR::Instruction *getAppendInstruction() {return _appendInstruction;}
+
+   /**
+    * @brief Sets the last TR::Instruction in the stream of instructions for
+    *        this method.  This instruction's "next" link should be NULL.
+    *
+    * @return The instruction being set.
+    */
+   TR::Instruction *setAppendInstruction(TR::Instruction *ai) {return (_appendInstruction = ai);}
 
    TR::TreeTop *getCurrentEvaluationTreeTop() {return _currentEvaluationTreeTop;}
    TR::TreeTop *setCurrentEvaluationTreeTop(TR::TreeTop *tt) {return (_currentEvaluationTreeTop = tt);}
@@ -484,14 +480,6 @@ class OMR_EXTENSIBLE CodeGenerator
 
 
 
-   // --------------------------------------------------------------------------
-   // Constructor
-   //
-   // allocate is used by the main compilation class to get a code
-   // generator for the current compilation.
-   //
-   static TR::CodeGenerator *armAllocate(TR::Compilation *comp);
-
    TR::Recompilation *allocateRecompilationInfo() { return NULL; }
 
    // --------------------------------------------------------------------------
@@ -580,8 +568,14 @@ class OMR_EXTENSIBLE CodeGenerator
    // Optimizer, code generator capabilities
    //
    int32_t getPreferredLoopUnrollFactor() {return -1;} // no virt, default
-   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method) {return false;} // no virt, default
-   bool isMethodInAtomicLongGroup (TR::RecognizedMethod rm);
+
+   /**
+    * @brief Answers whether the provided recognized method should be inlined by an
+    *        inliner optimization.
+    * @param method : the recognized method to consider
+    * @return true if inlining should be suppressed; false otherwise
+    */
+   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method) {return false;}
 
    // --------------------------------------------------------------------------
    // Optimizer, not code generator
@@ -595,10 +589,6 @@ class OMR_EXTENSIBLE CodeGenerator
    bool supportsPassThroughCopyToNewVirtualRegister() { return false; } // no virt, default
 
    uint8_t getSizeOfCombinedBuffer() {return 0;} // no virt, default
-
-   // The number of nodes we want between a monexit and the next monent before transforming a monitored region with
-   // transactional lock elision.
-   int32_t getMinimumNumberOfNodesBetweenMonitorsForTLE() { return 15; } // no virt, default
 
    bool doRematerialization() {return false;} // no virt, default
 
@@ -733,23 +723,17 @@ class OMR_EXTENSIBLE CodeGenerator
    // --------------------------------------------------------------------------
    // Binary encoding code cache
    //
-   uint32_t getEstimatedWarmLength()           {return _estimatedWarmLength;}
-   uint32_t setEstimatedWarmLength(uint32_t l) {return (_estimatedWarmLength = l);}
-   uint32_t getEstimatedColdLength()           {return _estimatedColdLength;}
-   uint32_t setEstimatedColdLength(uint32_t l) {return (_estimatedColdLength = l);}
-   uint32_t getEstimatedMethodLength()           {return _estimatedWarmLength+_estimatedColdLength;}
+   uint32_t getEstimatedWarmLength()           {return _estimatedCodeLength;} // DEPRECATED
+   uint32_t setEstimatedWarmLength(uint32_t l) {return (_estimatedCodeLength = l);} // DEPRECATED
+
+   uint32_t getEstimatedCodeLength()           {return _estimatedCodeLength;}
+   uint32_t setEstimatedCodeLength(uint32_t l) {return (_estimatedCodeLength = l);}
 
    uint8_t *getBinaryBufferStart()           {return _binaryBufferStart;}
    uint8_t *setBinaryBufferStart(uint8_t *b) {return (_binaryBufferStart = b);}
 
    uint8_t *getCodeStart();
-   uint8_t *getWarmCodeEnd()              {return _coldCodeStart ? _warmCodeEnd : _binaryBufferCursor;}
-   uint8_t *setWarmCodeEnd(uint8_t *c)    {return (_warmCodeEnd = c);}
-   uint8_t *getColdCodeStart()            {return _coldCodeStart;}
-   uint8_t *setColdCodeStart(uint8_t *c)  {return (_coldCodeStart = c);}
    uint8_t *getCodeEnd()                  {return _binaryBufferCursor;}
-   uint32_t getWarmCodeLength();
-   uint32_t getColdCodeLength();
    uint32_t getCodeLength();
 
    uint8_t *getBinaryBufferCursor() {return _binaryBufferCursor;}
@@ -792,8 +776,6 @@ class OMR_EXTENSIBLE CodeGenerator
    // Load extensions (Z)
 
    TR::SparseBitVector & getExtendedToInt64GlobalRegisters()  { return _extendedToInt64GlobalRegisters; }
-   TR_BitVector *signExtensionFlags() {return _signExtensionFlags;}
-   TR_BitVector *setSignExtensionFlags(TR_BitVector* flag) { return _signExtensionFlags = flag; }
 
    // --------------------------------------------------------------------------
    // Live registers
@@ -818,9 +800,6 @@ class OMR_EXTENSIBLE CodeGenerator
 
    TR::RealRegister *getRealVMThreadRegister() {return _realVMThreadRegister;}
    void setRealVMThreadRegister(TR::RealRegister *defvmtr) {_realVMThreadRegister = defvmtr;}
-   uint32_t getVMThreadLiveCount() {return _vmThreadLiveCount;}
-   uint32_t decVMThreadLiveCount() {return (--_vmThreadLiveCount);}
-   uint32_t incVMThreadLiveCount() {return (++_vmThreadLiveCount);}
 
    TR::Instruction *getVMThreadSpillInstruction() {return _vmThreadSpillInstr;}
    void setVMThreadSpillInstruction(TR::Instruction *i);
@@ -1059,10 +1038,12 @@ class OMR_EXTENSIBLE CodeGenerator
    //
    TR::list<TR::Relocation*>& getRelocationList() {return _relocationList;}
    TR::list<TR::Relocation*>& getAOTRelocationList() {return _aotRelocationList;}
+   TR::list<TR::StaticRelocation>& getStaticRelocations() { return _staticRelocationList; }
 
    void addRelocation(TR::Relocation *r);
-   void addAOTRelocation(TR::Relocation *r, char *generatingFileName, uintptr_t generatingLineNumber, TR::Node *node);
+   void addAOTRelocation(TR::Relocation *r, const char *generatingFileName, uintptr_t generatingLineNumber, TR::Node *node);
    void addAOTRelocation(TR::Relocation *r, TR::RelocationDebugInfo *info);
+   void addStaticRelocation(const TR::StaticRelocation &relocation);
 
    void addProjectSpecializedRelocation(uint8_t *location,
                                           uint8_t *target,
@@ -1184,7 +1165,6 @@ class OMR_EXTENSIBLE CodeGenerator
    // Code patching
    //
    // Used to find out whether there is an appropriate instruction space as vgdnop space
-   bool    requiresAtomicPatching(TR::Instruction *vgdnop);
    int32_t sizeOfInstructionToBePatched(TR::Instruction *vgdnop);
    int32_t sizeOfInstructionToBePatchedHCRGuard(TR::Instruction *vgdnop);
    // Used to find which instruction is an appropriate instruction space as vgdnop space
@@ -1219,9 +1199,6 @@ class OMR_EXTENSIBLE CodeGenerator
 
    TR_BitVector *getLiveButMaybeUnreferencedLocals() {return _liveButMaybeUnreferencedLocals;}
    TR_BitVector *setLiveButMaybeUnreferencedLocals(TR_BitVector *v) {return (_liveButMaybeUnreferencedLocals = v);}
-
-   TR_BitVector *getLiveMonitors() {return _liveMonitors;}
-   TR_BitVector *setLiveMonitors(TR_BitVector *v) {return (_liveMonitors = v);}
 
    TR::AheadOfTimeCompile *getAheadOfTimeCompile() {return _aheadOfTimeCompile;}
    TR::AheadOfTimeCompile *setAheadOfTimeCompile(TR::AheadOfTimeCompile *p) {return (_aheadOfTimeCompile = p);}
@@ -1301,7 +1278,6 @@ class OMR_EXTENSIBLE CodeGenerator
    bool supportsOnDemandLiteralPool() { return false; } // no virt, cast
    bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; } // no virt
    bool supportsHighWordFacility() { return false; } // no virt, default, cast
-   bool doInlineAllocate(TR::Node *node) { TR_ASSERT(0, "unexpected call to OMR::CodeGenerator::doInlineAllocate"); return false; } // no virt, default
 
    bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
 
@@ -1374,8 +1350,6 @@ class OMR_EXTENSIBLE CodeGenerator
    // IA32 only?
    int32_t getVMThreadGlobalRegisterNumber() {return -1;} // no virt
    int32_t arrayInitMinimumNumberOfBytes() {return 8;} // no virt
-
-   int32_t getMaxPatchableInstructionLength() { return 0; } // no virt
 
    TR::Instruction *saveOrRestoreRegisters(TR_BitVector *regs, TR::Instruction *cursor, bool doSaves);
 
@@ -1464,9 +1438,6 @@ class OMR_EXTENSIBLE CodeGenerator
    bool getSupportsArraySet() {return _flags1.testAny(SupportsArraySet);}
    void setSupportsArraySet() {_flags1.set(SupportsArraySet);}
 
-   bool getSupportsArraySetToZero() {return _flags3.testAny(SupportsArraySetToZero);}
-   void setSupportsArraySetToZero() {_flags3.set(SupportsArraySetToZero);}
-
    bool getSupportsArrayCmp() {return _flags1.testAny(SupportsArrayCmp);}
    void setSupportsArrayCmp() {_flags1.set(SupportsArrayCmp);}
 
@@ -1519,6 +1490,8 @@ class OMR_EXTENSIBLE CodeGenerator
 
    virtual bool getSupportsIbyteswap();
 
+   virtual bool getSupportsBitPermute();
+
    bool getSupportsAutoSIMD() { return _flags4.testAny(SupportsAutoSIMD);}
    void setSupportsAutoSIMD() { _flags4.set(SupportsAutoSIMD);}
 
@@ -1559,9 +1532,6 @@ class OMR_EXTENSIBLE CodeGenerator
    void setSupportsInlinedAtomicLongVolatiles() {_flags1.set(SupportsInlinedAtomicLongVolatiles);}
    bool getInlinedGetCurrentThreadMethod() {return _flags3.testAny(InlinedGetCurrentThreadMethod);}
    void setInlinedGetCurrentThreadMethod() {_flags3.set(InlinedGetCurrentThreadMethod);}
-
-   bool disableCommoningOfVolatiles() {return false; }
-   bool allowDSEOfVolatiles() {return true; }
 
    bool considerAllAutosAsTacticalGlobalRegisterCandidates()    {return _flags1.testAny(ConsiderAllAutosAsTacticalGlobalRegisterCandidates);}
    void setConsiderAllAutosAsTacticalGlobalRegisterCandidates() {_flags1.set(ConsiderAllAutosAsTacticalGlobalRegisterCandidates);}
@@ -1635,10 +1605,6 @@ class OMR_EXTENSIBLE CodeGenerator
    bool isOutOfLineColdPath() {return (_outOfLineColdPathNestedDepth > 0) ? true : false;}
    void incOutOfLineColdPathNestedDepth(){_outOfLineColdPathNestedDepth++;}
    void decOutOfLineColdPathNestedDepth(){_outOfLineColdPathNestedDepth--;}
-
-   bool getIsInWarmCodeCache();
-   void setIsInWarmCodeCache() {_flags2.set(IsInWarmCodeCache);}
-   void resetIsInWarmCodeCache() {_flags2.reset(IsInWarmCodeCache);}
 
    bool getMethodModifiedByRA() {return _flags2.testAny(MethodModifiedByRA);}
    void setMethodModifiedByRA() {_flags2.set(MethodModifiedByRA);}
@@ -1746,7 +1712,7 @@ class OMR_EXTENSIBLE CodeGenerator
       SupportsReverseLoadAndStore                         = 0x00400000,
       SupportsLoweringConstLDivPower2                     = 0x00800000,
       DisableFpGRA                                        = 0x01000000,
-      IsInWarmCodeCache                                   = 0x02000000,
+      // Available                                        = 0x02000000,
       MethodModifiedByRA                                  = 0x04000000,
       SchedulingInstrCleanupNeeded                        = 0x08000000,
       // Available                                        = 0x10000000,
@@ -1780,7 +1746,7 @@ class OMR_EXTENSIBLE CodeGenerator
       SupportsShrinkWrapping                              = 0x00100000,
       ShrinkWrappingDone                                  = 0x00200000,
       SupportsStackAllocationOfArraylets                  = 0x00400000,
-      SupportsArraySetToZero                              = 0x00800000,
+      //                                                  = 0x00800000,  AVAILABLE FOR USE!
       SupportsDoubleWordCAS                               = 0x01000000,
       SupportsDoubleWordSet                               = 0x02000000,
       UsesLoadStoreMultiple                               = 0x04000000,
@@ -1857,18 +1823,13 @@ class OMR_EXTENSIBLE CodeGenerator
    TR_GCStackMap *_methodStackMap;
    TR::list<TR::Block*> _counterBlocks;
    uint8_t *_binaryBufferStart;
-   uint8_t *_warmCodeEnd;
-   uint8_t *_coldCodeStart;
    uint8_t *_binaryBufferCursor;
    TR::SparseBitVector _extendedToInt64GlobalRegisters;
 
    TR_BitVector *_liveButMaybeUnreferencedLocals;
-   TR_BitVector *_liveMonitors;
    bool _lmmdFailed;
-   TR_BitVector *_signExtensionFlags;
    TR_BitVector *_assignedGlobalRegisters;
 
-   TR::list<TR::Node*> *_liveRestrictValues[16];
    TR_LiveRegisters *_liveRegisters[NumRegisterKinds];
    TR::AheadOfTimeCompile *_aheadOfTimeCompile;
    uint32_t *_globalRegisterTable;
@@ -1890,6 +1851,7 @@ class OMR_EXTENSIBLE CodeGenerator
    TR::list<TR_BackingStore*> _allSpillList;
    TR::list<TR::Relocation *> _relocationList;
    TR::list<TR::Relocation *> _aotRelocationList;
+   TR::list<TR::StaticRelocation> _staticRelocationList;
    TR::list<uint8_t*> _breakPointList;
 
    TR::list<TR::SymbolReference*> _variableSizeSymRefPendingFreeList;
@@ -1914,11 +1876,9 @@ class OMR_EXTENSIBLE CodeGenerator
 
    int32_t _lowestSavedReg;
 
-   uint32_t _vmThreadLiveCount;
    uint32_t _largestOutgoingArgSize;
 
-   uint32_t _estimatedWarmLength;
-   uint32_t _estimatedColdLength;
+   uint32_t _estimatedCodeLength;
    int32_t _estimatedSnippetStart;
    int32_t _accumulatedInstructionLengthError;
    int32_t _frameSizeInBytes;
@@ -1934,6 +1894,9 @@ class OMR_EXTENSIBLE CodeGenerator
    int32_t _outOfLineColdPathNestedDepth;
 
    TR::CodeGenPhase _codeGenPhase;
+
+   TR::Instruction *_firstInstruction;
+   TR::Instruction *_appendInstruction;
 
    TR_RegisterMask _liveRealRegisters[NumRegisterKinds];
    TR_GlobalRegisterNumber _lastGlobalGPR;

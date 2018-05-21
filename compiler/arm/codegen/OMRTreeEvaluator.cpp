@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stdint.h>
@@ -106,7 +109,7 @@ TR::Instruction *armLoadConstant(TR::Node *node, int32_t value, TR::Register *tr
 
      TR::Instruction *insertingInstructions = cursor;
      if (cursor == NULL)
-        cursor = comp->getAppendInstruction();
+        cursor = cg->getAppendInstruction();
 
      // The straddled cases are not caught yet ...
 
@@ -157,7 +160,7 @@ TR::Instruction *armLoadConstant(TR::Node *node, int32_t value, TR::Register *tr
         }
 
      if (!insertingInstructions)
-        comp->setAppendInstruction(cursor);
+        cg->setAppendInstruction(cursor);
 
      return(cursor);
    }
@@ -170,7 +173,7 @@ TR::Instruction *fixedSeqMemAccess(TR::CodeGenerator *cg, TR::Node *node, int32_
    TR::Compilation *comp = cg->comp();
 
    if (cursor == NULL)
-      cursor = comp->getAppendInstruction();
+      cursor = cg->getAppendInstruction();
 
    TR_ARMOperand2 *op2_3 = new (cg->trHeapMemory()) TR_ARMOperand2(localVal.getByte3(), 24);
    TR_ARMOperand2 *op2_2 = new (cg->trHeapMemory()) TR_ARMOperand2(localVal.getByte2(), 16);
@@ -186,7 +189,7 @@ TR::Instruction *fixedSeqMemAccess(TR::CodeGenerator *cg, TR::Node *node, int32_
    nibbles[4] = cursor = generateTrg1MemInstruction(cg, ARMOp_ldr, node, trgReg, memRef, cursor);
 
    if (cursorCopy == NULL)
-      comp->setAppendInstruction(cursor);
+      cg->setAppendInstruction(cursor);
 
    return cursor;
    }
@@ -208,7 +211,7 @@ TR::Instruction *loadAddressConstantFixed(TR::CodeGenerator *cg, TR::Node * node
    intParts localVal(value);
 
    if (cursor == NULL)
-      cursor = comp->getAppendInstruction();
+      cursor = cg->getAppendInstruction();
 
    TR_ARMOperand2 *op2_3 = new (cg->trHeapMemory()) TR_ARMOperand2(localVal.getByte3(), 24);
    TR_ARMOperand2 *op2_2 = new (cg->trHeapMemory()) TR_ARMOperand2(localVal.getByte2(), 16);
@@ -305,7 +308,7 @@ TR::Instruction *loadAddressConstantFixed(TR::CodeGenerator *cg, TR::Node * node
    cursor = generateTrg1Src2Instruction(cg, ARMOp_add, node, trgReg, trgReg, op2_0, cursor);
 
    if (temp == NULL)
-      comp->setAppendInstruction(cursor);
+      cg->setAppendInstruction(cursor);
 
    return(cursor);
    }
@@ -932,10 +935,6 @@ TR::Register *OMR::ARM::TreeEvaluator::arraycopyEvaluator(TR::Node *node, TR::Co
    FILE *outFile;
 
    bool isSimpleCopy = (node->getNumChildren() == 3);
-   if(!isSimpleCopy)
-      {
-      TR_ASSERT(0,"Only simple array copies currently implemented on arm");
-      }
 
    if (isSimpleCopy)
       {
@@ -946,14 +945,13 @@ TR::Register *OMR::ARM::TreeEvaluator::arraycopyEvaluator(TR::Node *node, TR::Co
       lengthNode = node->getChild(2);
       }
    else
-     {
-      TR_ASSERT(0,"Only simple array copies implemented for arm");
+      {
       srcObjNode = node->getChild(0);
       dstObjNode = node->getChild(1);
       srcAddrNode = node->getChild(2);
       dstAddrNode = node->getChild(3);
       lengthNode = node->getChild(4);
-     }
+      }
 
    stopUsingCopyReg1 = stopUsingCopyReg(srcObjNode, srcObjReg, cg);
    stopUsingCopyReg2 = stopUsingCopyReg(dstObjNode, dstObjReg, cg);
@@ -982,6 +980,13 @@ TR::Register *OMR::ARM::TreeEvaluator::arraycopyEvaluator(TR::Node *node, TR::Co
                                    node, (uintptr_t)arrayCopyHelper->getMethodAddress(),
                                    deps,
                                    arrayCopyHelper);
+
+#ifdef J9_PROJECT_SPECIFIC
+   if (!isSimpleCopy)
+      {
+      TR::TreeEvaluator::genWrtbarForArrayCopy(node, srcObjReg, dstObjReg, cg);
+      }
+#endif
 
    if (srcObjNode != NULL)
       cg->decReferenceCount(srcObjNode);
@@ -1373,7 +1378,7 @@ TR::Register *OMR::ARM::TreeEvaluator::BBEndEvaluator(TR::Node *node, TR::CodeGe
    if (NULL == block->getNextBlock())
       {
       // PR108736 If bl jitThrowException is the last instruction, jitGetExceptionTableFromPC fails to find the method.
-      TR::Instruction *lastInstruction = comp->getAppendInstruction();
+      TR::Instruction *lastInstruction = cg->getAppendInstruction();
       if (lastInstruction->getOpCodeValue() == ARMOp_bl
               && lastInstruction->getNode()->getSymbolReference()->getReferenceNumber() == TR_aThrow)
          {
@@ -1437,10 +1442,7 @@ TR::Register *OMR::ARM::TreeEvaluator::conversionAnalyser(TR::Node          *nod
       {
       targetRegister = cg->allocateRegister();
       sourceRegister = child->getOpCode().isLong() ? cg->evaluate(child)->getLowOrder() : cg->evaluate(child);
-      if(needSignExtend)
-         signExtend(node, targetRegister, sourceRegister, dstBits, cg);
-      else
-         zeroExtend(node, targetRegister, sourceRegister, dstBits, cg);
+      generateSignOrZeroExtend(node, targetRegister, sourceRegister, needSignExtend, dstBits, cg);
       }
    node->setRegister(targetRegister);
    child->decReferenceCount();
@@ -1449,22 +1451,48 @@ TR::Register *OMR::ARM::TreeEvaluator::conversionAnalyser(TR::Node          *nod
    }
 
 
-static void signExtend(TR::Node *node, TR::Register *dst, TR::Register *src, int32_t bitsInDst, TR::CodeGenerator *cg)
+static void generateSignOrZeroExtend(TR::Node *node, TR::Register *dst, TR::Register *src, bool needSignExtend, int32_t bitsInDst, TR::CodeGenerator *cg)
    {
-   TR_ARMOperand2 *op;
+   TR_ARMOpCodes opcode = ARMOp_bad;
 
-   op = new (cg->trHeapMemory()) TR_ARMOperand2(ARMOp2RegLSLImmed, src, 32 - bitsInDst);
-   generateTrg1Src1Instruction(cg, ARMOp_mov, node, dst, op);
-   op = new (cg->trHeapMemory()) TR_ARMOperand2(ARMOp2RegASRImmed, dst, 32 - bitsInDst);
-   generateTrg1Src1Instruction(cg, ARMOp_mov, node, dst, op);
-   }
+   if (TR::Compiler->target.cpu.id() >= TR_ARMv6)
+      {
+      // sxtb/sxth/uxtb/uxth instructions are unavailable in ARMv5 and older
+      if (needSignExtend)
+         {
+         if (bitsInDst == 8) // byte
+            {
+            opcode = ARMOp_sxtb;
+            }
+         else if (bitsInDst == 16) // short
+            {
+            opcode = ARMOp_sxth;
+            }
+         }
+      else
+         {
+         if (bitsInDst == 8) // byte
+            {
+            opcode = ARMOp_uxtb;
+            }
+         else if (bitsInDst == 16) // short
+            {
+            opcode = ARMOp_uxth;
+            }
+         }
+      }
 
-static void zeroExtend(TR::Node *node, TR::Register *dst, TR::Register *src, int32_t bitsInDst, TR::CodeGenerator *cg)
-   {
-   TR_ARMOperand2 *op;
+   if (opcode != ARMOp_bad)
+      {
+      generateTrg1Src1Instruction(cg, opcode, node, dst, src);
+      }
+   else
+      {
+      TR_ARMOperand2 *op;
 
-   op = new (cg->trHeapMemory()) TR_ARMOperand2(ARMOp2RegLSLImmed, src, 32 - bitsInDst);
-   generateTrg1Src1Instruction(cg, ARMOp_mov, node, dst, op);
-   op = new (cg->trHeapMemory()) TR_ARMOperand2(ARMOp2RegLSRImmed, dst, 32 - bitsInDst);
-   generateTrg1Src1Instruction(cg, ARMOp_mov, node, dst, op);
+      op = new (cg->trHeapMemory()) TR_ARMOperand2(ARMOp2RegLSLImmed, src, 32 - bitsInDst);
+      generateTrg1Src1Instruction(cg, ARMOp_mov, node, dst, op);
+      op = new (cg->trHeapMemory()) TR_ARMOperand2((needSignExtend ? ARMOp2RegASRImmed : ARMOp2RegLSRImmed), dst, 32 - bitsInDst);
+      generateTrg1Src1Instruction(cg, ARMOp_mov, node, dst, op);
+      }
    }

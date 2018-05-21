@@ -1,21 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2016, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2016, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
-
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OMR_METHODBUILDER_INCL
 #define OMR_METHODBUILDER_INCL
@@ -27,19 +29,24 @@
 #endif
 
 
+#include <map>
+#include <set>
 #include <fstream>
 #include "ilgen/IlBuilder.hpp"
+#include "env/TypedAllocator.hpp"
 
 // Maximum length of _definingLine string (including null terminator)
 #define MAX_LINE_NUM_LEN 7
 
-class TR_HashTabInt;
-class TR_HashTabString;
 class TR_BitVector;
 namespace TR { class BytecodeBuilder; }
 namespace TR { class ResolvedMethod; }
 namespace TR { class SymbolReference; }
 namespace OMR { class VirtualMachineState; }
+
+namespace TR { class SegmentProvider; }
+namespace TR { class Region; }
+class TR_Memory;
 
 namespace OMR
 {
@@ -50,7 +57,8 @@ class MethodBuilder : public TR::IlBuilder
    TR_ALLOC(TR_Memory::IlGenerator)
 
    MethodBuilder(TR::TypeDictionary *types, OMR::VirtualMachineState *vmState = NULL);
-   virtual ~MethodBuilder() { }
+   MethodBuilder(const MethodBuilder &src);
+   virtual ~MethodBuilder();
 
    virtual void setupForBuildIL();
 
@@ -167,34 +175,59 @@ class MethodBuilder : public TR::IlBuilder
    int32_t GetNextBytecodeFromWorklist();
    
    protected:
-   void initMaps();
    virtual uint32_t countBlocks();
    virtual bool connectTrees();
 
    private:
+   TR::SegmentProvider *_segmentProvider;
+   TR::Region *_memoryRegion;
+   TR_Memory *_trMemory;
 
    // These values are typically defined outside of a compilation
    const char                * _methodName;
    TR::IlType                * _returnType;
    int32_t                     _numParameters;
-   TR_HashTabString          * _parameterSlot;
-   TR_HashTabString          * _symbolTypes;
-   TR_HashTabInt             * _symbolNameFromSlot;
-   TR_HashTabString          * _symbolIsArray;
-   TR_HashTabString          * _memoryLocations;
-   TR_HashTabString          * _functions;
 
-   TR::IlType               ** _cachedParameterTypes;
-   char                      * _cachedSignature;
+   typedef bool (*StrComparator)(const char *, const char*);
+
+   typedef TR::typed_allocator<std::pair<const char * const, TR::SymbolReference *>, TR::Region &> SymbolMapAllocator;
+   typedef std::map<const char *, TR::SymbolReference *, StrComparator, SymbolMapAllocator> SymbolMap;
+
+   // This map should only be accessed inside a compilation via lookupSymbol
+   SymbolMap                   _symbols;
+
+   typedef TR::typed_allocator<std::pair<const char * const, int32_t>, TR::Region &> ParameterMapAllocator;
+   typedef std::map<const char *, int32_t, StrComparator, ParameterMapAllocator> ParameterMap;
+   ParameterMap                _parameterSlot;
+
+   typedef TR::typed_allocator<std::pair<const char * const, TR::IlType *>, TR::Region &> SymbolTypeMapAllocator;
+   typedef std::map<const char *, TR::IlType *, StrComparator, SymbolTypeMapAllocator> SymbolTypeMap;
+   SymbolTypeMap               _symbolTypes;
+
+   typedef TR::typed_allocator<std::pair<int32_t const, const char *>, TR::Region &> SlotToSymNameMapAllocator;
+   typedef std::map<int32_t, const char *, std::less<int32_t>, SlotToSymNameMapAllocator> SlotToSymNameMap;
+   SlotToSymNameMap            _symbolNameFromSlot;
+   
+   typedef TR::typed_allocator<const char *, TR::Region &> StringSetAllocator;
+   typedef std::set<const char *, StrComparator, StringSetAllocator> ArrayIdentifierSet;
+
+   // This set acts as an identifier for symbols which correspond to arrays
+   ArrayIdentifierSet          _symbolIsArray;
+
+   typedef TR::typed_allocator<std::pair<const char * const, void *>, TR::Region &> MemoryLocationMapAllocator;
+   typedef std::map<const char *, void *, StrComparator, MemoryLocationMapAllocator> MemoryLocationMap;
+   MemoryLocationMap           _memoryLocations;
+
+   typedef TR::typed_allocator<std::pair<const char * const, TR::ResolvedMethod *>, TR::Region &> FunctionMapAllocator;
+   typedef std::map<const char *, TR::ResolvedMethod *, StrComparator, FunctionMapAllocator> FunctionMap;
+   FunctionMap                 _functions;
+
+   TR::IlType                ** _cachedParameterTypes;
    const char                * _definingFile;
    char                        _definingLine[MAX_LINE_NUM_LEN];
    TR::IlType                * _cachedParameterTypesArray[10];
-   char                        _cachedSignatureArray[100];
 
-   // This map should only be accessed inside a compilation via lookupSymbol
-   TR_HashTabString          * _symbols;
    bool                        _newSymbolsAreTemps;
-
    int32_t                     _nextValueID;
 
    bool                        _useBytecodeBuilders;
@@ -206,8 +239,6 @@ class MethodBuilder : public TR::IlBuilder
 
    TR_BitVector              * _bytecodeWorklist;
    TR_BitVector              * _bytecodeHasBeenInWorklist;
-
-   std::fstream              * _rpCpp;
    };
 
 } // namespace OMR

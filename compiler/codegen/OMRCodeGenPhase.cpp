@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 //On zOS XLC linker can't handle files with same name at link time
@@ -68,6 +71,7 @@
 #include "optimizer/StructuralAnalysis.hpp"
 #include "ras/Debug.hpp"                              // for TR_DebugBase, etc
 #include "runtime/Runtime.hpp"                        // for setDllSlip
+#include "env/RegionProfiler.hpp"
 
 #include <map>
 #include <utility>
@@ -124,6 +128,8 @@ OMR::CodeGenPhase::performAll()
    for(; i < TR::CodeGenPhase::getListSize(); i++)
       {
       PhaseValue phaseToDo = PhaseList[i];
+      TR::RegionProfiler rp(_cg->comp()->trMemory()->heapMemoryRegion(), *_cg->comp(), "codegen/%s/%s",
+         _cg->comp()->getHotnessName(_cg->comp()->getMethodHotness()), self()->getName(phaseToDo));
       _phaseToFunctionTable[phaseToDo](_cg, self());
       }
    }
@@ -186,7 +192,7 @@ OMR::CodeGenPhase::performProcessRelocationsPhase(TR::CodeGenerator * cg, TR::Co
 
      if (debug("dumpCodeSizes"))
         {
-        diagnostic("%08d   %s\n", cg->getWarmCodeLength()+ cg->getColdCodeLength(), comp->signature());
+        diagnostic("%08d   %s\n", cg->getCodeLength(), comp->signature());
         }
 
      if (comp->getCurrentMethod() == NULL)
@@ -194,12 +200,11 @@ OMR::CodeGenPhase::performProcessRelocationsPhase(TR::CodeGenerator * cg, TR::Co
         comp->getMethodSymbol()->setMethodAddress(cg->getBinaryBufferStart());
         }
 
-     TR_ASSERT(cg->getWarmCodeLength() <= cg->getEstimatedWarmLength() && cg->getColdCodeLength() <= cg->getEstimatedColdLength(),
+     TR_ASSERT(cg->getCodeLength() <= cg->getEstimatedCodeLength(),
                "Method length estimate must be conservatively large\n"
-               "    warmCodeLength = %d, estimatedWarmLength = %d \n"
-               "    coldCodeLength = %d, estimatedColdLength = %d",
-               cg->getWarmCodeLength(), cg->getEstimatedWarmLength(),
-               cg->getColdCodeLength(),cg->getEstimatedColdLength());
+               "    codeLength = %d, estimatedCodeLength = %d \n",
+               cg->getCodeLength(), cg->getEstimatedCodeLength()
+               );
 
      // also trace the interal stack atlas
      cg->getStackAtlas()->close(cg);
@@ -209,15 +214,11 @@ OMR::CodeGenPhase::performProcessRelocationsPhase(TR::CodeGenerator * cg, TR::Co
         {
         if (TR::Compiler->target.is64Bit())
         {
-        setDllSlip((char*)cg->getCodeStart(),(char*)cg->getCodeStart()+cg->getWarmCodeLength(),"SLIPDLL64", comp);
-        if (cg->getColdCodeStart())
-           setDllSlip((char*)cg->getColdCodeStart(),(char*)cg->getColdCodeStart()+cg->getColdCodeLength(),"SLIPDLL64", comp);
+        setDllSlip((char*)cg->getCodeStart(),(char*)cg->getCodeStart()+cg->getCodeLength(),"SLIPDLL64", comp);
         }
      else
         {
-        setDllSlip((char*)cg->getCodeStart(),(char*)cg->getCodeStart()+cg->getWarmCodeLength(),"SLIPDLL31", comp);
-        if (cg->getColdCodeStart())
-           setDllSlip((char*)cg->getColdCodeStart(),(char*)cg->getColdCodeStart()+cg->getColdCodeLength(),"SLIPDLL31", comp);
+        setDllSlip((char*)cg->getCodeStart(),(char*)cg->getCodeStart()+cg->getCodeLength(),"SLIPDLL31", comp);
         }
      }
 
@@ -243,9 +244,7 @@ OMR::CodeGenPhase::performEmitSnippetsPhase(TR::CodeGenerator * cg, TR::CodeGenP
 
    if (comp->getOption(TR_TraceCG) || comp->getOptions()->getTraceCGOption(TR_TraceCGPostBinaryEncoding))
       {
-      diagnostic("\nbuffer start = %8x, code start = %8x, buffer length = %d", cg->getBinaryBufferStart(), cg->getCodeStart(), cg->getEstimatedWarmLength());
-      if (cg->getEstimatedColdLength())
-         diagnostic(" + %d", cg->getEstimatedColdLength());
+      diagnostic("\nbuffer start = %8x, code start = %8x, buffer length = %d", cg->getBinaryBufferStart(), cg->getCodeStart(), cg->getEstimatedCodeLength());
       diagnostic("\n");
       const char * title = "Post Binary Instructions";
 
@@ -253,7 +252,7 @@ OMR::CodeGenPhase::performEmitSnippetsPhase(TR::CodeGenerator * cg, TR::CodeGenP
 
       traceMsg(comp,"<snippets>");
       comp->getDebug()->print(comp->getOutFile(), cg->getSnippetList());
-      traceMsg(comp,"</snippets>\n");
+      traceMsg(comp,"\n</snippets>\n");
 
       auto iterator = cg->getSnippetList().begin();
       int32_t estimatedSnippetStart = cg->getEstimatedSnippetStart();
@@ -267,8 +266,8 @@ OMR::CodeGenPhase::performEmitSnippetsPhase(TR::CodeGenerator * cg, TR::CodeGenP
       diagnostic("\nAmount of code memory allocated for this function        = %d"
                   "\nAmount of code memory consumed for this function         = %d"
                   "\nAmount of snippet code memory consumed for this function = %d\n\n",
-                  cg->getEstimatedMethodLength(),
-                  cg->getWarmCodeLength() + cg->getColdCodeLength(),
+                  cg->getEstimatedCodeLength(),
+                  cg->getCodeLength(),
                   snippetLength);
       }
    }
@@ -287,8 +286,6 @@ OMR::CodeGenPhase::performBinaryEncodingPhase(TR::CodeGenerator * cg, TR::CodeGe
    LexicalTimer pt(phase->getName(), comp->phaseTimer());
 
    cg->doBinaryEncoding();
-
-   comp->printMemStatsAfter("binary encoding");
 
    if (debug("verifyFinalNodeReferenceCounts"))
       {
@@ -362,7 +359,6 @@ OMR::CodeGenPhase::performRegisterAssigningPhase(TR::CodeGenerator * cg, TR::Cod
          if(cg->getDebug()) cg->getDebug()->dumpMethodInstrs(comp->getOutFile(),"Before Local RA",false);
 
       cg->doRegisterAssignment(nonColourableKindsToAssign);
-      comp->printMemStatsAfter("localRA");
 
       if (comp->compilationShouldBeInterrupted(AFTER_REGISTER_ASSIGNMENT_CONTEXT))
          {
@@ -435,7 +431,7 @@ OMR::CodeGenPhase::performSetupForInstructionSelectionPhase(TR::CodeGenerator * 
 
       auto mapAllocator = getTypedAllocator<std::pair<TR::TreeTop*, TR::TreeTop*> >(comp->allocator());
 
-      std::map<TR::TreeTop*, TR::TreeTop*, std::less<TR::TreeTop*>, TR::typed_allocator<std::pair<TR::TreeTop*, TR::TreeTop*>, TR::Allocator> >
+      std::map<TR::TreeTop*, TR::TreeTop*, std::less<TR::TreeTop*>, TR::typed_allocator<std::pair<TR::TreeTop* const, TR::TreeTop*>, TR::Allocator> >
          currentTreeTopToappendTreeTop(std::less<TR::TreeTop*> (), mapAllocator);
 
       TR_BitVector *unAnchorableAloadiNodes = comp->getBitVectorPool().get();
@@ -496,22 +492,38 @@ OMR::CodeGenPhase::performSetupForInstructionSelectionPhase(TR::CodeGenerator * 
                   }
                }
             }
-         else if (node->getOpCodeValue() == TR::aloadi &&
-                  !unAnchorableAloadiNodes->isSet(node->getGlobalIndex()))
+         else
             {
-            TR::TreeTop* anchorTreeTop = TR::TreeTop::create(comp, TR::Node::create(TR::treetop, 1, node));
-            TR::TreeTop* appendTreeTop = iter.currentTree();
+            bool shouldAnchorNode = false;
 
-            if (currentTreeTopToappendTreeTop.count(appendTreeTop) > 0)
+            if (node->getOpCodeValue() == TR::aloadi &&
+                !unAnchorableAloadiNodes->isSet(node->getGlobalIndex()))
                {
-               appendTreeTop = currentTreeTopToappendTreeTop[appendTreeTop];
+               shouldAnchorNode = true;
+               }
+            else if (node->getOpCodeValue() == TR::aload &&
+                     node->getSymbol()->isStatic() &&
+                     node->getSymbol()->isCollectedReference())
+               {
+               shouldAnchorNode = true;
                }
 
-            // Anchor the aloadi before the current treetop
-            appendTreeTop->insertBefore(anchorTreeTop);
-            currentTreeTopToappendTreeTop[iter.currentTree()] = anchorTreeTop;
+            if (shouldAnchorNode)
+               {
+               TR::TreeTop* anchorTreeTop = TR::TreeTop::create(comp, TR::Node::create(TR::treetop, 1, node));
+               TR::TreeTop* appendTreeTop = iter.currentTree();
 
-            traceMsg(comp, "GuardedStorage: Anchored  %p to treetop = %p\n", node, anchorTreeTop);
+               if (currentTreeTopToappendTreeTop.count(appendTreeTop) > 0)
+                  {
+                  appendTreeTop = currentTreeTopToappendTreeTop[appendTreeTop];
+                  }
+
+               // Anchor the aload/aloadi before the current treetop
+               appendTreeTop->insertBefore(anchorTreeTop);
+               currentTreeTopToappendTreeTop[iter.currentTree()] = anchorTreeTop;
+
+               traceMsg(comp, "GuardedStorage: Anchored  %p to treetop = %p\n", node, anchorTreeTop);
+               }
             }
          }
 
@@ -562,10 +574,7 @@ OMR::CodeGenPhase::performLowerTreesPhase(TR::CodeGenerator * cg, TR::CodeGenPha
    cg->lowerTrees();
 
    if (comp->getOption(TR_TraceCG))
-      {
       comp->dumpMethodTrees("Post Lower Trees");
-      comp->printMemStatsAfter("lowerTrees");
-      }
    }
 
 

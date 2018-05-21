@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "AllocateDescription.hpp"
@@ -23,6 +27,7 @@
 #include "EnvironmentBase.hpp"
 #include "GCExtensionsBase.hpp"
 #include "CollectionStatistics.hpp"
+#include "ConcurrentPhaseStatsBase.hpp"
 #include "ObjectAllocationInterface.hpp"
 #include "VerboseHandlerOutput.hpp"
 #include "VerboseManager.hpp"
@@ -38,7 +43,7 @@ MM_VerboseHandlerOutput::newInstance(MM_EnvironmentBase *env, MM_VerboseManager 
 {
 	MM_GCExtensionsBase* extensions = MM_GCExtensionsBase::getExtensions(env->getOmrVM());
 
-	MM_VerboseHandlerOutput *verboseHandlerOutput = (MM_VerboseHandlerOutput*)extensions->getForge()->allocate(sizeof(MM_VerboseHandlerOutput), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	MM_VerboseHandlerOutput *verboseHandlerOutput = (MM_VerboseHandlerOutput*)extensions->getForge()->allocate(sizeof(MM_VerboseHandlerOutput), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (NULL != verboseHandlerOutput) {
 		new(verboseHandlerOutput) MM_VerboseHandlerOutput(extensions);
 		if(!verboseHandlerOutput->initialize(env, manager)) {
@@ -808,6 +813,47 @@ MM_VerboseHandlerOutput::handleGCEnd(J9HookInterface** hook, uintptr_t eventNum,
 	writer->formatAndOutput(env, 0, "<gc-end %s activeThreads=\"%zu\">", tagTemplate, activeThreads);
 	outputMemoryInfo(env, _manager->getIndentLevel() + 1, stats);
 	writer->formatAndOutput(env, 0, "</gc-end>");
+	exitAtomicReportingBlock();
+}
+
+void
+MM_VerboseHandlerOutput::handleConcurrentStart(J9HookInterface** hook, UDATA eventNum, void* eventData)
+{
+	MM_ConcurrentPhaseStartEvent *event = (MM_ConcurrentPhaseStartEvent *)eventData;
+	MM_ConcurrentPhaseStatsBase *stats = (MM_ConcurrentPhaseStatsBase *)event->concurrentStats;
+	MM_VerboseWriterChain* writer = _manager->getWriterChain();
+	MM_EnvironmentBase *env = MM_EnvironmentBase::getEnvironment(event->currentThread);
+	OMRPORT_ACCESS_FROM_ENVIRONMENT(env);
+	UDATA contextId = stats->_cycleID;
+	char tagTemplate[200];
+	getTagTemplate(tagTemplate, sizeof(tagTemplate), _manager->getIdAndIncrement(), getConcurrentTypeString(), contextId, omrtime_current_time_millis());
+
+	enterAtomicReportingBlock();
+	writer->formatAndOutput(env, 0, "<concurrent-start %s>", tagTemplate);
+	handleConcurrentStartInternal(hook, eventNum, eventData);
+	writer->formatAndOutput(env, 0, "</concurrent-start>");
+	writer->flush(env);
+	exitAtomicReportingBlock();
+}
+
+void
+MM_VerboseHandlerOutput::handleConcurrentEnd(J9HookInterface** hook, UDATA eventNum, void* eventData)
+{
+	MM_ConcurrentPhaseEndEvent *event = (MM_ConcurrentPhaseEndEvent *)eventData;
+	MM_ConcurrentPhaseStatsBase *stats = (MM_ConcurrentPhaseStatsBase *)event->concurrentStats;
+	MM_VerboseWriterChain* writer = _manager->getWriterChain();
+	MM_EnvironmentBase *env = MM_EnvironmentBase::getEnvironment(event->currentThread);
+	OMRPORT_ACCESS_FROM_ENVIRONMENT(env);
+	UDATA contextId = stats->_cycleID;
+	char tagTemplate[200];
+	getTagTemplate(tagTemplate, sizeof(tagTemplate), _manager->getIdAndIncrement(), getConcurrentTypeString(), contextId, omrtime_current_time_millis());
+
+	enterAtomicReportingBlock();
+	writer->formatAndOutput(env, 0, "<concurrent-end %s>", tagTemplate);
+	handleConcurrentEndInternal(hook, eventNum, eventData);
+	handleConcurrentGCOpEnd(hook, eventNum, eventData);
+	writer->formatAndOutput(env, 0, "</concurrent-end>");
+	writer->flush(env);
 	exitAtomicReportingBlock();
 }
 

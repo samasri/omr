@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2001, 2015 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2001, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_TEST_FRAMEWORK_H_
@@ -46,11 +49,97 @@ static int iconv_init_static_variable = iconv_initialization();
 #include "gtest/gtest.h"
 #endif
 
+using namespace testing;
+
+class OMREventListener: public TestEventListener {
+
+protected:
+	TestEventListener* _eventListener;
+
+public:
+	bool _showTestCases;
+	bool _showTests;
+	bool _showSuccess;
+	bool _showFailures;
+
+	OMREventListener(TestEventListener* theEventListener) :
+			_eventListener(theEventListener),
+			_showTestCases(true),
+			_showTests(true),
+			_showSuccess(true),
+			_showFailures(true)
+	{
+	}
+
+	virtual ~OMREventListener() {
+		delete _eventListener;
+	}
+	virtual void OnTestProgramStart(const UnitTest& unit_test) {
+		_eventListener->OnTestProgramStart(unit_test);
+	}
+	virtual void OnTestIterationStart(const UnitTest& unit_test, int iteration) {
+		_eventListener->OnTestIterationStart(unit_test, iteration);
+	}
+	virtual void OnEnvironmentsSetUpStart(const UnitTest& unit_test) {}
+	virtual void OnEnvironmentsSetUpEnd(const UnitTest& unit_test) {}
+
+	virtual void OnTestCaseStart(const TestCase& test_case) {
+		if (_showTestCases) {
+			_eventListener->OnTestCaseStart(test_case);
+		}
+	}
+	virtual void OnTestStart(const TestInfo& test_info) {
+		if (_showTests) {
+			_eventListener->OnTestStart(test_info);
+		}
+	}
+	virtual void OnTestPartResult(const TestPartResult& result) {
+		_eventListener->OnTestPartResult(result);
+	}
+	virtual void OnTestEnd(const TestInfo& test_info) {
+		if (test_info.result()->Failed()) {
+			if (_showFailures) {
+				_eventListener->OnTestEnd(test_info);
+			}
+		} else {
+			if (_showSuccess) {
+				_eventListener->OnTestEnd(test_info);
+			}
+		}
+	}
+	virtual void OnTestCaseEnd(const TestCase& test_case) {
+		if (_showTestCases) {
+			_eventListener->OnTestCaseEnd(test_case);
+		}
+	}
+	virtual void OnEnvironmentsTearDownStart(const UnitTest& unit_test) {}
+	virtual void OnEnvironmentsTearDownEnd(const UnitTest& unit_test) {}
+	virtual void OnTestIterationEnd(const UnitTest& unit_test, int iteration) {
+		_eventListener->OnTestIterationEnd(unit_test, iteration);
+	}
+	virtual void OnTestProgramEnd(const UnitTest& unit_test) {
+		_eventListener->OnTestProgramEnd(unit_test);
+	}
+
+	static void setDefaultTestListener(bool showTestCases = true, bool showTests = false, bool showSuccess = false, bool showFailures = true) {
+            if (!getenv("OMR_VERBOSE_TEST")) {
+		TestEventListeners& listeners = testing::UnitTest::GetInstance()->listeners();
+		TestEventListener* default_printer = listeners.Release(listeners.default_result_printer());
+		OMREventListener *listener = new OMREventListener(default_printer);
+		listener->_showTestCases = showTestCases;
+		listener->_showTests = showTests;
+		listener->_showSuccess = showSuccess;
+		listener->_showFailures = showFailures;
+		listeners.Append(listener);
+            }
+	}
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int testMain(int argc, char **argv, char **envp);
+int omr_main_entry(int argc, char **argv, char **envp);
 
 #ifdef __cplusplus
 } /* extern "C" */

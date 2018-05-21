@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- *    James Johnston (IBM Corp.)   - initial z/TPF Port Updates
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #if !defined(ATOMIC_SUPPORT_HPP_)
@@ -176,6 +179,28 @@ public:
 	}
 
 	/**
+	 * Prevents compiler reordering of reads and writes across the barrier.
+	 * This does not prevent processor reordering.
+	 */
+	VMINLINE static void
+	compilerReorderingBarrier()
+	{
+#if !defined(ATOMIC_SUPPORT_STUB)
+#if defined(__GNUC__)
+		asm volatile("":::"memory");
+#elif defined(_MSC_VER) /* __GNUC__ */
+		_ReadWriteBarrier();
+#elif defined(J9ZOS390) /* _MSC_VER */
+		__fence();
+#elif defined(__xlC__) /* J9ZOS390 */
+		asm volatile("");
+#else /* __xlC__ */
+#error Unknown compiler
+#endif /* __xlC__ */
+#endif /* !defined(ATOMIC_SUPPORT_STUB) */
+	}
+
+	/**
 	 * Creates a memory barrier.
 	 * On a given processor, any load or store instructions ahead
 	 * of the sync instruction in the program sequence must complete their accesses to memory
@@ -189,6 +214,12 @@ public:
 		__sync();
 #elif defined(_MSC_VER)
 		_ReadWriteBarrier();
+#if defined(J9HAMMER)
+		__faststorefence();
+#else /* J9HAMMER */
+		__asm { lock or dword ptr [esp],0 }
+#endif /* J9HAMMER */
+		_ReadWriteBarrier();
 #elif defined(__GNUC__)
 #if defined(J9X86)
 		asm volatile("lock orl $0x0,(%%esp)" ::: "memory");
@@ -196,13 +227,16 @@ public:
 		asm volatile("lock orq $0x0,(%%rsp)" ::: "memory");
 #elif defined(ARM) /* defined(J9HAMMER) */
 		__sync_synchronize();
-#elif defined(S390) /* defined(ARM) */
+#elif defined(AARCH64) /* defined(ARM) */
+		__asm __volatile ("dmb ish":::"memory");
+#elif defined(S390) /* defined(AARCH64) */
 		asm volatile("bcr 15,0":::"memory");
 #else /* defined(S390) */
 		asm volatile("":::"memory");
 #endif /* defined(J9X86) || defined(J9HAMMER) */
 #elif defined(J9ZOS390)
 		/* Replace this with an inline "bcr 15,0" whenever possible */
+		__fence();
 		J9ZOSRWB();
 		__fence();
 #endif /* defined(AIXPPC) || defined(LINUXPPC) */
@@ -223,7 +257,7 @@ public:
 #if defined(AIXPPC) || defined(LINUXPPC)
 		__lwsync();
 #elif defined(_MSC_VER)
-		_WriteBarrier();
+		_ReadWriteBarrier();
 #elif defined(__GNUC__)
 #if defined(J9X86) || defined(J9HAMMER)
 		asm volatile("":::"memory");
@@ -232,7 +266,9 @@ public:
 		*/
 #elif defined(ARM) /* defined(J9X86) || defined(J9HAMMER) */
 		__sync_synchronize();
-#else /* defined(ARM) */
+#elif defined(AARCH64) /* defined(ARM) */
+		__asm __volatile ("dmb ishst":::"memory");
+#else /* defined(AARCH64) */
 		asm volatile("":::"memory");
 #endif /* defined(J9X86) || defined(J9HAMMER) */
 #elif defined(J9ZOS390)
@@ -255,7 +291,13 @@ public:
 #if defined(AIXPPC) || defined(LINUXPPC)
 		__isync();
 #elif defined(_MSC_VER)
-		_ReadBarrier();
+		_ReadWriteBarrier();
+#if defined(J9HAMMER)
+		__faststorefence();
+#else /* J9HAMMER */
+		__asm { lock or dword ptr [esp],0 }
+#endif /* J9HAMMER */
+		_ReadWriteBarrier();
 #elif defined(__GNUC__)
 #if defined(J9X86)
 		asm volatile("lock orl $0x0,(%%esp)" ::: "memory");
@@ -269,7 +311,9 @@ public:
 		*/
 #elif defined(ARM) /* defined(J9HAMMER) */
 		__sync_synchronize();
-#else /* defined(ARM) */
+#elif defined(AARCH64) /* defined(ARM) */
+		__asm __volatile ("dmb ishld":::"memory");
+#else /* defined(AARCH64) */
 		asm volatile("":::"memory");
 #endif /* defined(J9X86) || defined(J9HAMMER) */
 #elif defined(J9ZOS390)
@@ -607,7 +651,7 @@ public:
 	}
 
 	/**
-	 * Subtracts a number from the value at a specific memory location asn an atomic operation.
+	 * Subtracts a number from the value at a specific memory location as an atomic operation.
 	 * Subtracts the value <b>value</b> from the value stored at memory location pointed
 	 * to by <b>address</b>.
 	 *

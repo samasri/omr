@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/CopyPropagation.hpp"
@@ -47,7 +50,7 @@
 #include "infra/Assert.hpp"                    // for TR_ASSERT
 #include "infra/Cfg.hpp"                       // for CFG
 #include "infra/List.hpp"                      // for ListIterator, List, etc
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
 #include "optimizer/Optimization.hpp"          // for Optimization
 #include "optimizer/Optimizations.hpp"
 #include "optimizer/Optimization_inlines.hpp"
@@ -63,7 +66,9 @@
 void collectNodesForIsCorrectChecks(TR::Node * n, TR::list< TR::Node *> & checkNodes, TR::SparseBitVector & refsToCheckIfKilled, vcount_t vc);
 
 TR_CopyPropagation::TR_CopyPropagation(TR::OptimizationManager *manager)
-   : TR::Optimization(manager)
+   : TR::Optimization(manager),
+   _storeTreeTops((StoreTreeMapComparator()), StoreTreeMapAllocator(comp()->trMemory()->currentStackRegion())),
+   _useTreeTops((UseTreeMapComparator()), UseTreeMapAllocator(comp()->trMemory()->currentStackRegion()))
    {}
 
 template <class T>
@@ -439,6 +444,9 @@ int32_t TR_CopyPropagation::perform()
          }
       }
 
+   // Pre-compute and cache usedef information for compile time performance
+   useDefInfo->buildDefUseInfo();
+
    // Required beyond the scope of the stack memory region
    bool donePropagation = false;
 
@@ -447,302 +455,321 @@ int32_t TR_CopyPropagation::perform()
 
    _cleanupTemps = false;
 
-   _numStoreTreeTops = 0;
    TR::TreeTop *currentTree = comp()->getStartTree();
    while (currentTree)
       {
       TR::Node *currentNode = skipTreeTopAndGetNode(currentTree);
       if (currentNode->getOpCode().isLikeDef())
-         _numStoreTreeTops++;
+         _storeTreeTops[currentNode] = currentTree;
       currentTree = currentTree->getNextTreeTop();
       }
 
-   _storeTreeTopsAsArray = (TR::TreeTop**)trMemory()->allocateStackMemory(_numStoreTreeTops*sizeof(TR::TreeTop*));
-
-   memset(_storeTreeTopsAsArray, 0, _numStoreTreeTops*sizeof(TR::TreeTop*));
-
-   int32_t i = 0, j;
-   currentTree = comp()->getStartTree();
-   while (currentTree)
-      {
-      TR::Node *currentNode = skipTreeTopAndGetNode(currentTree);
-      if (currentNode->getOpCode().isLikeDef())
-         _storeTreeTopsAsArray[i++] = currentTree;
-      currentTree = currentTree->getNextTreeTop();
-      }
-
-
-   _counter = 0;
    int32_t numDefsOnEntry    = useDefInfo->getNumDefsOnEntry();
    int32_t firstRealDefIndex = useDefInfo->getFirstDefIndex() + numDefsOnEntry;
    int32_t lastDefIndex      = useDefInfo->getLastDefIndex();
    int32_t numDefNodes       = lastDefIndex - firstRealDefIndex + 1;
 
-   int32_t *usesToBeFixed = (int32_t *) trMemory()->allocateStackMemory(useDefInfo->getTotalNodes()*sizeof(int32_t));
-   memset(usesToBeFixed, 0xFF, useDefInfo->getTotalNodes()*sizeof(int32_t));
+   typedef TR::typed_allocator<std::pair<int32_t const, int32_t>, TR::Region&> UDMapAllocator;
+   typedef std::less<int32_t> UDMapComparator;
+   typedef std::map<int32_t, int32_t, UDMapComparator, UDMapAllocator> UsesToBeFixedMap;
+   typedef std::map<int32_t, int32_t, UDMapComparator, UDMapAllocator> EquivalentDefMap;
 
-   int32_t *equivalentDefs = (int32_t*)trMemory()->allocateStackMemory(numDefNodes*sizeof(int32_t));
+   UsesToBeFixedMap usesToBeFixed((UDMapComparator()), UDMapAllocator(trMemory()->currentStackRegion()));
+   EquivalentDefMap equivalentDefs((UDMapComparator()), UDMapAllocator(trMemory()->currentStackRegion()));
+
+   typedef TR::typed_allocator<std::pair<TR::Node* const, TR::deque<TR::Node*, TR::Region&>*>, TR::Region&> StoreNodeMapAllocator;
+   typedef std::less<TR::Node*> StoreNodeMapComparator;
+   typedef std::map<TR::Node*, TR::deque<TR::Node*, TR::Region&>*, StoreNodeMapComparator, StoreNodeMapAllocator> StoreNodeMap;
+
+   StoreNodeMap storeMap((StoreNodeMapComparator()), StoreNodeMapAllocator(trMemory()->currentStackRegion()));
+
+   TR::NodeChecklist checklist(comp());
 
    _lookForOriginalDefs = false;
-   for (i = firstRealDefIndex; i <= lastDefIndex; i++)
+   for (TR::TreeTop *tree = comp()->getStartTree(); tree; tree = tree->getNextTreeTop())
       {
-      TR::Node *defNode = useDefInfo->getNode(i);
+      TR::Node *defNode = tree->getNode();
+      if (defNode->getOpCodeValue() == TR::BBStart && !defNode->getBlock()->isExtensionOfPreviousBlock())
+         {
+         storeMap.clear();
+         continue;
+         }
 
-      // If there is no usedef info for this def node, it must have been removed
-      // by a previous optimization
-      //
-      if (defNode == NULL)
+      collectUseTrees(tree, tree->getNode(), checklist);
+
+      if (!(defNode->getOpCode().isStoreDirect()
+            && defNode->getSymbolReference()->getSymbol()->isAutoOrParm()
+            && !defNode->storedValueIsIrrelevant()))
          continue;
 
-      equivalentDefs[i-firstRealDefIndex] = i;
-      if (defNode->getOpCode().isStoreDirect() && defNode->getSymbolReference()->getSymbol()->isAutoOrParm())
+      TR::Node *rhsOfStoreDefNode = defNode->getChild(0);
+      int32_t i = defNode->getUseDefIndex();
+      if (i == 0)
+         continue;
+
+      auto storeLookup = storeMap.find(rhsOfStoreDefNode);
+      if (storeLookup != storeMap.end())
          {
-         TR::Node *rhsOfStoreDefNode = defNode->getChild(0);
-
-         for (j = firstRealDefIndex; j < i; j++)
+         for (auto itr = storeLookup->second->begin(), end = storeLookup->second->end(); itr != end; ++itr)
             {
-            TR::Node *prevDefNode = useDefInfo->getNode(j);
-            if (prevDefNode == NULL)
-               continue;
-            if (prevDefNode->getOpCode().isStoreDirect() && prevDefNode->getSymbolReference()->getSymbol()->isAutoOrParm())
-               {
-               TR::Node *rhsOfPrevStoreDefNode = prevDefNode->getChild(0);
-               if (rhsOfStoreDefNode == rhsOfPrevStoreDefNode)
-                  {
-                  int32_t thisDefSlot = defNode->getSymbolReference()->getCPIndex();
-                  int32_t prevDefSlot = prevDefNode->getSymbolReference()->getCPIndex();
+            TR::Node *prevDefNode = *itr;
+            int32_t j = prevDefNode->getUseDefIndex();
+            int32_t thisDefSlot = defNode->getSymbolReference()->getCPIndex();
+            int32_t prevDefSlot = prevDefNode->getSymbolReference()->getCPIndex();
 
-                  bool thisSymRefIsPreferred = false;
-                  if (thisDefSlot < 0) // pending pushes
-		     thisSymRefIsPreferred = true;
-                  else if (thisDefSlot < comp()->getOwningMethodSymbol(defNode->getSymbolReference()->getOwningMethodIndex())->getFirstJitTempIndex()) // autos and parms
-                     thisSymRefIsPreferred = true;
+            bool thisSymRefIsPreferred = false;
+            if (thisDefSlot < 0) // pending pushes
+               thisSymRefIsPreferred = true;
+            else if (thisDefSlot < comp()->getOwningMethodSymbol(defNode->getSymbolReference()->getOwningMethodIndex())->getFirstJitTempIndex()) // autos and parms
+               thisSymRefIsPreferred = true;
 
-                  bool prevSymRefIsPreferred = false;
-                  if (prevDefSlot < 0) // pending pushes
-		     prevSymRefIsPreferred = true;
-                  else if (prevDefSlot < comp()->getOwningMethodSymbol(prevDefNode->getSymbolReference()->getOwningMethodIndex())->getFirstJitTempIndex()) // autos and parms
-                     prevSymRefIsPreferred = true;
+            bool prevSymRefIsPreferred = false;
+            if (prevDefSlot < 0) // pending pushes
+               prevSymRefIsPreferred = true;
+            else if (prevDefSlot < comp()->getOwningMethodSymbol(prevDefNode->getSymbolReference()->getOwningMethodIndex())->getFirstJitTempIndex()) // autos and parms
+               prevSymRefIsPreferred = true;
 
 #ifdef J9_PROJECT_SPECIFIC
-                  if (prevDefNode->getType().isBCD())
-                     {
-                     TR_ASSERT(defNode->getType().isBCD(),"expecting defNode to be a BCD type (dt=%s) when prevDefNode is a BCD type (dt=%s)\n",
-                        defNode->getDataType().toString(),prevDefNode->getDataType().toString());
-                     if (defNode->getType().isBCD() &&
-                         defNode->getDataType() == prevDefNode->getDataType() &&
-                         prevDefNode->getDecimalPrecision() == defNode->getDecimalPrecision() &&
-                         (defNode->getDataType() != TR::PackedDecimal || prevDefNode->mustCleanSignInPDStoreEvaluator() == defNode->mustCleanSignInPDStoreEvaluator()))
-                        {
-                        dumpOptDetails(comp(), "%s   Def nodes %p (precision = %d) and %p (precision = %d) are equivalent\n",OPT_DETAILS,
-                           defNode,
-                           defNode->getDecimalPrecision(),
-                           prevDefNode,
-                           prevDefNode->getDecimalPrecision());
+            if (prevDefNode->getType().isBCD())
+               {
+               TR_ASSERT(defNode->getType().isBCD(),"expecting defNode to be a BCD type (dt=%s) when prevDefNode is a BCD type (dt=%s)\n",
+                  defNode->getDataType().toString(),prevDefNode->getDataType().toString());
+               if (defNode->getType().isBCD() &&
+                   defNode->getDataType() == prevDefNode->getDataType() &&
+                   prevDefNode->getDecimalPrecision() == defNode->getDecimalPrecision() &&
+                   (defNode->getDataType() != TR::PackedDecimal || prevDefNode->mustCleanSignInPDStoreEvaluator() == defNode->mustCleanSignInPDStoreEvaluator()))
+                  {
+                  dumpOptDetails(comp(), "%s   Def nodes %p (precision = %d) and %p (precision = %d) are equivalent\n",OPT_DETAILS,
+                     defNode,
+                     defNode->getDecimalPrecision(),
+                     prevDefNode,
+                     prevDefNode->getDecimalPrecision());
 
-                        if ((!thisSymRefIsPreferred &&
-                             (prevSymRefIsPreferred || (equivalentDefs[j-firstRealDefIndex] != j))))
-                           {
-                           if (trace())
-                              traceMsg(comp(), "000setting i %d to j %d\n", i, j);
-                           equivalentDefs[i-firstRealDefIndex] = equivalentDefs[j-firstRealDefIndex];
-                           }
-                        else if (equivalentDefs[j-firstRealDefIndex] == j)
-                           {
-                           if (trace())
-                               traceMsg(comp(), "111setting j %d to i %d\n", j, i);
-                           equivalentDefs[j-firstRealDefIndex] = i;
-                           }
+                  auto equivalentDefLookup = equivalentDefs.find(j);
+                  if ((!thisSymRefIsPreferred &&
+                       (prevSymRefIsPreferred || (equivalentDefLookup != equivalentDefs.end()))))
+                     {
+                     if (trace())
+                        traceMsg(comp(), "000setting i %d to j %d\n", i, j);
+                     if (equivalentDefLookup == equivalentDefs.end())
+                        {
+                        if (i != j)
+                           equivalentDefs[i] = j;
+                        }
+                     else if (i == equivalentDefLookup->second)
+                        {
+                        equivalentDefs.erase(i);
+                        }
+                     else
+                        {
+                        equivalentDefs[i] = equivalentDefLookup->second;
                         }
                      }
-                  else
-#endif
+                  else if (equivalentDefs.find(j) == equivalentDefs.end())
                      {
-                     dumpOptDetails(comp(), "%s   Def nodes %p and %p are equivalent\n",OPT_DETAILS,
-                        defNode,
-                        prevDefNode);
-
-                     if ((!thisSymRefIsPreferred &&
-                         (prevSymRefIsPreferred || (equivalentDefs[j-firstRealDefIndex] != j))))
-                        {
-                        if (trace())
-                           traceMsg(comp(), "000setting i %d to j %d\n", i, j);
-                         equivalentDefs[i-firstRealDefIndex] = equivalentDefs[j-firstRealDefIndex];
-                         }
-                      else if (equivalentDefs[j-firstRealDefIndex] == j)
-                         {
-                         if (trace())
-                            traceMsg(comp(), "111setting j %d to i %d\n", j, i);
-                         equivalentDefs[j-firstRealDefIndex] = i;
-                         }
+                     if (trace())
+                         traceMsg(comp(), "111setting j %d to i %d\n", j, i);
+                     if (i != j)
+                        equivalentDefs[j] = i;
                      }
-                  break;
                   }
                }
+            else
+#endif
+               {
+               dumpOptDetails(comp(), "%s   Def nodes %p and %p are equivalent\n",OPT_DETAILS,
+                  defNode,
+                  prevDefNode);
+
+               auto equivalentDefLookup = equivalentDefs.find(j);
+               if ((!thisSymRefIsPreferred &&
+                   (prevSymRefIsPreferred || (equivalentDefLookup != equivalentDefs.end()))))
+                  {
+                  if (trace())
+                     traceMsg(comp(), "000setting i %d to j %d\n", i, j);
+
+                  if (equivalentDefLookup == equivalentDefs.end())
+                     {
+                     if (i != j)
+                        equivalentDefs[i] = j;
+                     }
+                  else if (i == equivalentDefLookup->second)
+                     {
+                     equivalentDefs.erase(i);
+                     }
+                  else
+                     {
+                     equivalentDefs[i] = equivalentDefLookup->second;
+                     }
+                  }
+               else if (equivalentDefs.find(j) == equivalentDefs.end())
+                  {
+                  if (trace())
+                     traceMsg(comp(), "111setting j %d to i %d\n", j, i);
+                  if (i != j)
+                     equivalentDefs[j] = i;
+                  }
+               }
+            break;
             }
+         }
+
+      if (storeLookup == storeMap.end())
+         {
+         storeMap[rhsOfStoreDefNode] = new (trStackMemory()) TR::deque<TR::Node*, TR::Region&>(trMemory()->currentStackRegion());
+         storeMap[rhsOfStoreDefNode]->push_back(defNode);
+         }
+      else
+         {
+         storeMap[rhsOfStoreDefNode]->push_back(defNode);
          }
       }
 
-
-   int32_t lastUseIndex = useDefInfo->getLastUseIndex();
-   for (i = useDefInfo->getFirstUseIndex(); i <= lastUseIndex; i++)
+   int32_t firstUseIndex = useDefInfo->getFirstUseIndex();
+   for (auto itr = equivalentDefs.begin(), end = equivalentDefs.end(); itr != end; ++itr)
       {
-      TR::Node *useNode = useDefInfo->getNode(i);
-
-      if (!useNode)
-          continue;
-      if (useNode->getReferenceCount() == 0)
+      int32_t defIndex = itr->first;
+      TR::Node *defNode = useDefInfo->getNode(defIndex);
+      TR::TreeTop *defTree = useDefInfo->getTreeTop(defIndex);
+      TR::TreeTop *extendedBlockEntry = defTree->getEnclosingBlock()->startOfExtendedBlock()->getEntry();
+      TR::TreeTop *extendedBlockExit = extendedBlockEntry->getExtendedBlockExitTreeTop();
+      if (defNode == NULL)
          continue;
 
-      TR_UseDefInfo::BitVector defs(comp()->allocator());
-      useDefInfo->getUseDef(defs, i);
+      TR::Node *equivalentDefNode = useDefInfo->getNode(itr->second);
+      TR::TreeTop *equivalentDefTree = useDefInfo->getTreeTop(itr->second);
 
-      // could use "if (defs.PopulationCount() == 1) continue", but this is more efficient
-      TR_UseDefInfo::BitVector::Cursor cursor(defs);
-      cursor.SetToFirstOne();
-      if (!cursor.Valid())
-         continue;
-      int32_t defIndex = cursor;
-      cursor.SetToNextOne();
-      if (cursor.Valid())
-         continue;
-
-      // Now we know there is a single definition for this use node
-      //
-
-      if (defIndex < firstRealDefIndex)
+      TR_UseDefInfo::BitVector uses(comp()->allocator());
+      useDefInfo->getUsesFromDef(uses, itr->first, useDefInfo->hasLoadsAsDefs());
+      TR_UseDefInfo::BitVector::Cursor useCursor(uses);
+      for (useCursor.SetToFirstOne(); useCursor.Valid(); useCursor.SetToNextOne())
          {
-         continue;
-         }
+         int32_t i = useCursor + firstUseIndex;
 
-         if (equivalentDefs[defIndex-firstRealDefIndex] == defIndex)
+         TR_UseDefInfo::BitVector defs(comp()->allocator());
+         useDefInfo->getUseDef(defs, i);
+
+         // could use "if (defs.PopulationCount() == 1) continue", but this is more efficient
+         TR_UseDefInfo::BitVector::Cursor cursor(defs);
+         cursor.SetToFirstOne();
+         if (!cursor.Valid())
+            continue;
+         int32_t defIndex = cursor;
+         cursor.SetToNextOne();
+         if (cursor.Valid())
             continue;
 
-         TR::Node *defNode = useDefInfo->getNode(defIndex);
-         TR::TreeTop *defTree = useDefInfo->getTreeTop(defIndex);
-
-         if(defNode == NULL)
+         TR::Node *useNode = useDefInfo->getNode(i);
+         if (!useNode || useNode->getReferenceCount() == 0)
             continue;
 
-         TR::Node *equivalentDefNode = useDefInfo->getNode(equivalentDefs[defIndex-firstRealDefIndex]);
-         TR::TreeTop *equivalentDefTree = useDefInfo->getTreeTop(equivalentDefs[defIndex-firstRealDefIndex]);
-
-         if (useNode->getOpCodeValue() == TR::loadaddr)
-            continue;
-
-         if (defNode->getOpCode().isStoreDirect() &&
-         	   defNode->getSymbolReference()->getSymbol()->isAutoOrParm())
+         // Now we know there is a single definition for this use node
+         //
+         TR::SymbolReference *copySymbolReference = defNode->getSymbolReference();
+         if (performTransformation(comp(), "%s   Copy1 Propagation replacing Copy symRef #%d %p %p\n",OPT_DETAILS, copySymbolReference->getReferenceNumber(), defNode,  equivalentDefNode))
             {
-            TR::SymbolReference *copySymbolReference = defNode->getSymbolReference();
-            if (copySymbolReference->getSymbol()->isAutoOrParm() &&
-                performTransformation(comp(), "%s   Copy1 Propagation replacing Copy symRef #%d %p %p\n",OPT_DETAILS, copySymbolReference->getReferenceNumber(), defNode,  equivalentDefNode))
+	      comp()->setOsrStateIsReliable(false); // could check if the propagation was done to a child of the OSR helper call here
+
+            _storeTree = NULL;
+            _useTree = NULL;
+            _storeBlock = NULL;
+
+            if (!isCorrectToReplace(useNode, equivalentDefNode, defs, useDefInfo))
+               continue;
+
+            TR::TreeTop *cursorTree = extendedBlockEntry;
+
+            bool defSeenFirst = false;
+            bool equivalentDefSeenFirst = false;
+            while (cursorTree != extendedBlockExit)
                {
-	       comp()->setOsrStateIsReliable(false); // could check if the propagation was done to a child of the OSR helper call here
-
-               _storeTree = NULL;
-               _useTree = NULL;
-               _storeBlock = NULL;
-
-               if (!isCorrectToReplace(useNode, equivalentDefNode, defs, useDefInfo))
-                  continue;
-
-               TR::TreeTop *extendedBlockEntry = defTree->getEnclosingBlock()->startOfExtendedBlock()->getEntry();
-               TR::TreeTop *extendedBlockExit = extendedBlockEntry->getExtendedBlockExitTreeTop();
-               TR::TreeTop *cursorTree = extendedBlockEntry;
-
-               bool defSeenFirst = false;
-               bool equivalentDefSeenFirst = false;
-               while (cursorTree != extendedBlockExit)
+               if (cursorTree == defTree)
                   {
-                  if (cursorTree == defTree)
+                  defSeenFirst = true;
+                  break;
+                  }
+
+               if (cursorTree == equivalentDefTree)
+                  {
+                  equivalentDefSeenFirst = true;
+                  break;
+                  }
+
+              cursorTree = cursorTree->getNextTreeTop();
+              }
+
+
+            bool safe = true;
+            if (defSeenFirst)
+               {
+               cursorTree = defTree;
+               while (cursorTree != equivalentDefTree)
+                  {
+                  if (!cursorTree->getNode()->getOpCode().isStore() ||
+                        (cursorTree->getNode()->getFirstChild() != defNode->getFirstChild()))
                      {
-                     defSeenFirst = true;
+                     safe = false;
                      break;
                      }
 
-                  if (cursorTree == equivalentDefTree)
-                     {
-                     equivalentDefSeenFirst = true;
-                     break;
-                     }
-
-                 cursorTree = cursorTree->getNextTreeTop();
-                 }
-
-
-               bool safe = true;
-               if (defSeenFirst)
-                  {
-                  cursorTree = defTree;
-                  while (cursorTree != equivalentDefTree)
-                     {
-                     if (!cursorTree->getNode()->getOpCode().isStore() ||
-                           (cursorTree->getNode()->getFirstChild() != defNode->getFirstChild()))
-                        {
-                        safe = false;
-                        break;
-                        }
-
-                     cursorTree = cursorTree->getNextTreeTop();
-                     }
+                  cursorTree = cursorTree->getNextTreeTop();
                   }
-
-               if (!safe)
-                  continue;
-
-
-               TR::SymbolReference *originalSymbolReference = equivalentDefNode->getSymbolReference();
-
-               dumpOptDetails(comp(), "%s   By Original symRef #%d in Use node : %p\n",OPT_DETAILS, originalSymbolReference->getReferenceNumber(), useNode);
-               dumpOptDetails(comp(), "%s   Use #%d[%p] is defined by:\n",OPT_DETAILS,i,useNode);
-               dumpOptDetails(comp(), "%s      Def #%d[%p]\n",OPT_DETAILS, defIndex,useDefInfo->getNode(defIndex));
-
-               comp()->incOrResetVisitCount();
-               replaceCopySymbolReferenceByOriginalIn(copySymbolReference, equivalentDefNode, useNode, defNode);
-               usesToBeFixed[useNode->getUseDefIndex()] = equivalentDefs[defIndex-firstRealDefIndex];
-
-               donePropagation = true;
-
-               if (trace())
-                  {
-                  traceMsg(comp(), "   Use #%d[%p] :\n",useNode->getUseDefIndex(),useNode);
-                  traceMsg(comp(), "      Does NOT get Defined by #%d[%p] from now\n",defNode->getUseDefIndex(), defNode);
-                  }
-
-               if (trace())
-                  {
-                  traceMsg(comp(), "   Use #%d[%p] is defined by:\n",useNode->getUseDefIndex(), useNode);
-                  traceMsg(comp(), "      Added New Def #%d[%p]\n",defIndex,useDefInfo->getNode(equivalentDefs[defIndex-firstRealDefIndex]));
-                  }
-
-               if (trace())
-                  traceMsg(comp(), "\n");
                }
+
+            if (!safe)
+               continue;
+
+
+            TR::SymbolReference *originalSymbolReference = equivalentDefNode->getSymbolReference();
+
+            dumpOptDetails(comp(), "%s   By Original symRef #%d in Use node : %p\n",OPT_DETAILS, originalSymbolReference->getReferenceNumber(), useNode);
+            dumpOptDetails(comp(), "%s   Use #%d[%p] is defined by:\n",OPT_DETAILS,i,useNode);
+            dumpOptDetails(comp(), "%s      Def #%d[%p]\n",OPT_DETAILS, defIndex,useDefInfo->getNode(defIndex));
+
+            comp()->incOrResetVisitCount();
+            replaceCopySymbolReferenceByOriginalIn(copySymbolReference, equivalentDefNode, useNode, defNode);
+            usesToBeFixed[useNode->getUseDefIndex()] = equivalentDefs[defIndex];
+
+            donePropagation = true;
+
+            if (trace())
+               {
+               traceMsg(comp(), "   Use #%d[%p] :\n",useNode->getUseDefIndex(),useNode);
+               traceMsg(comp(), "      Does NOT get Defined by #%d[%p] from now\n",defNode->getUseDefIndex(), defNode);
+               }
+
+            if (trace())
+               {
+               traceMsg(comp(), "   Use #%d[%p] is defined by:\n",useNode->getUseDefIndex(), useNode);
+               traceMsg(comp(), "      Added New Def #%d[%p]\n",defIndex,useDefInfo->getNode(equivalentDefs[defIndex]));
+               }
+
+            if (trace())
+               traceMsg(comp(), "\n");
             }
+         }
       }
 
 
    bool invalidateDefUseInfo = false;
-   int32_t fixUseIndex = useDefInfo->getFirstUseIndex();
-   for (;fixUseIndex <= lastUseIndex;fixUseIndex++)
+   int32_t lastUseIndex = useDefInfo->getLastUseIndex();
+   for (auto itr = usesToBeFixed.begin(), end = usesToBeFixed.end(); itr != end; )
       {
-      if (usesToBeFixed[fixUseIndex] > -1)
+      int32_t fixUseIndex = itr->first;
+      TR::Node *fixUseNode = useDefInfo->getNode(fixUseIndex);
+      invalidateDefUseInfo = true;
+      if (useDefInfo->hasLoadsAsDefs())
          {
-         invalidateDefUseInfo = true;
-         int32_t i;
-         for (i = useDefInfo->getFirstUseIndex(); i <= lastUseIndex; i++)
+         for (int32_t i = useDefInfo->getFirstUseIndex(); i <= lastUseIndex; i++)
             {
-            if (!useDefInfo->getNode(i))
+            TR::Node *useNode = useDefInfo->getNode(i);
+            if (!useNode || useNode->getReferenceCount() == 0)
                continue;
 
-            if (useDefInfo->getNode(i)->getReferenceCount() == 0)
-               continue;
-
-            if (useDefInfo->getSingleDefiningLoad(useDefInfo->getNode(i)) == useDefInfo->getNode(fixUseIndex))
+            if (useDefInfo->getSingleDefiningLoad(useNode) == fixUseNode)
                {
                TR_UseDefInfo::BitVector defsOfUseToBeFixed(comp()->allocator());
-               useDefInfo->getUseDef(defsOfUseToBeFixed, fixUseIndex);
-               if (!defsOfUseToBeFixed.IsZero())
+               if (useDefInfo->getUseDef(defsOfUseToBeFixed, fixUseIndex))
                   {
                   TR_UseDefInfo::BitVector::Cursor cursor(defsOfUseToBeFixed);
                   for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
@@ -754,23 +781,22 @@ int32_t TR_CopyPropagation::perform()
                useDefInfo->resetUseDef(i, fixUseIndex);
                }
             }
-
-         useDefInfo->clearUseDef(fixUseIndex);
-         useDefInfo->setUseDef(fixUseIndex, usesToBeFixed[fixUseIndex]);
-         usesToBeFixed[fixUseIndex] = -1;
          }
+
+      useDefInfo->clearUseDef(fixUseIndex);
+      useDefInfo->setUseDef(fixUseIndex, itr->second);
+      usesToBeFixed.erase(itr++);
       }
 
    if (_cleanupTemps)
       rematerializeIndirectLoadsFromAutos();
 
    _lookForOriginalDefs = true;
-   for (i = useDefInfo->getFirstUseIndex(); i <= lastUseIndex; i++)
+   for (int32_t i = useDefInfo->getFirstUseIndex(); i <= lastUseIndex; i++)
       {
       TR_UseDefInfo::BitVector defs(comp()->allocator());
-      useDefInfo->getUseDef(defs, i);
 
-      if (!defs.IsZero())
+      if (useDefInfo->getUseDef(defs, i))
          {
          TR::Node *useNode = useDefInfo->getNode(i);
          _useTree = NULL;
@@ -937,59 +963,53 @@ int32_t TR_CopyPropagation::perform()
    if (_cleanupTemps)
       commonIndirectLoadsFromAutos();
 
-   fixUseIndex = useDefInfo->getFirstUseIndex();
-   for (;fixUseIndex <= lastUseIndex;fixUseIndex++)
+   for (auto itr = usesToBeFixed.begin(), end = usesToBeFixed.end(); itr != end; ++itr)
       {
-      if (usesToBeFixed[fixUseIndex] > -1)
+      int32_t fixUseIndex = itr->first;
+      TR::Node *fixUseNode = useDefInfo->getNode(fixUseIndex);
+      invalidateDefUseInfo = true;
+
+      if (useDefInfo->hasLoadsAsDefs())
          {
-         invalidateDefUseInfo = true;
-         int32_t i;
-
-         if (useDefInfo->hasLoadsAsDefs())
+         for (int32_t i = useDefInfo->getFirstUseIndex(); i <= lastUseIndex; i++)
             {
-            for (i = useDefInfo->getFirstUseIndex(); i <= lastUseIndex; i++)
-               {
-               if (!useDefInfo->getNode(i))
-                  continue;
-               if (useDefInfo->getNode(i)->getReferenceCount() == 0)
-                  continue;
+            TR::Node *useNode = useDefInfo->getNode(i);
+            if (!useNode || useNode->getReferenceCount() == 0)
+               continue;
 
-               if (useDefInfo->getSingleDefiningLoad(useDefInfo->getNode(i)) == useDefInfo->getNode(fixUseIndex))
+            if (useDefInfo->getSingleDefiningLoad(useNode) == fixUseNode)
+               {
+               TR_UseDefInfo::BitVector defsOfUseToBeFixed(comp()->allocator());
+               if (useDefInfo->getUseDef(defsOfUseToBeFixed, fixUseIndex))
                   {
-                  TR_UseDefInfo::BitVector defsOfUseToBeFixed(comp()->allocator());
-                  useDefInfo->getUseDef(defsOfUseToBeFixed, fixUseIndex);
-                  if (!defsOfUseToBeFixed.IsZero())
+                  TR_UseDefInfo::BitVector::Cursor cursor(defsOfUseToBeFixed);
+                  for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
                      {
-                     TR_UseDefInfo::BitVector::Cursor cursor(defsOfUseToBeFixed);
-                     for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
-                        {
-                        int32_t nextDef = cursor;
-                        useDefInfo->setUseDef(i, nextDef);
-                        }
-                     useDefInfo->resetUseDef(i, fixUseIndex);
+                     int32_t nextDef = cursor;
+                     useDefInfo->setUseDef(i, nextDef);
                      }
+                  useDefInfo->resetUseDef(i, fixUseIndex);
                   }
                }
             }
+         }
 
-         useDefInfo->clearUseDef(fixUseIndex);
+      useDefInfo->clearUseDef(fixUseIndex);
 
-         if (useDefInfo->hasLoadsAsDefs())
+      if (useDefInfo->hasLoadsAsDefs())
+         {
+         useDefInfo->setUseDef(fixUseIndex, itr->second);
+         }
+      else if (itr->second != 0)
+         {
+         TR_UseDefInfo::BitVector defsOfRhs(comp()->allocator());
+         if (useDefInfo->getUseDef(defsOfRhs, itr->second))
             {
-            useDefInfo->setUseDef(fixUseIndex, usesToBeFixed[fixUseIndex]);
-            }
-         else if (usesToBeFixed[fixUseIndex] != 0)
-            {
-            TR_UseDefInfo::BitVector defsOfRhs(comp()->allocator());
-            useDefInfo->getUseDef(defsOfRhs, usesToBeFixed[fixUseIndex]);
-            if (!defsOfRhs.IsZero())
+            TR_UseDefInfo::BitVector::Cursor cursor(defsOfRhs);
+            for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
                {
-               TR_UseDefInfo::BitVector::Cursor cursor(defsOfRhs);
-               for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
-                  {
-                  int32_t nextDef = cursor;
-                  useDefInfo->setUseDef(fixUseIndex, nextDef);
-                  }
+               int32_t nextDef = cursor;
+               useDefInfo->setUseDef(fixUseIndex, nextDef);
                }
             }
          }
@@ -1017,6 +1037,24 @@ int32_t TR_CopyPropagation::perform()
    return 1; // actual cost
    }
 
+void TR_CopyPropagation::collectUseTrees(TR::TreeTop *tree, TR::Node *node, TR::NodeChecklist &checklist)
+   {
+   if (checklist.contains(node))
+      return;
+   checklist.add(node);
+
+   int32_t useIndex = node->getUseDefIndex();
+   TR_UseDefInfo *useDefInfo = optimizer()->getUseDefInfo();
+   if (useIndex >= useDefInfo->getFirstUseIndex() && useIndex <= useDefInfo->getLastUseIndex())
+      {
+      auto useTreeLookup = _useTreeTops.find(node);
+      if (useTreeLookup == _useTreeTops.end())
+         _useTreeTops[node] = tree;
+      }
+
+   for (int i = 0; i < node->getNumChildren(); i++)
+      collectUseTrees(tree, node->getChild(i), checklist);
+   }
 
 void TR_CopyPropagation::rematerializeIndirectLoadsFromAutos()
    {
@@ -1649,15 +1687,11 @@ TR::Node *TR_CopyPropagation::areAllDefsInCorrectForm(TR::Node *useNode, const T
             n1799n        ==>iconst -4
 
           */
-
-         for (int32_t i=0;i<_numStoreTreeTops;i++)
+         auto lookup = _storeTreeTops.find(lastDefNode);
+         if (lookup != _storeTreeTops.end())
             {
-            if (skipTreeTopAndGetNode(_storeTreeTopsAsArray[i]) == lastDefNode)
-               {
-               _storeTree = _storeTreeTopsAsArray[i];
-               _storeBlock = _storeTree->getEnclosingBlock()->startOfExtendedBlock();
-               break;
-               }
+            _storeTree = lookup->second;
+            _storeBlock = _storeTree->getEnclosingBlock()->startOfExtendedBlock();
             }
 
          TR::Node * currentNode = skipTreeTopAndGetNode(_storeTree);
@@ -1699,29 +1733,26 @@ TR::TreeTop * TR_CopyPropagation::findAnchorTree(TR::Node *storeNode, TR::Node *
 
    TR::TreeTop *anchor = NULL;
 
-   for (int32_t i=0;i<_numStoreTreeTops;i++)
+   auto lookup = _storeTreeTops.find(storeNode);
+   if (lookup != _storeTreeTops.end())
       {
-      if (skipTreeTopAndGetNode(_storeTreeTopsAsArray[i]) == storeNode)
+      TR::TreeTop *treeTop = lookup->second;
+      anchor = treeTop;
+
+      if (loadNode)
          {
-         TR::TreeTop *treeTop = _storeTreeTopsAsArray[i];
-         anchor = treeTop;
+         TR::SymbolReference *originalSymbolReference = loadNode->getSymbolReference();
 
-         if (loadNode)
+         comp()->incOrResetVisitCount();
+         while (!((treeTop->getNode()->getOpCode().getOpCodeValue() == TR::BBStart) &&
+                  !treeTop->getNode()->getBlock()->isExtensionOfPreviousBlock()))
             {
-            TR::SymbolReference *originalSymbolReference = loadNode->getSymbolReference();
-
             comp()->incOrResetVisitCount();
-            while (!((treeTop->getNode()->getOpCode().getOpCodeValue() == TR::BBStart) &&
-                     !treeTop->getNode()->getBlock()->isExtensionOfPreviousBlock()))
-               {
-               comp()->incOrResetVisitCount();
-               if (containsNode(treeTop->getNode(), loadNode))
-                  anchor = treeTop;
+            if (containsNode(treeTop->getNode(), loadNode))
+               anchor = treeTop;
 
-               treeTop = treeTop->getPrevTreeTop();
-               }
+            treeTop = treeTop->getPrevTreeTop();
             }
-         return anchor;
          }
       }
 
@@ -1743,42 +1774,40 @@ bool TR_CopyPropagation::isSafeToPropagate(TR::Node *storeNode, TR::Node *loadNo
    {
    bool seenStore = false;
 
-   for (int32_t i=0; i<_numStoreTreeTops; i++)
+   auto lookup = _storeTreeTops.find(storeNode);
+   if (lookup != _storeTreeTops.end())
       {
-      if (skipTreeTopAndGetNode(_storeTreeTopsAsArray[i]) == storeNode)
+      TR::TreeTop *_storeTreeTop = lookup->second;
+      _storeTree = _storeTreeTop;
+
+      if (loadNode)
          {
-         TR::TreeTop *_storeTreeTop = _storeTreeTopsAsArray[i];
-         _storeTree = _storeTreeTop;
+         TR::SymbolReference *originalSymbolReference = loadNode->getSymbolReference();
 
-         if (loadNode)
+         if (storeNode->getSymbolReference() == loadNode->getSymbolReference())
             {
-            TR::SymbolReference *originalSymbolReference = loadNode->getSymbolReference();
-
-            if (storeNode->getSymbolReference() == loadNode->getSymbolReference())
-               {
-               _storeTreeTop = _storeTreeTop->getPrevTreeTop(); // skip i = i + 1
-               }
-
-            comp()->incOrResetVisitCount();
-
-            // Walk the tree backward to first treetop inside extended basic block, reject if org sym is killed
-            while (!((_storeTreeTop->getNode()->getOpCode().getOpCodeValue() == TR::BBStart) &&
-                     !_storeTreeTop->getNode()->getBlock()->isExtensionOfPreviousBlock()))
-               {
-               TR::Node * node = skipTreeTopAndGetNode(_storeTreeTop);
-
-               if (node->mayKill().contains(originalSymbolReference, comp()))
-                  seenStore = true;
-
-               if (seenStore && containsNode(_storeTreeTop->getNode(), loadNode))
-                  return false;
-
-               _storeTreeTop = _storeTreeTop->getPrevTreeTop();
-               }
+            _storeTreeTop = _storeTreeTop->getPrevTreeTop(); // skip i = i + 1
             }
 
-         return true;
+         comp()->incOrResetVisitCount();
+
+         // Walk the tree backward to first treetop inside extended basic block, reject if org sym is killed
+         while (!((_storeTreeTop->getNode()->getOpCode().getOpCodeValue() == TR::BBStart) &&
+                  !_storeTreeTop->getNode()->getBlock()->isExtensionOfPreviousBlock()))
+            {
+            TR::Node * node = skipTreeTopAndGetNode(_storeTreeTop);
+
+            if (node->mayKill().contains(originalSymbolReference, comp()))
+               seenStore = true;
+
+            if (seenStore && containsNode(_storeTreeTop->getNode(), loadNode))
+               return false;
+
+            _storeTreeTop = _storeTreeTop->getPrevTreeTop();
+            }
          }
+
+      return true;
       }
 
    TR_ASSERT(0, "end of isSafeToPropagate!");
@@ -1788,7 +1817,7 @@ bool TR_CopyPropagation::isSafeToPropagate(TR::Node *storeNode, TR::Node *loadNo
 
 TR::Node* TR_CopyPropagation::skipTreeTopAndGetNode (TR::TreeTop* tt)
    {
-   TR_ASSERT(tt, "tt should always be set no matter if it comes from _storeTreeTopsAsArray or an iterator");
+   TR_ASSERT(tt, "tt should always be set no matter if it comes from _storeTreeTops an iterator");
    return (tt->getNode()->getOpCodeValue() == TR::treetop) ? tt->getNode()->getFirstChild() : tt->getNode();
    }
 
@@ -1846,18 +1875,9 @@ void TR_CopyPropagation::findUseTree(TR::Node *useNode)
    {
    if (_useTree) return;
 
-   TR::TreeTop *currentTree = comp()->getStartTree();
-
-   comp()->incOrResetVisitCount();
-   while (currentTree)
-      {
-      if (containsNode(currentTree->getNode(), useNode))
-         {
-         _useTree = currentTree;
-         break;
-         }
-      currentTree = currentTree->getNextTreeTop();
-      }
+   auto lookup = _useTreeTops.find(useNode);
+   if (lookup != _useTreeTops.end())
+      _useTree = lookup->second;
    }
 
 bool TR_CopyPropagation::isCorrectToPropagate(TR::Node *useNode, TR::Node *storeNode, TR::list< TR::Node *> & checkNodes,
@@ -1866,28 +1886,17 @@ bool TR_CopyPropagation::isCorrectToPropagate(TR::Node *useNode, TR::Node *store
    TR::TreeTop *currentTree = comp()->getStartTree();
    _storeTree = NULL;
    _storeBlock = NULL;
+   _useTree = NULL;
 
-   comp()->incOrResetVisitCount();
-   while (currentTree)
-      {
-      if (containsNode(currentTree->getNode(), useNode))
-         {
-         _useTree = currentTree;
-         break;
-         }
-      currentTree = currentTree->getNextTreeTop();
-      }
+   findUseTree(useNode);
 
    if (_storeTree == NULL)
       {
-      for (int32_t i=0;i<_numStoreTreeTops;i++)
+      auto lookup = _storeTreeTops.find(storeNode);
+      if (lookup != _storeTreeTops.end())
          {
-         if (skipTreeTopAndGetNode(_storeTreeTopsAsArray[i]) == storeNode)
-            {
-            _storeTree = _storeTreeTopsAsArray[i];
-            _storeBlock = _storeTree->getEnclosingBlock()->startOfExtendedBlock();
-            break;
-            }
+         _storeTree = lookup->second;
+         _storeBlock = _storeTree->getEnclosingBlock()->startOfExtendedBlock();
          }
       }
 
@@ -2183,27 +2192,16 @@ bool TR_CopyPropagation::isCorrectToReplace(TR::Node *useNode, TR::Node *storeNo
    // z <- x + a
    refsToCheckIfKilled[storeNode->getSymbolReference()->getReferenceNumber()] = 1;
 
-   comp()->incOrResetVisitCount();
-   while (currentTree)
-      {
-      if (containsNode(currentTree->getNode(), useNode))
-         {
-         _useTree = currentTree;
-         break;
-         }
-      currentTree = currentTree->getNextTreeTop();
-      }
+   _useTree = NULL;
+   findUseTree(useNode);
 
    if (_storeTree == NULL)
       {
-      for (int32_t i=0;i<_numStoreTreeTops;i++)
+      auto lookup = _storeTreeTops.find(storeNode);
+      if (lookup != _storeTreeTops.end())
          {
-         if (skipTreeTopAndGetNode(_storeTreeTopsAsArray[i]) == storeNode)
-            {
-            _storeTree = _storeTreeTopsAsArray[i];
-            _storeBlock = _storeTree->getEnclosingBlock()->startOfExtendedBlock();
-            break;
-            }
+         _storeTree = lookup->second;
+         _storeBlock = _storeTree->getEnclosingBlock()->startOfExtendedBlock();
          }
       }
 

@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "omrcfg.h"
@@ -54,6 +58,7 @@
 #include "SublistPool.hpp"
 #include "SublistPuddle.hpp"
 #include "SweepHeapSectioning.hpp"
+#include "CompactDelegate.hpp"
 
 /* OMRTODO temporary workaround to allow both ut_j9mm.h and ut_omrmm.h to be included.
  *                 Dependency on ut_j9mm.h should be removed in the future.
@@ -75,7 +80,7 @@ MM_CompactScheme::newInstance(MM_EnvironmentBase *env, MM_MarkingScheme *marking
 {
 	MM_CompactScheme *compactScheme;
 
-	compactScheme = (MM_CompactScheme *)env->getForge()->allocate(sizeof(MM_CompactScheme), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	compactScheme = (MM_CompactScheme *)env->getForge()->allocate(sizeof(MM_CompactScheme), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (compactScheme) {
 		new(compactScheme) MM_CompactScheme(env, markingScheme);
 		if (!compactScheme->initialize(env)) {
@@ -275,13 +280,13 @@ public:
 bool
 MM_CompactScheme::initialize(MM_EnvironmentBase *env)
 {
-	return true;
+	return _delegate.initialize(env, _omrVM, _markMap, this);
 }
 
 void
 MM_CompactScheme::tearDown(MM_EnvironmentBase *env)
 {
-	/* Do nothing */
+	_delegate.tearDown(env);
 }
 
 /**
@@ -351,7 +356,7 @@ MM_CompactScheme::masterSetupForGC(MM_EnvironmentStandard *env)
 	_compactTable = (CompactTableEntry*)_markingScheme->getMarkMap()->getMarkBits();
 	_subAreaTable = (SubAreaEntry*)_extensions->sweepHeapSectioning->getBackingStoreAddress();
 	_subAreaTableSize = _extensions->sweepHeapSectioning->getBackingStoreSize();
-	_extensions->collectorLanguageInterface->compactScheme_languageMasterSetupForGC(env);
+	_delegate.masterSetupForGC(env);
 }
 
 omrobjectptr_t
@@ -539,7 +544,7 @@ MM_CompactScheme::compact(MM_EnvironmentBase *envBase, bool rebuildMarkBits, boo
 		 */
 		masterSetupForGC(env);
 #if defined(DEBUG)
-		_extensions->collectorLanguageInterface->compactScheme_verifyHeap(env, _markMap);
+		_delegate.verifyHeap(env, _markMap);
 #endif /* DEBUG */
 
 		/* Reset largestFreeEntry of all subSpaces at beginning of compaction */
@@ -589,7 +594,7 @@ MM_CompactScheme::compact(MM_EnvironmentBase *envBase, bool rebuildMarkBits, boo
 
 	/* FixupRoots can always be done in parallel */
 	env->_compactStats._rootFixupStartTime = omrtime_hires_clock();
-	_extensions->collectorLanguageInterface->compactScheme_fixupRoots(env, this);
+	_delegate.fixupRoots(env, this);
 	env->_compactStats._rootFixupEndTime = omrtime_hires_clock();
 
 	MM_AtomicOperations::sync();
@@ -613,7 +618,7 @@ MM_CompactScheme::compact(MM_EnvironmentBase *envBase, bool rebuildMarkBits, boo
 		MM_AtomicOperations::sync();
 	}
 
-	_extensions->collectorLanguageInterface->compactScheme_workerCleanupAfterGC(env);
+	_delegate.workerCleanupAfterGC(env);
 
 	env->_compactStats._movedObjects = objectCount;
 	env->_compactStats._movedBytes = byteCount;

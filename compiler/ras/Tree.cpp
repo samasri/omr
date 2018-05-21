@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <math.h>                                     // for log10
@@ -33,7 +36,6 @@
 #include "control/Options.hpp"
 #include "control/Options_inlines.hpp"
 #include "cs2/sparsrbit.h"
-#include "cs2/tableof.h"                              // for TableOf
 #include "env/CompilerEnv.hpp"
 #include "env/IO.hpp"                                 // for IO
 #include "env/TRMemory.hpp"                           // for TR_Memory, etc
@@ -57,8 +59,8 @@
 #include "infra/Flags.hpp"                            // for flags32_t
 #include "infra/List.hpp"                             // for ListIterator, etc
 #include "infra/SimpleRegex.hpp"
-#include "infra/TRCfgEdge.hpp"                        // for CFGEdge
-#include "infra/TRCfgNode.hpp"                        // for CFGNode
+#include "infra/CfgEdge.hpp"                          // for CFGEdge
+#include "infra/CfgNode.hpp"                          // for CFGNode
 #include "optimizer/Optimizations.hpp"                // for Optimizations
 #include "optimizer/Optimizer.hpp"                    // for Optimizer
 #include "optimizer/Structure.hpp"
@@ -137,7 +139,7 @@ TR_Debug::printSymRefTable(TR::FILE *pOutFile, bool printFullTable)
          trfprintf(pOutFile, "\nSymbol References (incremental):\n--------------------------------\n");
       for (int i = _comp->getPrevSymRefTabSize() ; i < currSymRefTabSize ; i++)
          {
-         if (symRefIterator = symRefTab->getSymRef(i))
+         if ((symRefIterator = symRefTab->getSymRef(i)))
             {
             output.reset();
             print(symRefIterator, output, false/*hideHelperMethodInfo*/, true /*verbose*/);
@@ -1285,7 +1287,7 @@ TR_Debug::printWithFixedPrefix(TR::FILE *pOutFile, TR::Node * node, uint32_t ind
 #endif
          //  trfprintf(pOutFile, " at n%d", node->getGlobalIndex());
          }
-      if (_comp->getAppendInstruction() != NULL && node->getDataType() != TR::NoType && node->getRegister() != NULL)
+      if (_comp->cg()->getAppendInstruction() != NULL && node->getDataType() != TR::NoType && node->getRegister() != NULL)
          {
          output.append(" (in %s)", getName(node->getRegister()));
          _comp->incrNodeOpCodeLength( output.getLength() );
@@ -1310,7 +1312,7 @@ TR_Debug::printWithFixedPrefix(TR::FILE *pOutFile, TR::Node * node, uint32_t ind
    int32_t i;
 
    printNodeInfo(pOutFile, node);
-   if (_comp->getAppendInstruction() != NULL && node->getDataType() != TR::NoType && node->getRegister() != NULL)
+   if (_comp->cg()->getAppendInstruction() != NULL && node->getDataType() != TR::NoType && node->getRegister() != NULL)
       {
       output.append(" (in %s)", getName(node->getRegister()));
       _comp->incrNodeOpCodeLength( output.getLength() );
@@ -1840,15 +1842,7 @@ TR_Debug::printBCDNodeInfo(TR::Node * node, TR_PrettyPrinterString& output)
    {
    if (node->getType().isBCD())
       {
-      if (node->getOpCode().isPackedArithmeticSelect())
-         {
-         output.append(" <prec=%d (len=%d) dividendPrec=%d divisorPrec=%d> ",
-                       node->getDecimalPrecision(),
-                       node->getSize(),
-                       node->getSelectDividendPrecision(),
-                       node->getSelectDivisorPrecision());
-         }
-      else if (node->getOpCode().isStore() ||
+      if (node->getOpCode().isStore() ||
                node->getOpCode().isCall() ||
                node->getOpCode().isLoadConst() ||
                (node->getOpCode().isConversion() && !node->getOpCode().isConversionWithFraction()))
@@ -3508,8 +3502,6 @@ int32_t childTypes[] =
    TR::PackedDecimal | (TR::Int32<<16),                      // TR::pdSetSign
 
    TR::PackedDecimal,                                        // TR::pddivrem
-   TR::PackedDecimal,                                        // TR::pddivSelect
-   TR::PackedDecimal,                                        // TR::pdremSelect
 
    TR::PackedDecimal,                                        // TR::pdModifyPrecision
 

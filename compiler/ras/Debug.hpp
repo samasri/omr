@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 //  __   ___  __   __   ___  __       ___  ___  __
@@ -49,7 +52,7 @@
 #include "infra/TRlist.hpp"
 #include "optimizer/Optimizations.hpp"      // for Optimizations
 #include "runtime/Runtime.hpp"              // for TR_CCPreLoadedCode
-#include "infra/TRCfgNode.hpp"              // for TR::CFGEdgeList
+#include "infra/CfgNode.hpp"              // for TR::CFGEdgeList
 
 #include "codegen/RegisterRematerializationInfo.hpp"
 
@@ -115,7 +118,6 @@ namespace TR { class X86PaddingInstruction;                }
 namespace TR { class X86AlignmentInstruction;              }
 namespace TR { class X86BoundaryAvoidanceInstruction;      }
 namespace TR { class X86PatchableCodeAlignmentInstruction; }
-namespace TR { class X86RestoreVMThreadInstruction;        }
 namespace TR { class X86FenceInstruction;                  }
 namespace TR { class X86VirtualGuardNOPInstruction;        }
 namespace TR { class X86ImmInstruction;                    }
@@ -423,9 +425,6 @@ public:
    virtual void         printHeader();
    virtual void         printMethodHotness();
    virtual void         printInstrDumpHeader(const char * title);
-#if defined(TR_TARGET_ARM)
-   virtual void         printAsmDumpHeader();
-#endif
 
    virtual void         printByteCodeAnnotations();
    virtual void         printAnnotationInfoEntry(J9AnnotationInfo *,J9AnnotationInfoEntry *,int32_t);
@@ -750,7 +749,6 @@ public:
    void print(TR::FILE *, TR::X86AlignmentInstruction *);
    void print(TR::FILE *, TR::X86BoundaryAvoidanceInstruction *);
    void print(TR::FILE *, TR::X86PatchableCodeAlignmentInstruction *);
-   void print(TR::FILE *, TR::X86RestoreVMThreadInstruction *);
    void print(TR::FILE *, TR::X86FenceInstruction *);
 #ifdef J9_PROJECT_SPECIFIC
    void print(TR::FILE *, TR::X86VirtualGuardNOPInstruction *);
@@ -800,7 +798,6 @@ public:
    int32_t printIntConstant(TR::FILE *pOutFile, int64_t value, int8_t radix, TR_RegisterSizes size = TR_WordReg, bool padWithZeros = false);
    int32_t printDecimalConstant(TR::FILE *pOutFile, int64_t value, int8_t width, bool padWithZeros);
    int32_t printHexConstant(TR::FILE *pOutFile, int64_t value, int8_t width, bool padWithZeros);
-   int32_t printFPConstant(TR::FILE *pOutFile, void *value, int8_t numBits, bool printAsBytes = false);
    void printInstructionComment(TR::FILE *pOutFile, int32_t tabStops, TR::Instruction *instr);
    void printFPRegisterComment(TR::FILE *pOutFile, TR::Register *target, TR::Register *source);
    void printMemoryReferenceComment(TR::FILE *pOutFile, TR::MemoryReference *mr);
@@ -974,7 +971,6 @@ public:
    void print(TR::FILE *, TR::ARMStackCheckFailureSnippet *);
    void print(TR::FILE *, TR::UnresolvedDataSnippet *);
    void print(TR::FILE *, TR::ARMRecompilationSnippet *);
-   void printARM(TR::FILE *, uint8_t *, uint8_t *);
 #endif
 #ifdef TR_TARGET_S390
    void printPrefix(TR::FILE *, TR::Instruction *);

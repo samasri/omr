@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_Z_CODEGENERATOR_INCL
@@ -36,7 +39,7 @@ namespace OMR { typedef OMR::Z::CodeGenerator CodeGeneratorConnector; }
 #include <stdint.h>                                 // for int32_t, etc
 #include <string.h>                                 // for memcmp
 #include "codegen/FrontEnd.hpp"
-#include "codegen/InstOpCode.hpp"                   // for InstOpCode, etc
+#include "codegen/InstOpCode.hpp"
 #include "codegen/LinkageConventionsEnum.hpp"
 #include "codegen/Machine.hpp"                      // for Machine, etc
 #include "codegen/RealRegister.hpp"                 // for RealRegister, etc
@@ -90,7 +93,6 @@ class TR_PseudoRegister;
 class TR_RegisterCandidate;
 namespace TR { class S390ConstantDataSnippet; }
 namespace TR { class S390ConstantInstructionSnippet; }
-namespace TR { class S390DeclTrampSnippet; }
 namespace TR { class S390EyeCatcherDataSnippet; }
 namespace TR { class S390ImmInstruction; }
 namespace TR { class S390LabelTableSnippet; }
@@ -98,7 +100,6 @@ namespace TR { class S390LookupSwitchSnippet; }
 class TR_S390OutOfLineCodeSection;
 namespace TR { class S390PrivateLinkage; }
 class TR_S390ScratchRegisterManager;
-namespace TR { class S390SortJumpTrampSnippet; }
 namespace TR { class S390TargetAddressSnippet; }
 namespace TR { class S390WritableDataSnippet; }
 class TR_StorageReference;
@@ -163,10 +164,6 @@ extern int64_t getIntegralValue(TR::Node* node);
 #define TR_MAX_REPLACE_CHAR_STRING_SIZE 1
 #define TR_MAX_BEFORE_AFTER_SIZE 1
 
-
-// heuristic codegen register pressure threshold (restricted registers)
-#define CODEGEN_REGPRESSURE_THRESHOLD 14
-
 // performance thresholds -- until SRST and similar instructions are used inline
 #define TR_MAX_REPLACE_ALL_LOOP_PERF 150              // search > 1 byte (otherwise it is table lookup)
 #define TR_MAX_TALLY_ALL_WIDE_LOOP_PERF 150           // search > 1 byte
@@ -187,99 +184,6 @@ enum TR_MemCpyPadTypes
 
 #define TR_INVALID_REGISTER -1
 
-class TR_S390ProcessorInfo
-   {
-   public:
-   enum TR_S390ProcessorArchitectures
-      {
-      TR_UnknownArchitecture          = 0,
-      TR_ESA390                       = 1,
-      TR_z900                         = 2,
-      TR_z990                         = 3,
-      TR_z9                           = 4, ///< arch7
-      TR_z10                          = 5, ///< arch8
-      TR_z196                         = 6, ///< arch9
-      TR_zEC12                        = 7, ///< arch10
-      TR_z13                          = 8, ///< arch11
-      TR_z14                          = 9, ///< arch12
-      TR_zNext                        = 10, ///< arch13
-
-      TR_LatestArchitecture           = TR_zNext
-      };
-
-   bool crossCompile()                   {return _crossCompile; }
-
-   bool supportsArch(TR_S390ProcessorArchitectures arch)
-      {
-      TR_ASSERT(arch >= TR_UnknownArchitecture && arch <= TR_LatestArchitecture, "Invalid Processor Architecture.");
-      return _processorArchitecture >= arch;
-      }
-
-   void disableArch(TR_S390ProcessorArchitectures arch)
-      {
-      TR_ASSERT(arch > TR_UnknownArchitecture && arch <= TR_LatestArchitecture, "Invalid Processor Architecture.");
-      _processorArchitecture = _processorArchitecture < arch ? _processorArchitecture : (TR_S390ProcessorArchitectures)((uint32_t)arch - 1);
-      }
-
-   void enableArch(TR_S390ProcessorArchitectures arch)
-      {
-      TR_ASSERT(arch >= TR_UnknownArchitecture && arch <= TR_LatestArchitecture, "Invalid Processor Architecture.");
-      _processorArchitecture = _processorArchitecture > arch ? _processorArchitecture : arch;
-      }
-
-   TR_Processor getProcessor();
-
-   private:
-   TR_S390ProcessorArchitectures _processorArchitecture;
-
-   bool _crossCompile;
-
-   friend class OMR::Z::CodeGenerator;
-
-   TR_S390ProcessorInfo()
-      :
-        _processorArchitecture(TR_UnknownArchitecture),
-        _crossCompile(false)
-      {
-#ifndef TR_HOST_S390
-      _crossCompile = true;
-#endif
-      initialize();
-      }
-
-   bool checkz900();
-   bool checkz10();
-   bool checkz990();
-   bool checkz9();
-   bool checkz196();
-   bool checkzEC12();
-   bool checkZ13();
-   bool checkZ14();
-   bool checkZNext();
-
-   void initialize()
-      {
-      if(checkZNext())
-         _processorArchitecture = TR_zNext;
-      else if (checkZ14())
-         _processorArchitecture = TR_z14;
-      else if (checkZ13())
-         _processorArchitecture = TR_z13;
-      else if (checkzEC12())
-         _processorArchitecture = TR_zEC12;
-      else if (checkz196())
-         _processorArchitecture = TR_z196;
-      else if (checkz10())
-         _processorArchitecture = TR_z10;
-      else if (checkz9())
-         _processorArchitecture = TR_z9;
-      else if (checkz990())
-         _processorArchitecture = TR_z990;
-      else if (checkz900())
-         _processorArchitecture = TR_z900;
-      }
-   };
-
 
 struct TR_S390BinaryEncodingData : public TR_BinaryEncodingData
    {
@@ -293,10 +197,8 @@ struct TR_S390BinaryEncodingData : public TR_BinaryEncodingData
 
 namespace OMR
 {
-
 namespace Z
 {
-
 class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    {
 
@@ -359,14 +261,12 @@ public:
    void setNodeAddressOfCachedStaticTree(TR::Node *n) { _nodeAddressOfCachedStatic=n; }
    TR::Node *getNodeAddressOfCachedStatic() { return _nodeAddressOfCachedStatic; }
 
-   bool supportsNamedVirtualRegisters(); // no virt, default
    TR::SparseBitVector & getBucketPlusIndexRegisters()  { return _bucketPlusIndexRegisters; }
 
    // For hanging multiple loads from register symbols onto one common DEPEND
    TR::Instruction *getCurrentDEPEND() {return _currentDEPEND; }
    void setCurrentDEPEND(TR::Instruction *instr) { _currentDEPEND=instr; }
 
-   uintptr_t getOutgoingArgLevelDuringTreeEvaluation() { return _outgoingArgLevelDuringTreeEvaluation; }
    void changeRegisterKind(TR::Register * temp, TR_RegisterKinds rk);
 
 
@@ -384,12 +284,6 @@ public:
    void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
 
    void lowerTreesPropagateBlockToNode(TR::Node *node);
-
-   typedef enum
-      {
-      Backward = 0,
-      Forward  = 1
-      } RegisterAssignmentDirection;
 
    CodeGenerator();
    TR::Linkage *createLinkage(TR_LinkageConventions lc);
@@ -458,12 +352,6 @@ public:
    TR::Register *evaluateLengthMinusOneForMemoryOps(TR::Node *,  bool , bool &lenMinusOne);
 
    virtual TR_GlobalRegisterNumber getGlobalRegisterNumber(uint32_t realRegNum);
-
-   RegisterAssignmentDirection getAssignmentDirection() {return assignmentDirection;}
-   RegisterAssignmentDirection setAssignmentDirection(RegisterAssignmentDirection d)
-      {
-      return assignmentDirection = d;
-      }
 
    TR::RegisterPair* allocateArGprPair(TR::Register* lowRegister, TR::Register* highRegister);
    void splitBaseRegisterPairsForRRMemoryInstructions(TR::Node *node, TR::RegisterPair * sourceReg, TR::RegisterPair * targetReg);
@@ -606,6 +494,7 @@ public:
    bool needs64bitPrecision(TR::Node *node);
 
    virtual bool isUsing32BitEvaluator(TR::Node *node);
+   virtual bool getSupportsBitPermute();
    int32_t getEstimatedExtentOfLitLoop()  {return _extentOfLitPool;}
 
    int64_t setAvailableHPRSpillMask(int64_t i)  {return _availableHPRSpillMask = i;}
@@ -690,53 +579,16 @@ public:
    void setRealRegisterAssociation(TR::Register     *reg,
                                    TR::RealRegister::RegNum realNum);
    bool isGlobalRegisterAvailable(TR_GlobalRegisterNumber i, TR::DataType dt);
-   void registerSymbolSetup();
 
    // Used to model register liveness without Future Use Count.
    virtual bool isInternalControlFlowReg(TR::Register *reg);
    virtual void startInternalControlFlow(TR::Instruction *instr);
    virtual void endInternalControlFlow(TR::Instruction *instr) { _internalControlFlowRegisters.clear(); }
 
-   void setEvaluateNodeInRegPair(TR::Node * node, bool b = true)
-   {
-   if( !(node->getOpCodeValue()== TR::lload || node->getOpCodeValue() == TR::lloadi || node->getOpCodeValue() == TR::lconst))
-      return;
-
-   CS2::HashIndex hashIndex = 0;
-   if (_nodesToBeEvaluatedInRegPairs.Locate(node->getGlobalIndex(), hashIndex))
-      {
-      _nodesToBeEvaluatedInRegPairs.SetDataAt(hashIndex,b);
-      }
-   else
-      {
-
-      _nodesToBeEvaluatedInRegPairs.Add(node->getGlobalIndex(), b);
-      }
-   }
-
-   bool evaluateNodeInRegPair(TR::Node * node)
-   {
-   CS2::HashIndex hashIndex = 0;
-   if (!_nodesToBeEvaluatedInRegPairs.Locate(node->getGlobalIndex(), hashIndex))
-      return false;
-   else
-      return _nodesToBeEvaluatedInRegPairs.DataAt(hashIndex);
-   }
-
    bool doRematerialization() {return true;}
-
-   /**
-    * The number of nodes we want between a monexit and the next monent before transforming a monitored region with
-    * transactional lock elision.  On Z, we require 25-30 cycles between transactions, or else the latter transaction will
-    * be aborted (with significant penalty).  The 45 is an estimate based on CPI of 1.5-2, and average of 1 instruction per node.
-    */
-   int32_t getMinimumNumberOfNodesBetweenMonitorsForTLE() { return 45; }
 
    void dumpDataSnippets(TR::FILE *outFile);
    void dumpTargetAddressSnippets(TR::FILE *outFile);
-
-   bool specializedEpilogues() { return _cgFlags.testAny(S390CG_specializedEpilogues); }
-   void setSpecializedEpilogues(bool b) { _cgFlags.set(S390CG_specializedEpilogues, b); }
 
    bool getSupportsBitOpCodes() { return true;}
 
@@ -753,15 +605,9 @@ public:
    void setCondCodeShouldBePreserved(bool b) { _cgFlags.set(S390CG_condCodeShouldBePreserved, b); }
 
    uint8_t getFCondMoveBranchOpCond() { return fCondMoveBranchOpCond; }
-   void setFCondMoveBranchOpCond(TR::InstOpCode::S390BranchCondition b) { fCondMoveBranchOpCond = (getMaskForBranchCondition(b) >> 4) & 0xF; }
+   void setFCondMoveBranchOpCond(TR::InstOpCode::S390BranchCondition b) { fCondMoveBranchOpCond = (getMaskForBranchCondition(b)) & 0xF; }
 
    uint8_t getRCondMoveBranchOpCond() { return 0xF - fCondMoveBranchOpCond; }
-
-   void markBlockThatModifiesRegister(TR::RealRegister::RegNum reg, int32_t blockNum);
-
-   /** Checks if reg has to be restored in block blockNumber during epilogue */
-   bool restoreRegister(TR::RealRegister::RegNum reg, int32_t blockNumber);
-   void performReachingBlocks();
 
    /** Support for shrinkwrapping */
    bool processInstruction(TR::Instruction *instr, TR_BitVector **registerUsageInfo, int32_t &blockNum, int32_t &isFence, bool traceIt); // virt
@@ -781,7 +627,6 @@ public:
    void ensure64BitRegister(TR::Register *reg);
 
    virtual bool isAddMemoryUpdate(TR::Node * node, TR::Node * valueChild);
-   bool inlinePackedLongConversion();
 
    bool globalAccessRegistersSupported();
 
@@ -834,41 +679,6 @@ public:
     *     The last padding instruction generated, or \param cursor if \param size is zero.
     */
    TR::Instruction* insertPad(TR::Node* node, TR::Instruction* cursor, uint32_t size, bool prependCursor);
-
-   void setCurrentlyClobberedRestrictedRegister(int32_t regNum)
-      {
-      _currentlyClobberedRestrictedRegister = regNum;
-      }
-   void clearCurrentlyClobberedRestrictedRegister()
-      {
-      _currentlyClobberedRestrictedRegister = TR_INVALID_REGISTER;
-      }
-   int32_t getCurrentlyClobberedRestrictedRegister(int32_t regNum)
-      {
-      return _currentlyClobberedRestrictedRegister;
-      }
-
-   TR_BitVector * setKilledRestrictedRegisters(TR_BitVector *killRestrictedRegsBV)
-      {
-      return _killedRestrictedRegisters = killRestrictedRegsBV;
-      }
-   TR_BitVector * getKilledRestrictedRegisters()
-      {
-      return _killedRestrictedRegisters;
-      }
-
-   TR_BitVector * setCurrentlyRestrictedRegisters(TR_BitVector *currentRestrictedRegsBV)
-      {
-      return _currentlyRestrictedRegisters = currentRestrictedRegsBV;
-      }
-
-   TR_BitVector * getCurrentlyRestrictedRegisters()
-      {
-      return _currentlyRestrictedRegisters;
-      }
-
-   /** Heuristicly get the register pressure for doing codegen */
-   int8_t getCurrentRegisterPressure(TR_RegisterKinds rk = TR_GPR);
 
     struct TR_S390ConstantDataSnippetKey
         {
@@ -954,10 +764,6 @@ public:
    // Snippet Data functions
    void addDataConstantSnippet(TR::S390ConstantDataSnippet * snippet);
 
-   // Identify the Inst selection phase
-   bool getDoingInstructionSelection() { return _cgFlags.testAny(S390CG_doingInstructionSelection); }
-   void setDoingInstructionSelection(bool b) { _cgFlags.set(S390CG_doingInstructionSelection, b); }
-
    // Target Address List functions
    int32_t setEstimatedOffsetForTargetAddressSnippets();
    int32_t setEstimatedLocationsForTargetAddressSnippetLabels(int32_t estimatedSnippetStart);
@@ -978,7 +784,6 @@ public:
       {
       return 1 << (reg-1);
       }
-   bool fixedPointOverflowExceptionEnabled() { return false; }
 
    bool opCodeIsNoOpOnThisPlatform(TR::ILOpCode &opCode);
 
@@ -993,8 +798,6 @@ public:
       {
       return TR::Compiler->target.isZOS() && TR::Compiler->target.is32Bit();
       }
-
-   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method);
 
    bool isAddressScaleIndexSupported(int32_t scale) { if (scale <= 2) return true; return false; }
    using OMR::CodeGenerator::getSupportsConstantOffsetInAddressing;
@@ -1039,9 +842,6 @@ public:
 
    bool mulDecompositionCostIsJustified(int32_t numOfOperations, char bitPosition[], char operationType[], int64_t value);
 
-   bool disableCommoningOfVolatiles() { return false; } // TODO : Identitiy needs folding
-   bool allowDSEOfVolatiles() { return true; } // TODO : Identitiy needs folding
-
    bool canUseGoldenEagleImmediateInstruction( int32_t value )
      {
      return true;
@@ -1083,8 +883,6 @@ public:
    virtual void setVMThreadRequired(bool v); //override TR::CodeGenerator::setVMThreadRequired
 
    bool ilOpCodeIsSupported(TR::ILOpCodes);
-
-   void setupSpecializedEpilogues();
 
    void setUsesZeroBasePtr( bool v = true );
    bool getUsesZeroBasePtr();
@@ -1132,23 +930,15 @@ public:
    TR::Instruction* ccInstruction() { return _ccInstruction; }
    void setCCInstruction(TR::Instruction* cc) { _ccInstruction = cc; }
 
-   #define TR_DEFAULT_DATA_SNIPPET_EXPONENT 6
-   int32_t constantDataSnippetExponent() { return TR_DEFAULT_DATA_SNIPPET_EXPONENT; } // 1 << 6 = 64 byte max size for each constantDataSnippet
+   #define TR_DEFAULT_DATA_SNIPPET_EXPONENT 7
+   int32_t constantDataSnippetExponent() { return TR_DEFAULT_DATA_SNIPPET_EXPONENT; } // 1 << 7 = 128 byte max size for each constantDataSnippet
 
 
  private:
    TR_BitVector _globalGPRsPreservedAcrossCalls;
    TR_BitVector _globalFPRsPreservedAcrossCalls;
 
-   TR_BitVector *getBlocksThatModifyRegister(TR::RealRegister::RegNum reg)
-      {
-      return _blocksThatModifyRegister[reg];
-      }
-
-
-
    TR::S390ImmInstruction          *_returnTypeInfoInstruction;
-   RegisterAssignmentDirection     assignmentDirection;
    int32_t                        _extentOfLitPool;  // excludes snippets
    uint64_t                       _availableHPRSpillMask;
 
@@ -1210,12 +1000,6 @@ private:
 
    TR::SymbolReference* _reusableTempSlot;
 
-   TR_ReachingBlocks                *_reachingBlocks;
-   TR_BitVector                     **_blocksThatModifyRegister;
-
-   TR_BitVector  *_currentlyRestrictedRegisters;
-   TR_BitVector  *_killedRestrictedRegisters;
-
    TR::list<TR::Register *> _internalControlFlowRegisters;
 
    CS2::HashTable<ncount_t, bool, TR::Allocator> _nodesToBeEvaluatedInRegPairs;
@@ -1228,13 +1012,13 @@ protected:
       {
       // Available                       = 0x00000001,
       S390CG_extCodeBaseRegisterIsFree   = 0x00000002,
-      S390CG_doingInstructionSelection   = 0x00000004,
+      // Available                       = 0x00000004,
       S390CG_addStorageReferenceHints    = 0x00000008,
       S390CG_isOutOfLineHotPath          = 0x00000010,
       S390CG_literalPoolOnDemandOnRun    = 0x00000020,
       S390CG_prefetchNextStackCacheLine  = 0x00000040,
       S390CG_doesExit                    = 0x00000080,
-      S390CG_specializedEpilogues        = 0x00000100,
+      // Available                       = 0x00000100,
       S390CG_implicitNullChecks          = 0x00000200,
       S390CG_reusableSlotIsFree          = 0x00000400,
       S390CG_conditionalMovesEvaluation  = 0x00000800,
@@ -1254,10 +1038,8 @@ private:
    TR::Node *_nodeAddressOfCachedStatic;
    protected:
 
-   int32_t _currentlyClobberedRestrictedRegister;
    TR::SparseBitVector _bucketPlusIndexRegisters;
    TR::Instruction *_currentDEPEND;
-   uintptr_t _outgoingArgLevelDuringTreeEvaluation;
    };
 
 }
@@ -1268,13 +1050,7 @@ private:
 class TR_S390Peephole
    {
 public:
-   TR_S390Peephole(TR::Compilation* comp, TR::CodeGenerator *cg)
-      : _fe(comp->fe()),
-        _outFile(comp->getOutFile()),
-        _cursor(comp->getFirstInstruction()),
-        _cg(cg)
-      {
-      }
+   TR_S390Peephole(TR::Compilation* comp, TR::CodeGenerator *cg);
 
    void perform();
 
@@ -1305,6 +1081,7 @@ private:
    bool LGFRReduction();
    bool AGIReduction();
    bool ICMReduction();
+   bool replaceGuardedLoadWithSoftwareReadBarrier();
    bool LAReduction();
    bool NILHReduction();
    bool duplicateNILHReduction();
@@ -1343,13 +1120,10 @@ private:
    bool revertTo32BitShift();
    bool inlineEXtargetHelper(TR::Instruction *, TR::Instruction *);
    bool inlineEXtarget();
-   void markBlockThatModifiesRegister(TR::Instruction *, TR::Register *, int32_t);
+   void markBlockThatModifiesRegister(TR::Instruction *, TR::Register *);
    void reloadLiteralPoolRegisterForCatchBlock();
 
    TR::Compilation * comp() { return TR::comp(); }
-
-private:
-   void setupSpecializedEpilogues();
 
 private:
    TR_FrontEnd * _fe;

@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 #include "modronbase.h"
 
@@ -37,20 +41,6 @@
 #include "Scavenger.hpp"
 #include "SlotObject.hpp"
 
-/* This enum extends ConcurrentStatus with values > CONCURRENT_ROOT_TRACING. Values from this
- * and from ConcurrentStatus are treated as uintptr_t values everywhere except when used as
- * case labels in switch() statements where manifest constants are required.
- * 
- * ConcurrentStatus extensions allow the client language to define discrete units of work
- * that can be executed in parallel by concurrent threads. ConcurrentGC will call 
- * MM_CollectorLanguageInterfaceImpl::concurrentGC_collectRoots(..., concurrentStatus, ...)
- * only once with each client-defined status value. The thread that receives the call
- * can check the concurrentStatus value to select and execute the appropriate unit of work.
- */
-enum {
-	CONCURRENT_ROOT_TRACING1 = ((uintptr_t)((uintptr_t)CONCURRENT_ROOT_TRACING + 1))
-};
-
 /**
  * Initialization
  */
@@ -61,7 +51,7 @@ MM_CollectorLanguageInterfaceImpl::newInstance(MM_EnvironmentBase *env)
 	OMR_VM *omrVM = env->getOmrVM();
 	MM_GCExtensionsBase *extensions = MM_GCExtensionsBase::getExtensions(omrVM);
 
-	cli = (MM_CollectorLanguageInterfaceImpl *)extensions->getForge()->allocate(sizeof(MM_CollectorLanguageInterfaceImpl), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	cli = (MM_CollectorLanguageInterfaceImpl *)extensions->getForge()->allocate(sizeof(MM_CollectorLanguageInterfaceImpl), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (NULL != cli) {
 		new(cli) MM_CollectorLanguageInterfaceImpl(omrVM);
 		if (!cli->initialize(omrVM)) {
@@ -217,72 +207,3 @@ MM_CollectorLanguageInterfaceImpl::scavenger_fixupDestroyedSlot(MM_EnvironmentBa
 #endif /* OMR_INTERP_COMPRESSED_OBJECT_HEADER */
 #endif /* OMR_GC_MODRON_SCAVENGER */
 
-#if defined(OMR_GC_MODRON_COMPACTION)
-void
-MM_CollectorLanguageInterfaceImpl::compactScheme_verifyHeap(MM_EnvironmentBase *env, MM_MarkMap *markMap)
-{
-	Assert_MM_unimplemented();
-}
-
-void
-MM_CollectorLanguageInterfaceImpl::compactScheme_fixupRoots(MM_EnvironmentBase *env, MM_CompactScheme *compactScheme)
-{
-	Assert_MM_unimplemented();
-}
-
-void
-MM_CollectorLanguageInterfaceImpl::compactScheme_workerCleanupAfterGC(MM_EnvironmentBase *env)
-{
-	Assert_MM_unimplemented();
-}
-
-void
-MM_CollectorLanguageInterfaceImpl::compactScheme_languageMasterSetupForGC(MM_EnvironmentBase *env)
-{
-	Assert_MM_unimplemented();
-}
-#endif /* OMR_GC_MODRON_COMPACTION */
-
-#if defined(OMR_GC_MODRON_CONCURRENT_MARK)
-MM_ConcurrentSafepointCallback*
-MM_CollectorLanguageInterfaceImpl::concurrentGC_createSafepointCallback(MM_EnvironmentBase *env)
-{
-	MM_EnvironmentStandard *envStd = MM_EnvironmentStandard::getEnvironment(env);
-	return MM_ConcurrentSafepointCallback::newInstance(envStd);
-}
-
-uintptr_t
-MM_CollectorLanguageInterfaceImpl::concurrentGC_getNextTracingMode(uintptr_t executionMode)
-{
-	uintptr_t nextExecutionMode = CONCURRENT_TRACE_ONLY;
-	switch (executionMode) {
-	case CONCURRENT_ROOT_TRACING:
-		nextExecutionMode = CONCURRENT_ROOT_TRACING1;
-		break;
-	case CONCURRENT_ROOT_TRACING1:
-		nextExecutionMode = CONCURRENT_TRACE_ONLY;
-		break;
-	default:
-		Assert_MM_unreachable();
-	}
-
-	return nextExecutionMode;
-}
-
-uintptr_t
-MM_CollectorLanguageInterfaceImpl::concurrentGC_collectRoots(MM_EnvironmentStandard *env, uintptr_t concurrentStatus, bool *collectedRoots, bool *paidTax)
-{
-	uintptr_t bytesScanned = 0;
-	*collectedRoots = true;
-	*paidTax = true;
-
-	switch (concurrentStatus) {
-	case CONCURRENT_ROOT_TRACING1:
-		break;
-	default:
-		Assert_MM_unreachable();
-	}
-
-	return bytesScanned;
-}
-#endif /* OMR_GC_MODRON_CONCURRENT_MARK */

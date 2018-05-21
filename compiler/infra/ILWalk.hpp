@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #ifndef OMR_INFRA_ILWALK
 #define OMR_INFRA_ILWALK
@@ -338,6 +341,42 @@ class AllBlockIterator: protected BlockIterator
    public: // operators
 
    void operator ++() { stepForward(); }
+   };
+
+/** \brief
+ *     Iterates through extended basic block sequences in a treetop order, where treetop order means the order in
+ *     which the extended basic blocks appear in a trace log file.
+ */
+class TreeTopOrderExtendedBlockIterator : protected BlockIterator
+   {
+
+   public:
+
+      TreeTopOrderExtendedBlockIterator(TR::Compilation* comp, const char* name = NULL);
+
+   /** \brief
+    *     Returns the first basic block in the current iteration of the extended basic block sequence.
+    */
+   TR::Block* getFirst();
+
+   /** \brief
+    *     Returns the last basic block in the current iteration of the extended basic block sequence.
+    */
+   TR::Block* getLast();
+
+   /** \brief
+    *     Advances the iterator to the next extended basic block in TreeTop order.
+    */
+   void operator ++();
+
+   private:
+
+   void logCurrentLocation();
+
+   private:
+
+   TR::Block* _currBlock;
+   TR::Block* _nextBlock;
    };
 
 }

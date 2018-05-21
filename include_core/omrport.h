@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- *    Multiple authors (IBM Corp.) - z/TPF platform initial port to OMR environment
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #if !defined(OMRPORT_H_)
@@ -250,7 +253,7 @@
 #define OMRPORT_TIME_HIRES_MILLITIME_DIVISOR ((uint64_t) 2048000)
 #define OMRTIME_HIRES_CLOCK_FREQUENCY ((uint64_t) 2048000000) /* Frequency is microseconds / second */
 
-#else
+#else /* defined(S390) || defined(J9ZOS390) */
 
 #define OMRPORT_TIME_HIRES_NANOTIME_NUMERATOR ((uint64_t) 0)
 #define OMRPORT_TIME_HIRES_NANOTIME_DENOMINATOR ((uint64_t) 0)
@@ -366,6 +369,13 @@ typedef struct J9PortVmemParams {
 	 *  		- enabled for Linux only,
 	 *  		- If not set, search memory in linear scan method
 	 *  		- If set, scan memory in a quick way, using memory information in file /proc/self/maps. (still use linear search if failed)
+	 * \arg OMRPORT_VMEM_ADDRESS_HINT
+	 *		- enabled for Linux and default page allocations only (has no effect on large page allocations)
+	 *		- If not set, search memory in linear scan method
+	 *		- If set, return whatever mmap gives us (only one allocation attempt)
+	 *		- this option is based on the observation that mmap would take the given address as a hint about where to place the mapping
+	 *		- this option does not apply to large page allocations as the allocation is done with shmat instead of mmap
+	 *
 	 */
 	uintptr_t options;
 
@@ -396,6 +406,7 @@ typedef enum J9VMemMemoryQuery {
 #define OMRPORT_VMEM_ZOS_USE2TO32G_AREA 16
 #define OMRPORT_VMEM_ALLOC_QUICK 		32
 #define OMRPORT_VMEM_ZTPF_USE_31BIT_MALLOC 64
+#define OMRPORT_VMEM_ADDRESS_HINT 128
 
 /**
  * @name Virtual Memory Address
@@ -635,14 +646,15 @@ typedef struct J9ProcessorInfos {
 #define OMRPORT_SLOPEN_NO_LOOKUP_MSG_FOR_NOT_FOUND  4
 #define OMRPORT_SLOPEN_OPEN_EXECUTABLE 8     /* Can be ORed without affecting existing flags. */
 
-#define OMRPORT_ARCH_X86  "x86"
-#define OMRPORT_ARCH_PPC  "ppc" 				/* in line with IBM JDK 1.22 and above for AIX and Linux/PPC */
-#define OMRPORT_ARCH_PPC64  "ppc64"
-#define OMRPORT_ARCH_PPC64LE  "ppc64le"
-#define OMRPORT_ARCH_S390  "s390"
-#define OMRPORT_ARCH_S390X  "s390x"
-#define OMRPORT_ARCH_HAMMER  "amd64"
-#define OMRPORT_ARCH_ARM     "arm"
+#define OMRPORT_ARCH_X86       "x86"
+#define OMRPORT_ARCH_PPC       "ppc" 				/* in line with IBM JDK 1.22 and above for AIX and Linux/PPC */
+#define OMRPORT_ARCH_PPC64     "ppc64"
+#define OMRPORT_ARCH_PPC64LE   "ppc64le"
+#define OMRPORT_ARCH_S390      "s390"
+#define OMRPORT_ARCH_S390X     "s390x"
+#define OMRPORT_ARCH_HAMMER    "amd64"
+#define OMRPORT_ARCH_ARM       "arm"
+#define OMRPORT_ARCH_AARCH64   "aarch64"
 
 #define OMRPORT_TTY_IN  0
 #define OMRPORT_TTY_OUT  1
@@ -692,6 +704,7 @@ typedef struct J9ProcessorInfos {
 
 #define OMRPORT_SIG_FLAG_MAY_RETURN  1
 #define OMRPORT_SIG_FLAG_MAY_CONTINUE_EXECUTION  2
+#define OMRPORT_SIG_SMALLEST_SIGNAL_FLAG  4
 #define OMRPORT_SIG_FLAG_SIGSEGV  4
 #define OMRPORT_SIG_FLAG_SIGBUS  8
 #define OMRPORT_SIG_FLAG_SIGILL  16
@@ -713,11 +726,13 @@ typedef struct J9ProcessorInfos {
 #define OMRPORT_SIG_FLAG_SIGXFSZ  0x8000
 #define OMRPORT_SIG_FLAG_SIGRESERVED16  0x10000
 #define OMRPORT_SIG_FLAG_SIGRESERVED17  0x20000
-#define OMRPORT_SIG_FLAG_SIGALLASYNC  (OMRPORT_SIG_FLAG_SIGQUIT | OMRPORT_SIG_FLAG_SIGABRT | OMRPORT_SIG_FLAG_SIGTERM | OMRPORT_SIG_FLAG_SIGRECONFIG | OMRPORT_SIG_FLAG_SIGXFSZ)
 #define OMRPORT_SIG_FLAG_SIGFPE_DIV_BY_ZERO  (OMRPORT_SIG_FLAG_SIGFPE | 0x40000)
 #define OMRPORT_SIG_FLAG_SIGFPE_INT_DIV_BY_ZERO  (OMRPORT_SIG_FLAG_SIGFPE | 0x80000)
 #define OMRPORT_SIG_FLAG_SIGFPE_INT_OVERFLOW  (OMRPORT_SIG_FLAG_SIGFPE | 0x100000)
 #define OMRPORT_SIG_FLAG_DOES_NOT_MAP_TO_POSIX  0x200000
+#define OMRPORT_SIG_FLAG_SIGHUP  0x400000
+#define OMRPORT_SIG_FLAG_SIGCONT  0x800000
+#define OMRPORT_SIG_FLAG_SIGALLASYNC  (OMRPORT_SIG_FLAG_SIGQUIT | OMRPORT_SIG_FLAG_SIGABRT | OMRPORT_SIG_FLAG_SIGTERM | OMRPORT_SIG_FLAG_SIGRECONFIG | OMRPORT_SIG_FLAG_SIGXFSZ | OMRPORT_SIG_FLAG_SIGINT | OMRPORT_SIG_FLAG_SIGHUP | OMRPORT_SIG_FLAG_SIGCONT)
 
 #define OMRPORT_SIG_EXCEPTION_CONTINUE_SEARCH  0
 #define OMRPORT_SIG_EXCEPTION_CONTINUE_EXECUTION  1
@@ -918,6 +933,9 @@ typedef struct J9MmapHandle {
 #define _XOPEN_SOURCE
 #endif /* defined(OSX) */
 #include <ucontext.h>
+#if defined(OSX)
+#undef _XOPEN_SOURCE
+#endif /* OSX */
 #endif /* !WIN32 */
 
 #if defined(J9ZOS390)
@@ -1001,6 +1019,11 @@ typedef struct OMROSKernelInfo {
 	uint32_t minorRevision;
 } OMROSKernelInfo;
 
+/* bitwise flags indicating cgroup subsystems supported by portlibrary */
+#define OMR_CGROUP_SUBSYSTEM_CPU ((uint64_t)0x1)
+#define OMR_CGROUP_SUBSYSTEM_MEMORY ((uint64_t)0x2)
+#define OMR_CGROUP_SUBSYSTEM_ALL (OMR_CGROUP_SUBSYSTEM_CPU | OMR_CGROUP_SUBSYSTEM_MEMORY)
+
 struct OMRPortLibrary;
 typedef struct J9Heap J9Heap;
 
@@ -1072,6 +1095,8 @@ typedef struct OMRPortLibrary {
 	int32_t (*sysinfo_get_processor_info)(struct OMRPortLibrary *portLibrary, struct J9ProcessorInfos *procInfo) ;
 	/** see @ref omrsysinfo.c::omrsysinfo_destroy_processor_info "omrsysinfo_destroy_processor_info"*/
 	void (*sysinfo_destroy_processor_info)(struct OMRPortLibrary *portLibrary, struct J9ProcessorInfos *procInfos) ;
+	/** see @ref omrsysinfo.c::omrsysinfo_get_addressable_physical_memory "omrsysinfo_get_addressable_physical_memory"*/
+	uint64_t (*sysinfo_get_addressable_physical_memory)(struct OMRPortLibrary *portLibrary) ;
 	/** see @ref omrsysinfo.c::omrsysinfo_get_physical_memory "omrsysinfo_get_physical_memory"*/
 	uint64_t (*sysinfo_get_physical_memory)(struct OMRPortLibrary *portLibrary) ;
 	/** see @ref omrsysinfo.c::omrsysinfo_get_OS_version "omrsysinfo_get_OS_version"*/
@@ -1348,27 +1373,35 @@ typedef struct OMRPortLibrary {
 	const char *(*nls_lookup_message)(struct OMRPortLibrary *portLibrary, uintptr_t flags, uint32_t module_name, uint32_t message_num, const char *default_string) ;
 	/** see @ref omrportcontrol.c::omrport_control "omrport_control"*/
 	int32_t (*port_control)(struct OMRPortLibrary *portLibrary, const char *key, uintptr_t value) ;
-	/** see @ref omrsig.c::omrsig_startup "omrsig_startup"*/
+	/** see @ref omrsignal.c::omrsig_startup "omrsig_startup"*/
 	int32_t (*sig_startup)(struct OMRPortLibrary *portLibrary) ;
-	/** see @ref omrsig.c::omrsig_shutdown "omrsig_shutdown"*/
+	/** see @ref omrsignal.c::omrsig_shutdown "omrsig_shutdown"*/
 	void (*sig_shutdown)(struct OMRPortLibrary *portLibrary) ;
-	/** see @ref omrsig.c::omrsig_protect "omrsig_protect"*/
+	/** see @ref omrsignal.c::omrsig_protect "omrsig_protect"*/
 	int32_t (*sig_protect)(struct OMRPortLibrary *portLibrary,  omrsig_protected_fn fn, void *fn_arg, omrsig_handler_fn handler, void *handler_arg, uint32_t flags, uintptr_t *result) ;
-	/** see @ref omrsig.c::omrsig_can_protect "omrsig_can_protect"*/
+	/** see @ref omrsignal.c::omrsig_can_protect "omrsig_can_protect"*/
 	int32_t (*sig_can_protect)(struct OMRPortLibrary *portLibrary,  uint32_t flags) ;
-	/** see @ref omrsig.c::omrsig_set_async_signal_handler "omrsig_set_async_signal_handler"*/
-	uint32_t (*sig_set_async_signal_handler)(struct OMRPortLibrary *portLibrary,  omrsig_handler_fn handler, void *handler_arg, uint32_t flags) ;
-	/** see @ref omrsig.c::omrsig_info "omrsig_info"*/
+	/** see @ref omrsignal.c::omrsig_set_async_signal_handler "omrsig_set_async_signal_handler"*/
+	int32_t (*sig_set_async_signal_handler)(struct OMRPortLibrary *portLibrary, omrsig_handler_fn handler, void *handler_arg, uint32_t flags) ;
+	/** see @ref omrsignal.c::omrsig_set_single_async_signal_handler "omrsig_set_single_async_signal_handler"*/
+	int32_t (*sig_set_single_async_signal_handler)(struct OMRPortLibrary *portLibrary, omrsig_handler_fn handler, void *handler_arg, uint32_t portlibSignalFlag, void **oldOSHandler) ;
+	/** see @ref omrsignal.c::omrsig_map_os_signal_to_portlib_signal "omrsig_map_os_signal_to_portlib_signal"*/
+	uint32_t (*sig_map_os_signal_to_portlib_signal)(struct OMRPortLibrary *portLibrary, uint32_t osSignalValue) ;
+	/** see @ref omrsignal.c::omrsig_map_portlib_signal_to_os_signal "omrsig_map_portlib_signal_to_os_signal"*/
+	int32_t (*sig_map_portlib_signal_to_os_signal)(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag) ;
+	/** see @ref omrsignal.c::omrsig_register_os_handler "omrsig_register_os_handler"*/
+	int32_t (*sig_register_os_handler)(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag, void *newOSHandler, void **oldOSHandler) ;
+	/** see @ref omrsignal.c::omrsig_info "omrsig_info"*/
 	uint32_t (*sig_info)(struct OMRPortLibrary *portLibrary, void *info, uint32_t category, int32_t index, const char **name, void **value) ;
-	/** see @ref omrsig.c::omrsig_info_count "omrsig_info_count"*/
+	/** see @ref omrsignal.c::omrsig_info_count "omrsig_info_count"*/
 	uint32_t (*sig_info_count)(struct OMRPortLibrary *portLibrary, void *info, uint32_t category) ;
-	/** see @ref omrsig.c::omrsig_set_options "omrsig_set_options"*/
+	/** see @ref omrsignal.c::omrsig_set_options "omrsig_set_options"*/
 	int32_t (*sig_set_options)(struct OMRPortLibrary *portLibrary, uint32_t options) ;
-	/** see @ref omrsig.c::omrsig_get_options "omrsig_get_options"*/
+	/** see @ref omrsignal.c::omrsig_get_options "omrsig_get_options"*/
 	uint32_t (*sig_get_options)(struct OMRPortLibrary *portLibrary) ;
-	/** see @ref omrsig.c::omrsig_get_current_signal "omrsig_get_current_signal"*/
+	/** see @ref omrsignal.c::omrsig_get_current_signal "omrsig_get_current_signal"*/
 	intptr_t (*sig_get_current_signal)(struct OMRPortLibrary *portLibrary) ;
-	/** see @ref omrsig.c::omrsig_set_reporter_priority "omrsig_set_reporter_priority"*/
+	/** see @ref omrsignal.c::omrsig_set_reporter_priority "omrsig_set_reporter_priority"*/
 	int32_t (*sig_set_reporter_priority)(struct OMRPortLibrary *portLibrary, uintptr_t priority) ;
 	/** see @ref omrfile.c::omrfile_read_text "omrfile_read_text"*/
 	char  *(*file_read_text)(struct OMRPortLibrary *portLibrary, intptr_t fd, char *buf, intptr_t nbytes) ;
@@ -1438,12 +1471,18 @@ typedef struct OMRPortLibrary {
 	BOOLEAN  ( *sysinfo_os_has_feature)(struct OMRPortLibrary *portLibrary, struct OMROSDesc *desc, uint32_t feature) ;
 	/** see @ref omrsysinfo.c::omrsysinfo_os_kernel_info "omrsysinfo_os_kernel_info"*/
 	BOOLEAN  ( *sysinfo_os_kernel_info)(struct OMRPortLibrary *portLibrary, struct OMROSKernelInfo *kernelInfo) ;
-	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_is_limits_supported "omrsysinfo_cgroup_is_limits_supported"*/
-	int32_t ( *sysinfo_cgroup_is_limits_supported)(struct OMRPortLibrary *portLibrary);
-	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_is_limits_enabled "omrsysinfo_cgroup_is_limits_enabled"*/
-	BOOLEAN ( *sysinfo_cgroup_is_limits_enabled)(struct OMRPortLibrary *portLibrary);
-	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_enable_limits "omrsysinfo_cgroup_enable_limits"*/
-	int32_t ( *sysinfo_cgroup_enable_limits)(struct OMRPortLibrary *portLibrary);
+	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_is_system_available "omrsysinfo_cgroup_is_system_available"*/
+	BOOLEAN  ( *sysinfo_cgroup_is_system_available)(struct OMRPortLibrary *portLibrary);
+	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_get_available_subsystems "omrsysinfo_cgroup_get_available_subsystems"*/
+	uint64_t ( *sysinfo_cgroup_get_available_subsystems)(struct OMRPortLibrary *portLibrary);
+	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_are_subsystems_available "omrsysinfo_cgroup_are_subsystems_available"*/
+	uint64_t ( *sysinfo_cgroup_are_subsystems_available)(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlags);
+	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_get_enabled_subsystems "omrsysinfo_cgroup_get_enabled_subsystems"*/
+	uint64_t ( *sysinfo_cgroup_get_enabled_subsystems)(struct OMRPortLibrary *portLibrary);
+	/** see @ref omrsysinfo_cgroup_enable_subsystems "omrsysinfo_cgroup_enable_subsystems"*/
+	uint64_t ( *sysinfo_cgroup_enable_subsystems)(struct OMRPortLibrary *portLibrary, uint64_t requestedSubsystems);
+	/** see @ref omrsysinfo_cgroup_are_subsystems_enabled "omrsysinfo_cgroup_are_subsystems_enabled"*/
+	uint64_t ( *sysinfo_cgroup_are_subsystems_enabled)(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlags);
 	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_get_memlimit "omrsysinfo_cgroup_get_memlimit"*/
 	int32_t (*sysinfo_cgroup_get_memlimit)(struct OMRPortLibrary *portLibrary, uint64_t *limit);
 	/** see @ref omrport.c::omrport_init_library "omrport_init_library"*/
@@ -1706,6 +1745,7 @@ extern J9_CFUNC int32_t omrport_getVersion(struct OMRPortLibrary *portLibrary);
 #define omrsysinfo_get_memory_info_with_flags(param1,param2) privateOmrPortLibrary->sysinfo_get_memory_info(privateOmrPortLibrary, (param1), (param2))
 #define omrsysinfo_get_processor_info(param1) privateOmrPortLibrary->sysinfo_get_processor_info(privateOmrPortLibrary, (param1))
 #define omrsysinfo_destroy_processor_info(param1) privateOmrPortLibrary->sysinfo_destroy_processor_info(privateOmrPortLibrary, (param1))
+#define omrsysinfo_get_addressable_physical_memory() privateOmrPortLibrary->sysinfo_get_addressable_physical_memory(privateOmrPortLibrary)
 #define omrsysinfo_get_physical_memory() privateOmrPortLibrary->sysinfo_get_physical_memory(privateOmrPortLibrary)
 #define omrsysinfo_get_OS_version() privateOmrPortLibrary->sysinfo_get_OS_version(privateOmrPortLibrary)
 #define omrsysinfo_get_env(param1,param2,param3) privateOmrPortLibrary->sysinfo_get_env(privateOmrPortLibrary, (param1), (param2), (param3))
@@ -1849,6 +1889,10 @@ extern J9_CFUNC int32_t omrport_getVersion(struct OMRPortLibrary *portLibrary);
 #define omrsig_protect(param1,param2,param3,param4,param5,param6) privateOmrPortLibrary->sig_protect(privateOmrPortLibrary, (param1), (param2), (param3), (param4), (param5), (param6))
 #define omrsig_can_protect(param1) privateOmrPortLibrary->sig_can_protect(privateOmrPortLibrary, (param1))
 #define omrsig_set_async_signal_handler(param1,param2,param3) privateOmrPortLibrary->sig_set_async_signal_handler(privateOmrPortLibrary, (param1), (param2), (param3))
+#define omrsig_set_single_async_signal_handler(param1,param2,param3,param4) privateOmrPortLibrary->sig_set_single_async_signal_handler(privateOmrPortLibrary, (param1), (param2), (param3), (param4))
+#define omrsig_map_os_signal_to_portlib_signal(param1) privateOmrPortLibrary->sig_map_os_signal_to_portlib_signal(privateOmrPortLibrary, (param1))
+#define omrsig_map_portlib_signal_to_os_signal(param1) privateOmrPortLibrary->sig_map_portlib_signal_to_os_signal(privateOmrPortLibrary, (param1))
+#define omrsig_register_os_handler(param1,param2,param3) privateOmrPortLibrary->sig_register_os_handler(privateOmrPortLibrary, (param1), (param2), (param3))
 #define omrsig_info(param1,param2,param3,param4,param5) privateOmrPortLibrary->sig_info(privateOmrPortLibrary, (param1), (param2), (param3), (param4), (param5))
 #define omrsig_info_count(param1,param2) privateOmrPortLibrary->sig_info_count(privateOmrPortLibrary, (param1), (param2))
 #define omrsig_set_options(param1) privateOmrPortLibrary->sig_set_options(privateOmrPortLibrary, (param1))
@@ -1886,9 +1930,12 @@ extern J9_CFUNC int32_t omrport_getVersion(struct OMRPortLibrary *portLibrary);
 #define omrsysinfo_get_os_description(param1) privateOmrPortLibrary->sysinfo_get_os_description(privateOmrPortLibrary, (param1))
 #define omrsysinfo_os_has_feature(param1,param2) privateOmrPortLibrary->sysinfo_os_has_feature(privateOmrPortLibrary, (param1), (param2))
 #define omrsysinfo_os_kernel_info(param1) privateOmrPortLibrary->sysinfo_os_kernel_info(privateOmrPortLibrary, (param1))
-#define omrsysinfo_cgroup_is_limits_supported() privateOmrPortLibrary->sysinfo_cgroup_is_limits_supported(privateOmrPortLibrary)
-#define omrsysinfo_cgroup_is_limits_enabled() privateOmrPortLibrary->sysinfo_cgroup_is_limits_enabled(privateOmrPortLibrary) 
-#define omrsysinfo_cgroup_enable_limits() privateOmrPortLibrary->sysinfo_cgroup_enable_limits(privateOmrPortLibrary)
+#define omrsysinfo_cgroup_is_system_available() privateOmrPortLibrary->sysinfo_cgroup_is_system_available(privateOmrPortLibrary)
+#define omrsysinfo_cgroup_get_available_subsystems() privateOmrPortLibrary->sysinfo_cgroup_get_available_subsystems(privateOmrPortLibrary)
+#define omrsysinfo_cgroup_are_subsystems_available(param1) privateOmrPortLibrary->sysinfo_cgroup_are_subsystems_available(privateOmrPortLibrary, param1)
+#define omrsysinfo_cgroup_get_enabled_subsystems() privateOmrPortLibrary->sysinfo_cgroup_get_enabled_subsystems(privateOmrPortLibrary)
+#define omrsysinfo_cgroup_enable_subsystems(param1) privateOmrPortLibrary->sysinfo_cgroup_enable_subsystems(privateOmrPortLibrary, param1)
+#define omrsysinfo_cgroup_are_subsystems_enabled(param1) privateOmrPortLibrary->sysinfo_cgroup_are_subsystems_enabled(privateOmrPortLibrary, param1)
 #define omrsysinfo_cgroup_get_memlimit(param1) privateOmrPortLibrary->sysinfo_cgroup_get_memlimit(privateOmrPortLibrary, param1)
 #define omrintrospect_startup() privateOmrPortLibrary->introspect_startup(privateOmrPortLibrary)
 #define omrintrospect_shutdown() privateOmrPortLibrary->introspect_shutdown(privateOmrPortLibrary)

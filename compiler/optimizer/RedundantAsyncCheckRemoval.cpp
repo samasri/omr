@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/RedundantAsyncCheckRemoval.hpp"
@@ -46,8 +49,8 @@
 #include "il/symbol/MethodSymbol.hpp"          // for MethodSymbol
 #include "infra/Assert.hpp"                    // for TR_ASSERT
 #include "infra/BitVector.hpp"                 // for TR_BitVector
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
-#include "infra/TRCfgNode.hpp"                 // for CFGNode
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
+#include "infra/CfgNode.hpp"                   // for CFGNode
 #include "optimizer/Optimization_inlines.hpp"
 #include "optimizer/Optimizer.hpp"             // for Optimizer
 #include "optimizer/Structure.hpp"             // for TR_StructureSubGraphNode, etc
@@ -103,7 +106,7 @@ bool TR_RedundantAsyncCheckRemoval::shouldPerform()
    {
    // Don't run when profiling
    //
-   if (comp()->isProfilingCompilation() || comp()->generateArraylets())
+   if (comp()->getProfilingMode() == JitProfiling || comp()->generateArraylets())
       return false;
 
 
@@ -417,12 +420,21 @@ bool TR_RedundantAsyncCheckRemoval::callDoesAnImplicitAsyncCheck(TR::Node *callN
        (symbol->getRecognizedMethod()==TR::java_lang_Integer_rotateLeft) ||
        (symbol->getRecognizedMethod()==TR::java_lang_Long_rotateLeft) ||
        (symbol->getRecognizedMethod()==TR::java_lang_Integer_rotateRight) ||
-       (symbol->getRecognizedMethod()==TR::java_lang_Long_rotateRight) ||
-       (symbol->getRecognizedMethod()==TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z) ||
-       (symbol->getRecognizedMethod()==TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z) ||
-       (symbol->getRecognizedMethod()==TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z)
+       (symbol->getRecognizedMethod()==TR::java_lang_Long_rotateRight)
        )
        return false;
+
+   // Beginning in Java9 we use the same enum values for both the
+   // sun.misc.Unsafe wrappers and the jdk.internal.misc.Unsafe JNI methods, so
+   // for these we need to do an additional test to check if they are the native
+   // versions or not.
+   if (symbol->isNative() &&
+       ((symbol->getRecognizedMethod()==TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z) ||
+       (symbol->getRecognizedMethod()==TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z) ||
+       (symbol->getRecognizedMethod()==TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z))
+      )
+      return false;
+
 
    if ((symbol->getRecognizedMethod()==TR::java_math_BigDecimal_DFPPerformHysteresis)  ||
        (symbol->getRecognizedMethod()==TR::java_math_BigDecimal_DFPUseDFP) ||
@@ -830,7 +842,7 @@ int32_t TR_RedundantAsyncCheckRemoval::findShallowestCommonCaller(int32_t callSi
       else
 	 callSiteIndex2 = comp()->getInlinedCallSite(callSiteIndex2)._byteCodeInfo.getCallerIndex();
       }
-   if ((callSiteIndex1 == callSiteIndex2))
+   if (callSiteIndex1 == callSiteIndex2)
       return callSiteIndex1;
    else
       return -1;
@@ -2005,8 +2017,8 @@ void TR_LoopEstimator::mergeWithLoopIncrements(TR::Block *block, IncrementInfo *
 void TR_LoopEstimator::IncrementInfo::merge(IncrementInfo *other)
    {
    if (other->isUnknownValue() ||
-       _kind == Arithmetic && other->_kind == Geometric ||
-       _kind == Geometric && other->_kind == Arithmetic)
+       (_kind == Arithmetic && other->_kind == Geometric) ||
+       (_kind == Geometric && other->_kind == Arithmetic))
       _unknown = true;
    else if (!_unknown)
       {

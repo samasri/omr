@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 
@@ -188,7 +192,7 @@ MM_ParallelDispatcher::newInstance(MM_EnvironmentBase *env, omrsig_handler_fn ha
 {
 	MM_ParallelDispatcher *dispatcher;
 	
-	dispatcher = (MM_ParallelDispatcher *)env->getForge()->allocate(sizeof(MM_ParallelDispatcher), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	dispatcher = (MM_ParallelDispatcher *)env->getForge()->allocate(sizeof(MM_ParallelDispatcher), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (dispatcher) {
 		new(dispatcher) MM_ParallelDispatcher(env, handler, handler_arg, defaultOSStackSize);
 		if(!dispatcher->initialize(env)) {
@@ -202,7 +206,7 @@ MM_ParallelDispatcher::newInstance(MM_EnvironmentBase *env, omrsig_handler_fn ha
 void
 MM_ParallelDispatcher::kill(MM_EnvironmentBase *env)
 {
-	MM_Forge *forge = env->getForge();
+	OMR::GC::Forge *forge = env->getForge();
 
 	if(_slaveThreadMutex) {
 		omrthread_monitor_destroy(_slaveThreadMutex);
@@ -236,7 +240,7 @@ MM_ParallelDispatcher::kill(MM_EnvironmentBase *env)
 bool
 MM_ParallelDispatcher::initialize(MM_EnvironmentBase *env)
 {
-	MM_Forge *forge = env->getForge();
+	OMR::GC::Forge *forge = env->getForge();
 
 	_threadCountMaximum = env->getExtensions()->gcThreadCount;
 	Assert_MM_true(0 < _threadCountMaximum);
@@ -248,19 +252,19 @@ MM_ParallelDispatcher::initialize(MM_EnvironmentBase *env)
 	}
 
 	/* Initialize the thread tables */
-	_threadTable = (omrthread_t *)forge->allocate(_threadCountMaximum * sizeof(omrthread_t), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	_threadTable = (omrthread_t *)forge->allocate(_threadCountMaximum * sizeof(omrthread_t), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if(!_threadTable) {
 		goto error_no_memory;
 	}
 	memset(_threadTable, 0, _threadCountMaximum * sizeof(omrthread_t));
 
-	_statusTable = (uintptr_t *)forge->allocate(_threadCountMaximum * sizeof(uintptr_t *), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	_statusTable = (uintptr_t *)forge->allocate(_threadCountMaximum * sizeof(uintptr_t *), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if(!_statusTable) {
 		goto error_no_memory;
 	}
 	memset(_statusTable, 0, _threadCountMaximum * sizeof(uintptr_t *));
 
-	_taskTable = (MM_Task **)forge->allocate(_threadCountMaximum * sizeof(MM_Task *), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	_taskTable = (MM_Task **)forge->allocate(_threadCountMaximum * sizeof(MM_Task *), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if(!_taskTable) {
 		goto error_no_memory;
 	}

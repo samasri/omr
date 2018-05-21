@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <stdint.h>                                 // for int32_t, etc
@@ -115,7 +118,6 @@ OMR::Power::CodeGenerator::CodeGenerator() :
      _stackPtrRegister(NULL),
      _constantData(NULL),
      _blockCallInfo(NULL),
-     _assignmentDirection(Backward),
      _transientLongRegisters(self()->trMemory()),
      conversionBuffer(NULL),
      _outOfLineCodeSectionList(getTypedAllocator<TR_PPCOutOfLineCodeSection*>(self()->comp()->allocator()))
@@ -129,23 +131,6 @@ OMR::Power::CodeGenerator::CodeGenerator() :
    _unlatchedRegisterList[0] = 0; // mark that list is empty
 
    _linkageProperties = &self()->getLinkage()->getProperties();
-
-   _specializedEpilogues = self()->comp()->getOption(TR_EnableSpecializedEpilogues) && self()->comp()->getOptLevel() >= hot;
-   // disable specialized epilogues when shrinkwrapping
-   // is enabled
-   if (!self()->comp()->getOption(TR_DisableShrinkWrapping))
-      _specializedEpilogues = false;
-
-   if (_specializedEpilogues)
-      {
-      _blocksThatModifyRegister = (TR_BitVector **)self()->trMemory()->allocateHeapMemory(TR::RealRegister::NumRegisters*sizeof(TR_BitVector *), TR_Memory::CodeGenerator);
-
-      int reg;
-      for (reg = 0; reg < TR::RealRegister::NumRegisters; reg++)
-         {
-         _blocksThatModifyRegister[reg] = new (self()->trHeapMemory()) TR_BitVector(self()->comp()->getFlowGraph()->getNextNodeNumber(), self()->trMemory(), heapAlloc, growable);
-         }
-      }
 
    // Set up to collect items for later TOC mapping
    if (TR::Compiler->target.is64Bit())
@@ -232,7 +217,6 @@ OMR::Power::CodeGenerator::CodeGenerator() :
     if (self()->comp()->getOption(TR_AggressiveOpts) &&
         !self()->comp()->getOption(TR_DisableArraySetOpts))
        {
-       self()->setSupportsArraySetToZero();
        self()->setSupportsArraySet();
        }
     self()->setSupportsArrayCmp();
@@ -558,9 +542,7 @@ void OMR::Power::CodeGenerator::doRegisterAssignment(TR_RegisterKinds kindsToAss
 
    // gprs, fprs, and ccrs are all assigned in backward direction
 
-   self()->setAssignmentDirection(Backward);
-
-   TR::Instruction *instructionCursor = self()->comp()->getAppendInstruction();
+   TR::Instruction *instructionCursor = self()->getAppendInstruction();
 
    TR::Block *currBlock = NULL;
    TR::Instruction * currBBEndInstr = instructionCursor;
@@ -1240,7 +1222,7 @@ static void lhsPeephole(TR::CodeGenerator *cg, TR::Instruction *storeInstruction
    //   mr rY, rX
    // and then the mr peephole should run on the resulting mr
    if (loadInstruction->getOpCodeValue() == TR::InstOpCode::lwz)
-      { 
+      {
       if (performTransformation(comp, "O^O PPC PEEPHOLE: Replace redundant load " POINTER_PRINTF_FORMAT " after store " POINTER_PRINTF_FORMAT " with rlwinm.\n", loadInstruction, storeInstruction))
          {
          generateTrg1Src1Imm2Instruction(cg, TR::InstOpCode::rlwinm, loadInstruction->getNode(), trgReg, srcReg, 0, 0xffffffff, storeInstruction);
@@ -1545,7 +1527,7 @@ void OMR::Power::CodeGenerator::doPeephole()
    if (self()->comp()->getOptLevel() == noOpt)
       return;
 
-   TR::Instruction *instructionCursor = self()->comp()->getFirstInstruction();
+   TR::Instruction *instructionCursor = self()->getFirstInstruction();
 
    while (instructionCursor)
       {
@@ -1974,7 +1956,7 @@ void OMR::Power::CodeGenerator::generateBinaryEncodingPrologue(
    {
    TR::Compilation *comp = self()->comp();
    data->recomp = NULL;
-   data->cursorInstruction = comp->getFirstInstruction();
+   data->cursorInstruction = self()->getFirstInstruction();
    data->preProcInstruction = data->cursorInstruction;
 
    data->jitTojitStart = data->cursorInstruction;
@@ -1982,7 +1964,7 @@ void OMR::Power::CodeGenerator::generateBinaryEncodingPrologue(
 
    self()->getLinkage()->loadUpArguments(data->cursorInstruction);
 
-   data->cursorInstruction = comp->getFirstInstruction();
+   data->cursorInstruction = self()->getFirstInstruction();
 
    while (data->cursorInstruction && data->cursorInstruction->getOpCodeValue() != TR::InstOpCode::proc)
       {
@@ -2007,32 +1989,6 @@ void OMR::Power::CodeGenerator::doBinaryEncoding()
    data.estimate = 0;
 
    self()->generateBinaryEncodingPrologue(&data);
-
-   if (!(TR::Optimizer *)self()->comp()->getOptimizer())
-      _specializedEpilogues = false;
-
-   if (_specializedEpilogues)
-      {
-      TR_ASSERT((TR::Optimizer *)self()->comp()->getOptimizer(), "No optimizer\n");
-
-      if (!self()->comp()->getFlowGraph()->getStructure())
-         ((TR::Optimizer *)self()->comp()->getOptimizer())->doStructuralAnalysis();
-
-      _reachingBlocks = new (self()->comp()->allocator()) TR_ReachingBlocks(self()->comp(), (TR::Optimizer *)self()->comp()->getOptimizer());
-      _reachingBlocks->perform();
-
-      TR::Instruction *instr = self()->comp()->getFirstInstruction();
-      while (instr)
-         {
-         TR::RealRegister *reg = (TR::RealRegister *)instr->getTrg1Register();
-         if (reg)
-            {
-            TR_ASSERT(instr->getBlockIndex(), "Instruction %p without block index\n", instr);
-            self()->getBlocksThatModifyRegister(reg->getRegisterNumber())->set(instr->getBlockIndex());
-            }
-         instr = instr->getNext();
-         }
-      }
 
    bool skipOneReturn = false;
    while (data.cursorInstruction)
@@ -2062,12 +2018,11 @@ void OMR::Power::CodeGenerator::doBinaryEncoding()
       data.estimate = identifyFarConditionalBranches(data.estimate, self());
       }
 
-   self()->setEstimatedWarmLength(data.estimate);
-   self()->setEstimatedColdLength(0);
+   self()->setEstimatedCodeLength(data.estimate);
 
-   data.cursorInstruction = self()->comp()->getFirstInstruction();
+   data.cursorInstruction = self()->getFirstInstruction();
    uint8_t *coldCode = NULL;
-   uint8_t *temp = self()->allocateCodeMemory(self()->getEstimatedWarmLength(), self()->getEstimatedColdLength(), &coldCode);
+   uint8_t *temp = self()->allocateCodeMemory(self()->getEstimatedCodeLength(), 0, &coldCode);
 
    self()->setBinaryBufferStart(temp);
    self()->setBinaryBufferCursor(temp);
@@ -2230,7 +2185,7 @@ TR::Register *OMR::Power::CodeGenerator::gprClobberEvaluate(TR::Node *node)
 static int32_t identifyFarConditionalBranches(int32_t estimate, TR::CodeGenerator *cg)
    {
    TR_Array<TR::PPCConditionalBranchInstruction *> candidateBranches(cg->trMemory(), 256);
-   TR::Instruction *cursorInstruction = cg->comp()->getFirstInstruction();
+   TR::Instruction *cursorInstruction = cg->getFirstInstruction();
 
    while (cursorInstruction)
       {
@@ -2930,7 +2885,7 @@ j2Prof_startInterval(int32_t *preambLen, int32_t *ipAssistLen, int32_t *prologue
    int32_t  *sizePtr = (int32_t *)(cg->getBinaryBufferStart()+prePrologue-4);
    *ipAssistLen = ((*sizePtr)>>16) & 0x0000ffff;
 
-   currentIntervalStart = comp->getFirstInstruction();
+   currentIntervalStart = cg->getFirstInstruction();
    while (currentIntervalStart->getOpCodeValue() != TR::InstOpCode::proc)
       currentIntervalStart = currentIntervalStart->getNext();
    intervalBinaryStart = currentIntervalStart->getBinaryEncoding();
@@ -3407,11 +3362,6 @@ bool OMR::Power::CodeGenerator::supportsSinglePrecisionSQRT()
    return TR::Compiler->target.cpu.getSupportsHardwareSQRT();
    }
 
-bool OMR::Power::CodeGenerator::suppressInliningOfRecognizedMethod(TR::RecognizedMethod method)
-   {
-   return self()->isMethodInAtomicLongGroup(method);
-   }
-
 
 int32_t
 OMR::Power::CodeGenerator::getPreferredLoopUnrollFactor()
@@ -3679,7 +3629,7 @@ OMR::Power::CodeGenerator::loadAddressConstantFixed(
    TR::Instruction *firstInstruction;
 
    if (cursor == NULL)
-      cursor = comp->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
 
    if (tempReg == NULL)
       {
@@ -3716,7 +3666,7 @@ OMR::Power::CodeGenerator::loadAddressConstantFixed(
       }
 
    if (temp == NULL)
-      comp->setAppendInstruction(cursor);
+      self()->setAppendInstruction(cursor);
 
    return(cursor);
    }
@@ -3778,7 +3728,7 @@ OMR::Power::CodeGenerator::loadIntConstantFixed(
 
    if (cursor == NULL)
       {
-      cursor = comp->getAppendInstruction();
+      cursor = self()->getAppendInstruction();
       }
 
    cursor = firstInstruction = generateTrg1ImmInstruction(self(), TR::InstOpCode::lis, node, trgReg, value>>16, cursor);
@@ -3788,7 +3738,7 @@ OMR::Power::CodeGenerator::loadIntConstantFixed(
 
    if (temp == NULL)
       {
-      comp->setAppendInstruction(cursor);
+      self()->setAppendInstruction(cursor);
       }
 
    return(cursor);
@@ -3972,7 +3922,18 @@ bool OMR::Power::CodeGenerator::supportsTransientPrefetch()
 
 bool OMR::Power::CodeGenerator::is64BitProcessor()
    {
-   return TR::Compiler->target.cpu.getPPCis64bit();
+   /*
+    * If the target is 64 bit, the CPU must also be 64 bit (even if we don't specifically know which Power CPU it is) so this can just return true.
+    * If the target is not 64 bit, we need to check the CPU properties to try and find out if the CPU is 64 bit or not.
+    */
+   if (TR::Compiler->target.is64Bit())
+      {
+      return true;
+      }
+   else
+      {
+      return TR::Compiler->target.cpu.getPPCis64bit();
+      }
    }
 
 bool OMR::Power::CodeGenerator::getSupportsIbyteswap()

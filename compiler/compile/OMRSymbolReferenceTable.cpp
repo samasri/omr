@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "compile/SymbolReferenceTable.hpp"
 #include "compile/Compilation.hpp"
@@ -70,11 +73,10 @@
 #include "infra/BitVector.hpp"                 // for TR_BitVector, etc
 #include "infra/Cfg.hpp"                       // for CFG, TR_SuccessorIterator, etc
 #include "infra/Flags.hpp"                     // for flags8_t
-#include "infra/HashTab.hpp"                   // for TR_HashTab, TR_HashId
 #include "infra/Link.hpp"                      // for TR_LinkHead, TR_Pair
 #include "infra/List.hpp"                      // for List, ListIterator, etc
-#include "infra/TRCfgEdge.hpp"                 // for CFGEdge
-#include "infra/TRCfgNode.hpp"                 // for CFGNode
+#include "infra/CfgEdge.hpp"                   // for CFGEdge
+#include "infra/CfgNode.hpp"                   // for CFGNode
 #include "ras/Debug.hpp"                       // for TR_DebugBase
 #include "runtime/Runtime.hpp"                 // for TR_RuntimeHelper, etc
 
@@ -110,14 +112,9 @@ OMR::SymbolReferenceTable::SymbolReferenceTable(size_t sizeHint, TR::Compilation
      _classStaticsSymbolRefs(comp->trMemory()),
      _classDLPStaticsSymbolRefs(comp->trMemory()),
      _debugCounterSymbolRefs(comp->trMemory()),
-     _currentThreadDebugEventDataSymbol(0),
-     _currentThreadDebugEventDataSymbolRefs(comp->trMemory()),
      _methodsBySignature(8, comp->allocator("SymRefTab")), // TODO: Determine a suitable default size
      _hasImmutable(false),
      _hasUserField(false),
-     _aggregateShadowSymbolMap(8, comp->allocator("SymRefTab")),
-     _aggregateShadowSymbolReferenceMap(8, comp->allocator("SymRefTab")),
-     _registerSymbolRefs(NULL),
      _sharedAliasMap(NULL)
    {
    _numHelperSymbols = TR_numRuntimeHelpers + 1;;
@@ -129,8 +126,6 @@ OMR::SymbolReferenceTable::SymbolReferenceTable(size_t sizeHint, TR::Compilation
    for (uint32_t i = 0; i < _numPredefinedSymbols; i++)
       baseArray.element(i) = 0;
    _size_hint = sizeHint;
-
-   _genericCallHash  = new (trHeapMemory()) TR_HashTab(comp->trMemory(), heapAlloc, 60);
 
    }
 
@@ -408,6 +403,51 @@ OMR::SymbolReferenceTable::findOrCreateArrayShadowSymbolRef(TR::DataType type, T
 
    return baseArray.element(index);
 
+   }
+
+bool OMR::SymbolReferenceTable::isImmutableArrayShadow(TR::SymbolReference *symRef)
+   {
+   int32_t index = symRef->getReferenceNumber();
+   return aliasBuilder.immutableArrayElementSymRefs().isSet(index);
+   }
+
+/**
+ * \brief
+ *    Find or create a SymbolReference for access to array with given element type
+ * \parm
+ *    elementType The element type of the array
+ *
+ * \return
+ *    A symbol reference for the ImmutableArrayShadow
+ */
+TR::SymbolReference *
+OMR::SymbolReferenceTable::findOrCreateImmutableArrayShadowSymbolRef(TR::DataType elementType)
+   {
+   TR_BitVectorIterator bvi(aliasBuilder.immutableArrayElementSymRefs());
+   while (bvi.hasMoreElements())
+      {
+      TR::SymbolReference *symRef = getSymRef(bvi.getNextElement());
+      // A immutable array shadow with known object index is for array shadow from a known array,
+      // and thus cannot be shared with other array shadows
+      if (symRef->getSymbol()->getDataType() == elementType && !symRef->hasKnownObjectIndex())
+         return symRef;
+      }
+
+   // Instead of creating a regular array shadow and waiting for VP to improve it to ImmutableArrayShadow,
+   // there are occassions we want to create one directly, e.g. when we're generating array shadow for a
+   // constant array with constant element. In this case, a regular array shadow might not exist
+   TR::SymbolReference * symRef = findOrCreateArrayShadowSymbolRef(elementType);
+   symRef->setReallySharesSymbol();
+
+   TR::SymbolReference *newRef = new (trHeapMemory()) TR::SymbolReference(self(), (TR::Symbol *) symRef->getSymbol());
+   newRef->setReallySharesSymbol();
+   newRef->setCPIndex(-1);
+
+   int32_t index = newRef->getReferenceNumber();
+   aliasBuilder.arrayElementSymRefs().set(index); // this ensures the newly created shadow can still be aliased to all other array shadows
+   aliasBuilder.immutableArrayElementSymRefs().set(index);
+
+   return newRef;
    }
 
 bool OMR::SymbolReferenceTable::isRefinedArrayShadow(TR::SymbolReference *symRef)
@@ -922,11 +962,17 @@ OMR::SymbolReferenceTable::methodSymRefFromName(TR::ResolvedMethodSymbol * ownin
 TR::SymbolReference *
 OMR::SymbolReferenceTable::findOrCreateSymRefWithKnownObject(TR::SymbolReference *original, uintptrj_t *referenceLocation)
    {
+   return findOrCreateSymRefWithKnownObject(original, referenceLocation, false);
+   }
+
+TR::SymbolReference *
+OMR::SymbolReferenceTable::findOrCreateSymRefWithKnownObject(TR::SymbolReference *original, uintptrj_t *referenceLocation, bool isArrayWithConstantElements)
+   {
    TR::KnownObjectTable *knot = comp()->getOrCreateKnownObjectTable();
    if (!knot)
       return original;
 
-   TR::KnownObjectTable::Index objectIndex = knot->getIndexAt(referenceLocation);
+   TR::KnownObjectTable::Index objectIndex = knot->getIndexAt(referenceLocation, isArrayWithConstantElements);
    return findOrCreateSymRefWithKnownObject(original, objectIndex);
    }
 
@@ -935,7 +981,10 @@ OMR::SymbolReferenceTable::findOrCreateSymRefWithKnownObject(TR::SymbolReference
    {
    TR_BitVector *bucket = _knownObjectSymrefsByObjectIndex[objectIndex];
    if (!bucket)
+      {
       bucket = new (trHeapMemory()) TR_BitVector(baseArray.size(), trMemory(), heapAlloc, growable, TR_MemoryBase::SymbolReference);
+      _knownObjectSymrefsByObjectIndex[objectIndex] = bucket;
+      }
 
    TR_BitVectorIterator bvi(*bucket);
    while (bvi.hasMoreElements())
@@ -948,6 +997,17 @@ OMR::SymbolReferenceTable::findOrCreateSymRefWithKnownObject(TR::SymbolReference
    // Need a new one
    TR::SymbolReference *result = new (trHeapMemory()) TR::SymbolReference(self(), *original, 0, objectIndex);
    bucket->set(result->getReferenceNumber());
+
+   // If the known object symref is created for an immutable array shadow, it should be aliased to other array shadows as well
+   // Put the symRef in arrayElementSymRefs so that its alias set can be built correctly
+   if (isImmutableArrayShadow(original))
+      {
+      result->setReallySharesSymbol();
+      int32_t index = result->getReferenceNumber();
+      aliasBuilder.arrayElementSymRefs().set(index);
+      aliasBuilder.immutableArrayElementSymRefs().set(index);
+      }
+
    return result;
    }
 
@@ -1201,88 +1261,6 @@ OMR::SymbolReferenceTable::findOrCreateCounterAddressSymbolRef()
    return element(counterAddressSymbol);
    }
 
-void OMR::SymbolReferenceTable::initRegisterSymbols(TR::ResolvedMethodSymbol *owningMethodSymbol)
-  {
-  int32_t i,nr;
-  TR::Machine *machine = comp()->cg()->machine();
-
-  // Create lists for each register kind
-  // and initialize with real hardware registers for each register kind
-  nr = machine->getLastRealRegisterGlobalRegisterNumber()+1;
-  _registerSymbolRefs = new (trHeapMemory()) TR_Array<TR::SymbolReference *>(comp()->trMemory());
-  for(i=0;i<nr;i++)
-    {
-    TR::SymbolReference *symRef = createRegisterSymbol(owningMethodSymbol,machine->getRealRegister(i)->getKind(),TR::NoType,i);
-    TR::AutomaticSymbol *sym = symRef->getSymbol()->castToRegisterSymbol();
-    sym->setRealRegister();
-    _registerSymbolRefs->operator[](i) = symRef; //FIXME: Why doesn't this just use the operator directly?
-    }
-
-#if defined(TR_TARGET_S390)
-  // Let machine/OS specific setup happen on all these real register symbols we just created
-  comp()->cg()->registerSymbolSetup();
-#endif
-  }
-
-TR::SymbolReference * OMR::SymbolReferenceTable::createRegisterSymbol(TR::ResolvedMethodSymbol *owningMethodSymbol, TR_RegisterKinds regKind, TR::DataType dataType, TR_GlobalRegisterNumber grn)
-  {
-  TR::DataType dt(dataType);
-  int32_t size;
-
-  switch (regKind)
-    {
-    case TR_GPR:
-      if (TR::Compiler->target.is64Bit())
-        {
-        dt = TR::Int64;
-        size = 8;
-        }
-      else
-        {
-        dt = TR::Int32;
-        size = 4;
-        }
-      break;
-    case TR_FPR:
-      dt = TR::Double;
-      size = 8;
-      break;
-    case TR_AR:
-      dt = TR::Int32;
-      size = 4;
-      break;
-    case TR_VRF:
-       dt = TR::VectorDouble;
-       size = 16;
-       break;
-    default:
-      TR_ASSERT(0, "Only GPR, FPR, VRF and ARs exist for now");
-      break;
-    }
-
-   if (!_registerSymbolRefs)
-     {
-     initRegisterSymbols(owningMethodSymbol);
-     }
-
-   mcount_t noMethod;
-   mcount_t owningMethodIndex = owningMethodSymbol!=NULL ? owningMethodSymbol->getResolvedMethodIndex() : noMethod;
-   if(dataType != TR::NoType)
-     dt = dataType;
-   TR::Symbol * sym = TR::AutomaticSymbol::createRegisterSymbol(trHeapMemory(), regKind, grn, dt, size, fe());
-   TR::SymbolReference *symRef = new (trHeapMemory()) TR::SymbolReference(self(), sym, owningMethodIndex, 0 /* slot */);
-
-   return symRef;
-
-  }
-
-TR::SymbolReference * OMR::SymbolReferenceTable::getRegisterSymbol(TR_GlobalRegisterNumber grn)
-  {
-  if(!_registerSymbolRefs) initRegisterSymbols(comp()->getMethodSymbol());
-  return _registerSymbolRefs->element(grn);
-  }
-
-
 
 TR::SymbolReference *
 OMR::SymbolReferenceTable::findStaticSymbol(TR_ResolvedMethod * owningMethod, int32_t cpIndex, TR::DataType type)
@@ -1290,7 +1268,7 @@ OMR::SymbolReferenceTable::findStaticSymbol(TR_ResolvedMethod * owningMethod, in
    TR::SymbolReference * symRef;
    TR_SymRefIterator i(type == TR::Address ? aliasBuilder.addressStaticSymRefs() :
                                             (type == TR::Int32 ? aliasBuilder.intStaticSymRefs() : aliasBuilder.nonIntPrimitiveStaticSymRefs()), self());
-   while (symRef = i.getNext())
+   while ((symRef = i.getNext()))
       {
       if (symRef->getSymbol()->getDataType() == type &&
           symRef->getCPIndex() != -1 &&
@@ -1705,31 +1683,16 @@ OMR::SymbolReferenceTable::makeAutoAvailableForIlGen(TR::SymbolReference * a)
       _availableAutos.add(a);
    }
 
-static bool parmSlotCameFromExpandingAnArchetypeArgPlaceholder(int32_t slot, TR::ResolvedMethodSymbol *sym, TR_Memory *mem)
-   {
-   TR_ResolvedMethod *meth = sym->getResolvedMethod();
-   if (meth->convertToMethod()->isArchetypeSpecimen())
-      return slot >= meth->archetypeArgPlaceholderSlot(mem);
-   else
-      return false;
-   }
 
 TR::ParameterSymbol *
 OMR::SymbolReferenceTable::createParameterSymbol(
-   TR::ResolvedMethodSymbol * owningMethodSymbol, int32_t slot, TR::DataType type, bool isUnsigned)
+   TR::ResolvedMethodSymbol * owningMethodSymbol, int32_t slot, TR::DataType type)
    {
-   TR::ParameterSymbol * sym = TR::ParameterSymbol::create(trHeapMemory(),type,isUnsigned,slot);
-
-   if (comp()->getOption(TR_MimicInterpreterFrameShape))
-      {
-      int32_t parameterSlots = owningMethodSymbol->getNumParameterSlots();
-      sym->setGCMapIndex(-slot + parameterSlots - sym->getNumberOfSlots());
-      }
+   TR::ParameterSymbol * sym = TR::ParameterSymbol::create(trHeapMemory(),type,slot);
 
    TR::SymbolReference *symRef = new (trHeapMemory()) TR::SymbolReference(self(), sym, owningMethodSymbol->getResolvedMethodIndex(), slot);
    owningMethodSymbol->setParmSymRef(slot, symRef);
-   if (!parmSlotCameFromExpandingAnArchetypeArgPlaceholder(slot, owningMethodSymbol, trMemory()))
-      owningMethodSymbol->getAutoSymRefs(slot).add(symRef);
+   owningMethodSymbol->getAutoSymRefs(slot).add(symRef);
 
    return sym;
    }
@@ -1746,7 +1709,7 @@ OMR::SymbolReferenceTable::createTemporary(TR::ResolvedMethodSymbol * owningMeth
    }
 
 TR::SymbolReference *
-OMR::SymbolReferenceTable::createCoDependententTemporary(TR::ResolvedMethodSymbol *owningMethodSymbol, TR::DataType type, bool isInternalPointer, size_t size, TR::Symbol *coDependent, int32_t offset)
+OMR::SymbolReferenceTable::createCoDependentTemporary(TR::ResolvedMethodSymbol *owningMethodSymbol, TR::DataType type, bool isInternalPointer, size_t size, TR::Symbol *coDependent, int32_t offset)
    {
    TR::SymbolReference *tempSymRef = findOrCreateAutoSymbol(owningMethodSymbol, offset, type, true, isInternalPointer, false, false, size);
    return tempSymRef;
@@ -1931,7 +1894,7 @@ void OMR::SymbolReferenceTable::makeSharedAliases(TR::SymbolReference *sr1, TR::
        aliases1->empty();
        _sharedAliasMap->insert(std::make_pair(symRefNum1, aliases1));
        }
- 
+
     if (aliases2 == NULL)
        {
        aliases2 = new (comp()->trHeapMemory()) TR_BitVector(self()->getNumSymRefs(), comp()->trMemory(), heapAlloc);
@@ -1956,4 +1919,3 @@ TR_BitVector *OMR::SymbolReferenceTable::getSharedAliases(TR::SymbolReference *s
 
    return NULL;
    }
-

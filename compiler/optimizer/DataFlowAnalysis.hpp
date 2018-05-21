@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef DFA_INCL
@@ -100,9 +103,20 @@ template<class Container>class TR_BackwardUnionDFSetAnalysis<Container *>;
 // the analyses to perform TR::Node and TR::TreeTop related computations.
 //
 //
-class TR_DataFlowAnalysis : public TR::Allocatable<TR_DataFlowAnalysis, TR::Allocator>
+class TR_DataFlowAnalysis
    {
    public:
+
+   static void *operator new(size_t size, TR::Allocator a)
+      { return a.allocate(size); }
+   static void  operator delete(void *ptr, size_t size)
+      { ((TR_DataFlowAnalysis*)ptr)->allocator().deallocate(ptr, size); } /* t->allocator() better return the same allocator as used for new */
+
+   /* Virtual destructor is necessary for the above delete operator to work
+    * See "Modern C++ Design" section 4.7
+    */
+   virtual ~TR_DataFlowAnalysis() {}
+
 
    TR_DataFlowAnalysis(TR::Compilation *comp, TR::CFG *cfg, TR::Optimizer *optimizer, bool trace)
       : _comp(comp),
@@ -481,29 +495,11 @@ class TR_ReachingDefinitions : public TR_UnionBitVectorAnalysis
 
    private:
 
-   void initializeGenAndKillSetInfoForNode(TR::Node *node, TR_UseDefInfo::BitVector &defsKilled, bool seenException, int32_t blockNum, TR::Node *parent);
+   void initializeGenAndKillSetInfoForNode(TR::Node *node, TR_BitVector &defsKilled, bool seenException, int32_t blockNum, TR::Node *parent);
 
    TR_UseDefInfo *_useDefInfo;
    TR_UseDefInfo::AuxiliaryData &_aux;
    bool           _traceRD;
-   };
-
-class TR_ReachingBlocks : public TR_UnionBitVectorAnalysis
-   {
-   public:
-
-   TR_ReachingBlocks(TR::Compilation *comp, TR::Optimizer *optimizer, bool trace = false);
-
-   virtual int32_t perform();
-   virtual Kind getKind();
-   virtual int32_t getNumberOfBits();
-   virtual void analyzeBlockZeroStructure(TR_BlockStructure *);
-   virtual bool supportsGenAndKillSets();
-   virtual void initializeGenAndKillSetInfo();
-
-   private:
-
-   int32_t _numberOfBlocks;
    };
 
 // The root of the Backward bit vector analysis hierarchy. Extended
@@ -779,12 +775,12 @@ class TR_LiveVariableInformation
    void findLocalUsesInBackwardsTreeWalk(TR::Node *node, int32_t blockNum,
                                          TR_BitVector *genSetInfo, TR_BitVector *killSetInfo,
                                          TR_BitVector *commonedLoads, vcount_t visitCount);
-   void findUseOfLocal(TR::Node *node, int32_t blockNum,
+
+   protected:
+   virtual void findUseOfLocal(TR::Node *node, int32_t blockNum,
                        TR_BitVector **genSetInfo, TR_BitVector **killSetInfo,
                        TR_BitVector *commonedLoads, bool movingForwardThroughTrees, vcount_t visitCount);
-
    private:
-
    void visitTreeForLocals(TR::Node *node, TR_BitVector **blockGenSetInfo, TR_BitVector *blockKillSetInfo,
                            bool movingForwardThroughTrees, bool visitEntireTree, vcount_t visitCount,
                            TR_BitVector *commonedLoads, bool belowCommonedNode);
@@ -814,6 +810,34 @@ class TR_LiveVariableInformation
 
    // this bit vector tracks which commoned loads are currently live
    TR_BitVector   *_liveCommonedLoads;
+   };
+
+
+class TR_OSRLiveVariableInformation : public TR_LiveVariableInformation
+   {
+   public:
+   TR_ALLOC(TR_Memory::DataFlowAnalysis)
+
+   TR_OSRLiveVariableInformation(TR::Compilation *comp,
+                              TR::Optimizer *,
+                              TR_Structure *,
+                              bool splitLongs = false,
+                              bool includeParms = false,
+                              bool includeMethodMetaDataSymbols = false,
+                              bool ignoreOSRUses = false);
+
+   private:
+   virtual void findUseOfLocal(TR::Node *node, int32_t blockNum,
+                       TR_BitVector **genSetInfo, TR_BitVector **killSetInfo,
+                       TR_BitVector *commonedLoads, bool movingForwardThroughTrees, vcount_t visitCount);
+   TR_BitVector *getLiveSymbolsInInterpreter(TR_ByteCodeInfo &byteCodeInfo);
+   void buildLiveSymbolsBitVector(TR_OSRMethodData *osrMethodData, int32_t byteCodeIndex, TR_BitVector *);
+
+   typedef TR::typed_allocator<std::pair<const int32_t , TR_BitVector*>, TR::Region&> TR_BCLiveSymbolsMapAllocator;
+   typedef std::less<int32_t> TR_BCLiveSymbolsMapComparator;
+   typedef std::map<int32_t, TR_BitVector*, TR_BCLiveSymbolsMapComparator, TR_BCLiveSymbolsMapAllocator> TR_BCLiveSymbolsMap;
+
+   TR_BCLiveSymbolsMap **bcLiveSymbolMaps;
    };
 
 // Global Collected Reference analysis - find which collected reference locals

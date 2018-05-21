@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "codegen/CodeGenerator.hpp"      // for CodeGenerator
@@ -84,18 +87,18 @@ TR::Register *OMR::X86::TreeEvaluator::integerNegEvaluator(TR::Node *node, TR::C
 
 TR::Register *OMR::X86::TreeEvaluator::integerAbsEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   TR::Node *child = node->getFirstChild();
-   bool is64Bit = TR::TreeEvaluator::getNodeIs64Bit(node, cg);
-   TR::Register *targetRegister = TR::TreeEvaluator::intOrLongClobberEvaluate(child, is64Bit, cg);
-   node->setRegister(targetRegister);
-   TR::Register *signRegister = cg->allocateRegister(TR_GPR);
-   generateRegRegInstruction(MOVRegReg(is64Bit), node, signRegister, targetRegister, cg);
-   generateRegImmInstruction(SARRegImm1(is64Bit), node, signRegister, is64Bit ? 63 : 31, cg);
-   generateRegRegInstruction(ADDRegReg(is64Bit), node, targetRegister, signRegister, cg);
-   generateRegRegInstruction(XORRegReg(is64Bit), node, targetRegister, signRegister, cg);
-   cg->stopUsingRegister(signRegister);
+   auto child = node->getFirstChild();
+   auto value = cg->evaluate(child);
+   auto result = cg->allocateRegister(value->getKind());
+
+   auto is64Bit = TR::TreeEvaluator::getNodeIs64Bit(node, cg);
+   generateRegRegInstruction(MOVRegReg(is64Bit), node, result, value, cg);
+   generateRegInstruction(NEGReg(is64Bit), node, result, cg);
+   generateRegRegInstruction(CMOVSRegReg(is64Bit), node, result, value, cg);
+
+   node->setRegister(result);
    cg->decReferenceCount(child);
-   return targetRegister;
+   return result;
    }
 
 TR::Register *OMR::X86::TreeEvaluator::bnegEvaluator(TR::Node *node, TR::CodeGenerator *cg)

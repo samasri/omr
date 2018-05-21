@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_LINKAGE_INCL
@@ -75,53 +78,14 @@ class OMR_EXTENSIBLE Linkage
       TR_ASSERT(0, "setParameterLinkageRegisterIndex has to be implemented for this linkage\n");
       }
 
-   virtual uintptr_t getNumberOfAllocatedOutgoingArgumentAreas() { return 0; }
-   virtual bool isArgumentListSymbol(TR::Symbol *sym, TR::Compilation *comp) { return false; }
-   virtual TR_GlobalRegisterNumber getFormalParameterGlobalRegister(TR::ParameterSymbol *sym) { return -1; }
-
    virtual int32_t numArgumentRegisters(TR_RegisterKinds kind) = 0;
    virtual TR_RegisterKinds argumentRegisterKind(TR::Node *argumentNode);
 
    virtual bool useCachedStaticAreaAddresses(TR::Compilation *c) { return false; }
 
-   virtual TR::SymbolReference *getCachedPrivateStaticSymRef()  { return NULL; }
-   virtual bool safeToUseCachedPrivateStaticSymRef()             { return false; }
-
-   virtual bool usedCachedStaticSymRef()                         { return false; }
-
-   virtual bool isPointerToPrivateStaticAddress(TR::SymbolReference *ref) { return false; }
-   virtual bool isAddressOfPrivateStaticSymRef(TR::SymbolReference *ref)  { return false; }
-
-   virtual bool isAlwaysInlined(TR::Node *call) { return false; }
-   virtual bool isRecognizedBuiltin(TR::Compilation *comp, TR::Node *node) { return false; }
-   virtual int32_t getInRegisterNumberForParameter(TR::Node *callNode, uint32_t childIndex) { return -1; }
-
    virtual void setParameterLinkageRegisterIndex(TR::ResolvedMethodSymbol *method)
       {
       TR_ASSERT(0, "setParameterLinkageRegisterIndex(2) has to be implemented for this linkage\n");
-      }
-
-   virtual uint8_t getCodeNum()
-      {
-      TR_ASSERT(0, "getCodeNum has to be implemented for this linkage\n");
-      return 0;
-      }
-
-   virtual uint8_t getDataNum()
-      {
-      TR_ASSERT(0, "getDataNum has to be implemented for this linkage\n");
-      return 0;
-      }
-
-   virtual uint8_t getStatNum()
-      {
-      TR_ASSERT(0, "getStatNum has to be implemented for this linkage\n");
-      return 0;
-      }
-
-   virtual bool preserveForInlining(uint8_t)
-      {
-      return true;
       }
 
    virtual  TR_BitVector * getKilledRegisters(TR::Node *node)
@@ -132,16 +96,6 @@ class OMR_EXTENSIBLE Linkage
       {
       return NULL;
       }
-
-   virtual bool isAddressOfStaticSymRef(TR::SymbolReference *) { return false; }
-   virtual TR::SymbolReference* getCachedStaticSymRef() { return NULL; }
-   virtual TR::SymbolReference* getCached512KStaticSymRef(uint32_t index) { return NULL; }
-   virtual TR::SymbolReference* getCachedCRENTSymRef() { return NULL; }
-
-#define DEFAULT_NUM_WSA_BUCKETS 1
-   virtual uint32_t getNumWSABuckets() { return DEFAULT_NUM_WSA_BUCKETS; }
-
-   virtual List<TR::ParameterSymbol> *getMainBodyLogicalParameterList() { return NULL; }
 
    virtual bool mapPreservedRegistersToStackOffsets(int32_t *mapRegsToStack, int32_t &numPreserved, TR_BitVector *&) { return false; }
    virtual TR::Instruction *savePreservedRegister(TR::Instruction *cursor, int32_t regIndex, int32_t offset)    {return NULL; }

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/ValueNumberInfo.hpp"
@@ -101,7 +104,6 @@ TR_ValueNumberInfo::TR_ValueNumberInfo(TR::Compilation *comp, TR::Optimizer *opt
                delete _useDefInfo;
                _useDefInfo = NULL;
                }
-            comp->printMemStatsAfter("use defs (value numbers - I)");
             }
          }
 
@@ -347,10 +349,8 @@ bool TR_ValueNumberInfo::congruentNodes(TR::Node * node, TR::Node * entryNode)
           // In rare cases when Jsrs exist in the method, use def info could be NULL
           //
           TR_UseDefInfo::BitVector udef(comp()->allocator());
-          _useDefInfo->getUseDef(udef, udIndex);
           TR_UseDefInfo::BitVector entryudef(comp()->allocator());
-          _useDefInfo->getUseDef(entryudef, entryUdIndex);
-          if (!udef.IsZero() && !entryudef.IsZero())
+          if (_useDefInfo->getUseDef(udef, udIndex) && _useDefInfo->getUseDef(entryudef, entryUdIndex))
              {
              return (udef == entryudef);
              }
@@ -543,10 +543,8 @@ void TR_ValueNumberInfo::initializeNode(TR::Node *node, int32_t &negativeValueNu
             // In rare cases when Jsrs exist in the method, use def info could be NULL
             //
             TR_UseDefInfo::BitVector udef(comp()->allocator());
-            _useDefInfo->getUseDef(udef, udIndex);
             TR_UseDefInfo::BitVector entryudef(comp()->allocator());
-            _useDefInfo->getUseDef(entryudef, entryUdIndex);
-            if (!udef.IsZero() && !entryudef.IsZero())
+            if (_useDefInfo->getUseDef(udef, udIndex) && _useDefInfo->getUseDef(entryudef, entryUdIndex))
                {
                if (udef == entryudef)
                   {
@@ -1041,9 +1039,9 @@ TR::Node *TR_ValueNumberInfo::getValueNumberForLoad(TR::Node *node)
       return NULL;
 
    TR_UseDefInfo::BitVector definingLoads(comp()->allocator());
-   _useDefInfo->getDefiningLoads(definingLoads, node);
+   bool isNonZero = _useDefInfo->getDefiningLoads(definingLoads, node);
 
-   if (!definingLoads.IsZero() && node->getOpCode().isLoadVarDirect())
+   if (isNonZero && node->getOpCode().isLoadVarDirect())
       {
       int32_t defValue = -1;
       TR::Node *defNode = NULL;
@@ -1110,16 +1108,15 @@ TR::Node *TR_ValueNumberInfo::getValueNumberForLoad(TR::Node *node)
    if (getVN(node) >= 0)
       return NULL;
 
-   if (!definingLoads.IsZero() && node->getOpCode().isLoadVar())
+   if (isNonZero && node->getOpCode().isLoadVar())
       {
       TR_UseDefInfo::BitVector::Cursor cursor(definingLoads);
       for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
          {
          int32_t index = cursor;
          TR_UseDefInfo::BitVector usesFromDefs(comp()->allocator());
-         _useDefInfo->getUsesFromDef(usesFromDefs, index, true);
          //traceMsg(comp(), "def %d uses from defs %p\n", index, usesFromDefs);
-         if (!usesFromDefs.IsZero())
+         if (_useDefInfo->getUsesFromDef(usesFromDefs, index, true))
             {
             //traceMsg(comp(), "2looking at use node %p\n", node);
             TR_UseDefInfo::BitVector::Cursor cursor2(usesFromDefs);
@@ -1133,8 +1130,7 @@ TR::Node *TR_ValueNumberInfo::getValueNumberForLoad(TR::Node *node)
                      useNode->getOpCode().isLoadVar())
                   {
                   TR_UseDefInfo::BitVector otherUseDefiningLoads(comp()->allocator());
-                  _useDefInfo->getDefiningLoads(otherUseDefiningLoads, useNode);
-                  if (!otherUseDefiningLoads.IsZero() && (otherUseDefiningLoads == definingLoads))
+                  if (_useDefInfo->getDefiningLoads(otherUseDefiningLoads, useNode) && (otherUseDefiningLoads == definingLoads))
                      {
                      //TR_ASSERT(useNode->getOpCode().isLoadVar(), "Defining load is not a load");
                      if (_valueNumbers.ElementAt(useNode->getGlobalIndex()) != -2)
@@ -1185,22 +1181,18 @@ TR::Node *TR_ValueNumberInfo::getValueNumberForLoad(TR::Node *node)
    // the load its own value number.
    //
    TR_UseDefInfo::BitVector defsForLoad(comp()->allocator());
-   _useDefInfo->getUseDef(defsForLoad, useDefIndex);
-
-   if (trace())
-      {
-      if (!defsForLoad.IsZero())
-         {
-         traceMsg(comp(), "  Defs for load at [%p]: ",node);
-         (*comp()) << defsForLoad;
-         traceMsg(comp(), "\n");
-         }
-      }
 
    // In rare case when Jsrs exist in a method a use could exist without a def
    //
-   if (defsForLoad.IsZero())
-     return NULL;
+   if (!_useDefInfo->getUseDef(defsForLoad, useDefIndex))
+      return NULL;
+
+   if (trace())
+      {
+      traceMsg(comp(), "  Defs for load at [%p]: ",node);
+      (*comp()) << defsForLoad;
+      traceMsg(comp(), "\n");
+      }
 
    TR::SymbolReference  *loadSymRef  = node->getSymbolReference();
 
@@ -1552,7 +1544,6 @@ TR_HashValueNumberInfo::TR_HashValueNumberInfo(TR::Compilation *comp, TR::Optimi
                delete _useDefInfo;
                _useDefInfo = NULL;
                }
-            comp->printMemStatsAfter("use defs (value numbers - II)");
             }
          }
 

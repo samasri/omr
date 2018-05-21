@@ -1,23 +1,27 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "omrcfg.h"
-/* TODO 90354 rm: #include "j9.h" */
+
 #if defined(AIXPPC) || defined(LINUXPPC)
 
 #if defined(OMR_GC_MODRON_CONCURRENT_MARK)
@@ -29,6 +33,7 @@
 #include "AtomicOperations.hpp" 
 #include "CollectorLanguageInterface.hpp"
 #include "ConcurrentCardTableForWC.hpp"
+#include "ConcurrentGC.hpp"
 #include "ConcurrentPrepareCardTableTask.hpp"
 #include "Debug.hpp"
 #include "Dispatcher.hpp"
@@ -48,7 +53,7 @@ MM_ConcurrentCardTableForWC::newInstance(MM_EnvironmentBase *env, MM_Heap *heap,
 {
 	MM_ConcurrentCardTableForWC *cardTable;
 	
-	cardTable = (MM_ConcurrentCardTableForWC *)env->getForge()->allocate(sizeof(MM_ConcurrentCardTableForWC), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	cardTable = (MM_ConcurrentCardTableForWC *)env->getForge()->allocate(sizeof(MM_ConcurrentCardTableForWC), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (NULL != cardTable) {
 		new(cardTable) MM_ConcurrentCardTableForWC(env, markingScheme, collector);
 		if (!cardTable->initialize(env, heap)) {
@@ -74,7 +79,7 @@ MM_ConcurrentCardTableForWC::initialize(MM_EnvironmentBase *env, MM_Heap *heap)
 		goto error_no_memory;
 	}	
 	
-	_callback = env->getExtensions()->collectorLanguageInterface->concurrentGC_createSafepointCallback(env);
+	_callback = _collector->_concurrentDelegate.createSafepointCallback(env);
 
 	if (NULL == _callback) {
 		goto error_no_memory;
@@ -108,7 +113,7 @@ void
 MM_ConcurrentCardTableForWC::prepareCardTableAsyncEventHandler(OMR_VMThread *omrVMThread, void *userData)
 {
 	MM_ConcurrentCardTableForWC *cardTable  = (MM_ConcurrentCardTableForWC *)userData;
-	MM_EnvironmentStandard *env = MM_EnvironmentStandard::getEnvironment(omrVMThread);
+	MM_EnvironmentBase *env = MM_EnvironmentBase::getEnvironment(omrVMThread);
 
 	cardTable->prepareCardTable(env);
 }
@@ -118,7 +123,7 @@ MM_ConcurrentCardTableForWC::prepareCardTableAsyncEventHandler(OMR_VMThread *omr
  * 
  */
 void
-MM_ConcurrentCardTableForWC::prepareCardTable(MM_EnvironmentStandard *env)
+MM_ConcurrentCardTableForWC::prepareCardTable(MM_EnvironmentBase *env)
 {
 	CardCleanPhase currentPhase = _cardCleanPhase;
 	
@@ -148,7 +153,7 @@ MM_ConcurrentCardTableForWC::prepareCardTable(MM_EnvironmentStandard *env)
  * miss any object references. 
  */
 void
-MM_ConcurrentCardTableForWC::prepareCardsForCleaning(MM_EnvironmentStandard *env)
+MM_ConcurrentCardTableForWC::prepareCardsForCleaning(MM_EnvironmentBase *env)
 {
 	/* First call superclass which will set card cleaning range for next
 	 * phase of card cleaning
@@ -191,7 +196,7 @@ MM_ConcurrentCardTableForWC::prepareCardsForCleaning(MM_EnvironmentStandard *env
  * @return TRUE if exclusive access acquired; FALSE otherwise
  */
 MMINLINE bool
-MM_ConcurrentCardTableForWC::getExclusiveCardTableAccess(MM_EnvironmentStandard *env, CardCleanPhase currentPhase, bool threadAtSafePoint)
+MM_ConcurrentCardTableForWC::getExclusiveCardTableAccess(MM_EnvironmentBase *env, CardCleanPhase currentPhase, bool threadAtSafePoint)
 {
 	/* Because the WC CardTable requires exclusive access to prepare the cards for cleaning, we cannot gain
 	 * exclusive access to the card table if the thread is not at a safe point. Request async call back
@@ -228,7 +233,7 @@ MM_ConcurrentCardTableForWC::getExclusiveCardTableAccess(MM_EnvironmentStandard 
  * Release exclusive control of the card table
  */
 MMINLINE void
-MM_ConcurrentCardTableForWC::releaseExclusiveCardTableAccess(MM_EnvironmentStandard *env)
+MM_ConcurrentCardTableForWC::releaseExclusiveCardTableAccess(MM_EnvironmentBase *env)
 {
 	/* Cache the current value */
 	CardCleanPhase currentPhase = _cardCleanPhase;
@@ -260,7 +265,7 @@ MM_ConcurrentCardTableForWC::releaseExclusiveCardTableAccess(MM_EnvironmentStand
  * @return Number of active cards in the the chunk
  */ 
 uintptr_t
-MM_ConcurrentCardTableForWC::countCardsInRange(MM_EnvironmentStandard *env, Card *chunkStart, Card *chunkEnd)
+MM_ConcurrentCardTableForWC::countCardsInRange(MM_EnvironmentBase *env, Card *chunkStart, Card *chunkEnd)
 {
 	uintptr_t cardsInRange = 0;
 	CleaningRange  *cleaningRange = _cleaningRanges;
@@ -301,7 +306,7 @@ MM_ConcurrentCardTableForWC::countCardsInRange(MM_EnvironmentStandard *env, Card
  * MARK_SAFE_CARD_DIRTY.
  */ 
 void
-MM_ConcurrentCardTableForWC::prepareCardTableChunk(MM_EnvironmentStandard *env, Card *chunkStart, Card *chunkEnd, CardAction action)
+MM_ConcurrentCardTableForWC::prepareCardTableChunk(MM_EnvironmentBase *env, Card *chunkStart, Card *chunkEnd, CardAction action)
 {
 	uintptr_t prepareUnitFactor, prepareUnitSize;
 	
@@ -405,7 +410,7 @@ MM_ConcurrentCardTableForWC::prepareCardTableChunk(MM_EnvironmentStandard *env, 
  * not cleaned back to card_DIRTY so that they are rescanned during final card cleaning.
  */ 
 void
-MM_ConcurrentCardTableForWC::initializeFinalCardCleaning(MM_EnvironmentStandard *env)
+MM_ConcurrentCardTableForWC::initializeFinalCardCleaning(MM_EnvironmentBase *env)
 {
 	/* Did we get as far as preparing the card table for cleaning ? */
 	if (_cardTablePreparedForCleaning ) {

@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2015 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 
@@ -37,15 +41,6 @@
 #include "MemorySubSpaceRegionIterator.hpp"
 #include "ObjectAllocationInterface.hpp"
 #include "RegionPool.hpp"
-
-/**
- * Zos390 Platform dependent trickery for the ar command.  Without this definition
- * the ar command on Zos390 will fail to link this class.
- */
-#if defined(J9ZOS390)
-#include "ZOSLinkage.hpp"
-int j9zos390LinkTrickMemorySubSpaceGeneric;
-#endif /* J9ZOS390 */
 
 /**
  * Return the memory pool associated to the receiver.
@@ -548,7 +543,7 @@ MM_MemorySubSpaceGeneric::newInstance(MM_EnvironmentBase* env, MM_MemoryPool* me
 {
 	MM_MemorySubSpaceGeneric* memorySubSpace;
 
-	memorySubSpace = (MM_MemorySubSpaceGeneric*)env->getForge()->allocate(sizeof(MM_MemorySubSpaceGeneric), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	memorySubSpace = (MM_MemorySubSpaceGeneric*)env->getForge()->allocate(sizeof(MM_MemorySubSpaceGeneric), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (NULL != memorySubSpace) {
 		new (memorySubSpace) MM_MemorySubSpaceGeneric(env, memoryPool, regionPool, usesGlobalCollector, minimumSize, initialSize, maximumSize, memoryType, objectFlags);
 		if (!memorySubSpace->initialize(env)) {
@@ -634,12 +629,7 @@ MM_MemorySubSpaceGeneric::expanded(MM_EnvironmentBase* env, MM_PhysicalSubArena*
 	bool result = heapAddRange(env, this, size, lowAddress, highAddress);
 
 	if (result) {
-		/* Feed the range to the memory pool */
-		_memoryPool->expandWithRange(env, size, lowAddress, highAddress, canCoalesce);
-
-		if (MEMORY_TYPE_OLD == (getTypeFlags() & MEMORY_TYPE_OLD)) {
-			addTenureRange(env, size, lowAddress, highAddress);
-		}
+		addExistingMemory(env, subArena, size, lowAddress, highAddress, canCoalesce);
 	}
 	return result;
 }

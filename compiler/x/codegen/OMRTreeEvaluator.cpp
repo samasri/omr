@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <algorithm>                                  // for std::min
@@ -62,7 +65,7 @@
 #include "infra/Assert.hpp"                           // for TR_ASSERT
 #include "infra/Bit.hpp"                              // for leadingZeroes
 #include "infra/List.hpp"                             // for List, etc
-#include "infra/TRCfgEdge.hpp"                        // for CFGEdge
+#include "infra/CfgEdge.hpp"                          // for CFGEdge
 #include "ras/Debug.hpp"                              // for TR_DebugBase
 #include "ras/DebugCounter.hpp"
 #include "runtime/Runtime.hpp"
@@ -84,16 +87,6 @@ class TR_OpaqueMethodBlock;
 
 extern bool existsNextInstructionToTestFlags(TR::Instruction *startInstr,
                                              uint8_t         testMask);
-
-static inline bool alwaysInlineArrayCopy(TR::CodeGenerator *cg)
-   {
-   return false;
-   }
-
-static inline bool isByteLengthSmallEnough(uintptrj_t byteLength)
-   {
-   return true;
-   }
 
 TR::Register *OMR::X86::TreeEvaluator::ifxcmpoEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
@@ -120,9 +113,7 @@ TR::Register *OMR::X86::TreeEvaluator::ifxcmpoEvaluator(TR::Node *node, TR::Code
    else
       generateRegRegInstruction(CMPRegReg(nodeIs64Bit), node, rs1, rs2, cg);
 
-   cg->setVMThreadRequired(true);
    generateConditionalJumpInstruction(reverseBranch ? JNO4 : JO4, node, cg, true);
-   cg->setVMThreadRequired(false);
 
    cg->decReferenceCount(node->getFirstChild());
    cg->decReferenceCount(node->getSecondChild());
@@ -578,8 +569,8 @@ void OMR::X86::TreeEvaluator::removeLiveDiscardableStatics(TR::CodeGenerator *cg
             {
             diagnostic("\n---> Deleting static discardable candidate %s at %s instruction " POINTER_PRINTF_FORMAT,
                   regCursor->getRegisterName(comp),
-                  comp->getAppendInstruction()->getOpCode().getOpCodeName(cg),
-                  comp->getAppendInstruction());
+                  cg->getAppendInstruction()->getOpCode().getOpCodeName(cg),
+                  cg->getAppendInstruction());
             }
          }
       else
@@ -1163,674 +1154,13 @@ TR::Register *OMR::X86::TreeEvaluator::cstoreEvaluator(TR::Node *node, TR::CodeG
 
 // icstoreEvaluator handled by cstoreEvaluator
 
-static TR::Register *REPArraycmpEvaluator(TR::Node *node, TR::CodeGenerator *cg)
-   {
-   /*
-    * This evaluator will utilize the REPE CMPSQ (64 bit) or CMPSD (32 bit) 
-    * instruction to compare 8 (64 bit) or 4 (32 bit) bytes of an array at a 
-    * time. Before compare the 8 or 4 byte chunks, the residuals will be taken 
-    * care of. By right shifting the length array 3 times, the size of the 
-    * residual can be determined and taken care of by using CMPSB, CMPSW and 
-    * CMPSD (64 bit). For example, if the residual is 7 Byte, each shift will 
-    * set the CF flag, which will result in CMPSB, CMPSW and CMPSD being used.
-    * Depending on the result, equal/less than/greater than, the result register
-    * will be 0/1/2 respectively
-   */
-   TR::Register *resultRegister = cg->allocateRegister(TR_GPR);
-   TR::Node *src1AddrNode = node->getChild(0);
-   TR::Node *src2AddrNode = node->getChild(1);
-   TR::Node *lengthNode = node->getChild(2);
-   
-   int32_t byteLen = TR::Compiler->target.is64Bit() ? 8 : 4;
-
-   TR::Register *src1AddrRegister = cg->gprClobberEvaluate(src1AddrNode, MOVRegReg());
-   TR::Register *src2AddrRegister = cg->gprClobberEvaluate(src2AddrNode, MOVRegReg());
-   TR::Register *arrayLenRegister = cg->gprClobberEvaluate(lengthNode, MOVRegReg());
-   TR::Register *counterRegister = cg->allocateRegister();
-
-   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *notEqualLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *lessThanLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *endResultLabel = generateLabelSymbol(cg);
-   
-   TR::LabelSymbol *wordCompareLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *dWordCompareLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *qWordCompareLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *equalLabel = generateLabelSymbol(cg);
-
-   generateLabelInstruction(LABEL, node, startLabel, cg);
-   startLabel->setStartInternalControlFlow();
-
-   TR::RegisterDependencyConditions *deps = generateRegisterDependencyConditions((uint8_t) 0, 5, cg);
-   deps->addPostCondition(src1AddrRegister, TR::RealRegister::esi, cg);
-   deps->addPostCondition(src2AddrRegister, TR::RealRegister::edi, cg);
-   deps->addPostCondition(counterRegister, TR::RealRegister::ecx, cg);
-   deps->addPostCondition(arrayLenRegister, TR::RealRegister::NoReg, cg);
-   deps->addPostCondition(resultRegister, TR::RealRegister::NoReg, cg);
-
-   generateRegRegInstruction(MOVRegReg(), node, counterRegister, arrayLenRegister, cg);   
-   cg->stopUsingRegister(arrayLenRegister);
-
-   //Byte Compare
-   generateRegImmInstruction(SHRRegImm1(), node, counterRegister, 1, cg);
-   generateLabelInstruction(JAE4, node, wordCompareLabel, cg);
-   generateInstruction(CMPSB, node, deps, cg);
-   generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-
-   //Word Compare
-   generateLabelInstruction(LABEL, node, wordCompareLabel, cg);
-   generateRegImmInstruction(SHRRegImm1(), node, counterRegister, 1, cg);
-   generateLabelInstruction(JAE4, node, dWordCompareLabel, cg);
-   generateInstruction(CMPSW, node, deps, cg);
-   generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-
-   if (TR::Compiler->target.is64Bit())
-      {
-      //DWord Compare
-      generateLabelInstruction(LABEL, node, dWordCompareLabel, cg);
-      generateRegImmInstruction(SHRRegImm1(), node, counterRegister, 1, cg);
-      generateLabelInstruction(JAE4, node, qWordCompareLabel, cg);
-      generateInstruction(CMPSD, node, deps, cg);
-      generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-
-      //QWord Compare
-      generateLabelInstruction(LABEL, node, qWordCompareLabel, cg);
-      generateInstruction(REPECMPSQ, node, deps, cg);
-      generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-   else 
-      {
-      generateLabelInstruction(LABEL, node, dWordCompareLabel, cg);
-      generateInstruction(REPECMPSD, node, deps, cg);
-      generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-
-   cg->stopUsingRegister(counterRegister);
-   cg->stopUsingRegister(src1AddrRegister);
-   cg->stopUsingRegister(src2AddrRegister);
-
-   //Result 
-   generateLabelInstruction(LABEL, node, equalLabel, cg);
-   generateRegRegInstruction(TR::Compiler->target.is64Bit() ? XOR8RegReg : XOR4RegReg, node, resultRegister, resultRegister, cg); //Equal
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-
-   generateLabelInstruction(LABEL, node, notEqualLabel, cg);
-   generateLabelInstruction(JL4, node, lessThanLabel, cg);
-   generateRegImmInstruction(MOVRegImm4(), node, resultRegister, 2, cg); //Greater Than
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-
-   generateLabelInstruction(LABEL, node, lessThanLabel, cg);
-   generateRegImmInstruction(MOVRegImm4(), node, resultRegister, 1, cg); //Less Than
-   
-   deps->stopAddingConditions();
-
-   generateLabelInstruction(LABEL, node, endResultLabel, deps, cg);
-   endResultLabel->setEndInternalControlFlow();
-
-   node->setRegister(resultRegister);
-
-   cg->decReferenceCount(src1AddrNode);
-   cg->decReferenceCount(src2AddrNode );
-   cg->decReferenceCount(lengthNode );
-
-   return resultRegister;
-   }
-
-static TR::Register *REPArraycmpLenEvaluator(TR::Node *node, TR::CodeGenerator *cg)
-   {
-   /*
-    * This evaluator will utilize the REPE CMPSQ (64 bit) or CMPSD (32 bit) 
-    * instruction to compare 8 (64 bit) or 4 (32 bit) bytes of an array at a 
-    * time. The residual bytes are compared using the REPE CMPSB instruction.
-    * If an inequality was found, in order to determine the first unequal byte,
-    * the ESI/EDI registers will be moved back 8 bytes (64 bit), 4 bytes (32 bit)
-    * or 1 byte if the inequality was found in the residuals. After this 
-    * backtracking is done, REPE CMPSB will be used to find the byte of inequality
-   */
-   TR::Register *resultRegister = cg->allocateRegister(TR_GPR);
-   TR::Node *src1AddrNode = node->getChild(0);
-   TR::Node *src2AddrNode = node->getChild(1);
-   TR::Node *lengthNode = node->getChild(2);
-   
-   int32_t byteLen = TR::Compiler->target.is64Bit() ? 8 : 4;
-
-   TR::Register *src1AddrRegister = cg->gprClobberEvaluate(src1AddrNode, MOVRegReg());
-   TR::Register *src2AddrRegister = cg->gprClobberEvaluate(src2AddrNode, MOVRegReg());
-   TR::Register *arrayLenRegister = cg->gprClobberEvaluate(lengthNode, MOVRegReg());
-
-   TR::Register *counterRegister = cg->allocateRegister();
-
-   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *residualLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *notEqualLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *backtrackLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *equalLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *endResultLabel = generateLabelSymbol(cg);
-
-   generateLabelInstruction(LABEL, node, startLabel, cg);
-   startLabel->setStartInternalControlFlow();
-
-   TR::RegisterDependencyConditions *deps = generateRegisterDependencyConditions((uint8_t) 0, 5, cg);
-   deps->addPostCondition(src1AddrRegister, TR::RealRegister::esi, cg);
-   deps->addPostCondition(src2AddrRegister, TR::RealRegister::edi, cg);
-   deps->addPostCondition(counterRegister, TR::RealRegister::ecx, cg);
-   deps->addPostCondition(arrayLenRegister, TR::RealRegister::NoReg, cg);
-   deps->addPostCondition(resultRegister, TR::RealRegister::NoReg, cg);
-
-   //Setup
-   generateRegRegInstruction(MOVRegReg(), node, resultRegister, src1AddrRegister, cg);   
-   generateRegRegInstruction(MOVRegReg(), node, counterRegister, arrayLenRegister, cg);   
-
-
-   if (TR::Compiler->target.is64Bit())
-      {
-      //Qword REP compare
-      generateRegImmInstruction(SHRRegImm1(), node, counterRegister, 3, cg);
-      generateInstruction(REPECMPSQ, node, deps, cg);
-      }
-   else
-      {
-      //Dword REP compare
-      generateRegImmInstruction(SHRRegImm1(), node, counterRegister, 2, cg);
-      generateInstruction(REPECMPSD, node, deps, cg);
-      }
-   generateLabelInstruction(JNE4, node, backtrackLabel, cg);
-
-   //Residual
-   generateLabelInstruction(LABEL, node, residualLabel, cg);
-   generateRegRegInstruction(MOVRegReg(), node, counterRegister, arrayLenRegister, cg);   
-   generateRegImmInstruction(ANDRegImm4(), node, counterRegister, 0x7, cg);
-   generateInstruction(REPECMPSB, node, deps, cg);
-   generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-
-   //Equal
-   generateRegRegInstruction(MOVRegReg(), node, resultRegister, arrayLenRegister, cg);   
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-   cg->stopUsingRegister(arrayLenRegister);
-
-   //Inequality found, figure out which byte
-   generateLabelInstruction(LABEL, node, backtrackLabel, cg);
-   generateRegImmInstruction(SUBRegImm4(), node, src1AddrRegister, byteLen, cg);
-   generateRegImmInstruction(SUBRegImm4(), node, src2AddrRegister, byteLen, cg);
-   generateRegImmInstruction(MOVRegImm4(), node, counterRegister, byteLen, cg);
-   generateInstruction(REPECMPSB, node, deps, cg);
-   cg->stopUsingRegister(counterRegister);
-
-   //NotEqual
-   generateLabelInstruction(LABEL, node, notEqualLabel, cg);
-   generateRegImmInstruction(SUBRegImm4(), node, src1AddrRegister, 1, cg);
-   generateRegRegInstruction(SUBRegReg(), node, src1AddrRegister, resultRegister, cg);
-   generateRegRegInstruction(MOVRegReg(), node, resultRegister, src1AddrRegister, cg);   
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-
-   //Result 
-   cg->stopUsingRegister(src1AddrRegister);
-   cg->stopUsingRegister(src2AddrRegister);
-   deps->stopAddingConditions();
-
-   generateLabelInstruction(LABEL, node, endResultLabel, deps, cg);
-   endResultLabel->setEndInternalControlFlow();
-
-   node->setRegister(resultRegister);
-
-   cg->decReferenceCount(src1AddrNode);
-   cg->decReferenceCount(src2AddrNode );
-   cg->decReferenceCount(lengthNode );
-
-   return resultRegister;
-   }
-
-static TR::Register *ConstLenArraycmpEvaluator(TR::Node *node, TR::CodeGenerator *cg, uintptrj_t arrLen)
-   {
-   /* This evaluator will use CMPSQ (64 bit) or CMPSD (32 bit) to compare an array
-    * of known length, by generating a sequence of CMPS instructions. Any residuals
-    * will be dealt with CMPSB
-    * The result is similar to the REPArraycmpLenEvaluator
-   */
-   TR::Register *resultRegister = cg->allocateRegister(TR_GPR);
-   TR::Node *src1AddrNode = node->getChild(0);
-   TR::Node *src2AddrNode = node->getChild(1);
-   TR::Node *lengthNode = node->getChild(2);
-   
-   int32_t byteLen = TR::Compiler->target.is64Bit() ? 8 : 4;
-
-   TR::Register *src1AddrRegister = cg->gprClobberEvaluate(src1AddrNode, MOVRegReg());
-   TR::Register *src2AddrRegister = cg->gprClobberEvaluate(src2AddrNode, MOVRegReg());
-
-   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *notEqualLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *lessThanLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *endResultLabel = generateLabelSymbol(cg);
-
-   generateLabelInstruction(LABEL, node, startLabel, cg);
-   startLabel->setStartInternalControlFlow();
-
-   TR::RegisterDependencyConditions *deps = generateRegisterDependencyConditions((uint8_t) 0, 3, cg);
-   deps->addPostCondition(src1AddrRegister, TR::RealRegister::esi, cg);
-   deps->addPostCondition(src2AddrRegister, TR::RealRegister::edi, cg);
-   deps->addPostCondition(resultRegister, TR::RealRegister::NoReg, cg);
-
-   //Deal with the residual bits first, as we want to have a length that is a multiple of 8/4 in order to use CMPSQ
-   uintptrj_t residualLen = arrLen % byteLen;
-   
-   if (TR::Compiler->target.is64Bit() && residualLen & 4)
-      {
-      generateInstruction(CMPSD, node, deps, cg);
-      generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-   if (residualLen & 2)
-      {
-      generateInstruction(CMPSW, node, deps, cg);
-      generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-   if (residualLen & 1)
-      {
-      generateInstruction(CMPSB, node, deps, cg);
-      generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-
-   arrLen -= residualLen;
-
-   //Perform CMPSQ, for the rest of the array, which should be a multiple of 8.
-   if (TR::Compiler->target.is64Bit())
-      TR_ASSERT(arrLen % 8 == 0, "64 Bit: arrLen should be a multiple of 8 at this point, the length is %d", arrLen);
-   else
-      TR_ASSERT(arrLen % 4 == 0, "32 Bit: arrLen should be a multiple of 4 at this point, the length is %d", arrLen);
-
-   while (arrLen > 0)
-      {
-         arrLen -= byteLen;
-         generateInstruction(TR::Compiler->target.is64Bit() ? CMPSQ : CMPSD, node, deps, cg);
-         generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-
-   //Result 
-   cg->stopUsingRegister(src1AddrRegister);
-   cg->stopUsingRegister(src2AddrRegister);
-   generateRegRegInstruction(TR::Compiler->target.is64Bit() ? XOR8RegReg : XOR4RegReg, node, resultRegister, resultRegister, cg); //Equal
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-
-   generateLabelInstruction(LABEL, node, notEqualLabel, cg);
-   generateLabelInstruction(JL4, node, lessThanLabel, cg);
-   generateRegImmInstruction(MOVRegImm4(), node, resultRegister, 1, cg);
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-
-   generateLabelInstruction(LABEL, node, lessThanLabel, cg);
-   generateRegImmInstruction(MOVRegImm4(), node, resultRegister, 2, cg);
-   
-   deps->stopAddingConditions();
-
-   generateLabelInstruction(LABEL, node, endResultLabel, deps, cg);
-   endResultLabel->setEndInternalControlFlow();
-
-   node->setRegister(resultRegister);
-
-   cg->decReferenceCount(src1AddrNode);
-   cg->decReferenceCount(src2AddrNode);
-   cg->recursivelyDecReferenceCount(lengthNode);
-
-   return resultRegister;
-   }
-
-static TR::Register *ConstLenArraycmpLenEvaluator(TR::Node *node, TR::CodeGenerator *cg, uintptrj_t arrLen)
-   {
-   /* This evaluator will use CMPSQ (64 bit) or CMPSD (32 bit) to compare an array
-    * of known length, by generating a sequence of CMPS instructions. Any residuals
-    * will be dealt with CMPSD (64 bit), CMPSW and CMPSB
-    * The result is similar to the REPArraycmpEvaluator
-   */
-   TR::Register *resultRegister = cg->allocateRegister(TR_GPR);
-   TR::Node *src1AddrNode = node->getChild(0);
-   TR::Node *src2AddrNode = node->getChild(1);
-   TR::Node *lengthNode = node->getChild(2);
-   
-   int32_t byteLen = TR::Compiler->target.is64Bit() ? 8 : 4;
-
-   TR::Register *src1AddrRegister = cg->gprClobberEvaluate(src1AddrNode, MOVRegReg());
-   TR::Register *src2AddrRegister = cg->gprClobberEvaluate(src2AddrNode, MOVRegReg());
-   TR::Register *arrayLenRegister = cg->gprClobberEvaluate(lengthNode, MOVRegReg());
-
-   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *residualLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *notEqualLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *backtrackLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *equalLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *endResultLabel = generateLabelSymbol(cg);
-
-   generateLabelInstruction(LABEL, node, startLabel, cg);
-   startLabel->setStartInternalControlFlow();
-
-   TR::RegisterDependencyConditions *deps = generateRegisterDependencyConditions((uint8_t) 0, 4, cg);
-   deps->addPostCondition(src1AddrRegister, TR::RealRegister::esi, cg);
-   deps->addPostCondition(src2AddrRegister, TR::RealRegister::edi, cg);
-   deps->addPostCondition(arrayLenRegister, TR::RealRegister::NoReg, cg);
-   deps->addPostCondition(resultRegister, TR::RealRegister::NoReg, cg);
-
-   //Setup
-   generateRegRegInstruction(MOVRegReg(), node, resultRegister, src1AddrRegister, cg);   
-
-   //Use CMPSQ/CMPSD to compare the first N bytes of the array that are a multiple of 8/4
-   while (arrLen >= byteLen )
-      {
-      arrLen -= byteLen ;
-      generateInstruction(TR::Compiler->target.is64Bit() ? CMPSQ : CMPSD, node, deps, cg);
-      generateLabelInstruction(JNE4, node, backtrackLabel, cg);
-      }
-
-   //Residual
-   while (arrLen > 0)
-      {
-         arrLen--;
-         generateInstruction(CMPSB, node, deps, cg);
-         generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-
-   //Equal
-   generateRegRegInstruction(MOVRegReg(), node, resultRegister, arrayLenRegister, cg);   
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-
-   //Inequality found, figure out which byte
-   generateLabelInstruction(LABEL, node, backtrackLabel, cg);
-   generateRegImmInstruction(SUBRegImm4(), node, src1AddrRegister, byteLen , cg);
-   generateRegImmInstruction(SUBRegImm4(), node, src2AddrRegister, byteLen , cg);
-
-   arrLen = byteLen ;
-   while (arrLen > 0)
-      {
-         arrLen--;
-         generateInstruction(CMPSB, node, deps, cg);
-         generateLabelInstruction(JNE4, node, notEqualLabel, cg);
-      }
-
-   //NotEqual
-   generateLabelInstruction(LABEL, node, notEqualLabel, cg);
-   generateRegInstruction(TR::Compiler->target.is64Bit() ? DEC8Reg : DEC4Reg, node, src1AddrRegister, cg);
-   generateRegRegInstruction(SUBRegReg(), node, src1AddrRegister, resultRegister, cg);
-   generateRegRegInstruction(MOVRegReg(), node, resultRegister, src1AddrRegister, cg);   
-   generateLabelInstruction(JMP4, node, endResultLabel, cg);
-
-   //Result 
-   cg->stopUsingRegister(src1AddrRegister);
-   cg->stopUsingRegister(src2AddrRegister);
-   cg->stopUsingRegister(arrayLenRegister);
-   deps->stopAddingConditions();
-
-   generateLabelInstruction(LABEL, node, endResultLabel, deps, cg);
-   endResultLabel->setEndInternalControlFlow();
-
-   node->setRegister(resultRegister);
-
-   cg->decReferenceCount(src1AddrNode);
-   cg->decReferenceCount(src2AddrNode );
-   cg->decReferenceCount(lengthNode );
-
-   return resultRegister;
-   }
-
 TR::Register *
 OMR::X86::TreeEvaluator::arraycmpEvaluator(
       TR::Node *node,
       TR::CodeGenerator *cg)
    {
-   TR::Register *resultRegister = NULL;
-
-   TR::Node *byteLenNode = node->getChild(2);
-
-   static bool repArrayCmpOpt = (feGetEnv("TR_NewArrayCompareOpt") != NULL);
-   static bool constLenArrayCmpOpt = (feGetEnv("TR_NoConstLenArrayCompareOpt") == NULL);
-   static char* maxLengthOfConstArrayStr = feGetEnv("TR_MaxLengthOfConstArray");
-   int32_t maxLengthOfConstArray = maxLengthOfConstArrayStr ? atoi(maxLengthOfConstArrayStr) : 32;
-   uintptrj_t arrLen;
-
-   //Array Rep
-   //
-   if (repArrayCmpOpt)
-      {
-      if (byteLenNode->getOpCode().isLoadConst() && constLenArrayCmpOpt)
-         {
-         arrLen = TR::TreeEvaluator::integerConstNodeValue(byteLenNode, cg);
-         if (arrLen <= maxLengthOfConstArray)
-            return node->isArrayCmpLen() ?  ConstLenArraycmpLenEvaluator(node, cg, arrLen) : ConstLenArraycmpEvaluator(node, cg, arrLen);
-         }
-      return node->isArrayCmpLen() ? REPArraycmpLenEvaluator(node, cg) : REPArraycmpEvaluator(node, cg);
-      }
-   // Exploit SSE4.2 SIMD instructions if they're available.
-   //
-   if (cg->getX86ProcessorInfo().supportsSSE2())
-      {
-      return node->isArrayCmpLen() ? TR::TreeEvaluator::SSE2ArraycmpLenEvaluator(node, cg) : TR::TreeEvaluator::SSE2ArraycmpEvaluator(node, cg);
-      }
-
-   TR::Node *src1AddrNode = node->getChild(0);
-   TR::Node *src2AddrNode = node->getChild(1);
-   TR::Node *lengthNode = node->getChild(2);
-
-   TR::Register *byteLenRegister = NULL;
-   TR::Register *condReg = NULL;
-   TR::Register *byteLenRemainingRegister = NULL;
-   TR::Register *condResultReg = NULL;
-
-   TR::LabelSymbol *startLabel = NULL;
-   TR::LabelSymbol *loopStartLabel = NULL;
-   TR::LabelSymbol *residueStartLabel = NULL;
-   TR::LabelSymbol *residueLoopStartLabel = NULL;
-   TR::LabelSymbol *residueEndLabel = NULL;
-   TR::LabelSymbol *resultLabel = NULL;
-   TR::LabelSymbol *result2Label = NULL;
-   TR::LabelSymbol *result3Label = NULL;
-
-   int32_t byteLen = 4;
-   if (TR::Compiler->target.is64Bit())
-      byteLen = 8;
-
-   TR::Register *src1AddrReg = TR::TreeEvaluator::intOrLongClobberEvaluate(src1AddrNode, TR::TreeEvaluator::getNodeIs64Bit(src1AddrNode, cg), cg);
-   TR::Register *src2AddrReg = TR::TreeEvaluator::intOrLongClobberEvaluate(src2AddrNode, TR::TreeEvaluator::getNodeIs64Bit(src2AddrNode, cg), cg);
-   byteLenRegister  = TR::TreeEvaluator::intOrLongClobberEvaluate(byteLenNode,  TR::TreeEvaluator::getNodeIs64Bit(byteLenNode, cg), cg);
-
-   byteLenRemainingRegister = cg->allocateRegister(TR_GPR);
-
-   generateRegRegInstruction(MOVRegReg(), node, byteLenRemainingRegister, byteLenRegister, cg);
-
-   startLabel = generateLabelSymbol(cg);
-   generateLabelInstruction(LABEL, node, startLabel, cg);
-
-   residueStartLabel = generateLabelSymbol(cg);
-   residueLoopStartLabel = generateLabelSymbol(cg);
-
-   generateRegRegInstruction(SUBRegReg(), node, src2AddrReg, src1AddrReg, cg);
-
-   generateRegImmInstruction(CMPRegImms(), node, byteLenRemainingRegister, byteLen, cg);
-   generateLabelInstruction(JL4, node, residueLoopStartLabel, cg);
-
-   generateRegImmInstruction(ADDRegImms(), node, byteLenRemainingRegister, -byteLen, cg);
-
-   loopStartLabel = generateLabelSymbol(cg);
-   generateLabelInstruction(LABEL, node, loopStartLabel, cg);
-
-   residueEndLabel = generateLabelSymbol(cg);
-   resultLabel = generateLabelSymbol(cg);
-   result2Label = generateLabelSymbol(cg);
-   result3Label = generateLabelSymbol(cg);
-   startLabel->setStartInternalControlFlow();
-
-   TR::Register *src1Reg = cg->allocateRegister(TR_GPR);
-   TR::Register *src2Reg = cg->allocateRegister(TR_GPR);
-
-   generateRegMemInstruction((byteLen == 4) ? L4RegMem : L8RegMem, node, src1Reg,
-                             generateX86MemoryReference(src1AddrReg, 0, cg), cg);
-
-   generateRegMemInstruction(CMPRegMem(), node, src1Reg, generateX86MemoryReference(src1AddrReg, src2AddrReg, 0, 0, cg), cg);
-   generateLabelInstruction(JNE4, node, residueStartLabel, cg);
-
-   generateRegImmInstruction(ADDRegImms(), node, src1AddrReg, byteLen, cg);
-   generateRegImmInstruction(ADDRegImms(), node, byteLenRemainingRegister, -byteLen, cg);
-
-   generateLabelInstruction(JGE4, node, loopStartLabel, cg);
-
-   generateLabelInstruction(LABEL, node, residueStartLabel, cg);
-   generateRegImmInstruction(ADDRegImms(), node, byteLenRemainingRegister, byteLen, cg);
-
-   generateRegImmInstruction(CMPRegImms(), node, byteLenRemainingRegister, 0, cg);
-   generateLabelInstruction(JE4, node, result3Label, cg);
-
-   generateLabelInstruction(LABEL, node, residueLoopStartLabel, cg);
-
-   generateRegMemInstruction((byteLen == 4) ? MOVZXReg4Mem1 : MOVZXReg8Mem1, node, src1Reg,
-                          generateX86MemoryReference(src1AddrReg, 0, cg), cg);
-   generateRegMemInstruction((byteLen == 4) ? MOVZXReg4Mem1 : MOVZXReg8Mem1, node, src2Reg,
-                          generateX86MemoryReference(src1AddrReg, src2AddrReg, 0, 0, cg), cg);
-
-   generateRegRegInstruction(CMPRegReg(), node, src1Reg, src2Reg, cg);
-   generateLabelInstruction(JNE4, node, result3Label, cg);
-
-   generateRegImmInstruction(ADDRegImms(), node, src1AddrReg, 1, cg);
-   generateRegImmInstruction(ADDRegImms(), node, byteLenRemainingRegister, -1, cg);
-   generateLabelInstruction(JG4, node, residueLoopStartLabel, cg);
-
-   generateLabelInstruction(LABEL, node, result3Label, cg);
-
-   generateRegRegInstruction(ADDRegReg(), node, src2AddrReg, src1AddrReg, cg);
-
-   generateLabelInstruction(LABEL, node, resultLabel, cg);
-
-   if (node->isArrayCmpLen())
-      {
-      generateRegRegInstruction(MOVRegReg(), node, src1Reg, byteLenRegister, cg);
-      generateRegRegInstruction(SUBRegReg(), node, src1Reg, byteLenRemainingRegister, cg);
-      resultRegister = src1Reg;
-      }
-   else
-      {
-      generateRegImmInstruction(CMPRegImms(), node, byteLenRemainingRegister, 0, cg);
-      generateLabelInstruction(JNE4, node, result2Label, cg);
-      generateRegImmInstruction(MOVRegImm4(), node, byteLenRemainingRegister, 0, cg);
-      generateLabelInstruction(JMP4, node, residueEndLabel, cg);
-      generateLabelInstruction(LABEL, node, result2Label, cg);
-      generateRegImmInstruction(MOVRegImm4(), node, byteLenRemainingRegister, 1, cg);
-      generateRegRegInstruction(CMPRegReg(), node, src1Reg, src2Reg, cg);
-      generateLabelInstruction(JL4, node, residueEndLabel, cg);
-      generateRegImmInstruction(MOVRegImm4(), node, byteLenRemainingRegister, 2, cg);
-      resultRegister = byteLenRemainingRegister;
-      }
-
-   TR::RegisterDependencyConditions *dependencies = generateRegisterDependencyConditions((uint8_t)0, 6, cg);
-   dependencies->addPostCondition(src1Reg, TR::RealRegister::NoReg, cg);
-   dependencies->addPostCondition(src2Reg, TR::RealRegister::NoReg, cg);
-   dependencies->addPostCondition(src1AddrReg, TR::RealRegister::NoReg, cg);
-   dependencies->addPostCondition(src2AddrReg, TR::RealRegister::NoReg, cg);
-   dependencies->addPostCondition(byteLenRemainingRegister, TR::RealRegister::NoReg, cg);
-   dependencies->addPostCondition(byteLenRegister, TR::RealRegister::NoReg, cg);
-
-   generateLabelInstruction(LABEL, node, residueEndLabel, dependencies, cg);
-   residueEndLabel->setEndInternalControlFlow();
-
-   node->setRegister(resultRegister);
-
-   if (src1Reg != resultRegister)
-      {
-      cg->stopUsingRegister(src1Reg);
-      }
-
-   cg->stopUsingRegister(src2Reg);
-   if ((byteLenRemainingRegister) && (byteLenRemainingRegister != resultRegister))
-      {
-      cg->stopUsingRegister(byteLenRemainingRegister);
-      }
-
-   cg->decReferenceCount(src1AddrNode);
-   cg->decReferenceCount(src2AddrNode);
-   cg->decReferenceCount(lengthNode);
-
-   cg->stopUsingRegister(src1AddrReg);
-   cg->stopUsingRegister(src2AddrReg);
-   cg->stopUsingRegister(byteLenRegister);
-
-   return resultRegister;
+   return node->isArrayCmpLen() ? TR::TreeEvaluator::SSE2ArraycmpLenEvaluator(node, cg) : TR::TreeEvaluator::SSE2ArraycmpEvaluator(node, cg);
    }
-
-TR::Register *OMR::X86::TreeEvaluator::SSE2IfArraycmpEvaluator(TR::Node *node, TR::LabelSymbol *targetLabel, bool branchonEqual, TR::CodeGenerator *cg)
-   {
-   TR::Node *s1AddrNode = node->getChild(0);
-   TR::Node *s2AddrNode = node->getChild(1);
-   TR::Node *lengthNode = node->getChild(2);
-
-   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *qwordLoop = generateLabelSymbol(cg);
-   TR::LabelSymbol *qwordUnequal = generateLabelSymbol(cg);
-   TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
-
-   TR::Register *s1Reg = cg->gprClobberEvaluate(s1AddrNode, MOVRegReg());
-   TR::Register *s2Reg = cg->gprClobberEvaluate(s2AddrNode, MOVRegReg());
-   TR::Register *strLenReg = cg->gprClobberEvaluate(lengthNode, MOVRegReg());
-   TR::Register *equalTestReg = cg->allocateRegister(TR_GPR);
-   TR::Register *xmm1Reg = cg->allocateRegister(TR_FPR);
-   TR::Register *xmm2Reg = cg->allocateRegister(TR_FPR);
-   TR::Machine *machine = cg->machine();
-
-   startLabel->setStartInternalControlFlow();
-   doneLabel->setEndInternalControlFlow();
-
-   // s2 = s2-1
-   generateLabelInstruction(LABEL, node, startLabel, cg);
-   generateRegRegInstruction(SUBRegReg(), node, s2Reg, s1Reg, cg); // s2 = s2 - s1
-
-   // SSE loop body
-   generateLabelInstruction(LABEL, node, qwordLoop, cg);
-   generateRegMemInstruction(MOVUPSRegMem, node, xmm2Reg, generateX86MemoryReference(s1Reg, 0, cg), cg);
-   generateRegMemInstruction(MOVUPSRegMem, node, xmm1Reg, generateX86MemoryReference(s1Reg, s2Reg, 0, cg), cg);
-   generateRegRegInstruction(PCMPEQBRegReg, node, xmm1Reg, xmm2Reg, cg);
-   generateRegRegInstruction(PMOVMSKB4RegReg, node, equalTestReg, xmm1Reg, cg);
-   generateRegImmInstruction(XOR2RegImm2, node, equalTestReg, 0xffff, cg);
-
-   cg->stopUsingRegister(xmm1Reg);
-   cg->stopUsingRegister(xmm2Reg);
-
-   generateLabelInstruction(JNE4, node, qwordUnequal, cg);
-   generateRegImmInstruction(SUBRegImms(), node, strLenReg, 0x10, cg);
-   generateRegMemInstruction(LEARegMem(), node, s1Reg, generateX86MemoryReference(s1Reg, 0x10, cg), cg);
-
-   cg->stopUsingRegister(s1Reg);
-   cg->stopUsingRegister(s2Reg);
-
-   generateLabelInstruction(JG4, node, qwordLoop, cg);
-   if (branchonEqual)
-      generateLabelInstruction(JMP4, node, targetLabel, cg);
-   else
-      generateLabelInstruction(JMP4, node, doneLabel, cg);
-
-   // check compare results
-   generateLabelInstruction(LABEL, node, qwordUnequal, cg);
-   generateRegRegInstruction(BSF2RegReg, node, equalTestReg, equalTestReg, cg);
-   generateRegRegInstruction(CMPRegReg(), node, equalTestReg, strLenReg, cg);
-
-   cg->stopUsingRegister(strLenReg);
-   cg->stopUsingRegister(equalTestReg);
-
-   if (branchonEqual)
-      generateLabelInstruction(JGE4, node, targetLabel, cg);
-   else
-      generateLabelInstruction(JL4, node, targetLabel, cg);
-
-   TR::RegisterDependencyConditions *deps = generateRegisterDependencyConditions((uint8_t) 0, 6, cg);
-   deps->addPostCondition(xmm1Reg, TR::RealRegister::xmm1, cg);
-   deps->addPostCondition(xmm2Reg, TR::RealRegister::xmm2, cg);
-   deps->addPostCondition(s2Reg, TR::RealRegister::NoReg, cg);
-   deps->addPostCondition(s1Reg, TR::RealRegister::NoReg, cg);
-   deps->addPostCondition(strLenReg, TR::RealRegister::NoReg, cg);
-   deps->addPostCondition(equalTestReg, TR::RealRegister::NoReg, cg);
-
-
-   generateLabelInstruction(LABEL, node, doneLabel, deps, cg);
-
-   cg->decReferenceCount(s1AddrNode);
-   cg->decReferenceCount(s2AddrNode);
-   cg->decReferenceCount(lengthNode);
-
-   return NULL;
-   }
-
-
-
 
 TR::Register *OMR::X86::TreeEvaluator::SSE2ArraycmpEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
@@ -2088,562 +1418,6 @@ void genCodeToPerformLeftToRightAndBlockConcurrentOpIfNeeded(
    {
    }
 
-void constLengthArrayCopy(
-      TR::Node *node,
-      TR::CodeGenerator *cg,
-      TR::Register *byteSrcReg,
-      TR::Register *byteDstReg,
-      TR::Node *byteLenNode,
-      bool preserveSrcPointer,
-      bool preserveDstPointer)
-   {
-
-   TR::LabelSymbol *endControlFlowLabel = NULL;
-   TR::LabelSymbol *startControlFlowLabel = NULL;
-   TR::Register    *temp = NULL, *tempReg2 = NULL;
-   TR::Register    *lenReg = NULL;
-   TR::Register    *valueReg  = NULL;
-   static char    *useSSECopy = feGetEnv("TR_SSECopy");
-   static char    *disableConstArrayCopyLoop = feGetEnv("TR_DisableConstArrayCopyLoop");
-
-   uintptrj_t byteLength = TR::TreeEvaluator::integerConstNodeValue(byteLenNode, cg);
-   TR::Compilation *comp = cg->comp();
-   TR::RegisterDependencyConditions  *deps = NULL;
-   TR::LabelSymbol *overlapCopyLabel = NULL;
-
-   // 160-byte copies occur in console workloads dealing with 80-character strings, so
-   // we want them to get in here.  For less than 64 bytes, the long-latency
-   // strategies will stall a lot.
-   //
-   if (node->isForwardArrayCopy() && byteLength >= 64 && byteLength <= 160)
-      {
-      struct TR_FancyConstLengthStrategy
-         {
-         const char      *_name;
-         TR_X86OpCodes    _loadOpCode, _storeOpCode;
-         int8_t           _stride;      // log2(size of copy)
-         TR_RegisterKinds _registerKind;
-         int8_t           _pentium4Latency, _pentiumMLatency, _core2Latency, _opteronLatency;
-
-         int8_t getLatency(TR_X86ProcessorInfo &p)
-            {
-            return (p.isIntelCore2() ||
-                    p.isIntelNehalem() ||
-                    p.isIntelWestmere() ||
-                    p.isIntelSandyBridge() ||
-                    p.isAMD15h()) ? _core2Latency : p.isAMDOpteron()? _opteronLatency : _pentium4Latency;
-            }
-         };
-      static TR_FancyConstLengthStrategy fancyConstLengthStrategies[] =
-         {
-         { "none" },
-         { "4-byte mov", L4RegMem,     S4MemReg,     2, TR_GPR, 3, 3, 3, 4 },
-         { "8-byte mov", L8RegMem,     S8MemReg,     3, TR_GPR, 3, 3, 3, 4 }, // Only valid when is64BitTarget
-         { "movq",       MOVQRegMem,   MOVQMemReg,   3, TR_FPR, 4, 4, 4, 4 }, // Not the latencies from the proc manuals... beyond 4 regs it doesn't seem to make much difference
-         { "movups",     MOVUPSRegMem, MOVUPSMemReg, 4, TR_FPR, 4, 4, 4, 4 },
-         };
-
-      // Pick a strategy
-      //
-      TR_X86ProcessorInfo &p = cg->getX86ProcessorInfo();
-      diagnostic("isIntelCore2: %d\n", p.isIntelCore2());
-      uint32_t stratNum;
-      TR_LiveRegisters *liveGPRs = cg->getLiveRegisters(TR_GPR);
-      if (p.isIntelSandyBridge() || p.isIntelWestmere() || p.isAMD15h())
-         stratNum = 4;
-      else if (TR::Compiler->target.is64Bit() && liveGPRs
-         && (liveGPRs->getNumberOfLiveRegisters() < (15-fancyConstLengthStrategies[2].getLatency(p))))
-         stratNum = 2;
-      else if (p.isIntelCore2() || p.isAMDOpteron() || p.isIntelNehalem())
-         stratNum = 3;
-      else
-         stratNum = 0;
-
-      static char *stratNumStr = feGetEnv("TR_FancyConstLengthStrategy");
-      if (stratNumStr)
-         stratNum = atoi(stratNumStr);
-
-      TR_FancyConstLengthStrategy *strat = fancyConstLengthStrategies + stratNum;
-
-      int32_t strideMask = (1<<strat->_stride) - 1;
-      if ((stratNum > 0) && ((byteLength & strideMask) == 0)
-         && performTransformation(comp, "O^O FANCY CONST LENGTH ARRAYCOPY: Copy %d bytes\n", byteLength))
-         {
-         int32_t numCopies     = byteLength >> strat->_stride;
-         int32_t numRegs       = strat->getLatency(p);
-         static char *numRegsStr = feGetEnv("TR_FancyConstLengthRegs");
-         if (numRegsStr)
-            numRegs = atoi(numRegsStr);
-         int32_t ramp          = std::min(numCopies, numRegs);
-         int32_t numIterations = numCopies / numRegs; // An "iteration" is a sequence of loads and stores using all the registers.  Has nothing to do with loops (though it is true that a loop, if generated, does exactly one iteration).
-         int32_t residue       = numCopies - numIterations * numRegs;
-
-         if (comp->getOption(TR_TraceCG))
-            {
-            traceMsg(comp, "   strategy:%d (%s) stride:%d bytes:%d architecture:%x\n", stratNum, strat->_name, strat->_stride, 1 << strat->_stride, p.getX86Architecture());
-            traceMsg(comp, "   copies:%d regs:%d ramp:%d iterations:%d residue:%d\n", numCopies, numRegs, ramp, numIterations, residue);
-            }
-
-         // Allocate registers
-         //
-         int32_t regIndex;
-         TR::Register *regs[16];
-         TR_ASSERT(numRegs <= sizeof(regs)/sizeof(regs[0]), "assertion failure");
-         for (regIndex = 0; regIndex < numRegs; regIndex++)
-            regs[regIndex] = cg->allocateRegister(strat->_registerKind);
-
-         // Ramp up with loads
-         //
-         int32_t copyNum;
-         for (copyNum = 0; copyNum < ramp; copyNum++)
-            {
-            regIndex = copyNum % numRegs;
-            generateRegMemInstruction(strat->_loadOpCode, node,
-               regs[regIndex],
-               generateX86MemoryReference(byteSrcReg, copyNum << strat->_stride, cg),
-               cg);
-            }
-
-         // Start of loop (if we need one)
-         //
-         // DISABLED becuase it doesn't handle the internal control flow properly yet
-         //
-         TR::LabelSymbol *loopStart    = NULL;
-         TR::Register    *inductionReg = NULL;
-         int32_t         inductionIncrement = 0;
-         int32_t         inductionEnd = 0;
-
-         // Steady state: store a reg then reload it
-         //
-         for (copyNum = ramp; copyNum < numCopies; copyNum++)
-            {
-            regIndex = copyNum % numRegs;
-            generateMemRegInstruction(strat->_storeOpCode, node,
-               generateX86MemoryReference(byteDstReg, inductionReg, 0, (copyNum-numRegs) << strat->_stride, cg),
-               regs[regIndex],
-               cg);
-            generateRegMemInstruction(strat->_loadOpCode, node,
-               regs[regIndex],
-               generateX86MemoryReference(byteSrcReg, inductionReg, 0, copyNum << strat->_stride, cg),
-               cg);
-            }
-
-         // Loop back-edge (if we need one)
-         //
-         if (inductionReg)
-            {
-            TR_ASSERT(loopStart, "assertion failure");
-            TR_ASSERT(inductionIncrement > 0, "assertion failure");
-            TR_X86OpCodes opCode;
-            opCode = (inductionIncrement <= 127)? ADDRegImms() : ADDRegImm4();
-            generateRegImmInstruction(opCode, node, inductionReg, inductionIncrement, cg);
-            opCode = (inductionEnd <= 127)? CMPRegImms() : CMPRegImm4();
-            generateRegImmInstruction(opCode, node, inductionReg, inductionEnd, cg);
-            cg->stopUsingRegister(inductionReg);
-            generateLabelInstruction(JLE4, node, loopStart, cg);
-            }
-
-         // Ramp down with stores
-         //
-         if (ramp < numRegs)
-            {
-            // Ramp-up was incomplete -- it didn't need all the registers.
-            // Just do the stores corresponding to the loads we actually did in the partial ramp-up.
-            //
-            for (copyNum = 0; copyNum < ramp; copyNum++)
-               {
-               regIndex = copyNum % numRegs;
-               generateMemRegInstruction(strat->_storeOpCode, node,
-                  generateX86MemoryReference(byteDstReg, copyNum << strat->_stride, cg),
-                  regs[regIndex],
-                  cg);
-               }
-            }
-         else
-            {
-            // We completed the ramp-up, then did zero or more iterations.
-            // The idea here is to pretend we're going to keep on copying, but only do the stores.
-            //
-            for (copyNum = numCopies; copyNum < numCopies+ramp; copyNum++)
-               {
-               regIndex = copyNum % numRegs;
-               generateMemRegInstruction(strat->_storeOpCode, node,
-                  generateX86MemoryReference(byteDstReg, inductionReg, 0, (copyNum-numRegs) << strat->_stride, cg),
-                  regs[regIndex],
-                  cg);
-               }
-            }
-
-         // Clean up
-         for (regIndex = 0; regIndex < numRegs; regIndex++)
-            cg->stopUsingRegister(regs[regIndex]);
-
-         cg->decReferenceCount(byteLenNode);
-
-         return;
-         }
-      }
-
-   if (useSSECopy && byteLength > 48)
-      {
-      // Check for mutual buffer alignment.
-      //
-      bool nodeIs64Bit = TR::Compiler->target.is64Bit();
-      TR_ASSERT(!nodeIs64Bit, "TODO: adapt for 64-bit");
-      TR::MemoryReference  *leaMR = generateX86MemoryReference(byteDstReg, byteSrcReg, 0, cg);
-      generateRegRegInstruction(SUBRegReg(nodeIs64Bit), node, byteDstReg, byteSrcReg, cg);
-      generateRegImmInstruction(TESTRegImm4(nodeIs64Bit), node, byteDstReg, 0xf, cg);
-
-      // Restore contents of byteDstReg without modifying any flags.
-      generateRegMemInstruction(LEARegMem(nodeIs64Bit), node, byteDstReg, leaMR, cg);
-
-      if (!startControlFlowLabel)
-         {
-         startControlFlowLabel = generateLabelSymbol(cg);
-         startControlFlowLabel->setStartInternalControlFlow();
-         generateLabelInstruction(LABEL, node, startControlFlowLabel, cg);
-         }
-
-      TR::LabelSymbol *stringMoveLabel = generateLabelSymbol(cg);
-      generateLabelInstruction(JNE4, node, stringMoveLabel, cg);
-
-      lenReg = cg->evaluate(byteLenNode);
-
-      TR::RegisterDependencyConditions  *sseDeps;
-      sseDeps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
-      sseDeps->addPostCondition(byteSrcReg, TR::RealRegister::esi, cg);
-      sseDeps->addPostCondition(byteDstReg, TR::RealRegister::edi, cg);
-      sseDeps->addPostCondition(lenReg, TR::RealRegister::ecx, cg);
-      sseDeps->stopAddingConditions();
-      TR::X86ImmSymInstruction  *callInstr =
-         generateHelperCallInstruction(node, TR_IA32forwardSSEArrayCopyNoAlignCheck, sseDeps, cg);
-      if (!endControlFlowLabel)
-         {
-         endControlFlowLabel = generateLabelSymbol(cg);
-         endControlFlowLabel->setEndInternalControlFlow();
-         }
-      generateLabelInstruction(JMP4, node, endControlFlowLabel, cg);
-
-      generateLabelInstruction(LABEL, node, stringMoveLabel, cg);
-      }
-
-   // we have to be really careful with ESP... modifying it is very dangerous
-   TR::Register *esp = cg->machine()->getX86RealRegister(TR::RealRegister::esp);
-   bool         srcIsEsp = (byteSrcReg == esp);
-   bool         dstIsEsp = (byteDstReg == esp);
-   TR_ASSERT(!(srcIsEsp && dstIsEsp), "Copying to ESP from ESP is not supported");
-
-   int32_t constWordSize = TR::Compiler->target.is64Bit() ? 8 : 4;
-   int64_t wordCount     = (byteLength / constWordSize);
-   int32_t residue       = byteLength % constWordSize;
-   int64_t numBytesMoved = wordCount * constWordSize;
-   bool    srcPtrChanged = true; // assume that the source and destination pointers get changed
-   bool    dstPtrChanged = true;
-
-   static char *reportConstArrayCopy = feGetEnv("TR_ReportConstArryCopy");
-
-   if (wordCount <= 3)
-      {
-      int32_t originalWordCount = wordCount;
-      if (!lenReg)
-         lenReg = cg->allocateRegister();
-
-      while (wordCount--)
-         {
-         TR::MemoryReference  * tempSrcMR = generateX86MemoryReference(byteSrcReg, constWordSize*(originalWordCount - wordCount) - constWordSize, cg);
-         generateRegMemInstruction(LRegMem(), node, lenReg, tempSrcMR, cg);
-         TR::MemoryReference  * tempDstMR = generateX86MemoryReference(byteDstReg, constWordSize*(originalWordCount - wordCount) - constWordSize, cg);
-         generateMemRegInstruction(SMemReg(), node, tempDstMR, lenReg, cg);
-         }
-
-      srcPtrChanged = false;  // in this case, we didn't change the pointers
-      dstPtrChanged = false;
-      if (reportConstArrayCopy)
-         diagnostic("constArrayCopy: found one inline with bytelength = %d in method %s\n", byteLength, comp->signature());
-      }
-   else if (!disableConstArrayCopyLoop && wordCount < 64 && (byteSrcReg != byteDstReg)) // word count must be > 1 or pipelined loop below is bad
-      {
-      TR_ASSERT(wordCount > 1, "Const Arraycopy tried to do pipelined loop with word count <= 1");
-      lenReg = TR::TreeEvaluator::loadConstant(byteLenNode, wordCount, TR_RematerializableInt, cg, lenReg);
-      if (!temp)
-         temp = cg->allocateRegister();
-
-      if (!deps)
-         {
-         TR::Machine *machine = cg->machine();
-         deps = generateRegisterDependencyConditions((uint8_t)0, 4, cg);
-         deps->addPostCondition(byteSrcReg, TR::RealRegister::NoReg, cg);
-         deps->addPostCondition(byteDstReg, TR::RealRegister::NoReg, cg);
-         deps->addPostCondition(lenReg, TR::RealRegister::NoReg, cg);
-         deps->addPostCondition(temp, TR::RealRegister::NoReg, cg);
-         deps->stopAddingConditions();
-         }
-
-      // Basic algorithm:
-      // - change dst register to be the offset from the src to the dst
-      // - use base+offset to access the destination
-      // - after the loop, add the base to the offset to restore the dst pointer
-
-      // ESP is a special case:
-      // - We want ESP to always contain a valid stack pointer.
-      //   So, if it's the dst register, then we use the dst as the base, and the
-      //   source as the offset
-      const bool srcIsOffset = (dstIsEsp) ? true : false;
-
-      // calculate the offset
-      if (srcIsOffset)
-         generateRegRegInstruction(SUBRegReg(), node, byteSrcReg, byteDstReg, cg);
-      else
-         generateRegRegInstruction(SUBRegReg(), node, byteDstReg, byteSrcReg, cg);
-
-      TR::LabelSymbol * loopHead = generateLabelSymbol(cg);
-
-      if (!startControlFlowLabel)
-         loopHead->setStartInternalControlFlow();
-
-      generateAlignmentInstruction(node, 16, cg); // TODO: Derive alignment from CPU cache information
-      generateLabelInstruction(LABEL, node, loopHead, cg);
-
-      // get the word from src memory
-      TR::MemoryReference  *tempSrcMR;
-      if (srcIsOffset)
-         tempSrcMR = generateX86MemoryReference(byteDstReg, byteSrcReg, 0, cg);
-      else
-         tempSrcMR = generateX86MemoryReference(byteSrcReg, 0, cg);
-      generateRegMemInstruction(LRegMem(), node, temp, tempSrcMR, cg);
-
-      // and send the word to dst memory
-      TR::MemoryReference  *tempDstMR;
-      if (srcIsOffset)
-         tempDstMR = generateX86MemoryReference(byteDstReg, 0, cg);
-      else
-         tempDstMR = generateX86MemoryReference(byteDstReg, byteSrcReg, 0, cg);
-      generateMemRegInstruction(SMemReg(), node, tempDstMR, temp, cg);
-
-      // increment base ptr, and decrement count
-      generateRegImmInstruction(ADDRegImms(), node, (srcIsOffset) ? byteDstReg : byteSrcReg, constWordSize, cg);
-      generateRegImmInstruction(SUBRegImms(), node, lenReg, 1, cg);
-      generateLabelInstruction(JNE4, node, loopHead,  cg);
-
-      if (!endControlFlowLabel)
-         {
-         endControlFlowLabel = generateLabelSymbol(cg);
-         endControlFlowLabel->setEndInternalControlFlow();
-         }
-
-      generateLabelInstruction(LABEL, node, endControlFlowLabel, deps, cg);
-
-      // add base to offset, so that both src and dst point to the end of their arrays
-      // and, if we need to preserve the pointer, subtract the # bytes moved
-      if (srcIsOffset && preserveSrcPointer)
-         {
-         generateRegMemInstruction(LEARegMem(), node, byteSrcReg, generateX86MemoryReference(byteDstReg, byteSrcReg, 0, -numBytesMoved, cg), cg);
-         srcPtrChanged = false;
-         }
-      else if (srcIsOffset)
-         {
-         generateRegRegInstruction(ADDRegReg(), node, byteSrcReg, byteDstReg, cg);
-         }
-      else if (preserveDstPointer) // dstIsOffset
-         {
-         generateRegMemInstruction(LEARegMem(), node, byteDstReg, generateX86MemoryReference(byteDstReg, byteSrcReg, 0, -numBytesMoved, cg), cg);
-         dstPtrChanged = false;
-         }
-      else
-         {
-         generateRegRegInstruction(ADDRegReg(), node, byteDstReg, byteSrcReg, cg);
-         }
-
-      if (reportConstArrayCopy)
-         diagnostic("constArrayCopy: found one loop with bytelength = %d in method %s\n", byteLength, comp->signature());
-      }
-   else
-      {
-      TR_RematerializableTypes type =
-         byteLenNode->getOpCode().isLong() ? TR_RematerializableLong : TR_RematerializableInt;
-      lenReg = TR::TreeEvaluator::loadConstant(byteLenNode, wordCount, type, cg, lenReg);
-
-      // we can't modify the value of esp. Unless, of course, you want _weird_ data corruption.
-      if (srcIsEsp)
-         {
-         byteSrcReg = cg->allocateRegister();
-         generateRegRegInstruction(MOVRegReg(), node, byteSrcReg, esp, cg);
-         }
-      if (dstIsEsp)
-         {
-         byteDstReg = cg->allocateRegister();
-         generateRegRegInstruction(MOVRegReg(), node, byteDstReg, esp, cg);
-         }
-
-      if (!deps)
-         {
-         deps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
-         deps->addPostCondition(byteSrcReg, TR::RealRegister::esi, cg);
-         deps->addPostCondition(byteDstReg, TR::RealRegister::edi, cg);
-         deps->addPostCondition(lenReg, TR::RealRegister::ecx, cg);
-         deps->stopAddingConditions();
-         }
-
-      TR_X86OpCodes op = TR::Compiler->target.is64Bit() ? REPMOVSQ : REPMOVSD;
-      generateInstruction(op, node, deps, cg);
-      if (srcIsEsp)
-         {
-         cg->stopUsingRegister(byteSrcReg);
-         byteSrcReg = esp;
-         srcPtrChanged = false; // we modified the copy, not esp
-         }
-
-      if (dstIsEsp)
-         {
-         cg->stopUsingRegister(byteDstReg);
-         byteDstReg = esp;
-         dstPtrChanged = false; // we modified the copy, not esp
-         }
-
-      if (reportConstArrayCopy)
-         diagnostic("constArrayCopy: found one repmovs%s with bytelength = %d in method %s\n",
-                     TR::Compiler->target.is64Bit() ? "q" : "d",
-                     byteLength, comp->signature());
-      }
-
-   cg->decReferenceCount(byteLenNode);
-
-   if (preserveSrcPointer && srcPtrChanged)
-      {
-      TR_X86OpCodes opCode = (numBytesMoved < 127) ? SUBRegImms() : SUBRegImm4();
-      generateRegImmInstruction(opCode, node, byteSrcReg, numBytesMoved, cg);
-      srcPtrChanged = false;
-      }
-
-   if (preserveDstPointer && dstPtrChanged)
-      {
-      TR_X86OpCodes opCode = (numBytesMoved < 127) ? SUBRegImms() : SUBRegImm4();
-      generateRegImmInstruction(opCode, node, byteDstReg, numBytesMoved, cg);
-      dstPtrChanged = false;
-      }
-
-   int64_t srcOffset = (srcPtrChanged) ? 0 : numBytesMoved;
-   int64_t dstOffset = (dstPtrChanged) ? 0 : numBytesMoved;
-
-   TR::MemoryReference  *memRef;
-   TR_ASSERT(residue < 8, "Residue (%d) should be < 8, otherwise its not residue", residue);
-
-   if (residue >= 4)
-      {
-      if (!lenReg)
-         lenReg = cg->allocateRegister();
-
-      TR::MemoryReference  *loadRef = generateX86MemoryReference(byteSrcReg, srcOffset, cg);
-      generateRegMemInstruction(L4RegMem, node, lenReg, loadRef, cg);
-      TR::MemoryReference  *storeRef = generateX86MemoryReference(byteDstReg, dstOffset, cg);
-      generateMemRegInstruction(S4MemReg, node, storeRef, lenReg, cg);
-
-      srcOffset += 4;
-      dstOffset += 4;
-      residue -= 4;
-      }
-
-   if (residue >= 2)
-      {
-      // 2: mov reg_w, word ptr [esi]
-      //    mov word ptr [edi], reg_w
-      //
-      if (!lenReg)
-         lenReg = cg->allocateRegister();
-
-      TR::MemoryReference  *loadRef = generateX86MemoryReference(byteSrcReg, srcOffset, cg);
-      generateRegMemInstruction(L2RegMem, node, lenReg, loadRef, cg);
-      TR::MemoryReference  *storeRef = generateX86MemoryReference(byteDstReg, dstOffset, cg);
-      generateMemRegInstruction(S2MemReg, node, storeRef, lenReg, cg);
-
-      srcOffset += 2;
-      dstOffset += 2;
-      residue -= 2;
-      }
-
-   if (residue >= 1)
-      {
-      // 1: mov reg_b, byte ptr [esi]
-      //    mov byte ptr [edi], reg_b
-      //
-      if (!lenReg)
-         lenReg = cg->allocateRegister();
-
-      TR::MemoryReference  *loadRef = generateX86MemoryReference(byteSrcReg, srcOffset, cg);
-      generateRegMemInstruction(L1RegMem, node, lenReg, loadRef, cg);
-
-      TR::MemoryReference  *storeRef = generateX86MemoryReference(byteDstReg, dstOffset, cg);
-      generateMemRegInstruction(S1MemReg, node, storeRef, lenReg, cg);
-
-      srcOffset++;
-      dstOffset++;
-      residue--;
-      }
-
-   TR_ASSERT(residue == 0, "Residue should be 0 by now, not %d", residue);
-
-   if (lenReg)
-      cg->stopUsingRegister(lenReg);
-
-   if (temp)
-      {
-      cg->stopUsingRegister(temp);
-      }
-   if (tempReg2)
-      {
-      cg->stopUsingRegister(tempReg2);
-      }
-   }
-
-TR::Register *
-OMR::X86::TreeEvaluator::constLengthArrayCopyEvaluator(
-      TR::Node *node,
-      TR::CodeGenerator *cg)
-   {
-   TR::Node *byteSrcNode, *byteDstNode, *byteLenNode;
-   TR::Compilation *comp = cg->comp();
-   bool isPrimitiveCopy = (node->getNumChildren() == 3);
-   if (isPrimitiveCopy)
-      {
-      byteSrcNode = node->getChild(0);
-      byteDstNode = node->getChild(1);
-      byteLenNode = node->getChild(2);
-      }
-   else
-      {
-      TR_ASSERT(node->isNoArrayStoreCheckArrayCopy(), "expecting arraycopy not requiring an array store check");
-      cg->recursivelyDecReferenceCount(node->getChild(0));
-
-      // We can't avoid evaluating the destination object node if a write
-      // barrier is required.
-      //
-      if (!comp->getOptions()->needWriteBarriers())
-         cg->recursivelyDecReferenceCount(node->getChild(1));
-
-      byteSrcNode = node->getChild(2);
-      byteDstNode = node->getChild(3);
-      byteLenNode = node->getChild(4);
-      }
-
-   TR_ASSERT(node->isForwardArrayCopy(), "expecting forward arraycopy");
-   TR_ASSERT(byteLenNode->getOpCode().isLoadConst(), "expecting constant length arraycopy");
-   uintptrj_t byteLength = TR::TreeEvaluator::integerConstNodeValue(byteLenNode, cg);
-
-   TR::Register *byteSrcReg = cg->evaluate(byteSrcNode);
-   TR::Register *byteDstReg = cg->evaluate(byteDstNode);
-
-   bool preserveSrcPointer = (byteSrcNode->getReferenceCount() > 1);
-   bool preserveDstPointer = (byteDstNode->getReferenceCount() > 1);
-
-   constLengthArrayCopy(node, cg, byteSrcReg, byteDstReg, byteLenNode, preserveSrcPointer, preserveDstPointer);
-
-   cg->decReferenceCount(byteSrcNode);
-   cg->decReferenceCount(byteDstNode);
-
-   return NULL;
-   }
-
-
 bool OMR::X86::TreeEvaluator::stopUsingCopyRegAddr(TR::Node* node, TR::Register*& reg, TR::CodeGenerator* cg)
    {
    if (node != NULL)
@@ -2692,12 +1466,12 @@ TR::Block *OMR::X86::TreeEvaluator::getOverflowCatchBlock(TR::Node *node, TR::Co
    //make sure the overflowCHK has a catch block first
    TR::Block *overflowCatchBlock = NULL;
    TR::CFGEdgeList &excepSucc = cg->getCurrentEvaluationTreeTop()->getEnclosingBlock()->getExceptionSuccessors();
-   for (auto e = excepSucc.begin(); e != excepSucc.end(); ++e) 
-      {    
+   for (auto e = excepSucc.begin(); e != excepSucc.end(); ++e)
+      {
       TR::Block *dest = toBlock((*e)->getTo());
       if (dest->getCatchBlockExtension()->_catchType == TR::Block::CanCatchOverflowCheck)
             overflowCatchBlock = dest;
-      }    
+      }
    TR_ASSERT(overflowCatchBlock != NULL, "OverflowChk node %p doesn't have overflow catch block\n", node);
 
    //the BBStartEvaluator will generate the label but in this case the catch block might not been evaluated yet
@@ -2712,14 +1486,14 @@ TR::Block *OMR::X86::TreeEvaluator::getOverflowCatchBlock(TR::Node *node, TR::Co
    }
 
 void OMR::X86::TreeEvaluator::genArithmeticInstructionsForOverflowCHK(TR::Node *node, TR::CodeGenerator *cg)
-   {   
+   {
    /*
     *overflowCHK
     *   =>child1(Operation)
     *   =>child2(Operand1)
     *   =>child3(Operand2)
     */
- 
+
    TR_X86OpCodes op;
    TR::Node *operationNode = node->getFirstChild();
    TR::Node *operand1 = node->getSecondChild();
@@ -2777,10 +1551,10 @@ void OMR::X86::TreeEvaluator::genArithmeticInstructionsForOverflowCHK(TR::Node *
       cg->decReferenceCount(operand1);
       cg->decReferenceCount(operand2);
       }
-   else 
+   else
    // we need to do the operation again when the Operation node has been evaluated already under a different treetop
-   // TODO: there is still a chance that the flags might still be avaiable and we could detect it and avoid repeating
-   // the operation 
+   // TODO: there is still a chance that the flags might still be available and we could detect it and avoid repeating
+   // the operation
       {
       TR_X86BinaryCommutativeAnalyser  addMulAnalyser(cg);
       TR_X86SubtractAnalyser subAnalyser(cg);
@@ -2795,7 +1569,7 @@ void OMR::X86::TreeEvaluator::genArithmeticInstructionsForOverflowCHK(TR::Node *
             addMulAnalyser.integerAddAnalyserWithExplicitOperands(node, operand1, operand2, op, BADIA32Op, needsEflags);
             break;
          case TR::ladd:
-            TR::Compiler->target.is32Bit() ? addMulAnalyser.longAddAnalyserWithExplicitOperands(node, operand1, operand2) 
+            TR::Compiler->target.is32Bit() ? addMulAnalyser.longAddAnalyserWithExplicitOperands(node, operand1, operand2)
                                            : addMulAnalyser.integerAddAnalyserWithExplicitOperands(node, operand1, operand2, op, BADIA32Op, needsEflags);
             break;
          // sub group
@@ -2807,7 +1581,7 @@ void OMR::X86::TreeEvaluator::genArithmeticInstructionsForOverflowCHK(TR::Node *
             subAnalyser.integerSubtractAnalyserWithExplicitOperands(node, operand1, operand2, op, BADIA32Op, MOV4RegReg, needsEflags);
             break;
          case TR::lsub:
-            TR::Compiler->target.is32Bit() ? subAnalyser.longSubtractAnalyserWithExplicitOperands(node, operand1, operand2) 
+            TR::Compiler->target.is32Bit() ? subAnalyser.longSubtractAnalyserWithExplicitOperands(node, operand1, operand2)
                                            : subAnalyser.integerSubtractAnalyserWithExplicitOperands(node, operand1, operand2, op, BADIA32Op, MOV8RegReg, needsEflags);
             break;
          // mul group
@@ -2817,657 +1591,25 @@ void OMR::X86::TreeEvaluator::genArithmeticInstructionsForOverflowCHK(TR::Node *
          case TR::lmul:
             addMulAnalyser.genericAnalyserWithExplicitOperands(node, operand1, operand2, op, BADIA32Op, MOV8RegReg);
             break;
+         default:
+            break;
          }
       }
-
-   cg->setVMThreadRequired(true);
    }
 
 TR::Register *OMR::X86::TreeEvaluator::overflowCHKEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR_X86OpCodes opcode;
    if (node->getOpCodeValue() == TR::OverflowCHK)
-       opcode = JO4; 
+       opcode = JO4;
    else if (node->getOpCodeValue() == TR::UnsignedOverflowCHK)
-       opcode = JB4; 
-   else 
+       opcode = JB4;
+   else
        TR_ASSERT(0, "unrecognized overflow operation in overflowCHKEvaluator");
    TR::Block *overflowCatchBlock = TR::TreeEvaluator::getOverflowCatchBlock(node, cg);
    TR::TreeEvaluator::genArithmeticInstructionsForOverflowCHK(node, cg);
    generateLabelInstruction(opcode, node, overflowCatchBlock->getEntry()->getNode()->getLabel(), cg);
-   cg->setVMThreadRequired(false);
    cg->decReferenceCount(node->getFirstChild());
-   return NULL;
-   }
-
-extern "C" void *fwdHalfWordCopyTable;
-static TR::Register * deprecated_arraycopyEvaluator(TR::Node *node, TR::CodeGenerator *cg)
-   {
-   TR::Instruction *instr;
-   TR::LabelSymbol *snippetLabel;
-   TR::RegisterDependencyConditions *dependencies;
-
-   // There are two cases.
-   // In the first case we know that a simple memmove or memcpy operation can
-   // be done. For this case there are 3 children:
-   //    1) The byte source pointer
-   //    2) The byte destination pointer
-   //    3) The byte count
-   //
-   // In the second case we must generate run-time tests to see if a simple
-   // byte copy can be done or if an element-by-element copy is needed.
-   // For this case there are 5 children:
-   //    1) The original source object reference
-   //    2) The original destination object reference
-   //    3) The byte source pointer
-   //    4) The byte destination pointer
-   //    5) The byte count
-   //
-   TR::Node *srcNode;
-   TR::Node *dstNode;
-   TR::Node *byteSrcNode;
-   TR::Node *byteDstNode;
-   TR::Node *byteLenNode;
-
-   TR::Register *srcReg;
-   TR::Register *dstReg;
-   TR::Register *byteSrcReg;
-   TR::Register *byteDstReg;
-   TR::Register *byteLenReg = NULL;
-
-   bool isPrimitiveCopy = (node->getNumChildren() == 3);
-   if (isPrimitiveCopy)
-      {
-      srcNode     = NULL;
-      dstNode     = NULL;
-      byteSrcNode = node->getChild(0);
-      byteDstNode = node->getChild(1);
-      byteLenNode = node->getChild(2);
-      if (byteSrcNode == byteDstNode)
-         {
-         // nothing to do
-         cg->recursivelyDecReferenceCount(byteSrcNode);
-         cg->recursivelyDecReferenceCount(byteSrcNode);
-         cg->recursivelyDecReferenceCount(byteLenNode);
-         return NULL;
-         }
-      }
-   else
-      {
-      srcNode     = node->getChild(0);
-      dstNode     = node->getChild(1);
-      byteSrcNode = node->getChild(2);
-      byteDstNode = node->getChild(3);
-      byteLenNode = node->getChild(4);
-      }
-
-   bool isArrayStoreCheckUnnecessary = isPrimitiveCopy || node->isNoArrayStoreCheckArrayCopy();
-   bool shortCopy = true;
-
-   static char *disableConstantLengthArrayCopy = feGetEnv("TR_disableConstantLengthArrayCopy");
-
-   uintptrj_t constantByteLength = TR::TreeEvaluator::integerConstNodeValue(byteLenNode, cg);
-   TR::Compilation *comp = cg->comp();
-
-   if (isArrayStoreCheckUnnecessary &&
-       (alwaysInlineArrayCopy(cg) || node->isForwardArrayCopy()) &&
-       byteLenNode->getOpCode().isLoadConst() &&
-       isByteLengthSmallEnough(constantByteLength) &&
-       !disableConstantLengthArrayCopy)
-      {
-      static char * p = feGetEnv("TR_OldConstArrayCopy");
-      if (constantByteLength > 28 || !p)
-         {
-         TR::TreeEvaluator::constLengthArrayCopyEvaluator(node, cg);
-         if (!isPrimitiveCopy)
-            {
-#ifdef J9_PROJECT_SPECIFIC
-            TR::TreeEvaluator::generateWrtbarForArrayCopy(node, cg);
-#endif
-
-            if (comp->getOptions()->needWriteBarriers())
-               cg->decReferenceCount(dstNode);
-            }
-
-         return NULL;
-         }
-      }
-
-   static char *useSSECopyEnv = feGetEnv("TR_SSECopy");
-   static char *disableOptSeverCheckForRepeatMove = feGetEnv("TR_disableOptSeverCheckForRepeatMove");
-   bool useSSECopy = false;
-
-   if (useSSECopyEnv)
-      useSSECopy = true;
-
-
-   // Use SSE copy for following methods
-   TR_OpaqueMethodBlock *caller = node->getOwningMethod();
-   TR_ResolvedMethod *m = NULL;
-   if (caller)
-      {
-      m = comp->fe()->createResolvedMethod(cg->trMemory(), caller, node->getSymbolReference()->getOwningMethod(comp));
-      }
-
-#ifdef J9_PROJECT_SPECIFIC
-   if (m &&
-       (m->getRecognizedMethod() == TR::java_util_Arrays_copyOf_byte ||
-        m->getRecognizedMethod() == TR::java_io_ByteArrayOutputStream_write ||
-        m->getRecognizedMethod() == TR::java_io_ObjectInputStream_BlockDataInputStream_read))
-      {
-      useSSECopy = true;
-      }
-#endif
-
-   // disable SSE arraycopy for AMD64 but use it for aggressive liberty mode and for hot compiles
-   if (TR::Compiler->target.is64Bit())
-      {
-      if (comp->getOptLevel() >= hot || disableOptSeverCheckForRepeatMove || !comp->isOptServer())
-         useSSECopy = true;
-      }
-   else if (cg->useSSEForDoublePrecision())
-      useSSECopy = true;
-   else // 32 bit and useSSEForDoublePrecision is false
-      useSSECopy = false;
-
-#ifdef J9_PROJECT_SPECIFIC
-   if (isArrayStoreCheckUnnecessary &&
-       !useSSECopy &&
-       comp->getRecompilationInfo() &&
-       (node->isHalfWordElementArrayCopy() || node->isWordElementArrayCopy()))
-      {
-      TR_ValueInfo *valueInfo = (TR_ValueInfo *)TR_ValueProfiler::getProfiledValueInfo(node, comp);
-      if (valueInfo)
-         {
-         if ((valueInfo->_totalFrequency > 0) &&
-             (valueInfo->_frequency1 > (valueInfo->_totalFrequency/2)) &&
-             (valueInfo->_value1 > 24))
-            {
-            shortCopy = false;
-            }
-         }
-      }
-#endif
-
-   if (!useSSECopy && (comp->isOptServer() && !disableOptSeverCheckForRepeatMove))
-      {
-      shortCopy = false;
-      }
-
-   // If the byte length node is a mul (converting elements to bytes), then
-   // skip the mul, and just use the length in words directly.
-   //
-   bool byteLenInDWords    = false;
-   bool byteLenInWords     = false;
-   bool byteLenInHalfWords = false;
-
-   if (isArrayStoreCheckUnnecessary &&
-       !shortCopy &&
-       node->isForwardArrayCopy() &&
-       (node->isWordElementArrayCopy() || node->isHalfWordElementArrayCopy()) &&
-       !useSSECopy)
-      {
-      intptrj_t size = 0;
-      if (byteLenNode &&
-          byteLenNode->getRegister() == NULL &&
-          byteLenNode->getOpCode().isMul() &&
-          byteLenNode->getSecondChild()->getOpCode().isLoadConst())
-         {
-         TR::Node *constNode = byteLenNode->getSecondChild();
-         size = TR::TreeEvaluator::integerConstNodeValue(constNode, cg);
-         }
-
-      if (size == 8 || size == 4 || size == 2)
-         {
-         byteLenNode->getFirstChild()->incReferenceCount();
-         cg->recursivelyDecReferenceCount(byteLenNode);
-         byteLenNode = byteLenNode->getFirstChild();
-
-         if (size == 8)
-            byteLenInDWords = true;
-         else if (size == 4)
-            byteLenInWords = true;
-         else
-            byteLenInHalfWords = true;
-         }
-      }
-
-   if (!isArrayStoreCheckUnnecessary)
-      {
-      return TR::TreeEvaluator::VMarrayStoreCheckArrayCopyEvaluator(node, cg);
-      }
-
-   byteLenReg = cg->evaluate(byteLenNode);
-
-   int32_t argSize = 0;
-
-   // Evaluate the derived arguments.
-   //
-   // Since the derived argument registers are going to be killed over the call,
-   // move them into preserved registers if they still have more uses.
-   //
-   TR::Register *copyByteLenReg = NULL;
-   if (byteLenNode->getReferenceCount() > 1)
-      {
-      copyByteLenReg = cg->allocateRegister();
-      generateRegRegInstruction(MOVRegReg(), node, copyByteLenReg, byteLenReg, cg);
-
-      // Kill the copy rather than the original to allow better rematerialisation
-      // when the original register comes from a load.
-      //
-      byteLenReg = copyByteLenReg;
-      }
-
-   byteSrcReg = cg->evaluate(byteSrcNode);
-   TR::Register *copyByteSrcReg = NULL;
-   if (byteSrcNode->getReferenceCount() > 1)
-      {
-      if (byteSrcReg->containsInternalPointer())
-         {
-         copyByteSrcReg = cg->allocateRegister();
-         copyByteSrcReg->setPinningArrayPointer(byteSrcReg->getPinningArrayPointer());
-         copyByteSrcReg->setContainsInternalPointer();
-         }
-      else
-         copyByteSrcReg = cg->allocateCollectedReferenceRegister();
-
-      generateRegRegInstruction(MOVRegReg(), node, copyByteSrcReg, byteSrcReg, cg);
-
-      // Kill the copy rather than the original to allow better rematerialisation
-      // when the original register comes from a load.
-      //
-      byteSrcReg = copyByteSrcReg;
-      }
-
-   byteDstReg = cg->evaluate(byteDstNode);
-   TR::Register *copyByteDstReg = NULL;
-   if (byteDstNode->getReferenceCount() > 1)
-      {
-      if (byteDstReg->containsInternalPointer())
-         {
-         copyByteDstReg = cg->allocateRegister();
-         copyByteDstReg->setPinningArrayPointer(byteDstReg->getPinningArrayPointer());
-         copyByteDstReg->setContainsInternalPointer();
-         }
-      else
-         copyByteDstReg = cg->allocateCollectedReferenceRegister();
-
-      generateRegRegInstruction(MOVRegReg(), node, copyByteDstReg, byteDstReg, cg);
-
-      // Kill the copy rather than the original to allow better rematerialisation
-      // when the original register comes from a load.
-      //
-      byteDstReg = copyByteDstReg;
-      }
-
-   // Now that we have all the registers, set up the dependencies
-   //
-   int32_t numPostDeps = TR::Compiler->target.is64Bit() ? 6 : 4;
-
-   TR_ASSERT(isArrayStoreCheckUnnecessary, "arraystorechk must be necessary");
-
-   if ((shortCopy && node->isForwardArrayCopy() &&
-        !node->isWordElementArrayCopy() && cg->useSSEForDoublePrecision()))
-      {
-      // XMM scratch registers
-      //
-      numPostDeps += 1;
-      }
-
-   if (useSSECopy)
-      numPostDeps += 5;
-
-   if (node->isHalfWordElementArrayCopy() && shortCopy && TR::Compiler->target.is64Bit())
-      {
-      // "hidden" address reg in 64-bit memrefs
-      //
-      numPostDeps += 1;
-      }
-
-   dependencies = generateRegisterDependencyConditions((uint8_t)0, numPostDeps, cg);
-   dependencies->addPostCondition(byteSrcReg, TR::RealRegister::esi, cg);
-   dependencies->addPostCondition(byteDstReg, TR::RealRegister::edi, cg);
-   dependencies->addPostCondition(byteLenReg, TR::RealRegister::ecx, cg);
-
-   TR::Register *xmmScratchReg1 = NULL;
-   if (shortCopy && node->isForwardArrayCopy() &&
-       !node->isWordElementArrayCopy() && cg->useSSEForDoublePrecision())
-      {
-      xmmScratchReg1 = cg->allocateRegister(TR_FPR);
-      dependencies->addPostCondition(xmmScratchReg1, TR::RealRegister::xmm7, cg);
-      }
-
-   // Call the appropriate helper entry point
-   //
-   TR::DataType dt = node->getArrayCopyElementType();
-   uint32_t elementSize;
-   if (dt == TR::Address)
-      elementSize = TR::Compiler->om.sizeofReferenceField();
-   else
-      elementSize = TR::Symbol::convertTypeToSize(dt);
-
-   if (node->isForwardArrayCopy())
-      {
-      TR_RuntimeHelper helper;
-
-      bool generateInlineJumpTable = false;
-
-      if (useSSECopy)
-         {
-         TR::Register *tempReg = cg->allocateRegister();
-         dependencies->addPostCondition(tempReg, TR::RealRegister::eax, cg);
-
-         TR::Register *xmm0Register = cg->allocateRegister(TR_FPR);
-         TR::Register *xmm1Register = cg->allocateRegister(TR_FPR);
-         TR::Register *xmm2Register = cg->allocateRegister(TR_FPR);
-         TR::Register *xmm3Register = cg->allocateRegister(TR_FPR);
-         dependencies->addPostCondition(xmm0Register, TR::RealRegister::xmm0, cg);
-         dependencies->addPostCondition(xmm1Register, TR::RealRegister::xmm1, cg);
-         dependencies->addPostCondition(xmm2Register, TR::RealRegister::xmm2, cg);
-         dependencies->addPostCondition(xmm3Register, TR::RealRegister::xmm3, cg);
-
-         dependencies->stopAddingConditions();
-         if (TR::Compiler->target.is64Bit())
-             generateHelperCallInstruction(node, TR_AMD64SSEforwardArrayCopyAggressive, dependencies, cg);
-         else
-            {
-               generateHelperCallInstruction(node, TR_IA32SSEforwardArrayCopyAggressive, dependencies, cg);
-            }
-         cg->stopUsingRegister(tempReg);
-         cg->stopUsingRegister(xmm0Register);
-         cg->stopUsingRegister(xmm1Register);
-         cg->stopUsingRegister(xmm2Register);
-         cg->stopUsingRegister(xmm3Register);
-         }
-      else if (elementSize == 8)
-         {
-         dependencies->stopAddingConditions();
-         if (!shortCopy && TR::Compiler->target.is64Bit())
-            {
-            if (byteLenInDWords == false)
-               generateRegImmInstruction(SHRRegImm1(), node, byteLenReg, 3, cg);
-            generateInstruction(REPMOVSQ, node, dependencies, cg);
-            }
-         else if (TR::Compiler->target.is64Bit())
-            helper = TR_AMD64forwardWordArrayCopy;
-         else
-            helper = TR_IA32forwardWordArrayCopy;
-         }
-      else if (elementSize == 4)
-         {
-         dependencies->stopAddingConditions();
-         if (!shortCopy)
-            {
-            if (byteLenInWords == false)
-               generateRegImmInstruction(SHRRegImm1(), node, byteLenReg, 2, cg);
-            generateInstruction(REPMOVSD, node, dependencies, cg);
-            }
-         else if (TR::Compiler->target.is64Bit())
-            helper = TR_AMD64forwardWordArrayCopy;
-         else
-            helper = TR_IA32forwardWordArrayCopy;
-         }
-       else if (elementSize == 2)
-         {
-         if (!shortCopy)
-            {
-            dependencies->stopAddingConditions();
-            if (byteLenInHalfWords == false)
-               generateRegImmInstruction(SHRRegImm1(), node, byteLenReg, 1, cg);
-            generateInstruction(REPMOVSW, node, dependencies, cg);
-            }
-         else if (TR::Compiler->target.is64Bit())
-            {
-            // TODO: need an absolute relocation on the table base address and then AOT will work
-            //
-            if (!cg->needRelocationsForStatics())
-               {
-               generateInlineJumpTable = true;
-               }
-
-            helper = TR_AMD64forwardHalfWordArrayCopy;
-            }
-         else if (cg->useSSEForDoublePrecision())
-            {
-            // TODO: need an absolute relocation on the table base address and then AOT will work
-            //
-            if (!cg->needRelocationsForStatics())
-               {
-               generateInlineJumpTable = true;
-               }
-
-            helper = TR_IA32SSEforwardHalfWordArrayCopy;
-            }
-         else
-            helper = TR_IA32forwardHalfWordArrayCopy;
-
-         if (!generateInlineJumpTable && shortCopy)
-            {
-            dependencies->stopAddingConditions();
-            }
-         }
-      else
-         { // doing byte array copy or 8 byte reference copy on 64bit
-         dependencies->stopAddingConditions();
-         TR_X86ProcessorInfo p = cg->getX86ProcessorInfo();
-         //TR_ASSERT(shortCopy, "can't use long copy assumption here, code was invalid for 64bit reference copies");
-         if (!shortCopy)
-            {
-            generateInstruction(REPMOVSB, node, dependencies, cg);
-            }
-         else if (TR::Compiler->target.is64Bit())
-            {
-            if (p.isAMDOpteron() || p.isAMD15h())
-               {
-               helper = TR_AMD64forwardArrayCopyAMDOpteron;
-               }
-            else
-               {
-               helper = TR_AMD64forwardArrayCopy;
-               }
-            }
-         else if (cg->useSSEForDoublePrecision())
-            helper = (p.isAMDOpteron() || p.isAMD15h()) ? TR_IA32SSEforwardArrayCopyAMDOpteron : TR_IA32SSEforwardArrayCopy;
-         else
-            helper = TR_IA32forwardArrayCopy;
-         }
-
-      if (shortCopy && !generateInlineJumpTable && !useSSECopy)
-         {
-         generateHelperCallInstruction(node, helper, dependencies, cg)->setAdjustsFramePointerBy(-argSize);
-         }
-      else if (generateInlineJumpTable)
-         {
-         if (comp->getOption(TR_TraceCG))
-            traceMsg(comp, "Generating inline halfword jump table : %s\n", comp->signature());
-
-         TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg);
-         TR::LabelSymbol *restartLabel = generateLabelSymbol(cg);
-
-         startLabel->setStartInternalControlFlow();
-         restartLabel->setEndInternalControlFlow();
-
-         generateLabelInstruction(LABEL, node, startLabel, cg);
-
-         TR::SymbolReference *helperSymRef = cg->symRefTab()->findOrCreateRuntimeHelper(helper, false, false, false);
-
-         TR::X86HelperCallSnippet *snippet = new (cg->trHeapMemory())
-            TR::X86HelperCallSnippet(cg, node, restartLabel, snippetLabel, helperSymRef);
-
-         cg->addSnippet(snippet);
-
-         generateRegImmInstruction(CMP4RegImm4, node, byteLenReg, 48, cg);
-         generateLabelInstruction(JG4, node, snippetLabel, cg);
-
-         generateRegMemInstruction(LEARegMem(), node,
-                                   byteDstReg,
-                                   generateX86MemoryReference(byteDstReg, byteLenReg, 0, cg),
-                                   cg);
-
-         generateRegMemInstruction(LEARegMem(), node,
-                                   byteSrcReg,
-                                   generateX86MemoryReference(byteSrcReg, byteLenReg, 0, cg),
-                                   cg);
-
-         int32_t scale = TR::Compiler->target.is64Bit() ? 3 : 2;
-
-         // TODO: need an absolute relocation on the table base address
-         //
-         TR::MemoryReference *mr = generateX86MemoryReference(NULL, byteLenReg, scale, (intptrj_t)&fwdHalfWordCopyTable, cg);
-
-         if (TR::Compiler->target.is64Bit())
-            {
-            TR::Register *addressReg = mr->getAddressRegister();
-            if (addressReg)
-               {
-               dependencies->addPostCondition(addressReg, TR::RealRegister::NoReg, cg);
-               }
-            }
-
-         dependencies->stopAddingConditions();
-
-         generateMemInstruction(CALLMem, node, mr, cg);
-         generateLabelInstruction(LABEL, node, restartLabel, dependencies, cg);
-         }
-      }
-   else
-      {
-      TR::Register *xmm0Register = NULL, *xmm1Register = NULL, *xmm2Register = NULL, *xmm3Register = NULL;
-      if (useSSECopy)
-         {
-         xmm0Register = cg->allocateRegister(TR_FPR);
-         xmm1Register = cg->allocateRegister(TR_FPR);
-         xmm2Register = cg->allocateRegister(TR_FPR);
-         xmm3Register = cg->allocateRegister(TR_FPR);
-         dependencies->addPostCondition(xmm0Register, TR::RealRegister::xmm0, cg);
-         dependencies->addPostCondition(xmm1Register, TR::RealRegister::xmm1, cg);
-         dependencies->addPostCondition(xmm2Register, TR::RealRegister::xmm2, cg);
-         dependencies->addPostCondition(xmm3Register, TR::RealRegister::xmm3, cg);
-         }
-
-      dependencies->stopAddingConditions();
-
-      TR_RuntimeHelper helper;
-      TR::LabelSymbol *helperCallLabel = NULL;
-      TR::LabelSymbol *endRepetLabe = NULL;
-      if (!shortCopy && !(elementSize == 8 && TR::Compiler->target.is32Bit()))
-         {
-         // dst = dst - src
-         // cmp dst, rcx_in_bytes (always in bytes)
-         // lea dst, dst + src
-         // jb helper call
-         TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-         startLabel->setStartInternalControlFlow();
-         generateLabelInstruction(LABEL, node, startLabel, cg);
-         generateRegRegInstruction(SUBRegReg(), node, byteDstReg, byteSrcReg, cg);
-         generateRegRegInstruction(CMPRegReg(), node, byteDstReg, byteLenReg, cg);
-         generateRegMemInstruction(LEARegMem(), node, byteDstReg, generateX86MemoryReference(byteDstReg, byteSrcReg, 0, cg), cg);
-         helperCallLabel = generateLabelSymbol(cg);
-         endRepetLabe = generateLabelSymbol(cg);
-         endRepetLabe->setEndInternalControlFlow();
-         generateLabelInstruction(JB4,  node, helperCallLabel, cg);
-         }
-
-      if (elementSize == 8)
-         {
-         if (!shortCopy && TR::Compiler->target.is64Bit())
-            {
-            generateRegImmInstruction(SHRRegImm1(), node, byteLenReg, 3, cg);
-            generateInstruction(REPMOVSQ, node, dependencies, cg);
-            }
-         helper = TR::Compiler->target.is64Bit() ?
-              (useSSECopy) ? TR_AMD64wordArrayCopyAggressive : TR_AMD64wordArrayCopy
-              : (useSSECopy) ? TR_IA32wordArrayCopyAggressive : TR_IA32wordArrayCopy;
-         }
-      else if (elementSize == 4)
-         {
-         if (!shortCopy)
-            {
-            generateRegImmInstruction(SHRRegImm1(), node, byteLenReg, 2, cg);
-            generateInstruction(REPMOVSD, node, dependencies, cg);
-            }
-         helper = TR::Compiler->target.is64Bit() ?
-              (useSSECopy) ? TR_AMD64wordArrayCopyAggressive : TR_AMD64wordArrayCopy
-              : (useSSECopy) ? TR_IA32wordArrayCopyAggressive : TR_IA32wordArrayCopy;
-         }
-      else if (elementSize == 2)
-         {
-         if (!shortCopy)
-            {
-            generateRegImmInstruction(SHRRegImm1(), node, byteLenReg, 1, cg);
-            generateInstruction(REPMOVSW, node, dependencies, cg);
-            }
-         helper = TR::Compiler->target.is64Bit() ? (useSSECopy) ? TR_AMD64halfWordArrayCopyAggressive : TR_AMD64halfWordArrayCopy
-              : (useSSECopy) ? TR_IA32halfWordArrayCopyAggressive : TR_IA32halfWordArrayCopy;
-         }
-      else
-         {
-         if (!shortCopy)
-            {
-            generateInstruction(REPMOVSB, node, dependencies, cg);
-            }
-         helper = TR::Compiler->target.is64Bit() ? (false ? TR_AMD64BCarrayCopy :
-                                         (useSSECopy) ? TR_AMD64arrayCopyAggressive : TR_AMD64arrayCopy)
-                                      :  (useSSECopy) ? TR_IA32arrayCopyAggressive : TR_IA32arrayCopy;
-         }
-
-      TR_ASSERT((helperCallLabel != NULL) == (!shortCopy && !(elementSize == 8 && TR::Compiler->target.is32Bit())),
-                "arraycopy evaluator control flow disaster!");
-      TR_OutlinedInstructions *outlinedCall = NULL;
-      if (helperCallLabel != NULL)
-         {
-         outlinedCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(helperCallLabel, cg);
-         cg->getOutlinedInstructionsList().push_front(outlinedCall);
-         outlinedCall->swapInstructionListsWithCompilation();
-         generateLabelInstruction(LABEL, node, helperCallLabel, cg);
-         }
-
-      generateHelperCallInstruction(node, helper, dependencies, cg)->setAdjustsFramePointerBy(-argSize);
-
-
-      if (helperCallLabel != NULL)
-         {
-         generateLabelInstruction(JMP4, node, endRepetLabe, cg);
-         outlinedCall->swapInstructionListsWithCompilation();
-         generateLabelInstruction(LABEL,  node, endRepetLabe, dependencies, cg);
-         }
-
-      if (useSSECopy)
-         {
-         cg->stopUsingRegister(xmm0Register);
-         cg->stopUsingRegister(xmm1Register);
-         cg->stopUsingRegister(xmm2Register);
-         cg->stopUsingRegister(xmm3Register);
-         }
-      }
-
-   if (!isPrimitiveCopy)
-      {
-#ifdef J9_PROJECT_SPECIFIC
-      TR::TreeEvaluator::generateWrtbarForArrayCopy(node, cg);
-#endif
-      cg->decReferenceCount(srcNode);
-      cg->decReferenceCount(dstNode);
-      }
-
-   cg->decReferenceCount(byteSrcNode);
-   cg->decReferenceCount(byteDstNode);
-   cg->decReferenceCount(byteLenNode);
-
-   // If we made copies of the derived registers, these copies are now dead. At this point,
-   // copy{ByteSrc,ByteDst,ByteLen,Dst}Reg == {byteSrc,byteDst,byteLen,dst}Reg, respectively.
-   //
-   if (copyByteSrcReg)
-      cg->getLiveRegisters(TR_GPR)->registerIsDead(byteSrcReg);
-   if (copyByteDstReg)
-      cg->getLiveRegisters(TR_GPR)->registerIsDead(byteDstReg);
-   if (copyByteLenReg)
-      cg->getLiveRegisters(TR_GPR)->registerIsDead(byteLenReg);
-
-   if (xmmScratchReg1)
-      cg->getLiveRegisters(TR_FPR)->registerIsDead(xmmScratchReg1);
-
    return NULL;
    }
 
@@ -3493,6 +1635,24 @@ static void generateRepMovsInstruction(TR_X86OpCodes repmovs, TR::Node *node, TR
    generateInstruction(repmovs, node, dependencies, cg);
    }
 
+/** \brief
+*    Generate instructions to do array copy for 64-bit primitives on IA-32.
+*
+*  \param node
+*     The tree node
+*
+*  \param dstReg
+*     The destination array address register
+*
+*  \param srcReg
+*     The source array address register
+*
+*  \param sizeReg
+*     The register holding the total size of elements to be copied, in bytes
+*
+*  \param cg
+*     The code generator
+*/
 static void arrayCopy64BitPrimitiveOnIA32(TR::Node* node, TR::Register* dstReg, TR::Register* srcReg, TR::Register* sizeReg, TR::CodeGenerator* cg)
    {
    TR::Register* scratch = cg->allocateRegister();
@@ -3565,6 +1725,99 @@ static void arrayCopy64BitPrimitiveOnIA32(TR::Node* node, TR::Register* dstReg, 
    cg->stopUsingRegister(scratch);
    }
 
+/** \brief
+*    Generate instructions to do array copy for 16-bit primitives.
+*
+*  \param node
+*     The tree node
+*
+*  \param dstReg
+*     The destination array address register
+*
+*  \param srcReg
+*     The source array address register
+*
+*  \param sizeReg
+*     The register holding the total size of elements to be copied, in bytes
+*
+*  \param cg
+*     The code generator
+*/
+static void arrayCopy16BitPrimitive(TR::Node* node, TR::Register* dstReg, TR::Register* srcReg, TR::Register* sizeReg, TR::CodeGenerator* cg)
+   {
+   TR::RegisterDependencyConditions* dependencies = generateRegisterDependencyConditions((uint8_t)3, (uint8_t)3, cg);
+   dependencies->addPreCondition(srcReg, TR::RealRegister::esi, cg);
+   dependencies->addPreCondition(dstReg, TR::RealRegister::edi, cg);
+   dependencies->addPreCondition(sizeReg, TR::RealRegister::ecx, cg);
+   dependencies->addPostCondition(srcReg, TR::RealRegister::esi, cg);
+   dependencies->addPostCondition(dstReg, TR::RealRegister::edi, cg);
+   dependencies->addPostCondition(sizeReg, TR::RealRegister::ecx, cg);
+
+   TR::LabelSymbol* mainBegLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol* mainEndLabel = generateLabelSymbol(cg);
+   mainBegLabel->setStartInternalControlFlow();
+   mainEndLabel->setEndInternalControlFlow();
+
+   generateLabelInstruction(LABEL, node, mainBegLabel, cg);
+   if (node->isForwardArrayCopy())
+      {
+      generateRegImmInstruction(SHRRegImm1(), node, sizeReg, 2, cg);
+      generateInstruction(REPMOVSD, node, cg);
+      generateLabelInstruction(JAE1, node, mainEndLabel, cg);
+      generateRegMemInstruction(L2RegMem, node, sizeReg, generateX86MemoryReference(srcReg, 0, cg), cg);
+      generateMemRegInstruction(S2MemReg, node, generateX86MemoryReference(dstReg, 0, cg), sizeReg, cg);
+      }
+   else // decide direction during runtime
+      {
+      TR::LabelSymbol* backwardLabel = generateLabelSymbol(cg);
+
+      generateRegRegInstruction(SUBRegReg(), node, dstReg, srcReg, cg);  // dst = dst - src
+      generateRegRegInstruction(CMPRegReg(), node, dstReg, sizeReg, cg); // cmp dst, size
+      generateRegMemInstruction(LEARegMem(), node, dstReg, generateX86MemoryReference(dstReg, srcReg, 0, cg), cg); // dst = dst + src
+      generateLabelInstruction(JB4, node, backwardLabel, cg);   // jb, skip backward copy setup
+
+      generateRegImmInstruction(SHRRegImm1(), node, sizeReg, 2, cg);
+      generateInstruction(REPMOVSD, node, cg);
+      generateLabelInstruction(JAE1, node, mainEndLabel, cg);
+      generateRegMemInstruction(L2RegMem, node, sizeReg, generateX86MemoryReference(srcReg, 0, cg), cg);
+      generateMemRegInstruction(S2MemReg, node, generateX86MemoryReference(dstReg, 0, cg), sizeReg, cg);
+
+      TR_OutlinedInstructions* backwardPath = new (cg->trHeapMemory()) TR_OutlinedInstructions(backwardLabel, cg);
+      cg->getOutlinedInstructionsList().push_front(backwardPath);
+      backwardPath->swapInstructionListsWithCompilation();
+      generateLabelInstruction(LABEL, node, backwardLabel, cg);
+      generateRegMemInstruction(LEARegMem(), node, srcReg, generateX86MemoryReference(srcReg, sizeReg, 0, -2, cg), cg);
+      generateRegMemInstruction(LEARegMem(), node, dstReg, generateX86MemoryReference(dstReg, sizeReg, 0, -2, cg), cg);
+      generateInstruction(STD, node, cg);
+      generateRepMovsInstruction(REPMOVSW, node, sizeReg, NULL, cg);
+      generateInstruction(CLD, node, cg);
+      generateLabelInstruction(JMP4, node, mainEndLabel, cg);
+      backwardPath->swapInstructionListsWithCompilation();
+      }
+   generateLabelInstruction(LABEL, node, mainEndLabel, dependencies, cg);
+   }
+
+/** \brief
+*    Generate instructions to do array copy.
+*
+*  \param node
+*     The tree node
+*
+*  \param elementSize
+*     The size of an element, in bytes
+*
+*  \param dstReg
+*     The destination array address register
+*
+*  \param srcReg
+*     The source array address register
+*
+*  \param sizeReg
+*     The register holding the total size of elements to be copied, in bytes
+*
+*  \param cg
+*     The code generator
+*/
 static void arrayCopyDefault(TR::Node* node, uint8_t elementSize, TR::Register* dstReg, TR::Register* srcReg, TR::Register* sizeReg, TR::CodeGenerator* cg)
    {
    TR::RegisterDependencyConditions* dependencies = generateRegisterDependencyConditions((uint8_t)3, (uint8_t)3, cg);
@@ -3780,7 +2033,7 @@ static void generateArrayElementLoad(TR::Node* node, TR::Register* valueReg, uin
  *     The destination array address register
  *
  *  \param srcReg
- *     The srouce array address register
+ *     The source array address register
  *
  *  \param size
  *     The number of elements that will be copied
@@ -3835,7 +2088,7 @@ static void arraycopyForShortConstArrayWithDirection(TR::Node* node, TR::Registe
  *     The destination array address register
  *
  *  \param srcReg
- *     The srouce array address register
+ *     The source array address register
  *
  *  \param size
  *     The number of elements that will be copied
@@ -3948,11 +2201,6 @@ static void arraycopyForShortConstArrayWithoutDirection(TR::Node* node, TR::Regi
 
 TR::Register *OMR::X86::TreeEvaluator::arraycopyEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   static bool useNewArraycopy = feGetEnv("TR_UseNewArraycopy");
-   if (useNewArraycopy == NULL)
-      {
-      return deprecated_arraycopyEvaluator(node, cg);
-      }
    if (node->isReferenceArrayCopy() && !node->isNoArrayStoreCheckArrayCopy())
       {
       return TR::TreeEvaluator::VMarrayStoreCheckArrayCopyEvaluator(node, cg);
@@ -3989,6 +2237,7 @@ TR::Register *OMR::X86::TreeEvaluator::arraycopyEvaluator(TR::Node *node, TR::Co
 
    TR::DataType dt = node->getArrayCopyElementType();
    uint32_t elementSize = 1;
+   static bool useREPMOVSW = feGetEnv("TR_UseREPMOVSWForArrayCopy");
    static bool forceByteArrayElementCopy = feGetEnv("TR_ForceByteArrayElementCopy");
    if (!forceByteArrayElementCopy)
       {
@@ -4038,6 +2287,10 @@ TR::Register *OMR::X86::TreeEvaluator::arraycopyEvaluator(TR::Node *node, TR::Co
       if (elementSize == 8 && TR::Compiler->target.is32Bit())
          {
          arrayCopy64BitPrimitiveOnIA32(node, dstReg, srcReg, sizeReg, cg);
+         }
+      else if (elementSize == 2 && !useREPMOVSW)
+         {
+         arrayCopy16BitPrimitive(node, dstReg, srcReg, sizeReg, cg);
          }
       else
          {
@@ -4111,7 +2364,7 @@ TR::Register *OMR::X86::TreeEvaluator::arraytranslateEvaluator(TR::Node *node, T
 
    bool arraytranslateOT = false;
    if  (sourceByte && (node->getChild(3)->getOpCodeValue() == TR::iconst) && (node->getChild(3)->getInt() == 0))
-	arraytranslateOT = true;
+      arraytranslateOT = true;
 
    int noOfDependencies = (sourceByte && !arraytranslateOT) ? 8 : 9;
 
@@ -4133,7 +2386,7 @@ TR::Register *OMR::X86::TreeEvaluator::arraytranslateEvaluator(TR::Node *node, T
    TR_RuntimeHelper helper ;
    if (sourceByte)
       {
-      
+
       TR_ASSERT(!node->isTargetByteArrayTranslate(), "Both source and target are byte for array translate");
       if (arraytranslateOT)
       {
@@ -4729,30 +2982,20 @@ static TR::Register * inlineSinglePrecisionSQRT(TR::Node *node, TR::CodeGenerato
   return node->getRegister();
 }
 
-TR::Register* OMR::X86::TreeEvaluator::performSimpleAtomicMemoryUpdate(TR::Node* node, int8_t size, TR_X86OpCodes op, TR::CodeGenerator* cg)
+TR::Register* OMR::X86::TreeEvaluator::performSimpleAtomicMemoryUpdate(TR::Node* node, TR_X86OpCodes op, TR::CodeGenerator* cg)
    {
-   // There are two versions of native exchange helpers:
-   //     2 nodes: exchange with [address]
-   //     3 nodes: exchange with [address+offset]
-   TR::Register* object = cg->evaluate(node->getFirstChild());
-   TR::Register* offset = node->getNumChildren() == 2 ? NULL : cg->evaluate(node->getSecondChild());
-   TR::Register* value = TR::TreeEvaluator::intOrLongClobberEvaluate(node->getLastChild(), size == 8, cg);
-   // Assume that the offset is positive and not pathologically large (i.e., > 2^31).
-   if (offset && TR::Compiler->target.is32Bit() && size == 8)
-      {
-      offset = offset->getLowOrder();
-      }
+   TR_ASSERT((!TR_X86OpCode(op).hasLongSource() && !TR_X86OpCode(op).hasLongTarget()) || TR::Compiler->target.is64Bit(), "64-bit instruction not supported on IA32");
+   TR::Register* address = cg->evaluate(node->getChild(0));
+   TR::Register* value   = cg->evaluate(node->getChild(1));
+   TR::Register* result  = cg->allocateRegister();
 
-   generateMemRegInstruction(op, node, generateX86MemoryReference(object, offset, 0, cg), value, cg);
+   generateRegRegInstruction(MOVRegReg(), node, result, value, cg);
+   generateMemRegInstruction(op, node, generateX86MemoryReference(address, 0, cg), result, cg);
 
-   node->setRegister(value);
-
-   // Clean up children nodes
-   for (uint16_t i = 0; i < node->getNumChildren(); i++)
-      {
-      cg->decReferenceCount(node->getChild(i));
-      }
-   return value;
+   node->setRegister(result);
+   cg->decReferenceCount(node->getChild(0));
+   cg->decReferenceCount(node->getChild(1));
+   return result;
    }
 
 // TR::icall, TR::acall, TR::lcall, TR::fcall, TR::dcall, TR::call handled by directCallEvaluator
@@ -4770,27 +3013,27 @@ TR::Register *OMR::X86::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::C
       {
       if (comp->getSymRefTab()->isNonHelper(SymRef, TR::SymbolReferenceTable::atomicAdd32BitSymbol))
          {
-         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, 4, LADD4MemReg, cg);
+         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, LADD4MemReg, cg);
          }
       if (comp->getSymRefTab()->isNonHelper(SymRef, TR::SymbolReferenceTable::atomicAdd64BitSymbol))
          {
-         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, 8, LADD8MemReg, cg);
+         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, LADD8MemReg, cg);
          }
       if (comp->getSymRefTab()->isNonHelper(SymRef, TR::SymbolReferenceTable::atomicFetchAndAdd32BitSymbol))
          {
-         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, 4, LXADD4MemReg, cg);
+         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, LXADD4MemReg, cg);
          }
       if (comp->getSymRefTab()->isNonHelper(SymRef, TR::SymbolReferenceTable::atomicFetchAndAdd64BitSymbol))
          {
-         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, 8, LXADD8MemReg, cg);
+         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, LXADD8MemReg, cg);
          }
       if (comp->getSymRefTab()->isNonHelper(SymRef, TR::SymbolReferenceTable::atomicSwap32BitSymbol))
          {
-         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, 4, XCHG4MemReg, cg);
+         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, XCHG4MemReg, cg);
          }
       if (comp->getSymRefTab()->isNonHelper(SymRef, TR::SymbolReferenceTable::atomicSwap64BitSymbol))
          {
-         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, 8, XCHG8MemReg, cg);
+         return TR::TreeEvaluator::performSimpleAtomicMemoryUpdate(node, XCHG8MemReg, cg);
          }
       }
 
@@ -5123,8 +3366,6 @@ TR::Register *OMR::X86::TreeEvaluator::BBStartEvaluator(TR::Node *node, TR::Code
          node->setLabel(label);
          }
 
-      cg->setVMThreadRequired(true);
-
       static bool doAlign = (feGetEnv("TR_DoNotAlignLoopEntries") == NULL);
       static bool alwaysAlignLoops = (feGetEnv("TR_AlwaysAlignLoopEntries") != NULL);
       if (doAlign && !block->isCold() && block->firstBlockInLoop() &&
@@ -5133,48 +3374,10 @@ TR::Register *OMR::X86::TreeEvaluator::BBStartEvaluator(TR::Node *node, TR::Code
          generateAlignmentInstruction(node, 16, cg); // TODO: Derive alignment from CPU cache information
          }
 
-      if (comp->getOption(TR_DisableLateEdgeSplitting))
-         {
-         // Check the cfg edge for the mustRestoreVMThreadRegister attribute. If markked then
-         // there can be only one incoming edge.
-         TR::CFGEdge *edge = (!block->getPredecessors().empty()) ? block->getPredecessors().front() : NULL;
-         if (cg->getSupportsVMThreadGRA() &&
-             edge && edge->mustRestoreVMThreadRegister())
-            {
-            // Add a dummy register dependency on ebp to force a vmThread reload.
-            TR::RegisterDependencyConditions  *glRegDeps;
-            if (node->getNumChildren() > 0)
-               {
-               cg->evaluate(node->getFirstChild());
-               glRegDeps = generateRegisterDependencyConditions(node->getFirstChild(), cg, 1, &popRegisters);
-               }
-            else
-               glRegDeps = generateRegisterDependencyConditions((uint8_t)0, (uint8_t)1, cg);
-
-            TR::Register *dummyReg = cg->allocateRegister();
-            glRegDeps->addPostCondition(dummyReg, TR::RealRegister::ebp, cg);
-            glRegDeps->stopAddingConditions();
-            inst = new (cg->trHeapMemory()) TR::X86LabelInstruction(LABEL, node, label, glRegDeps, cg);
-            cg->stopUsingRegister(dummyReg);
-            }
-         else
-            {
-            if (node->getNumChildren() > 0)
-               inst = generateLabelInstruction(LABEL, node, label, node->getFirstChild(), &popRegisters, true, cg);
-            else
-               inst = generateLabelInstruction(LABEL, node, node->getLabel(), true, cg);
-            }
-         }
+      if (node->getNumChildren() > 0)
+         inst = generateLabelInstruction(LABEL, node, label, node->getFirstChild(), &popRegisters, true, cg);
       else
-         {
-         bool needVMThreadDep =
-            !performTransformation(comp, "O^O LATE EDGE SPLITTING: Omit ebp dependency for %s node %s\n",
-                                     node->getOpCode().getName(), cg->getDebug()->getName(node));
-         if (node->getNumChildren() > 0)
-            inst = generateLabelInstruction(LABEL, node, label, node->getFirstChild(), &popRegisters, needVMThreadDep, cg);
-         else
-            inst = generateLabelInstruction(LABEL, node, node->getLabel(), needVMThreadDep, cg);
-         }
+         inst = generateLabelInstruction(LABEL, node, node->getLabel(), true, cg);
 
       if (inst->getDependencyConditions())
          inst->getDependencyConditions()->setMayNeedToPopFPRegisters(true);
@@ -5183,7 +3386,6 @@ TR::Register *OMR::X86::TreeEvaluator::BBStartEvaluator(TR::Node *node, TR::Code
 
       node->getLabel()->setInstruction(inst);
       block->setFirstInstruction(inst);
-      cg->setVMThreadRequired(false);
 
       // If this is the first BBStart of the method, its GlRegDeps determine
       // where parameters should be placed.
@@ -5252,14 +3454,12 @@ TR::Register *OMR::X86::TreeEvaluator::BBEndEvaluator(TR::Node *node, TR::CodeGe
       TR::Machine *machine = cg->machine();
 
       if (cg->enableRegisterAssociations() &&
-          comp->getAppendInstruction()->getOpCodeValue() != ASSOCREGS)
+          cg->getAppendInstruction()->getOpCodeValue() != ASSOCREGS)
          {
-         machine->createRegisterAssociationDirective(comp->getAppendInstruction());
+         machine->createRegisterAssociationDirective(cg->getAppendInstruction());
          }
 
-      bool needVMThreadDep =
-         comp->getOption(TR_DisableLateEdgeSplitting) ||
-         !performTransformation(comp, "O^O LATE EDGE SPLITTING: Omit ebp dependency for %s node %s\n", node->getOpCode().getName(), cg->getDebug()->getName(node));
+      bool needVMThreadDep = true;
 
       // This label is also used by RegisterDependency to detect the end of a block.
       TR::Instruction *labelInst = NULL;
@@ -5683,10 +3883,10 @@ TR::Register *OMR::X86::TreeEvaluator::atomicorEvaluator(TR::Node *node, TR::Cod
    return NULL;
    }
 
-TR::Register *                                                                                                                                                             
-OMR::X86::TreeEvaluator::tstartEvaluator(TR::Node *node, TR::CodeGenerator *cg)                                                                                             
-   {                                                                                                                                                                       
-   /*         
+TR::Register *
+OMR::X86::TreeEvaluator::tstartEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   /*
    .Lstart:
       xbegin       .Lfallback
       jmp          .LfallThrough
@@ -5694,42 +3894,42 @@ OMR::X86::TreeEvaluator::tstartEvaluator(TR::Node *node, TR::CodeGenerator *cg)
       test         eax, 0x2
       jne          .Ltransient
       jmp          .Lpersistent
-   .Lend:  
-   */                                                                                                                                                                      
+   .Lend:
+   */
    TR::Node *persistentFailureNode = node->getFirstChild();
-   TR::Node *transientFailureNode = node->getSecondChild();                                                                                                                
+   TR::Node *transientFailureNode = node->getSecondChild();
    TR::Node *fallThroughNode = node->getThirdChild();
-   TR::Node *GRANode = NULL;                                                                                                                                               
-                                                                                                                                                                           
-   TR::LabelSymbol *startLabel = TR::LabelSymbol::create(cg->trHeapMemory(),cg);                                                                                           
-   startLabel->setStartInternalControlFlow();                                                                                                                              
-   TR::LabelSymbol *endLabel = TR::LabelSymbol::create(cg->trHeapMemory(),cg);                                                                                             
-   endLabel->setEndInternalControlFlow();                                                                                                                                  
-                    
-   TR::LabelSymbol *fallbackLabel = TR::LabelSymbol::create(cg->trHeapMemory(),cg);                                                                                    
-   TR::LabelSymbol *persistentFailureLabel = persistentFailureNode->getBranchDestination()->getNode()->getLabel();                                                         
-   TR::LabelSymbol *transientFailureLabel  = transientFailureNode->getBranchDestination()->getNode()->getLabel();     
-   TR::LabelSymbol *fallThroughLabel = fallThroughNode->getBranchDestination()->getNode()->getLabel();    
+   TR::Node *GRANode = NULL;
+
+   TR::LabelSymbol *startLabel = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
+   startLabel->setStartInternalControlFlow();
+   TR::LabelSymbol *endLabel = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
+   endLabel->setEndInternalControlFlow();
+
+   TR::LabelSymbol *fallbackLabel = TR::LabelSymbol::create(cg->trHeapMemory(),cg);
+   TR::LabelSymbol *persistentFailureLabel = persistentFailureNode->getBranchDestination()->getNode()->getLabel();
+   TR::LabelSymbol *transientFailureLabel  = transientFailureNode->getBranchDestination()->getNode()->getLabel();
+   TR::LabelSymbol *fallThroughLabel = fallThroughNode->getBranchDestination()->getNode()->getLabel();
 
    //if LabelSymbol isn't ready yet, generate a new one and assign to the node.
    if(!fallThroughLabel){
-      fallThroughLabel = generateLabelSymbol(cg); 
+      fallThroughLabel = generateLabelSymbol(cg);
       fallThroughNode->getBranchDestination()->getNode()->setLabel(fallThroughLabel);
-   }         
+   }
 
    if(!transientFailureLabel){
-       transientFailureLabel = generateLabelSymbol(cg); 
+       transientFailureLabel = generateLabelSymbol(cg);
        transientFailureNode->getBranchDestination()->getNode()->setLabel(transientFailureLabel);
-   }                                
-  
+   }
+
    //in case user will make transientFailure goto persistenFailure, in which case the label will mess up at this point
    //we'd better re-generate the label and set it to persistentFailure node again.
    if(!persistentFailureLabel || persistentFailureLabel != persistentFailureNode->getBranchDestination()->getNode()->getLabel()){
-      persistentFailureLabel = generateLabelSymbol(cg);  
+      persistentFailureLabel = generateLabelSymbol(cg);
       persistentFailureNode->getBranchDestination()->getNode()->setLabel(persistentFailureLabel);
-   }     
-       
-   TR::Register *accReg = cg->allocateRegister();                                                                                                                          
+   }
+
+   TR::Register *accReg = cg->allocateRegister();
    TR::RegisterDependencyConditions *endLabelConditions;
    TR::RegisterDependencyConditions *fallThroughConditions = NULL;
    TR::RegisterDependencyConditions *persistentConditions = NULL;
@@ -5773,7 +3973,7 @@ OMR::X86::TreeEvaluator::tstartEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    generateLabelInstruction(LABEL, node, startLabel, startLabelConditions, cg);
 
    //xbegin, if fallback then go to fallbackLabel
-   generateLongLabelInstruction(XBEGIN4, node, fallbackLabel, cg);  
+   generateLongLabelInstruction(XBEGIN4, node, fallbackLabel, cg);
 
    //jump to  fallThrough Path
    if (fallThroughConditions)
@@ -5784,7 +3984,7 @@ OMR::X86::TreeEvaluator::tstartEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    endLabelConditions = generateRegisterDependencyConditions((uint8_t)0, 1, cg);
    endLabelConditions->addPostCondition(accReg, TR::RealRegister::eax, cg);
    endLabelConditions->stopAddingConditions();
-  
+
    //Label fallback begin:
    generateLabelInstruction(LABEL, node, fallbackLabel, cg);
 
@@ -5809,7 +4009,7 @@ OMR::X86::TreeEvaluator::tstartEvaluator(TR::Node *node, TR::CodeGenerator *cg)
 
    cg->decReferenceCount(persistentFailureNode);
    cg->decReferenceCount(transientFailureNode);
-   
+
    return NULL;
    }
 
@@ -5873,42 +4073,64 @@ enum BinaryArithmeticOps : uint32_t
    BinaryArithmeticSub,
    BinaryArithmeticMul,
    BinaryArithmeticDiv,
+   BinaryArithmeticAnd,
+   BinaryArithmeticOr,
+   BinaryArithmeticXor,
    NumBinaryArithmeticOps
    };
+
 static const TR_X86OpCodes BinaryArithmeticOpCodes[TR::NumOMRTypes][NumBinaryArithmeticOps] =
    {
-   //  Invalid,       Add,         Sub,       Mul,         Div
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // NoType
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Int8
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Int16
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Int32
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Int64
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Float
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Double
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Address
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // VectorInt8
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // VectorInt16
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // VectorInt32
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // VectorInt64
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // VectorFloat
-   { BADIA32Op, ADDPDRegReg, BADIA32Op, MULPDRegReg, BADIA32Op }, // VectorDouble
-   { BADIA32Op, BADIA32Op,   BADIA32Op, BADIA32Op,   BADIA32Op }, // Aggregate
+   //  Invalid,       Add,         Sub,         Mul,         Div,          And,         Or,       Xor
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // NoType
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Int8
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Int16
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Int32
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Int64
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Float
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Double
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Address
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // VectorInt8
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // VectorInt16
+   { BADIA32Op, PADDDRegReg, PSUBDRegReg, PMULLDRegReg, BADIA32Op,   PANDRegReg, PORRegReg, PXORRegReg }, // VectorInt32
+   { BADIA32Op, PADDQRegReg, PSUBQRegReg, BADIA32Op,    BADIA32Op,   PANDRegReg, PORRegReg, PXORRegReg }, // VectorInt64
+   { BADIA32Op, ADDPSRegReg, SUBPSRegReg, MULPSRegReg,  DIVPSRegReg, BADIA32Op,  BADIA32Op, BADIA32Op  }, // VectorFloat
+   { BADIA32Op, ADDPDRegReg, SUBPDRegReg, MULPDRegReg,  DIVPDRegReg, BADIA32Op,  BADIA32Op, BADIA32Op  }, // VectorDouble
+   { BADIA32Op, BADIA32Op,   BADIA32Op,   BADIA32Op,    BADIA32Op,   BADIA32Op,  BADIA32Op, BADIA32Op  }, // Aggregate
    };
+
 // For ILOpCode that can be translated to single SSE/AVX instructions
 TR::Register* OMR::X86::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEvaluator(TR::Node* node, TR::CodeGenerator* cg)
    {
    auto arithmetic = BinaryArithmeticInvalid;
+
    switch (node->getOpCodeValue())
       {
       case TR::vadd:
          arithmetic = BinaryArithmeticAdd;
          break;
+      case TR::vsub:
+         arithmetic = BinaryArithmeticSub;
+         break;
       case TR::vmul:
          arithmetic = BinaryArithmeticMul;
+         break;
+      case TR::vdiv:
+         arithmetic = BinaryArithmeticDiv;
+         break;
+      case TR::vand:
+         arithmetic = BinaryArithmeticAnd;
+         break;
+      case TR::vor:
+         arithmetic = BinaryArithmeticOr;
+         break;
+      case TR::vxor:
+         arithmetic = BinaryArithmeticXor;
          break;
       default:
          TR_ASSERT(false, "Unsupported OpCode");
       }
+
    TR::Node* operandNode0 = node->getChild(0);
    TR::Node* operandNode1 = node->getChild(1);
    TR::Register* operandReg0 = cg->evaluate(operandNode0);
@@ -5924,5 +4146,102 @@ TR::Register* OMR::X86::TreeEvaluator::FloatingPointAndVectorBinaryArithmeticEva
    node->setRegister(resultReg);
    cg->decReferenceCount(operandNode0);
    cg->decReferenceCount(operandNode1);
+   return resultReg;
+   }
+
+TR::Register *
+OMR::X86::TreeEvaluator::bitpermuteEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   TR_ASSERT(node->getNumChildren() == 3, "Wrong number of children in bitpermuteEvaluator");
+   TR::Node *value = node->getChild(0);
+   TR::Node *addr = node->getChild(1);
+   TR::Node *length = node->getChild(2);
+
+   bool nodeIs64Bit = node->getSize() == 8;
+   auto valueReg = cg->evaluate(value);
+   auto addrReg = cg->evaluate(addr);
+
+   TR::Register *tmpReg = cg->allocateRegister(TR_GPR);
+
+   // Zero result reg
+   TR::Register *resultReg = cg->allocateRegister(TR_GPR);
+   generateRegRegInstruction(XORRegReg(nodeIs64Bit), node, resultReg, resultReg, cg);
+
+   if (length->getOpCode().isLoadConst())
+      {
+      // Manage the constant length case
+      uintptrj_t arrayLen = TR::TreeEvaluator::integerConstNodeValue(length, cg);
+      for (uintptrj_t x = 0; x < arrayLen; ++x)
+         {
+         // Zero tmpReg if SET won't do it
+         if (x >= 8)
+            generateRegRegInstruction(XORRegReg(nodeIs64Bit), node, tmpReg, tmpReg, cg);
+
+         TR::MemoryReference *sourceMR = generateX86MemoryReference(addrReg, x, cg);
+         generateRegMemInstruction(L1RegMem, node, tmpReg, sourceMR, cg);
+         generateRegRegInstruction(BTRegReg(nodeIs64Bit), node, valueReg, tmpReg, cg);
+
+         generateRegInstruction(SETB1Reg, node, tmpReg, cg);
+
+         // Shift to desired bit
+         if (x > 0)
+            generateRegImmInstruction(SHLRegImm1(nodeIs64Bit), node, tmpReg, x, cg);
+
+         // OR with result
+         TR_X86OpCodes op = (x < 8) ? OR1RegReg : ORRegReg(nodeIs64Bit);
+         generateRegRegInstruction(op, node, resultReg, tmpReg, cg);
+         }
+      }
+   else
+      {
+      auto lengthReg = cg->evaluate(length);
+
+      auto indexReg = cg->allocateRegister(TR_GPR);
+      TR::RegisterDependencyConditions *shiftDependencies = generateRegisterDependencyConditions((uint8_t)1, 1, cg);
+      shiftDependencies->addPreCondition(indexReg, TR::RealRegister::ecx, cg);
+      shiftDependencies->addPostCondition(indexReg, TR::RealRegister::ecx, cg);
+
+      TR::RegisterDependencyConditions* deps = generateRegisterDependencyConditions((uint8_t)0, (uint8_t)2, cg);
+      deps->addPostCondition(addrReg, TR::RealRegister::NoReg, cg);
+      deps->addPostCondition(indexReg, TR::RealRegister::ecx, cg);
+
+      TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
+      TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
+      startLabel->setStartInternalControlFlow();
+      endLabel->setEndInternalControlFlow();
+
+      // Load initial index, ending if 0
+      generateRegRegInstruction(MOV4RegReg, node, indexReg, lengthReg, cg);
+
+      // Test and decrement
+      generateLabelInstruction(LABEL, node, startLabel, cg);
+      generateLabelInstruction(JRCXZ1, node, endLabel, cg);
+      generateRegImmInstruction(SUB4RegImm4, node, indexReg, 1, cg);
+
+      // Load the byte, test the bit and set
+      generateRegRegInstruction(XORRegReg(nodeIs64Bit), node, tmpReg, tmpReg, cg);
+      TR::MemoryReference *sourceMR = generateX86MemoryReference(addrReg, indexReg, 0, 0, cg);
+      generateRegMemInstruction(L1RegMem, node, tmpReg, sourceMR, cg);
+      generateRegRegInstruction(BTRegReg(nodeIs64Bit), node, valueReg, tmpReg, cg);
+      generateRegInstruction(SETB1Reg, node, tmpReg, cg);
+
+      // Shift and OR with result
+      generateRegRegInstruction(SHLRegCL(nodeIs64Bit), node, tmpReg, indexReg, shiftDependencies, cg);
+      generateRegRegInstruction(ORRegReg(nodeIs64Bit), node, resultReg, tmpReg, cg);
+
+      // Loop
+      generateLabelInstruction(JMP4, node, startLabel, cg);
+      generateLabelInstruction(LABEL, node, endLabel, deps, cg);
+
+      cg->stopUsingRegister(indexReg);
+      }
+
+   cg->stopUsingRegister(tmpReg);
+
+   node->setRegister(resultReg);
+   cg->decReferenceCount(value);
+   cg->decReferenceCount(addr);
+   cg->decReferenceCount(length);
+
    return resultReg;
    }

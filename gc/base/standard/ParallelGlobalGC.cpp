@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "omrcfg.h"
@@ -70,6 +74,10 @@
 #undef UT_MODULE_UNLOADED
 #include "ut_omrmm.h"
 
+#if defined(OMR_VALGRIND_MEMCHECK)
+#include "MemcheckWrapper.hpp"
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
+
 /* Define hook routines to be called on AF start and End */
 static void globalGCHookAFCycleStart(J9HookInterface** hook, uintptr_t eventNum, void* eventData, void* userData);
 static void globalGCHookAFCycleEnd(J9HookInterface** hook, uintptr_t eventNum, void* eventData, void* userData);
@@ -97,6 +105,16 @@ fixObject(OMR_VMThread *omrVMThread, MM_HeapRegionDescriptor *region, omrobjectp
 	if( !collector->getMarkingScheme()->isMarked(object) ) {
 		MM_MemorySubSpace *memorySubSpace = region->getSubSpace();
 		uintptr_t deadObjectByteSize = extensions->objectModel.getConsumedSizeInBytesWithHeader(object);
+#if defined(OMR_VALGRIND_MEMCHECK)
+		/* Also clear dead object from valgrind pool
+		 * This could have been done directly inside internalRecycleHeapChunk (MemoryPoolAddressOrderedListBase.hpp)
+		 * but due to current limitation of API that requires address of object to be freed
+		 * which we need to check from a set stored in extensions, which weren't further passed
+		 * we will check it here. But in case new API is added, it is better to move there.
+		*/
+		if(valgrindCheckObjectInPool(extensions,(uintptr_t) object))
+			valgrindFreeObject(extensions,(uintptr_t) object);
+#endif /* defined(OMR_VALGRIND_MEMCHECK) */
 		memorySubSpace->abandonHeapChunk(object, ((U_8*)object) + deadObjectByteSize);
 		/* the userdata is a counter of dead objects fixed up so increment it here as a uintptr_t */
 		*((uintptr_t *)userData) += 1;
@@ -169,13 +187,13 @@ hookGlobalGcSweepEndAbortedCSFixHeap(J9HookInterface** hook, UDATA eventNum, voi
  * Initialization
  */
 MM_ParallelGlobalGC *
-MM_ParallelGlobalGC::newInstance(MM_EnvironmentBase *env, MM_CollectorLanguageInterface *cli)
+MM_ParallelGlobalGC::newInstance(MM_EnvironmentBase *env)
 {
 	MM_ParallelGlobalGC *globalGC;
 		
-	globalGC = (MM_ParallelGlobalGC *)env->getForge()->allocate(sizeof(MM_ParallelGlobalGC), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	globalGC = (MM_ParallelGlobalGC *)env->getForge()->allocate(sizeof(MM_ParallelGlobalGC), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (globalGC) {
-		new(globalGC) MM_ParallelGlobalGC(env, cli);
+		new(globalGC) MM_ParallelGlobalGC(env);
 		if (!globalGC->initialize(env)) { 
 			globalGC->kill(env);
 			globalGC = NULL;
@@ -317,6 +335,21 @@ MM_ParallelGlobalGC::cleanupAfterGC(MM_EnvironmentBase *env, MM_AllocateDescript
 
 	/* Heap size now fixed for next cycle so reset heap statistics */
 	_extensions->heap->resetHeapStatistics(true);
+
+#if defined(OMR_GC_MODRON_SCAVENGER)
+	GC_OMRVMThreadListIterator threadIterator(_extensions->getOmrVM());
+	OMR_VMThread *walkThread = NULL;
+
+	/* Null tenure TLH (Copy Cache) references for all GC slave and Mutator (for concurrent scavenger) threads as the memory will be invalidated on sweep cycle*/
+	while((walkThread = threadIterator.nextOMRVMThread()) != NULL) {
+		MM_EnvironmentStandard *threadEnvironment = MM_EnvironmentStandard::getEnvironment(walkThread);
+		threadEnvironment->_tenureTLHRemainderBase = NULL;
+		threadEnvironment->_tenureTLHRemainderTop = NULL;
+	}
+
+	_extensions->_masterThreadTenureTLHRemainderTop = NULL;
+	_extensions->_masterThreadTenureTLHRemainderBase = NULL;
+#endif /* OMR_GC_MODRON_SCAVENGER */
 }
 
 void

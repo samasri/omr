@@ -1,20 +1,24 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #if !defined(ENVIRONMENTBASECORE_HPP_)
 #define ENVIRONMENTBASECORE_HPP_
@@ -34,9 +38,6 @@
 #include "LargeObjectAllocateStats.hpp"
 #include "MarkStats.hpp"
 #include "RootScannerStats.hpp"
-#if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
-#include "ScavengerHotFieldStats.hpp"
-#endif /* defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC) */
 #include "ScavengerStats.hpp"
 #include "SweepStats.hpp"
 #include "WorkPacketStats.hpp"
@@ -158,9 +159,7 @@ public:
 
 	volatile uint32_t _allocationColor; /**< Flag field to indicate whether premarking is enabled on the thread */
 
-#if defined(OMR_GC_HEAP_CARD_TABLE)
 	MM_CardCleaningStats _cardCleaningStats; /**< Per thread stats to track the performance of the card cleaning */
-#endif /* defined(OMR_GC_HEAP_CARD_TABLE) */
 #if defined(OMR_GC_MODRON_STANDARD) || defined(OMR_GC_REALTIME)
 	MM_SweepStats _sweepStats;
 #if defined(OMR_GC_MODRON_COMPACTION)
@@ -169,7 +168,6 @@ public:
 #endif /* OMR_GC_MODRON_STANDARD || OMR_GC_REALTIME */
 #if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
 	MM_ScavengerStats _scavengerStats;
-	MM_ScavengerHotFieldStats _hotFieldStats; /**< hot field statistics for this GC thread */
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC) */
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
 	uint64_t _concurrentScavengerSwitchCount; /**< local counter of cycle start and cycle end transitions */
@@ -259,7 +257,7 @@ public:
 	 * Get the memory forge
 	 * @return The memory forge
 	 */
-	MMINLINE MM_Forge *getForge() { return getExtensions()->getForge(); }
+	MMINLINE OMR::GC::Forge *getForge() { return getExtensions()->getForge(); }
 
 	/**
 	 * Get the thread's priority.
@@ -523,6 +521,11 @@ public:
 	bool isInlineTLHAllocateEnabled() { return _delegate.isInlineTLHAllocateEnabled(); }
 #endif /* OMR_GC_THREAD_LOCAL_HEAP */
 
+	/* When a GC thread is created _workUnitIndex is initialized to 0, when a task is started _workUnitIndex is reset to 1.
+	 * _workUnitIndex can be used to check if a GC thread has done any work since it was created.
+	 */
+	MMINLINE bool isGCSlaveThreadActivated() { return _workUnitIndex != 0; }
+
 	MMINLINE uintptr_t getWorkUnitIndex() { return _workUnitIndex; }
 	MMINLINE uintptr_t getWorkUnitToHandle() { return _workUnitToHandle; }
 	MMINLINE void setWorkUnitToHandle(uintptr_t workUnitToHandle) { _workUnitToHandle = workUnitToHandle; }
@@ -569,7 +572,8 @@ public:
 
 	MMINLINE MM_WorkStack *getWorkStack() { return &_workStack; }
 
-	MMINLINE void flushNonAllocationCaches() { _delegate.flushNonAllocationCaches(); }
+	virtual void flushNonAllocationCaches() { _delegate.flushNonAllocationCaches(); }
+	virtual void flushGCCaches() {}
 
 	/**
 	 * Get a pointer to common GC metadata attached to this environment. The GC environment structure

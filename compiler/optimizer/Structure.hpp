@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef STRUCTURE_INCL
@@ -34,8 +37,8 @@
 #include "infra/Flags.hpp"          // for flags8_t
 #include "infra/Link.hpp"           // for TR_LinkHead, TR_Link
 #include "infra/List.hpp"           // for List
-#include "infra/TRCfgEdge.hpp"      // for CFGEdge
-#include "infra/TRCfgNode.hpp"      // for CFGNode
+#include "infra/CfgEdge.hpp"        // for CFGEdge
+#include "infra/CfgNode.hpp"        // for CFGNode
 #include "infra/vector.hpp"         // for TR::vector
 
 #include "optimizer/VPConstraint.hpp"
@@ -98,7 +101,7 @@ class TR_Structure
    //
    bool  contains(TR_Structure *other, TR_Structure *commonParent = NULL);
 
-   TR_Structure *getContainingLoop();
+   TR_RegionStructure *getContainingLoop();
 
    // Finds the common parent of this and other
    // note that if A contains B, then the common parent is parent(A)
@@ -472,6 +475,8 @@ class TR_RegionStructure : public TR_Structure
    virtual void collectCFGEdgesTo(int32_t, List<TR::CFGEdge> *);
    void replaceExitPart(int32_t fromNumber, int32_t toNumber);
 
+   static void extractUnconditionalExits(TR::Compilation * const comp, const TR::list<TR::Block*, TR::Region&> &blocks);
+
    // Collapse this region into its parent
    //
    void collapseIntoParent();
@@ -640,6 +645,17 @@ class TR_RegionStructure : public TR_Structure
 
    void checkForInternalCycles();
    void removeEdge(TR::CFGEdge *edge, bool isExitEdge);
+   void removeEdgeWithoutCleanup(TR::CFGEdge *edge, bool isExitEdge);
+   void removeSubNodeWithoutCleanup(TR_StructureSubGraphNode *subNode);
+
+   // Find a subnode with the given structure. As a precondition, such a node
+   // must exist. This method returns non-null.
+   TR_StructureSubGraphNode *subNodeFromStructure(TR_Structure*);
+
+
+   // Implementation of extractUnconditionalExits(). Class definition is private
+   // to Structure.cpp
+   class ExitExtraction;
 
    TR_StructureSubGraphNode         *_entryNode;
    TR_BitVector                     *_invariantSymbols;

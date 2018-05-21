@@ -1,29 +1,32 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#ifndef OMR_MACHINE_BASE_INCL
-#define OMR_MACHINE_BASE_INCL
+#ifndef OMR_MACHINE_INCL
+#define OMR_MACHINE_INCL
 
 /*
  * The following #define and typedef must appear before any #includes in this file
  */
-#ifndef OMR_MACHINEBASE_CONNECTOR
-#define OMR_MACHINEBASE_CONNECTOR
+#ifndef OMR_MACHINE_CONNECTOR
+#define OMR_MACHINE_CONNECTOR
 namespace OMR { class Machine; }
 namespace OMR { typedef OMR::Machine MachineConnector; }
 #endif
@@ -34,6 +37,7 @@ namespace OMR { typedef OMR::Machine MachineConnector; }
 #include "infra/Annotations.hpp"               // for OMR_EXTENSIBLE
 #include "codegen/RegisterConstants.hpp"
 
+namespace TR { class CodeGenerator; }
 namespace TR { class RealRegister; }
 namespace TR { class Machine; }
 
@@ -47,6 +51,7 @@ class OMR_EXTENSIBLE Machine
    TR_GlobalRegisterNumber _lastGlobalRegisterNumber[NumRegisterKinds];
    TR_GlobalRegisterNumber _lastRealRegisterGlobalRegisterNumber;
    TR_GlobalRegisterNumber _overallLastGlobalRegisterNumber;
+   TR::CodeGenerator *_cg;
 
    public:
 
@@ -63,7 +68,7 @@ class OMR_EXTENSIBLE Machine
       }
 
    // TODO: numVRFRegs should probably be explicitly set to 0 instead of defaulting to 0
-   Machine(uint8_t numIntRegs, uint8_t numFPRegs, uint8_t numVRFRegs = 0) : _lastRealRegisterGlobalRegisterNumber(-1), _overallLastGlobalRegisterNumber(-1)
+   Machine(TR::CodeGenerator *cg, uint8_t numIntRegs, uint8_t numFPRegs, uint8_t numVRFRegs = 0) : _lastRealRegisterGlobalRegisterNumber(-1), _overallLastGlobalRegisterNumber(-1), _cg(cg)
       {
        for(uint32_t i=0;i<NumRegisterKinds;i++)
          {
@@ -77,6 +82,8 @@ class OMR_EXTENSIBLE Machine
       }
 
    inline TR::Machine * self();
+
+   TR::CodeGenerator *cg() {return _cg;}
 
    uint8_t getNumberOfRegisters(TR_RegisterKinds rk) { return _numberRegisters[rk]; }
 

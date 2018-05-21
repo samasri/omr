@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "compile/OSRData.hpp"
 
@@ -35,6 +38,7 @@
 #include "env/CompilerEnv.hpp"
 #include "il/Block.hpp"                        // for Block
 #include "il/Node.hpp"                         // for Node
+#include "il/Node_inlines.hpp"                 // for getInt
 #include "il/Symbol.hpp"                       // for Symbol
 #include "il/SymbolReference.hpp"              // for SymbolReference
 #include "il/TreeTop.hpp"                      // for TreeTop
@@ -46,7 +50,7 @@
 TR::Compilation& operator<< (TR::Compilation& out, const TR_OSRSlotSharingInfo* osrSlotSharingInfo);
 
 TR_OSRCompilationData::TR_OSRCompilationData(TR::Compilation* _comp) :
-   instruction2SharedSlotMap(_comp->trMemory()),
+   instruction2SharedSlotMap(_comp->trMemory()->heapMemoryRegion()),
    comp(_comp),
    _classPreventingInducedOSRSeen(false),
    osrMethodDataArray(_comp->trMemory()),
@@ -70,6 +74,12 @@ TR_OSRCompilationData::addSlotSharingInfo(const TR_ByteCodeInfo& bcinfo,
       addSlotSharingInfo(bcinfo.getByteCodeIndex(), slot, symRefNum, symRefOrder, symSize, takesTwoSlots);
    }
 
+TR_OSRSlotSharingInfo *
+TR_OSRCompilationData::getSlotsInfo(const TR_ByteCodeInfo& bcinfo)
+   {
+   return getOSRMethodDataArray()[bcinfo.getCallerIndex()+1]->getSlotsInfo(bcinfo.getByteCodeIndex());
+   }
+
 void
 TR_OSRCompilationData::ensureSlotSharingInfoAt(const TR_ByteCodeInfo& bcinfo)
    {
@@ -79,12 +89,24 @@ TR_OSRCompilationData::ensureSlotSharingInfoAt(const TR_ByteCodeInfo& bcinfo)
    }
 
 /**
-  This is the top-level method that is called by the codegen to populate
-  the maps that are eventually written to meta data.
-*/
+ * This is the top-level method that is called by the codegen to populate
+ * the maps that are eventually written to meta data.
+ *
+ * In voluntary OSR, only induce OSR calls must be added to the
+ * OSR table, as these are the only points that will transition.
+ * However, under involuntary OSR, all points must support
+ * transitions.
+ */
 void
 TR_OSRCompilationData::addInstruction(TR::Instruction* instr)
    {
+   TR::Node *node = instr->getNode();
+   if (comp->getOSRMode() == TR::voluntaryOSR
+       && !(node
+         && node->getOpCode().hasSymbolReference()
+         && node->getSymbolReference()->getReferenceNumber() == TR_induceOSRAtCurrentPC))
+      return;
+
    int32_t instructionPC = instr->getBinaryEncoding() - instr->cg()->getCodeStart();
    TR_ByteCodeInfo& bcInfo = instr->getNode()->getByteCodeInfo();
    addInstruction(instructionPC, bcInfo);
@@ -185,34 +207,23 @@ TR_OSRCompilationData::findCallerOSRMethodData(TR_OSRMethodData *callee)
    return osrMethodData;
    }
 
-
 void
 TR_OSRCompilationData::addInstruction2SharedSlotMapEntry(
    int32_t instructionPC,
    const TR_ScratchBufferInfos& infos)
    {
-   uint32_t numOfElements = instruction2SharedSlotMap.size();
-   //find the right place in the array to place the new shared slot map entry
-   //such that the instruction PC offsets are in non-decreasing order
-   int i;
-   for (i = 0; i < numOfElements; i++)
-      if (instructionPC <= instruction2SharedSlotMap[i].instructionPC)
+   auto cur = instruction2SharedSlotMap.begin(), end = instruction2SharedSlotMap.end();
+   while (cur != end)
+      {
+      if (instructionPC <= (*cur).instructionPC)
          break;
+      ++cur;
+      }
 
-
-   if (i < numOfElements)
-      if (instructionPC == instruction2SharedSlotMap[i].instructionPC)
-         {
-         //we need to add infos to the already existing one at index i
-         //The infos, in this case, belongs to a different call site index than the existing ones
-         instruction2SharedSlotMap[i].scratchBufferInfos.append(infos);
-         }
-      else
-         {
-         instruction2SharedSlotMap.insert(TR_Instruction2SharedSlotMapEntry(instructionPC, infos),i);
-         }
+   if (cur != end && instructionPC == (*cur).instructionPC)
+      (*cur).scratchBufferInfos.append(infos);
    else
-      instruction2SharedSlotMap.add(TR_Instruction2SharedSlotMapEntry(instructionPC, infos));
+      instruction2SharedSlotMap.insert(cur, TR_Instruction2SharedSlotMapEntry(instructionPC, infos));
    }
 
 /*
@@ -221,25 +232,30 @@ TR_OSRCompilationData::addInstruction2SharedSlotMapEntry(
 void
 TR_OSRCompilationData::compressInstruction2SharedSlotMap()
    {
-   for (int i = 0; i < instruction2SharedSlotMap.size()-1;)
+   auto cur = instruction2SharedSlotMap.begin();
+   while (cur != instruction2SharedSlotMap.end())
       {
-      const TR_ScratchBufferInfos& curInfos = instruction2SharedSlotMap[i].scratchBufferInfos;
-      const TR_ScratchBufferInfos& nextInfos = instruction2SharedSlotMap[i+1].scratchBufferInfos;
-      //check the equality of infos of the current and the next element
-      //if they are equal, we remove the next info
-      if (curInfos.size() != nextInfos.size())
+      auto next = cur + 1;
+
+      for (; next != instruction2SharedSlotMap.end(); ++next)
          {
-         i++;
-         continue;
+         const TR_ScratchBufferInfos& curInfo = (*cur).scratchBufferInfos;
+         const TR_ScratchBufferInfos& nextInfo = (*next).scratchBufferInfos;
+         if (curInfo.size() != nextInfo.size())
+            break;
+
+         int j;
+         for (j = 0; j < curInfo.size(); j++)
+            if (!(curInfo[j] == nextInfo[j]))
+               break;
+         if (j != curInfo.size())
+            break;
          }
-      bool equal = true;
-      for (int j = 0; j < curInfos.size(); j++)
-         if (!(curInfos[j] == nextInfos[j]))
-            equal = false;
-      if (equal)
-         instruction2SharedSlotMap.remove(i+1);
+
+      if (cur + 1 != next)
+         cur = instruction2SharedSlotMap.erase(cur + 1, next);
       else
-         i++;
+         ++cur;
       }
    }
 
@@ -282,12 +298,12 @@ TR_OSRCompilationData::getSizeOfInstruction2SharedSlotMap() const
    size += sizeof(uint32_t); //number of bytes used to store the whole section
    size += sizeof(uint32_t); //maximum size of scratch buffer
    size += sizeof(int32_t); //number of mappings
-   for (int i = 0; i < instruction2SharedSlotMap.size(); i++)
+   for (auto itr = instruction2SharedSlotMap.begin(), end = instruction2SharedSlotMap.end(); itr != end; ++itr)
       {
       size += sizeof(int32_t); //instructionPC
       //storing the number of elements of the array (which is represented as the data of the hash table
       size += sizeof(int32_t);
-      size += sizeof(TR_ScratchBufferInfo) * instruction2SharedSlotMap[i].scratchBufferInfos.size(); //data
+      size += sizeof(TR_ScratchBufferInfo) * (*itr).scratchBufferInfos.size(); //data
       }
    return size;
    }
@@ -370,14 +386,13 @@ TR_OSRCompilationData::writeInstruction2SharedSlotMap(uint8_t* buffer) const
    *((uint32_t*)buffer) = getMaxScratchBufferSize(); buffer += sizeof(uint32_t);
    int32_t numberOfMappings = instruction2SharedSlotMap.size();
    *((int32_t*)buffer) = numberOfMappings; buffer += sizeof(int32_t);
-   for (int i = 0; i < numberOfMappings; i++)
+   for (auto itr = instruction2SharedSlotMap.begin(), end = instruction2SharedSlotMap.end(); itr != end; ++itr)
       {
-      const TR_Instruction2SharedSlotMapEntry& entry = instruction2SharedSlotMap[i];
-      *((int32_t*)buffer) = entry.instructionPC; buffer += sizeof(int32_t);
-      *((int32_t*)buffer) = entry.scratchBufferInfos.size(); buffer += sizeof(int32_t);
-      for (int j = 0; j < entry.scratchBufferInfos.size(); j++)
+      *((int32_t*)buffer) = (*itr).instructionPC; buffer += sizeof(int32_t);
+      *((int32_t*)buffer) = (*itr).scratchBufferInfos.size(); buffer += sizeof(int32_t);
+      for (int j = 0; j < (*itr).scratchBufferInfos.size(); j++)
          {
-         const TR_ScratchBufferInfo info = entry.scratchBufferInfos[j];
+         const TR_ScratchBufferInfo info = (*itr).scratchBufferInfos[j];
          buffer += info.writeToBuffer(buffer);
          }
       }
@@ -503,6 +518,390 @@ uint32_t TR_OSRCompilationData::getOSRStackFrameSize(uint32_t methodIndex)
       return 0;
    }
 
+static void printMap(DefiningMap *map, TR::Compilation *comp)
+   {
+   for (auto it = map->begin(); it != map->end(); ++it)
+      {
+      traceMsg(comp, "# %d:", it->first);
+      it->second->print(comp);
+      traceMsg(comp, "\n");
+      }
+   }
+
+/*
+ * \brief This is the top level function to start building defining maps for the symbol references
+ * under prepareForOSRCall for each method
+ *
+ * DefiningMap maps each symRef to the set of symRefs that define it in one block or several 
+ * contiguous blocks. 
+ *
+ * There are 4 DefiningMaps for each methods and their ranges are different:
+ *    - osrCatchBlock: starts from the osrCatchBlock and stops before the osrCodeBlock of THIS caller
+ *    - osrCodeBlock: starts from the osrCodeBlock and stops before the osrCodeBlock of the NEXT caller
+ *    - prepareForOSR: starts from the osrCodeBlock and stops at prepareForOSR call
+ *    - FinalMap: this one maps all the symbol references under each prepareForOSR call from the current
+ *      caller up until the top most caller and the is the only map published to the OSRMethodMetaData
+ *
+ * Combining the FinalMap with liveness info from OSRLiveRangeAnalysis, we are able to find which 
+ * symbols should be kept alive at each osrPoints.
+ */
+
+void TR_OSRCompilationData::buildDefiningMap()
+   {
+   const TR_Array<TR_OSRMethodData *>& methodDataArray = getOSRMethodDataArray();
+   int numOfMethods = methodDataArray.size();
+
+   TR::StackMemoryRegion stackMemoryRegion(*comp->trMemory());
+
+   DefiningMaps definingMapAtOSRCatchBlocks(numOfMethods, static_cast<DefiningMap*>(NULL), comp->trMemory()->currentStackRegion());
+   DefiningMaps definingMapAtOSRCodeBlocks(numOfMethods, static_cast<DefiningMap*>(NULL), comp->trMemory()->currentStackRegion());
+   DefiningMaps definingMapAtPrepareForOSRCalls(numOfMethods, static_cast<DefiningMap*>(NULL), comp->trMemory()->currentStackRegion());
+
+   for (intptrj_t i = 0; i < methodDataArray.size(); ++i)
+      {
+      TR_OSRMethodData *osrMethodData = methodDataArray[i];
+      if (!osrMethodData)
+         continue;
+
+      //Those 2 bool variables are necessary for identifying the cases where the OSRCode/CatchBlock is already 
+      //removed by the optimizer but osrMethodData still points to the block that's no longer in the CFG
+      bool osrCatchBlockRemoved = false;
+      bool osrCodeBlockRemoved = false;
+
+      TR::Block *osrCatchBlock = osrMethodData->getOSRCatchBlock();
+      if (osrCatchBlock && osrCatchBlock->getExceptionPredecessors().size() > 0)
+         {
+         definingMapAtOSRCatchBlocks[i] = new DefiningMap(DefiningMapComparator(), DefiningMapAllocator(comp->trMemory()->currentStackRegion()));
+         osrMethodData->buildDefiningMapForBlock(osrCatchBlock, definingMapAtOSRCatchBlocks[i]);
+         }
+      else osrCatchBlockRemoved = true;
+
+      TR::Block *osrCodeBlock = osrMethodData->getOSRCodeBlock();
+      if (osrCodeBlock && osrCodeBlock->getPredecessors().size() > 0)
+         {
+         definingMapAtOSRCodeBlocks[i] = new DefiningMap(DefiningMapComparator(), DefiningMapAllocator(comp->trMemory()->currentStackRegion()));
+         definingMapAtPrepareForOSRCalls[i] = new DefiningMap(DefiningMapComparator(), DefiningMapAllocator(comp->trMemory()->currentStackRegion()));
+         osrMethodData->buildDefiningMapForOSRCodeBlockAndPrepareForOSRCall(osrCodeBlock, definingMapAtOSRCodeBlocks[i], definingMapAtPrepareForOSRCalls[i]);
+         }
+      else osrCodeBlockRemoved = true;
+   
+      if (!osrCatchBlockRemoved && !osrCodeBlockRemoved )
+         buildFinalMap(i-1, osrMethodData->getDefiningMap(), definingMapAtOSRCatchBlocks[i], definingMapAtOSRCodeBlocks, definingMapAtPrepareForOSRCalls);
+      }
+
+   if (comp->getOption(TR_TraceOSR))
+      {
+      for (intptrj_t i = 0; i < methodDataArray.size(); ++i)
+         {
+         TR_OSRMethodData *osrMethodData = methodDataArray[i];
+         if (!osrMethodData)
+            continue;
+         DefiningMap *definingMap = osrMethodData->getDefiningMap();
+         if (osrMethodData->getOSRCatchBlock())
+            {
+            traceMsg(comp, "final map for OSRCatchBlock(block_%d): \n", osrMethodData->getOSRCatchBlock()->getNumber());
+            printMap(definingMap, comp);
+            }
+         }
+      }
+   }
+
+/* 
+ * \brief This function replace the symbols in \p subTreeSymRefs with the symbols defining them according to the \p DefiningMap
+ *
+ * @param subTreeSymRefs original symbols
+ * @param DefiningMap maps each symbol to the group of symbols it depends on
+ * @param resultSymRefs updated symbols with original symbols replaced with its defining symbols
+ */
+static void updateDefiningSymRefs(TR_BitVector *subTreeSymRefs, DefiningMap *definingMap, TR_BitVector *resultSymRefs)
+   {
+   TR_BitVectorIterator cursor(*subTreeSymRefs);
+   while (cursor.hasMoreElements())
+      {
+      int32_t j = cursor.getNextElement();
+      if ( definingMap->find(j) == definingMap->end() || 
+           (*definingMap)[j]->isEmpty())   
+         resultSymRefs->set(j);
+      else
+         *resultSymRefs |= *(*definingMap)[j];
+      } 
+   }
+
+/*
+ * \brief merge the 2 DefiningMaps
+ *
+ * This is a helper function that update the defs in the `firstMap` with the defs in the `secondMap`. 
+ * For each entry in the `secondMap`, there are 2 steps:
+ *    step 1: overwrite the entry with the same key in the `firstMap`
+ *    setp 2: update the defining symbols of that entry according to the `firstMap`
+ * Here is an example:
+ *    firstMap:
+ *       ------------------
+ *       | a0 -> {a1}     |
+ *       | a2 -> {a3, a4} |
+ *       ------------------
+ *    secondMap:
+ *       ------------------
+ *       | a2 -> {a0}     |
+ *       ------------------
+ *
+ * after step 1, the firstMap looks like:
+ *       ------------------
+ *       | a0 -> {a1}     |
+ *       | a2 -> {a0}     |
+ *       ------------------
+ * after step 2, the firstMap looks like:
+ *       ------------------
+ *       | a0 -> {a1}     |
+ *       | a2 -> {a1}     |
+ *       ------------------
+ */
+static void mergeDefiningMaps(DefiningMap *firstMap, DefiningMap *secondMap, TR::Compilation *comp)
+   {
+   if (comp->getOption(TR_TraceOSR))
+      {
+      traceMsg(comp, "mergeDefiningMaps: firstMap before\n"); 
+      printMap(firstMap, comp);
+      traceMsg(comp, "mergeDefiningMaps: secondMap before\n"); 
+      printMap(secondMap, comp);
+      }
+
+   for (auto it = secondMap->begin(); it != secondMap->end(); ++it)   
+      {
+      int32_t symRefNumber = it->first;
+      TR_BitVector *definingSymRefs = NULL;
+      if (firstMap->find(symRefNumber) == firstMap->end())
+         definingSymRefs = new (comp->trStackMemory()) TR_BitVector(comp->trMemory()->currentStackRegion());
+      else 
+         {
+         definingSymRefs = (*firstMap)[symRefNumber];
+         definingSymRefs->empty();
+         }
+      updateDefiningSymRefs(it->second, firstMap, definingSymRefs);
+      (*firstMap)[symRefNumber] = definingSymRefs;
+      }
+
+   if (comp->getOption(TR_TraceOSR))
+      {
+      traceMsg(comp, "mergeDefiningMaps: firstMap after\n"); 
+      printMap(firstMap, comp);
+      }
+   }
+
+/*
+ * \brief Solve and publish the final defining map which maps all the symbols under the prepareForOSR calls
+ *        to their defining symbols
+ * 
+ * @param finalMap the map that will be published to OSRMethodMetaData
+ * @param workingCatchBlockMap this map maintains all the defining relationsships while iterates through all the blocks 
+ * @param definingMapAtOSRCodeBlocks the OSRCodeBlock map for each method which needed in building the maps for all the callees
+ * @param definingMapAtPrepareForOSRCalls the prepareForOSRCall map needed in building maps for all the callees
+ *
+ * This function does the following 2 things:
+ *    - put the symbols under current prepareForOSRCall into the finalMap
+ *    - merge the workingCatchBlockMap with the OSRCodeBlockMap 
+ *
+ * This is a recursive function walking up the call chain and stops at the top most method. The walking path is the same as
+ * the execution path of an OSR transition.
+ */
+void 
+TR_OSRCompilationData::buildFinalMap (int32_t callerIndex,
+                                      DefiningMap *finalMap,
+                                      DefiningMap *workingCatchBlockMap,
+                                      DefiningMaps &definingMapAtOSRCodeBlocks, 
+                                      DefiningMaps &definingMapAtPrepareForOSRCalls
+                                      )
+   {
+   if (comp->getOption(TR_TraceOSR))
+      traceMsg(comp, "buildFinalMap callerIndex %d\n", callerIndex);
+   TR_OSRMethodData *osrMethodData = getOSRMethodDataArray()[callerIndex+1];
+   DefiningMap *codeBlockMap = definingMapAtOSRCodeBlocks[callerIndex+1];
+   DefiningMap *prepareForOSRCallMap = definingMapAtPrepareForOSRCalls[callerIndex+1];
+   for (auto entry = prepareForOSRCallMap->begin(); entry != prepareForOSRCallMap->end(); ++entry )
+      {
+      int32_t symRefNum = entry->first;
+      TR_BitVector *definingSymbols = entry->second;
+      TR_BitVector *result = new (comp->trHeapMemory()) TR_BitVector(0, comp->trMemory(), heapAlloc);
+      updateDefiningSymRefs(definingSymbols, workingCatchBlockMap, result);
+      TR_ASSERT(finalMap->find(symRefNum) == finalMap->end(), "same symbol reference shouldn't be written twice under different prepareForOSRCall");
+      if (comp->getOption(TR_TraceOSR))
+         {
+         traceMsg(comp, "adding symRef #%d and its defining symbols to finalMap\n", symRefNum);
+         result->print(comp);
+         traceMsg(comp, "\n");
+         }
+      (*finalMap)[symRefNum] = result;
+      }
+
+   if (callerIndex == -1)   
+      return;
+   mergeDefiningMaps(workingCatchBlockMap, codeBlockMap, comp);
+   TR::Block *osrCodeBlock = osrMethodData->getOSRCodeBlock();
+   TR::Block *nextBlock = toBlock(osrCodeBlock->getSuccessors().front()->getTo());
+   while (!nextBlock->isOSRCodeBlock())
+      {
+      TR_ASSERT(nextBlock->getSuccessors().size() == 1, "blocks between osrCodeBlock can only have one successor (block_%d)", nextBlock->getNumber());
+      nextBlock = toBlock(nextBlock->getSuccessors().front()->getTo());
+      }
+
+   int32_t nextCallerIndex = nextBlock->getEntry()->getNode()->getByteCodeInfo().getCallerIndex();
+   buildFinalMap (nextCallerIndex, finalMap, workingCatchBlockMap, definingMapAtOSRCodeBlocks, definingMapAtPrepareForOSRCalls);
+   }
+
+/*
+ * This function build the OSRCodeBlock map and the prepareForOSRCall map 
+ */
+void
+TR_OSRMethodData::buildDefiningMapForOSRCodeBlockAndPrepareForOSRCall(TR::Block *block, DefiningMap *osrCodeBlockMap, DefiningMap *prepareForOSRCallMap)
+   {
+   TR_ASSERT(block->getSuccessors().size() == 1, "OSRCodeBlock should have one successor but block_%d has %d", block->getNumber(), block->getSuccessors().size());
+   if (comp()->getOption(TR_TraceOSR))
+      traceMsg(comp(), "buildDefiningMapForOSRCodeBlockAndPrepareForOSRCall block_%d\n", block->getNumber()); 
+   buildDefiningMap(block, osrCodeBlockMap, prepareForOSRCallMap);
+   if (block->getEntry()->getNode()->getByteCodeInfo().getCallerIndex() == -1)
+      return;
+   TR::Block *nextBlock = toBlock(block->getSuccessors().front()->getTo()); 
+   // Keep processing all blocks one after another until reaching the next OSRCodeBlock
+   if (!nextBlock->isOSRCodeBlock())
+      buildDefiningMapForBlock(nextBlock, osrCodeBlockMap);
+   }
+
+/*
+ * \brief This function builds the defining map for the given block and all the blocks after
+ * until reaching the `next OSRCodeBlock`. 
+ *
+ * If called from `buildDefiningMapForOSRCodeBlockAndPrepareForOSRCall`, the map is for
+ * an OSRCodeBlock and `next OSRCodeBlock` belongs to the next caller in the call chain of this 
+ * method. Note that it's possible that the immediate next caller doesn't have an OSRCodeBlock
+ * and the `next OSRCodeBlock` would belong to the caller's caller.
+ *
+ * If called from `buildDefiningMap`, the map is for the OSRCatchBlock, and the `next OSRCodeBlock`
+ * belongs to the same method as the OSRCatchBlock.
+ */
+void
+TR_OSRMethodData::buildDefiningMapForBlock(TR::Block *block, DefiningMap *blockMap)
+   {
+   TR_ASSERT(block->getSuccessors().size() == 1, "OSRCatchBlock should have one successor but block_%d has %d", block->getNumber(), block->getSuccessors().size());
+   if (comp()->getOption(TR_TraceOSR))
+      traceMsg(comp(), "buildDefiningMapForBlock block_%d\n", block->getNumber()); 
+   buildDefiningMap(block, blockMap);
+   TR::Block *nextBlock = toBlock(block->getSuccessors().front()->getTo()); 
+   if (!nextBlock->isOSRCodeBlock())
+      buildDefiningMapForBlock(nextBlock, blockMap);
+   }
+
+/*
+ * \brief This is the most basic function iterating through all store nodes and add entries to the DefiningMap to
+ * map each symbol to the group of symbols defining it
+ */
+void
+TR_OSRMethodData::buildDefiningMap(TR::Block *block, DefiningMap *blockMap, DefiningMap *prepareForOSRCallMap)
+   {
+   for (TR::TreeTop *tt = block->getEntry(); tt != block->getExit(); tt = tt->getNextRealTreeTop())
+      {
+      TR::SymbolReference * symRef = NULL;
+      TR::Node *node = tt->getNode();
+
+      if (comp()->getOption(TR_TraceOSR))
+         traceMsg(comp(), "buildDefiningMap node n%dn\n", node->getGlobalIndex());
+
+      if (node->getOpCode().isStoreDirect())
+         symRef = node->getSymbolReference();
+      else if (node->getOpCode().isStoreReg())
+         symRef = node->getRegLoadStoreSymbolReference();
+
+      if (symRef)
+         {
+         if (symRef->getSymbol()->isAutoOrParm())
+            {
+            TR_BitVector subTreeSymRefs(comp()->trMemory()->currentStackRegion());
+            TR::NodeChecklist checklist(comp());
+            collectSubTreeSymRefs(node->getFirstChild(), &subTreeSymRefs, checklist);
+
+            if (comp()->getOption(TR_TraceOSR))
+               {
+               traceMsg(comp(), "buildDefiningMap: node n%dn: defining symbol #%d: ", node->getGlobalIndex(), symRef->getReferenceNumber());
+               subTreeSymRefs.print(comp());
+               traceMsg(comp(), "\n");
+               }
+
+            TR_BitVector *symRefs = NULL;
+            if (blockMap->find(symRef->getReferenceNumber()) != blockMap->end())
+               {
+               symRefs = (*blockMap)[symRef->getReferenceNumber()];
+               symRefs->empty(); // the current store kills previous defs
+               }
+
+            if (!subTreeSymRefs.isEmpty())
+               {
+               if (!symRefs)
+                  {
+                  symRefs = new (comp()->trStackMemory()) TR_BitVector(comp()->trMemory()->currentStackRegion());
+                  (*blockMap)[symRef->getReferenceNumber()] = symRefs;
+                  }
+               updateDefiningSymRefs(&subTreeSymRefs, blockMap, symRefs);
+               }
+            }
+         }
+      else if (node->getFirstChild() &&
+               node->getFirstChild()->getOpCode().isCall() &&
+               node->getFirstChild()->getSymbolReference()->getReferenceNumber() == TR_prepareForOSR)
+         {
+         TR::Node *callNode = node->getFirstChild();
+         const int firstSymChildIndex = 2;
+         for (int32_t child = firstSymChildIndex; child+2 < callNode->getNumChildren(); child += 3)
+            {
+            TR::Node* loadNode = callNode->getChild(child);
+            int32_t symRefNumber = callNode->getChild(child+1)->getInt();
+            TR::SymbolReference* symRef = comp()->getSymRefTab()->getSymRef(symRefNumber);
+            //GC map for Monitored object temps are handled specially by lmmd
+            if (symRef->getSymbol()->holdsMonitoredObject() 
+               || symRef->getSymbol()->isThisTempForObjectCtor())
+               continue;
+            TR_BitVector subTreeSymRefs(comp()->trMemory()->currentStackRegion());
+            TR::NodeChecklist checklist(comp());
+            collectSubTreeSymRefs(loadNode, &subTreeSymRefs, checklist);
+            if (comp()->getOption(TR_TraceOSR))
+               {
+               traceMsg(comp(), "collect subTreeSymRefs of loadNode n%dn for original symRef #%d\n", loadNode->getGlobalIndex(), symRefNumber);
+               subTreeSymRefs.print(comp());
+               traceMsg(comp(), "\n");
+               }
+
+            if (!subTreeSymRefs.isEmpty())
+               {
+               TR_BitVector *symRefs = new (comp()->trStackMemory()) TR_BitVector(comp()->trMemory()->currentStackRegion());
+               updateDefiningSymRefs(&subTreeSymRefs, blockMap, symRefs);
+               (*prepareForOSRCallMap)[symRefNumber] = symRefs;
+               }
+            }
+         }
+      }
+   }
+
+/*
+ * find all the symbols on the right hand side of the store node
+ */
+void 
+TR_OSRMethodData::collectSubTreeSymRefs(TR::Node *node, TR_BitVector *subTreeSymRefs, TR::NodeChecklist &checklist)
+   {
+   if (checklist.contains(node))
+      return;
+   else checklist.add(node);
+   if (node->getOpCode().hasSymbolReference() && node->getSymbolReference()->getSymbol()->isAutoOrParm())
+      {
+      subTreeSymRefs->set(node->getSymbolReference()->getReferenceNumber());
+      }
+   else if (node->getRegLoadStoreSymbolReference())
+      {
+      subTreeSymRefs->set(node->getRegLoadStoreSymbolReference()->getReferenceNumber());
+      }
+   if (node->getNumChildren() > 0)
+      {
+      for (int i=0; i < node->getNumChildren(); i++)
+         collectSubTreeSymRefs(node->getChild(i), subTreeSymRefs, checklist);
+      }
+   }
 
 void TR_OSRCompilationData::buildSymRefOrderMap()
    {
@@ -571,13 +970,13 @@ TR::Compilation& operator<< (TR::Compilation& out, const TR_OSRCompilationData& 
       {
       out << ", Instr2SharedSlotMetaData: " << array1.size() << "[\n";
       bool first = true;
-      for (int i = 0; i < array1.size(); i++)
+      for (auto itr = array1.begin(), end = array1.end(); itr != end; ++itr)
          {
          if (!first)
             out << ",\n";
          char tmp[20];
-         sprintf(tmp, "%x", array1[i].instructionPC);
-         const  TR_OSRCompilationData::TR_ScratchBufferInfos& array2 = array1[i].scratchBufferInfos;
+         sprintf(tmp, "%x", (*itr).instructionPC);
+         const  TR_OSRCompilationData::TR_ScratchBufferInfos& array2 = (*itr).scratchBufferInfos;
          out << tmp << " -> " << array2.size() << "[ ";
          for (int j = 0; j < array2.size(); j++)
             {
@@ -610,7 +1009,13 @@ TR_OSRMethodData::TR_OSRMethodData(int32_t _inlinedSiteIndex, TR::ResolvedMethod
         _linkedToCaller(false),
         slot2ScratchBufferOffset(comp()->allocator()),
         _numSymRefs(0),
-        bcInfoHashTab(comp()->allocator()),  bcLiveRangeInfoHashTab(comp()->allocator()), argInfoHashTab(comp()->allocator()) {};
+        bcInfoHashTab(comp()->allocator()),
+        bcLiveRangeInfoHashTab(comp()->allocator()),
+        bcPendingPushLivenessInfoHashTab(comp()->allocator()),
+        argInfoHashTab(comp()->allocator()),
+        _symRefDefiningMap(NULL),
+        _symRefs(NULL)
+   {}
 
 TR::Block *
 TR_OSRMethodData::findOrCreateOSRCodeBlock(TR::Node* n)
@@ -766,6 +1171,43 @@ TR_OSRMethodData::getArgInfo(int32_t byteCodeIndex)
    return args;
    }
 
+bool
+TR_OSRMethodData::hasSlotSharingOrDeadSlotsInfo()
+   {
+   return !bcInfoHashTab.IsEmpty();
+   }
+
+/*
+ * Add pending push live range info for a BCI.
+ *
+ * During IlGen, the live pending push symbol references may be available.
+ * They can be stashed against the BCI, so that OSRLiveRangeAnalysis can
+ * skip them, avoiding costly region and liveness analysis.
+ */
+void
+TR_OSRMethodData::addPendingPushLivenessInfo(int32_t byteCodeIndex, TR_BitVector *livenessInfo)
+   {
+   bcPendingPushLivenessInfoHashTab.Add(byteCodeIndex, livenessInfo);
+   }
+
+/*
+ * Get pending push live range info for a BCI. This represents all pending pushes
+ * that are live at a BCI. It will only be valid if they are stash here using
+ * addPendingPushLivenessInfo.
+ */
+TR_BitVector *
+TR_OSRMethodData::getPendingPushLivenessInfo(int32_t byteCodeIndex)
+   {
+   CS2::HashIndex hashIndex;
+   TR_BitVector* livenessInfo = NULL;
+   if (bcPendingPushLivenessInfoHashTab.Locate(byteCodeIndex, hashIndex))
+      {
+      livenessInfo = bcPendingPushLivenessInfoHashTab.DataAt(hashIndex);
+      }
+
+   return livenessInfo;
+   }
+
 void
 TR_OSRMethodData::addSlotSharingInfo(int32_t byteCodeIndex, int32_t slot, int32_t symRefNum,
                                      int32_t symRefOrder, int32_t symSize, bool takesTwoSlots)
@@ -795,12 +1237,6 @@ TR_OSRMethodData::ensureSlotSharingInfoAt(int32_t byteCodeIndex)
       }
    }
 
-bool
-TR_OSRMethodData::hasSlotSharingInfo()
-   {
-   return !bcInfoHashTab.IsEmpty();
-   }
-
 void
 TR_OSRMethodData::addScratchBufferOffset(int32_t slotIndex, int32_t symRefOrder, int32_t scratchBufferOffset)
    {
@@ -810,6 +1246,16 @@ TR_OSRMethodData::addScratchBufferOffset(int32_t slotIndex, int32_t symRefOrder,
       slot2ScratchBufferOffset.Add(slotIndex, TR_Array<int32_t>(comp()->trMemory()), hashIndex);
       }
    slot2ScratchBufferOffset.DataAt(hashIndex)[symRefOrder] = scratchBufferOffset;
+   }
+
+TR_OSRSlotSharingInfo* 
+TR_OSRMethodData::getSlotsInfo(int32_t byteCodeIndex)
+   {
+   TR_OSRSlotSharingInfo* slotsInfo = NULL;
+   CS2::HashIndex hashIndex;
+   if (bcInfoHashTab.Locate(byteCodeIndex, hashIndex))
+      slotsInfo = bcInfoHashTab.DataAt(hashIndex);
+   return slotsInfo;
    }
 
 void
@@ -840,7 +1286,10 @@ TR_OSRMethodData::addInstruction(int32_t instructionPC, int32_t byteCodeIndex)
          {
          int32_t scratchBufferOffset;
          bool found = slot2ScratchBufferOffset.Locate(slotInfos[i].slot, hashIndex);
-         TR_ASSERT(found, "slot %d symref #%d must be in slot2ScratchBufferOffset hash table\n",
+         //slotInfos[i].symRefOrder == -1 means the slot would be zeroed out at this OSR point
+         //scratchBufferOffset is not needed in such case because we don't need to copy a variable
+         //value from the scratch buffer.
+         TR_ASSERT(found || slotInfos[i].symRefOrder == -1, "slot %d symref #%d must be in slot2ScratchBufferOffset hash table\n",
                  slotInfos[i].slot, slotInfos[i].symRefNum);
          if (slotInfos[i].symRefOrder == -1)
             {
@@ -927,6 +1376,13 @@ TR_OSRMethodData::setNumOfSymsThatShareSlot(int32_t newValue)
    osrCompilationData->updateNumOfSymsThatShareSlot(newValue);
    }
 
+DefiningMap *
+TR_OSRMethodData::getDefiningMap()
+   { 
+   if (_symRefDefiningMap == NULL)
+      _symRefDefiningMap = new DefiningMap(DefiningMapComparator(), DefiningMapAllocator(comp()->trMemory()->heapMemoryRegion()));
+   return _symRefDefiningMap; 
+   }
 
 TR::Compilation& operator<< (TR::Compilation& out, const TR_OSRMethodData& osrMethodData)
    {
@@ -976,12 +1432,14 @@ TR_OSRSlotSharingInfo::addSlotInfo(int32_t slot, int32_t symRefNum, int32_t symR
             //TR_ASSERTC(0, comp, "ERROR: For slot %d symref #%d conflicts with symref#%d\n",
             //    symRefNum, info.symRefNum, slot);
             }
-         if ((info.slot == slot) && (info.symRefNum == symRefNum))
-            {
-            TR_ASSERT(info.symRefOrder==symRefOrder && info.symSize==symSize, "symref order (%d,%d) and symsize (%d,%d) must match", info.symRefOrder, symRefOrder, info.symSize, symSize);
-            found = true;
-            }
          }
+
+      if ((info.slot == slot) && (info.symRefNum == symRefNum))
+         {
+         TR_ASSERT(info.symRefOrder==symRefOrder && info.symSize==symSize, "symref order (%d,%d) and symsize (%d,%d) must match", info.symRefOrder, symRefOrder, info.symSize, symSize);
+         found = true;
+         }
+
       //check if the two syms overlap, if they do we will write zero in that stack slot. That's because
       //two shared symbols cannot be live at the same OSR point and we write the value zero because
       //it's a valid value for both reference and non-reference types.
@@ -993,7 +1451,8 @@ TR_OSRSlotSharingInfo::addSlotInfo(int32_t slot, int32_t symRefNum, int32_t symR
          int32_t endSlot2 = startSlot2 + (info.takesTwoSlots ? 2 : 1) - 1;
          if ((startSlot1 <= endSlot2) && (startSlot2 <= endSlot1))
             {
-            //if (trace) traceMsg(comp, "symbols %d and %d overlap\n", symRefNum, info.symRefNum);
+            if (trace) 
+               traceMsg(comp, "addSlotInfo: symbols #%d and #%d overlap zeroing out slot %d\n", symRefNum, info.symRefNum, slot);
             // don't add any more symbols to the list
             found = true;
             //mark the symbol

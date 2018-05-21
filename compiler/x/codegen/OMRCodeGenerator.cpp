@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "codegen/CodeGenerator.hpp"
@@ -97,8 +100,6 @@
 
 namespace OMR { class RegisterUsage; }
 namespace TR { class RegisterDependencyConditions; }
-
-extern "C" bool jitTestOSForSSESupport(void);
 
 // Hack markers
 #define CANT_REMATERIALIZE_ADDRESSES (TR::Compiler->target.is64Bit()) // AMD64 produces a memref with an unassigned addressRegister
@@ -224,7 +225,7 @@ OMR::X86::CodeGenerator::initialize(TR::Compilation *comp)
    //
 
 #if defined(TR_TARGET_X86) && !defined(J9HAMMER)
-   if (_targetProcessorInfo.supportsSSE2() && TR::Compiler->target.cpu.getX86OSSupportsSSE2(comp))
+   if (_targetProcessorInfo.supportsSSE2() && TR::Compiler->target.cpu.testOSForSSESupport(comp))
       supportsSSE2 = true;
 #endif // defined(TR_TARGET_X86) && !defined(J9HAMMER)
 
@@ -278,7 +279,7 @@ OMR::X86::CodeGenerator::initialize(TR::Compilation *comp)
    // 32-bit platforms must check the processor and OS.
    // 64-bit platforms unconditionally support prefetching.
    //
-   if (_targetProcessorInfo.supportsSSE() && jitTestOSForSSESupport())
+   if (_targetProcessorInfo.supportsSSE() && TR::Compiler->target.cpu.testOSForSSESupport(comp))
 #endif // defined(TR_TARGET_X86) && !defined(J9HAMMER)
       {
       self()->setTargetSupportsSoftwarePrefetches();
@@ -298,8 +299,20 @@ OMR::X86::CodeGenerator::initialize(TR::Compilation *comp)
    self()->setLastGlobalGPR(self()->machine()->getLastGlobalGPRRegisterNumber());
    self()->setLast8BitGlobalGPR(self()->machine()->getLast8BitGlobalGPRRegisterNumber());
    self()->setLastGlobalFPR(self()->machine()->getLastGlobalFPRRegisterNumber());
-   self()->setFirstGlobalVRF(self()->getFirstGlobalFPR());
-   self()->setLastGlobalVRF(self()->getLastGlobalFPR());
+   /*
+    * GRA does not work with vector registers on 32 bit due to a bug where xmm registers are not being assigned.
+    * This disables GRA for vector registers on 32 bit.
+    * This code will be reenabled as part of Issue 2035 which tracks the progress of fixing the GRA bug.
+    * GRA does not work with vector registers on 64 bit either. So GRA is now being disabled vector registers.
+    * This code will be reenabled as part of Issue 2280
+    */
+#if 0
+   if (TR::Compiler->target.is64Bit())
+      {
+      self()->setFirstGlobalVRF(self()->getFirstGlobalFPR());
+      self()->setLastGlobalVRF(self()->getLastGlobalFPR());
+      }
+#endif // closes the if 0.
 
    // Initialize Linkage for Code Generator
    self()->initializeLinkage();
@@ -362,7 +375,6 @@ OMR::X86::CodeGenerator::initialize(TR::Compilation *comp)
 
    if (!comp->getOption(TR_DisableArraySetOpts))
       {
-      self()->setSupportsArraySetToZero();
       self()->setSupportsArraySet();
       }
 
@@ -484,7 +496,6 @@ OMR::X86::CodeGenerator::CodeGenerator() :
    _dependentDiscardableRegisters(getTypedAllocator<TR::Register*>(TR::comp()->allocator())),
    _clobberingInstructions(getTypedAllocator<TR::ClobberingInstruction*>(TR::comp()->allocator())),
    _outlinedInstructionsList(getTypedAllocator<TR_OutlinedInstructions*>(TR::comp()->allocator())),
-   _deferredSplits(getTypedAllocator<TR::X86LabelInstruction*>(TR::comp()->allocator())),
    _flags(0)
    {
    _clobIterator = _clobberingInstructions.begin();
@@ -547,16 +558,16 @@ OMR::X86::CodeGenerator::beginInstructionSelection()
       // Return type info will have been generated by recompilation info
       //
       if (methodSymbol->getLinkageConvention() == TR_Private)
-         _returnTypeInfoInstruction = (TR::X86ImmInstruction*)comp->getAppendInstruction();
+         _returnTypeInfoInstruction = (TR::X86ImmInstruction*)(self()->getAppendInstruction());
 
       if (methodSymbol->getLinkageConvention() == TR_System)
-         _returnTypeInfoInstruction = (TR::X86ImmInstruction*)comp->getAppendInstruction();
+         _returnTypeInfoInstruction = (TR::X86ImmInstruction*)(self()->getAppendInstruction());
       }
 
    if (methodSymbol->getLinkageConvention() == TR_Private && !_returnTypeInfoInstruction)
       {
       // linkageInfo word
-      if (comp->getAppendInstruction())
+      if (self()->getAppendInstruction())
          _returnTypeInfoInstruction = generateImmInstruction(DDImm4, startNode, 0, self());
       else
          _returnTypeInfoInstruction = new (self()->trHeapMemory()) TR::X86ImmInstruction((TR::Instruction *)NULL, DDImm4, 0, self());
@@ -565,24 +576,16 @@ OMR::X86::CodeGenerator::beginInstructionSelection()
    if (methodSymbol->getLinkageConvention() == TR_System && !_returnTypeInfoInstruction)
       {
       // linkageInfo word
-      if (comp->getAppendInstruction())
+      if (self()->getAppendInstruction())
          _returnTypeInfoInstruction = generateImmInstruction(DDImm4, startNode, 0, self());
       else
          _returnTypeInfoInstruction = new (self()->trHeapMemory()) TR::X86ImmInstruction((TR::Instruction *)NULL, DDImm4, 0, self());
       }
 
-   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, (uint8_t)1, self());
-   if (_linkageProperties->getMethodMetaDataRegister() != TR::RealRegister::NoReg)
-      {
-      deps->addPostCondition(self()->getVMThreadRegister(),
-                             (TR::RealRegister::RegNum)self()->getVMThreadRegister()->getAssociation(), self());
-      }
-   deps->stopAddingPostConditions();
-
-   if (comp->getAppendInstruction())
-      generateInstruction(PROCENTRY, startNode, deps, self());
+   if (self()->getAppendInstruction())
+      generateInstruction(PROCENTRY, startNode, self());
    else
-      new (self()->trHeapMemory()) TR::Instruction(deps, PROCENTRY, (TR::Instruction *)NULL, self());
+      new (self()->trHeapMemory()) TR::Instruction(PROCENTRY, (TR::Instruction *)NULL, self());
 
    // Set the default FPCW to single precision mode if we are allowed to.
    //
@@ -624,21 +627,33 @@ int32_t OMR::X86::CodeGenerator::getMaximumNumbersOfAssignableGPRs()
    }
 
 /*
- * this method returns TRUE for all the cases we decide NOT to inline the CAS native
- * it checks the same condition as inlineCompareAndSwapNative in tr.source/trj9/x/codegen/J9TreeEvaluator.cpp
+ * This method returns TRUE for all the cases we decide NOT to replace the call to CAS
+ * with inline assembly.
+ * It checks the same condition as inlineCompareAndSwapNative in tr.source/trj9/x/codegen/J9TreeEvaluator.cpp
  * so that GRA and Evaluator should be consistent about whether to inline CAS natives
  */
 static bool willNotInlineCompareAndSwapNative(TR::Node *node,
       int8_t size,
-      bool isObject,
       TR::Compilation *comp)
    {
 #ifdef J9_PROJECT_SPECIFIC
+   TR::SymbolReference *callSymRef = node->getSymbolReference();
+   TR::MethodSymbol *methodSymbol = callSymRef->getSymbol()->castToMethodSymbol();
+
    if (TR::Compiler->om.canGenerateArraylets() && !node->isUnsafeGetPutCASCallOnNonArray())
       return true;
    static char *disableCASInlining = feGetEnv("TR_DisableCASInlining");
 
    if (disableCASInlining /* || comp->useCompressedPointers() */)
+      return true;
+
+   // In Java9 the sun.misc.Unsafe JNI methods have been moved to jdk.internal,
+   // with a set of wrappers remaining in sun.misc to delegate to the new package.
+   // We can be called in this function for the wrappers (which we will
+   // not be converting to assembly), the new jdk.internal JNI methods or the
+   // Java8 sun.misc JNI methods (both of which we will convert). We can
+   // differentiate between these cases by testing with isNative() on the method.
+   if (!methodSymbol->isNative())
       return true;
 
    if (size == 4)
@@ -661,7 +676,17 @@ static bool willNotInlineCompareAndSwapNative(TR::Node *node,
 #endif
    }
 
-//some recognized methods might be transformed into very simple hardcoded assembly sequence which doesn't need register spills as a real call does
+
+/** @brief Identify methods which are not transformed into inline assembly.
+
+    Some recognized methods are transformed into very simple hardcoded
+    assembly sequences which don't need register spills as real calls do.
+
+    @param node The TR::Node for the method call. NB this function assumes the Node is a call.
+
+    @return true if the method will be treated as a normal call, false if the method
+    will be converted to inline assembly.
+ */
 bool OMR::X86::CodeGenerator::willBeEvaluatedAsCallByCodeGen(TR::Node *node, TR::Compilation *comp)
    {
    TR::SymbolReference *callSymRef = node->getSymbolReference();
@@ -670,11 +695,11 @@ bool OMR::X86::CodeGenerator::willBeEvaluatedAsCallByCodeGen(TR::Node *node, TR:
       {
 #ifdef J9_PROJECT_SPECIFIC
       case TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z:
-         return willNotInlineCompareAndSwapNative(node, 8, false, comp);
+         return willNotInlineCompareAndSwapNative(node, 8, comp);
       case TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z:
-         return willNotInlineCompareAndSwapNative(node, 4, false, comp);
+         return willNotInlineCompareAndSwapNative(node, 4, comp);
       case TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z:
-         return willNotInlineCompareAndSwapNative(node, (TR::Compiler->target.is64Bit() && !comp->useCompressedPointers()) ? 8 : 4, true, comp);
+         return willNotInlineCompareAndSwapNative(node, (TR::Compiler->target.is64Bit() && !comp->useCompressedPointers()) ? 8 : 4, comp);
 #endif
       default:
          return true;
@@ -945,19 +970,12 @@ bool OMR::X86::CodeGenerator::supportsAddressRematerialization()         { stati
 
 bool OMR::X86::CodeGenerator::allowVMThreadRematerialization()
    {
-   if (self()->comp()->getOptions()->getOption(TR_DisableTraps)) return false;
-
-   static bool flag = (feGetEnv("TR_disableRematerializeVMThread") == NULL);
-   return flag;
+   return false;
    }
 
 bool OMR::X86::CodeGenerator::supportsFS0VMThreadRematerialization()
    {
-#ifdef WINDOWS
-   return allowVMThreadRematerialization();
-#else
    return false;
-#endif
    }
 
 #undef ALLOWED_TO_REMATERIALIZE
@@ -967,15 +985,35 @@ bool
 OMR::X86::CodeGenerator::getSupportsOpCodeForAutoSIMD(TR::ILOpCode opcode, TR::DataType dt)
    {
    /*
-    * Only a few of the vector evaluators for opcodes used in AutoSIMD have been implemented.
+    * Most of the vector evaluators for opcodes used in AutoSIMD have been implemented.
     * The cases that return false are placeholders that should be updated as support for more vector evaluators is added.
     */
    // implemented vector opcodes
    switch (opcode.getOpCodeValue())
       {
       case TR::vadd:
+      case TR::vsub:
+         if (dt == TR::Int32 || dt == TR::Int64 || dt == TR::Float || dt == TR::Double)
+            return true;
+         else
+            return false;
       case TR::vmul:
-         if (dt == TR::Double)
+         if (dt == TR::Float || dt == TR::Double || (dt == TR::Int32 && self()->getX86ProcessorInfo().supportsSSE4_1()))
+            return true;
+         else
+            return false;
+      case TR::vdiv:
+         if (dt == TR::Float || dt == TR::Double)
+            return true;
+         else
+            return false;
+      case TR::vneg:
+      case TR::vrem:
+         return false;
+      case TR::vxor:
+      case TR::vor:
+      case TR::vand:
+         if (dt == TR::Int32 || dt == TR::Int64)
             return true;
          else
             return false;
@@ -988,14 +1026,23 @@ OMR::X86::CodeGenerator::getSupportsOpCodeForAutoSIMD(TR::ILOpCode opcode, TR::D
             return true;
          else
             return false;
-      case TR::vsub:
-      case TR::vdiv:
-      case TR::vrem:
-      case TR::vneg:
-      case TR::vxor:
-      case TR::vor:
-      case TR::vand:
+      /*
+       * GRA does not work with vector registers on 32 bit due to a bug where xmm registers are not being assigned.
+       * This can potentially cause a performance problem in autosimd reductions.
+       * This function is where AutoSIMD checks to see if getvelem is suppored for use in reductions.
+       * The getvelem case was changed to disable the use of getvelem on 32 bit x86.
+       * This code will be reenabled as part of Issue 2035 which tracks the progress of fixing the GRA bug.
+       * GRA does not work with vector registers on 64 bit either.
+       * getvelem is now being disabled on 64 bit for the same reasons as 32 bit.
+       * This code will be reenabled as part of Issue 2280
+       */
       case TR::getvelem:
+#if 0
+         if (TR::Compiler->target.is64Bit() && (dt == TR::Int32 || dt == TR::Int64 || dt == TR::Float || dt == TR::Double))
+            return true;
+         else
+#endif //closes the if 0
+            return false;
       default:
          return false;
       }
@@ -1020,6 +1067,12 @@ OMR::X86::CodeGenerator::getSupportsEncodeUtf16BigWithSurrogateTest()
 
 bool
 OMR::X86::CodeGenerator::getSupportsIbyteswap()
+   {
+   return true;
+   }
+
+bool
+OMR::X86::CodeGenerator::getSupportsBitPermute()
    {
    return true;
    }
@@ -1438,8 +1491,6 @@ void OMR::X86::CodeGenerator::doBackwardsRegisterAssignment(
          }
       }
 
-   TR::RealRegister::RegNum vmThreadIndex = _linkageProperties->getMethodMetaDataRegister();
-
    if (self()->getDebug())
       self()->getDebug()->startTracingRegisterAssignment("backward", kindsToAssign);
 
@@ -1447,22 +1498,6 @@ void OMR::X86::CodeGenerator::doBackwardsRegisterAssignment(
       {
       TR::Instruction  *inst = instructionCursor;
 
-      // Detect BBEnd end of a non-extended block or the last BBEnd end of an extended block
-      if (comp->cg()->getSupportsVMThreadGRA() && inst->getKind() == TR::Instruction::IsLabel && vmThreadIndex != TR::RealRegister::NoReg)
-         {
-         TR::Node *node = inst->getNode();
-         if (node && node->getOpCodeValue() == TR::BBEnd)
-            {
-            TR::Block *block = node->getBlock();
-            if (block && (!block->getNextBlock() || !block->getNextBlock()->isExtensionOfPreviousBlock()))
-               { // Reset vmThread register state.
-               TR::RealRegister *vmThreadRealReg = self()->machine()->getX86RealRegister(TR::RealRegister::ebp);
-               self()->getVMThreadRegister()->setAssignedRegister(NULL);
-               vmThreadRealReg->setAssignedRegister(NULL);
-               vmThreadRealReg->setState(TR::RealRegister::Free);
-               }
-            }
-         }
 #ifdef DEBUG
       if (dumpPreGP)
          {
@@ -1546,7 +1581,7 @@ void OMR::X86::CodeGenerator::doRegisterAssignment(TR_RegisterKinds kindsToAssig
       LexicalTimer pt2("FP register assignment", self()->comp()->phaseTimer());
 
       self()->setAssignmentDirection(Forward);
-      instructionCursor = self()->comp()->getFirstInstruction();
+      instructionCursor = self()->getFirstInstruction();
       while (instructionCursor)
          {
          self()->tracePreRAInstruction(instructionCursor);
@@ -1599,7 +1634,7 @@ void OMR::X86::CodeGenerator::doRegisterAssignment(TR_RegisterKinds kindsToAssig
       if (self()->enableRegisterAssociations())
          self()->machine()->setGPRWeightsFromAssociations();
 
-      self()->doBackwardsRegisterAssignment(kindsToAssign, self()->comp()->getAppendInstruction());
+      self()->doBackwardsRegisterAssignment(kindsToAssign, self()->getAppendInstruction());
       }
    }
 
@@ -1651,7 +1686,7 @@ void OMR::X86::CodeGenerator::doBinaryEncoding()
 
    // Generate fixup code for the interpreter entry point right before PROCENTRY
    //
-   TR::Instruction * procEntryInstruction = self()->comp()->getFirstInstruction();
+   TR::Instruction * procEntryInstruction = self()->getFirstInstruction();
    while (procEntryInstruction && procEntryInstruction->getOpCodeValue() != PROCENTRY)
       {
       procEntryInstruction = procEntryInstruction->getNext();
@@ -1708,7 +1743,7 @@ void OMR::X86::CodeGenerator::doBinaryEncoding()
       traceMsg(self()->comp(), "<proepilogue>\n");
       }
 
-   TR::Instruction * estimateCursor = self()->comp()->getFirstInstruction();
+   TR::Instruction * estimateCursor = self()->getFirstInstruction();
    int32_t estimate = 0;
 
    // Estimate the binary length up to PROCENTRY
@@ -1886,8 +1921,7 @@ void OMR::X86::CodeGenerator::doBinaryEncoding()
    // adjacent block. For this reason it is better to overestimate
    // the allocated size by 4.
    #define OVER_ESTIMATION 4
-   self()->setEstimatedWarmLength(estimate+OVER_ESTIMATION);
-   self()->setEstimatedColdLength(0);
+   self()->setEstimatedCodeLength(estimate+OVER_ESTIMATION);
 
    if (self()->comp()->getOption(TR_TraceCG))
       {
@@ -1905,7 +1939,7 @@ void OMR::X86::CodeGenerator::doBinaryEncoding()
       }
 
    uint8_t * coldCode = NULL;
-   uint8_t * temp = self()->allocateCodeMemory(self()->getEstimatedWarmLength(), self()->getEstimatedColdLength(), &coldCode);
+   uint8_t * temp = self()->allocateCodeMemory(self()->getEstimatedCodeLength(), 0, &coldCode);
    TR_ASSERT(temp, "Failed to allocate primary code area.");
 
    if (TR::Compiler->target.is64Bit() && self()->comp()->getCodeCacheSwitched() && self()->getPicSlotCount() != 0)
@@ -1913,14 +1947,14 @@ void OMR::X86::CodeGenerator::doBinaryEncoding()
       int32_t numTrampolinesToReserve = self()->getPicSlotCount() - self()->comp()->getNumReservedIPICTrampolines();
       TR_ASSERT(numTrampolinesToReserve >= 0, "Discrepancy with number of IPIC trampolines to reserve getPicSlotCount()=%d getNumReservedIPICTrampolines()=%d",
          self()->getPicSlotCount(), self()->comp()->getNumReservedIPICTrampolines());
-      self()->comp()->fe()->reserveNTrampolines(self()->comp(), numTrampolinesToReserve, true);
+      self()->reserveNTrampolines(numTrampolinesToReserve);
       }
 
    self()->setBinaryBufferStart(temp);
    self()->setBinaryBufferCursor(temp);
    self()->alignBinaryBufferCursor();
 
-   TR::Instruction * cursorInstruction = self()->comp()->getFirstInstruction();
+   TR::Instruction * cursorInstruction = self()->getFirstInstruction();
 
    // Generate binary for all instructions before the interpreter entry point
    //
@@ -2156,7 +2190,7 @@ TR_OutlinedInstructions * OMR::X86::CodeGenerator::findOutlinedInstructionsFromL
    auto oiIterator = self()->getOutlinedInstructionsList().begin();
    while (oiIterator != self()->getOutlinedInstructionsList().end())
       {
-      if ((*oiIterator)->getEntryLabel() == label || (*oiIterator)->getEntryLabel()->getVMThreadRestoringLabel() == label)
+      if ((*oiIterator)->getEntryLabel() == label)
          return *oiIterator;
       ++oiIterator;
       }
@@ -2674,20 +2708,7 @@ uint32_t OMR::X86::CodeGenerator::isPreservedRegister(int32_t regIndex)
 TR::Instruction *OMR::X86::CodeGenerator::splitBlockEntry(TR::Instruction *instr)
    {
    TR::LabelSymbol *newLabel = generateLabelSymbol(self());
-   TR::Instruction *location = instr;
-   // late edge-splitting may have introduced a vmthreadrestoring label
-   // check for that and update the location accordingly so that
-   // the new label is placed correctly
-   //
-   if (instr->getKind() == TR::Instruction::IsLabel)
-      {
-      TR::LabelSymbol *label = ((TR::X86LabelInstruction *)instr)->getLabelSymbol();
-      if (label->getVMThreadRestoringLabel())
-         location = label->getVMThreadRestoringLabel()->getInstruction();
-      }
-   location = location->getPrev();
-
-   return generateLabelInstruction(location, LABEL, newLabel, self());
+   return generateLabelInstruction(instr->getPrev(), LABEL, newLabel, self());
    }
 
 TR::Instruction *OMR::X86::CodeGenerator::splitEdge(TR::Instruction *instr,
@@ -2721,13 +2742,6 @@ TR::Instruction *OMR::X86::CodeGenerator::splitEdge(TR::Instruction *instr,
       targetLabel = labelInstr->getLabelSymbol();
       labelInstr->setLabelSymbol(newLabel);
       location = targetLabel->getInstruction()->getPrev();
-      // for late-edge splitting
-      if (targetLabel->getVMThreadRestoringLabel())
-         {
-         location = targetLabel->getVMThreadRestoringLabel()->getInstruction();
-         traceMsg(self()->comp(), "found vmthreadrestoring label at %p\n", location);
-         location = location->getPrev();
-         }
       traceMsg(self()->comp(), "splitEdge fixing branch %p, appending to %p\n", instr, location);
       // now fixup any remaining jmp instrs that jmp to the target
       // so that they now jmp to the new label
@@ -2754,9 +2768,6 @@ TR::Instruction *OMR::X86::CodeGenerator::splitEdge(TR::Instruction *instr,
       {
       TR::Instruction *jmpLocation = cursor->getPrev();
       TR::LabelSymbol *l = targetLabel;
-      // for late-edge splitting
-      if (firstJump && targetLabel->getVMThreadRestoringLabel())
-         l = targetLabel->getVMThreadRestoringLabel();
       TR::Instruction *i = generateLabelInstruction(jmpLocation, JMP4, l, self());
       traceMsg(self()->comp(), "splitEdge jmp instr at [%p]\n", i);
       }
@@ -3256,21 +3267,6 @@ void OMR::X86::CodeGenerator::simulateNodeEvaluation(TR::Node * node, TR_Registe
       summary->spill(TR_eaxSpill, self());
    }
 
-bool OMR::X86::CodeGenerator::suppressInliningOfRecognizedMethod(TR::RecognizedMethod method)
-   {
-#ifdef J9_PROJECT_SPECIFIC
-   if ((method==TR::java_lang_Object_clone) ||
-      (method==TR::java_lang_Integer_rotateLeft))
-      {
-      return true;
-      }
-   else
-#endif
-      {
-      return false;
-      }
-   }
-
 uint8_t OMR::X86::CodeGenerator::old32BitPaddingEncoding[PADDING_TABLE_MAX_ENCODING_LENGTH][PADDING_TABLE_MAX_ENCODING_LENGTH]=
    {
       {0x90},                                     // 1: xchg eax,eax
@@ -3530,110 +3526,6 @@ TR_X86ScratchRegisterManager *OMR::X86::CodeGenerator::generateScratchRegisterMa
    return new (self()->trHeapMemory()) TR_X86ScratchRegisterManager(capacity, self());
    }
 
-void OMR::X86::CodeGenerator::clearDeferredSplits()
-   {
-   if (_internalControlFlowNestingDepth == 0)
-      {
-      if (self()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-         traceMsg(self()->comp(), "LATE EDGE SPLITTING: clearDeferredSplits\n");
-      _deferredSplits.clear();
-      }
-   else
-      {
-      // Whatever made us think it was safe to clear deferred splits would be
-      // uncertain inside internal control flow, so do nothing.
-      }
-   }
-
-void OMR::X86::CodeGenerator::performDeferredSplits()
-   {
-   if (self()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-      traceMsg(self()->comp(), "LATE EDGE SPLITTING: performDeferredSplits\n");
-
-   for (auto li = _deferredSplits.begin(); li != _deferredSplits.end(); ++li)
-      {
-      TR::LabelSymbol *newLabelSymbol = self()->splitLabel((*li)->getLabelSymbol());
-      if (self()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-         traceMsg(self()->comp(), "LATE EDGE SPLITTING: Pointed branch %s at vmThread-restoring label %s\n",
-                  self()->getDebug()->getName(*li),
-                  self()->getDebug()->getName(newLabelSymbol));
-
-      (*li)->setLabelSymbol(newLabelSymbol);
-      }
-
-   _deferredSplits.clear();
-   }
-
-void
-OMR::X86::CodeGenerator::processDeferredSplits(bool clear)
-   {
-   if (clear)
-      self()->clearDeferredSplits();
-   else
-      self()->performDeferredSplits();
-   }
-
-TR::LabelSymbol *OMR::X86::CodeGenerator::splitLabel(TR::LabelSymbol *targetLabel, TR::X86LabelInstruction *instructionToDefer)
-   {
-   TR::Instruction *instr = targetLabel->getInstruction();
-   TR_ASSERT(instr, "splitLabel only works on a label from a TR::Instruction");
-
-   // See if we can defer splitting this label until we know for sure that
-   // ebp won't contain the vmthread
-   //
-   TR::X86LabelInstruction *labelInstr = instr->getIA32LabelInstruction();
-   TR::RealRegister *ebp = self()->machine()->getX86RealRegister(self()->getProperties().getMethodMetaDataRegister());
-   if (instructionToDefer && !ebp->getAssignedRegister()
-      && performTransformation(self()->comp(), "O^O LATE EDGE SPLITTING: Defer splitting %s for %s\n", self()->getDebug()->getName(targetLabel), self()->getDebug()->getName(instructionToDefer)))
-      {
-      TR_ASSERT(instructionToDefer->getOpCode().isBranchOp() && instructionToDefer->getLabelSymbol() == targetLabel,
-         "instructionToDefer must be a branch to targetLabel");
-
-      // Just because ebp is not assigned to anything doesn't mean the value
-      // sitting in it can't possibly be the vmthread register.  There's still
-      // a chance that the last value in ebp was indeed the vmthread register.
-      // Defer the decision to split until we find out for sure that we've
-      // assigned something else to ebp.
-      //
-      self()->addDeferredSplit(instructionToDefer);
-      return targetLabel;
-      }
-
-   // Add another target label instruction if there isn't one already
-   //
-   if (!targetLabel->getVMThreadRestoringLabel())
-      {
-      TR::LabelSymbol *newLabel = generateLabelSymbol(self());
-      targetLabel->setVMThreadRestoringLabel(newLabel);
-      newLabel->setInstruction(generateLabelInstruction(targetLabel->getInstruction()->getPrev(), LABEL, newLabel, self()));
-      self()->generateDebugCounter(targetLabel->getInstruction(), "cg.lateSplitEdges", 1, TR::DebugCounter::Exorbitant);
-      if (self()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-         traceMsg(self()->comp(), "LATE EDGE SPLITTING: Inserted vmThread-restoring label %s before %s\n",
-            self()->getDebug()->getName(newLabel),
-            self()->getDebug()->getName(targetLabel));
-      }
-
-   // Conservatively store ebp in the prologue just in case any of these split labels decide they need to load it
-   // That decision will occur at binary encoding time, at which point it's too late to do anything about it.
-   // TODO: This is wasteful.  Come up with something better.
-   //
-   TR::Register *vmThreadVirtualReg = self()->getVMThreadRegister();
-   if (vmThreadVirtualReg->getBackingStorage() == NULL)
-      {
-      // copied from RegisterDependency.cpp
-      vmThreadVirtualReg->setBackingStorage(self()->allocateVMThreadSpill());
-      self()->getSpilledIntRegisters().push_front(vmThreadVirtualReg);
-      }
-
-   // Set spill instruction to the "spill in prolog" value.
-   //
-   self()->setVMThreadSpillInstruction((TR::Instruction *)0xffffffff);
-   if (self()->getTraceRAOption(TR_TraceRALateEdgeSplitting))
-      traceMsg(self()->comp(), "LATE EDGE SPLITTING: Store ebp in prologue\n");
-
-   return targetLabel->getVMThreadRestoringLabel();
-   }
-
 bool
 TR_X86ScratchRegisterManager::reclaimAddressRegister(TR::MemoryReference *mr)
    {
@@ -3704,8 +3596,6 @@ void OMR::X86::CodeGenerator::removeUnavailableRegisters(TR_RegisterCandidate * 
       }
    }
 
-#if DEBUG
-
 void OMR::X86::CodeGenerator::dumpDataSnippets(TR::FILE *outFile)
    {
 
@@ -3715,7 +3605,7 @@ void OMR::X86::CodeGenerator::dumpDataSnippets(TR::FILE *outFile)
    TR::IA32DataSnippet              * cursor;
    int32_t                                  size;
 
-   for (int exp=3; exp > 0; exp--)
+   for (int exp=4; exp > 0; exp--)
       {
       size = 1 << exp;
       for (auto iterator = _dataSnippetList.begin(); iterator != _dataSnippetList.end(); ++iterator)
@@ -3728,7 +3618,6 @@ void OMR::X86::CodeGenerator::dumpDataSnippets(TR::FILE *outFile)
       }
    }
 
-#endif
 #if defined(DEBUG)
 // Dump the instruction before FP register assignment to
 // reveal the virtual registers prior to stack register assignment.

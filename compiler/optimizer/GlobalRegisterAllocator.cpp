@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/GlobalRegisterAllocator.hpp"
@@ -58,8 +61,8 @@
 #include "infra/Cfg.hpp"                            // for CFG
 #include "infra/Link.hpp"                           // for TR_LinkHead
 #include "infra/List.hpp"                           // for ListIterator, etc
-#include "infra/TRCfgEdge.hpp"                      // for CFGEdge
-#include "infra/TRCfgNode.hpp"                      // for CFGNode
+#include "infra/CfgEdge.hpp"                        // for CFGEdge
+#include "infra/CfgNode.hpp"                        // for CFGNode
 #include "optimizer/Optimization.hpp"               // for Optimization
 #include "optimizer/Optimization_inlines.hpp"
 #include "optimizer/OptimizationManager.hpp"
@@ -381,12 +384,10 @@ TR_GlobalRegisterAllocator::perform()
    int32_t numberOfBlocks = cfg->getNextNodeNumber();
 
    TR_RegisterCandidates * candidates = comp()->getGlobalRegisterCandidates();
-   candidates->_candidateForSymRefsSize = CANDIDATE_FOR_SYMREF_SIZE;
-   candidates->_candidateForSymRefs = (TR_RegisterCandidate **)trMemory()->allocateStackMemory(CANDIDATE_FOR_SYMREF_SIZE*sizeof(TR_RegisterCandidate *));
-   memset(candidates->_candidateForSymRefs, 0, CANDIDATE_FOR_SYMREF_SIZE*sizeof(TR_RegisterCandidates *));
+   candidates->_candidateForSymRefs = new (trStackMemory()) TR_RegisterCandidates::SymRefCandidateMap((TR_RegisterCandidates::SymRefCandidateMapComparator()), (TR_RegisterCandidates::SymRefCandidateMapAllocator(trMemory()->currentStackRegion())));
    TR_RegisterCandidate *rc = candidates->getFirst();
    for (; rc ; rc = rc->getNext())
-      candidates->_candidateForSymRefs[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(rc->getSymbolReference())] = rc;
+      (*candidates->_candidateForSymRefs)[GET_INDEX_FOR_CANDIDATE_FOR_SYMREF(rc->getSymbolReference())] = rc;
 
    candidates->_startOfExtendedBBForBB.init(trMemory(),
                                             (uint32_t)(comp()->getFlowGraph()->getNextNodeNumber() * sizeof(TR::Block *) * 1.5),
@@ -491,19 +492,19 @@ TR_GlobalRegisterAllocator::perform()
          _candidatesSignExtendedInThisLoop = new (trStackMemory()) TR_BitVector(_origSymRefCount, trMemory(), stackAlloc);
          }
 
+      candidates->getReferencedAutoSymRefs(comp()->trMemory()->currentStackRegion());
       if (!comp()->mayHaveLoops() || cg()->considerAllAutosAsTacticalGlobalRegisterCandidates())
          offerAllAutosAndRegisterParmAsCandidates(cfgBlocks, numberOfBlocks);
       else
          offerAllFPAutosAndParmsAsCandidates(cfgBlocks, numberOfBlocks);
 
-      _registerCandidates = (TR_RegisterCandidate **)trMemory()->allocateStackMemory(_origSymRefCount*sizeof(TR_RegisterCandidate *));
-      memset(_registerCandidates, 0, _origSymRefCount*sizeof(TR_RegisterCandidate *));
+      _registerCandidates = new (trStackMemory()) SymRefCandidateMap((SymRefCandidateMapComparator()), SymRefCandidateMapAllocator(trMemory()->currentStackRegion()));
 
       _candidates = comp()->getGlobalRegisterCandidates();
 
       for (TR_RegisterCandidate * rc = _candidates->getFirst(); rc; rc = rc->getNext())
          {
-         _registerCandidates[rc->getSymbolReference()->getReferenceNumber()] = rc;
+         (*_registerCandidates)[rc->getSymbolReference()->getReferenceNumber()] = rc;
          }
 
       findIfThenRegisterCandidates();
@@ -608,7 +609,7 @@ TR_GlobalRegisterAllocator::perform()
          bool mayHaveDeadStore = false;
          for (TR_RegisterCandidate * rc = _candidates->getFirst(); rc; rc = rc->getNext())
             {
-            _registerCandidates[rc->getSymbolReference()->getReferenceNumber()] = rc;
+            (*_registerCandidates)[rc->getSymbolReference()->getReferenceNumber()] = rc;
             TR::SymbolReference *splitSymRef = rc->getSplitSymbolReference();
             if (splitSymRef)
                {
@@ -654,7 +655,7 @@ TR_GlobalRegisterAllocator::perform()
                TR::SymbolReference *outerSymRef = rc->getRestoreSymbolReference();
                while (outerSymRef)
                   {
-                  TR_RegisterCandidate *outerRc = _registerCandidates[outerSymRef->getReferenceNumber()];
+                  TR_RegisterCandidate *outerRc = (*_registerCandidates)[outerSymRef->getReferenceNumber()];
                   if (!outerRc)
                      break;
                   if (_valueModifiedSymRefs->get(rc->getSymbolReference()->getReferenceNumber()))
@@ -685,7 +686,7 @@ TR_GlobalRegisterAllocator::perform()
                   {
                   TR::Node *store = tt->getNode(), *load = tt->getNode()->getFirstChild();
                   if (store->getOpCode().isStoreDirect() && load->getOpCode().isLoadReg()
-                     && !_registerCandidates[store->getSymbolReference()->getReferenceNumber()]->extendedLiveRange())
+                     && !(*_registerCandidates)[store->getSymbolReference()->getReferenceNumber()]->extendedLiveRange())
                      {
                      storesFromRegisters.add(tt);
                      }
@@ -755,8 +756,8 @@ TR_GlobalRegisterAllocator::isSplittingCopy(TR::Node *node)
       TR::SymbolReference *loadSymRef  = node->getFirstChild()->getSymbolReferenceOfAnyType();
       if (storeSymRef && loadSymRef && storeSymRef != loadSymRef)
          {
-         TR_RegisterCandidate *storeRc = _registerCandidates[storeSymRef->getReferenceNumber()];
-         TR_RegisterCandidate *loadRc = _registerCandidates[loadSymRef->getReferenceNumber()];
+         TR_RegisterCandidate *storeRc = (*_registerCandidates)[storeSymRef->getReferenceNumber()];
+         TR_RegisterCandidate *loadRc = (*_registerCandidates)[loadSymRef->getReferenceNumber()];
          TR::SymbolReference *origStoreSymRef = storeRc ? storeRc->getSplitSymbolReference() : NULL;
          TR::SymbolReference *origLoadSymRef = loadRc ? loadRc->getSplitSymbolReference() : NULL;
          if ((origStoreSymRef && origLoadSymRef && origStoreSymRef == origLoadSymRef) ||
@@ -790,7 +791,7 @@ TR_GlobalRegisterAllocator::restoreOriginalSymbol(TR::Node *node, vcount_t visit
       if (node->getSymbolReferenceOfAnyType())
          {
          int32_t symRefNum = node->getSymbolReferenceOfAnyType()->getReferenceNumber();
-         TR_RegisterCandidate *rc = _registerCandidates[symRefNum];
+         TR_RegisterCandidate *rc = (*_registerCandidates)[symRefNum];
          TR::SymbolReference *origSymRef = rc ? rc->getRestoreSymbolReference() : NULL;
          bool foundChangeSymRef = false;
          bool setValueModified = false;
@@ -798,7 +799,7 @@ TR_GlobalRegisterAllocator::restoreOriginalSymbol(TR::Node *node, vcount_t visit
          while (origSymRef &&
                 (origSymRef != rc->getSplitSymbolReference()))
             {
-            TR_RegisterCandidate *origRc = _registerCandidates[origSymRef->getReferenceNumber()];
+            TR_RegisterCandidate *origRc = (*_registerCandidates)[origSymRef->getReferenceNumber()];
 
             if (setValueModified)
                _valueModifiedSymRefs->set(origRc->getSymbolReference()->getReferenceNumber());
@@ -825,7 +826,7 @@ TR_GlobalRegisterAllocator::restoreOriginalSymbol(TR::Node *node, vcount_t visit
             origSymRef = origRc->getRestoreSymbolReference();
             }
 
-         TR_RegisterCandidate *oldRc = origSymRef ? _registerCandidates[origSymRef->getReferenceNumber()] : 0;
+         TR_RegisterCandidate *oldRc = origSymRef ? (*_registerCandidates)[origSymRef->getReferenceNumber()] : 0;
          if (oldRc && oldRc->extendedLiveRange())
             {
             _valueModifiedSymRefs->set(oldRc->getSymbolReference()->getReferenceNumber());
@@ -1565,7 +1566,7 @@ TR_GlobalRegisterAllocator::transformNode(
                   setSignExtensionNotRequired(true, rc->getGlobalRegisterNumber());
                }
 
-            if (comp()->nodeNeeds2Regs(node))
+            if (node->requiresRegisterPair(comp()))
                {
                node->setLowGlobalRegisterNumber(rc->getLowGlobalRegisterNumber());
                node->setHighGlobalRegisterNumber(rc->getHighGlobalRegisterNumber());
@@ -2174,7 +2175,7 @@ TR_GlobalRegisterAllocator::prepareForBlockExit(
             TR::Node *actualValue = value;
             value = TR::Node::create(TR::PassThrough, 1, value);
 
-            if (comp()->nodeNeeds2Regs(actualValue))
+            if (actualValue->requiresRegisterPair(comp()))
                {
                value->setLowGlobalRegisterNumber(extgr->getCurrentRegisterCandidate()->getLowGlobalRegisterNumber());
                value->setHighGlobalRegisterNumber(extgr->getCurrentRegisterCandidate()->getHighGlobalRegisterNumber());
@@ -3011,7 +3012,7 @@ TR_GlobalRegister::createLoadFromRegister(TR::Node * n, TR::Compilation *comp)
    load = TR::Node::create(n, comp->il.opCodeForRegisterLoad(dt));
    load->setRegLoadStoreSymbolReference(rc->getSymbolReference());
 
-   if (comp->nodeNeeds2Regs(load))
+   if (load->requiresRegisterPair(comp))
       {
       load->setLowGlobalRegisterNumber(rc->getLowGlobalRegisterNumber());
       load->setHighGlobalRegisterNumber(rc->getHighGlobalRegisterNumber());
@@ -3021,7 +3022,7 @@ TR_GlobalRegister::createLoadFromRegister(TR::Node * n, TR::Compilation *comp)
    if (!rc->is8BitGlobalGPR())
       load->setIsInvalid8BitGlobalRegister(true);
    setValue(load);
-   if (comp->nodeNeeds2Regs(load))
+   if (load->requiresRegisterPair(comp))
       dumpOptDetails(comp, "%s create load [%p] from Register %d (low word) and Register %d (high word)\n", OPT_DETAILS, load, rc->getLowGlobalRegisterNumber(), rc->getHighGlobalRegisterNumber());
    else
       dumpOptDetails(comp, "%s create load [%p] %s from Register %d\n", OPT_DETAILS, load, rc->getSymbolReference()->getSymbol()->isMethodMetaData() ? rc->getSymbolReference()->getSymbol()->castToMethodMetaDataSymbol()->getName():"", rc->getGlobalRegisterNumber());
@@ -3086,7 +3087,7 @@ TR_GlobalRegister::createStoreToRegister(TR::TreeTop * prevTreeTop, TR::Node *no
       store->setNeedsSignExtension(true);
       }
 
-   if (comp->nodeNeeds2Regs(store))
+   if (store->requiresRegisterPair(comp))
       {
       store->setLowGlobalRegisterNumber(rc->getLowGlobalRegisterNumber());
       store->setHighGlobalRegisterNumber(rc->getHighGlobalRegisterNumber());
@@ -3107,7 +3108,7 @@ TR_GlobalRegister::createStoreToRegister(TR::TreeTop * prevTreeTop, TR::Node *no
    setValue(load);
    setAutoContainsRegisterValue(true);
 
-   if (comp->nodeNeeds2Regs(store))
+   if (store->requiresRegisterPair(comp))
       dumpOptDetails(comp, "%s create store [%p] of symRef#%d to Register %d (low word) and Register %d (high word)\n", OPT_DETAILS, store, rc->getSymbolReference()->getReferenceNumber(), rc->getLowGlobalRegisterNumber(), rc->getHighGlobalRegisterNumber());
    else
       dumpOptDetails(comp, "%s create store [%p] of %s symRef#%d to Register %d\n", OPT_DETAILS, store,
@@ -3153,7 +3154,7 @@ TR_GlobalRegister::createStoreFromRegister(vcount_t visitCount, TR::TreeTop * pr
 
    if (i != -1)
       {
-      if (comp->nodeNeeds2Regs(store))
+      if (store->requiresRegisterPair(comp))
          dumpOptDetails(comp, "%s create store [%p] from Register %d (low word) and Register %d (high word)\n", OPT_DETAILS, store, rc->getLowGlobalRegisterNumber(), rc->getHighGlobalRegisterNumber());
       else
          dumpOptDetails(comp, "%s create store [%p] from Register %d for %s #%d\n", OPT_DETAILS, store,
@@ -3384,7 +3385,7 @@ TR_GlobalRegisterAllocator::findIfThenRegisterCandidates()
                            if (mergeBlock1->getStructureOf())
                               optimizer()->getStaticFrequency(mergeBlock1, &weight);
 
-                           rc->addBlock(mergeBlock1, weight, trMemory());
+                           rc->addBlock(mergeBlock1, weight);
                            }
                         if (toBlock(block)->findFirstReference(symRef->getSymbol(), comp()->incVisitCount()))
                            {
@@ -3392,8 +3393,8 @@ TR_GlobalRegisterAllocator::findIfThenRegisterCandidates()
                            if (toBlock(block)->getStructureOf())
                               optimizer()->getStaticFrequency(toBlock(block), &weight);
 
-                           rc->addBlock(block1, weight, trMemory());
-                           rc->addBlock(block2, weight, trMemory());
+                           rc->addBlock(block1, weight);
+                           rc->addBlock(block2, weight);
                            }
                         }
                      }
@@ -3428,7 +3429,7 @@ TR_GlobalRegisterAllocator::findIfThenRegisterCandidates()
                         if (branchBlock->getStructureOf())
                            optimizer()->getStaticFrequency(branchBlock, &weight);
                         //printf("Adding symRef %d in block_%d\n", symRef->getReferenceNumber(), branchBlock->getNumber());
-                        rc->addBlock(branchBlock, weight, trMemory());
+                        rc->addBlock(branchBlock, weight);
                         }
                      }
                   }
@@ -3442,170 +3443,71 @@ void TR_GlobalRegisterAllocator::offerAllAutosAndRegisterParmAsCandidates(TR::Bl
    {
    LexicalTimer t("TR_GlobalRegisterAllocator::offerAllAutosAndRegisterParmsAsCandidates", comp()->phaseTimer());
 
-   TR::ResolvedMethodSymbol              *methodSymbol = comp()->getJittedMethodSymbol();
+   TR::ResolvedMethodSymbol            *methodSymbol = comp()->getJittedMethodSymbol();
    ListIterator<TR::ParameterSymbol>   paramIterator(&(methodSymbol->getParameterList()));
-   TR::CFG * cfg = comp()->getFlowGraph();
-   TR::CFGNode              *node;
-   TR::Block                *block, *startBlock=toBlock(cfg->getStart()), *endBlock=toBlock(cfg->getEnd());
-   TR::ParameterSymbol      *paramCursor = paramIterator.getFirst();
-   int32_t                  symRefCount = comp()->getSymRefCount();
-   TR::SymbolReferenceTable *symRefTab   = comp()->getSymRefTab();
-   TR::SymbolReference      *symRef;
-   TR::Symbol                *sym;
-   TR_Array<int32_t>       interestedCFGNodes(trMemory(), cfg->getNextNodeNumber()/2, false, stackAlloc);
-   int32_t                 numInterested;
-   int32_t                 i;
-   bool                    new2Offer=!debug("old2Offer");
-   bool                    newOffer=!new2Offer && !debug("oldOffer");
+   TR::CFG                             *cfg = comp()->getFlowGraph();
+   TR::CFGNode                         *node;
+   TR::Block                           *block, *startBlock=toBlock(cfg->getStart()), *endBlock=toBlock(cfg->getEnd());
+   int32_t                             symRefCount  = comp()->getSymRefCount();
+   TR::SymbolReferenceTable            *symRefTab   = comp()->getSymRefTab();
+   TR::SymbolReference                 *symRef;
+   TR::Symbol                          *sym;
+   TR_RegisterCandidates               *candidates = comp()->getGlobalRegisterCandidates();
 
-   TR_RegisterCandidates * candidates = comp()->getGlobalRegisterCandidates();
-   TR::GlobalSet& referencedAutoSymRefsInBlock = candidates->getReferencedAutoSymRefs();
-   referencedAutoSymRefsInBlock.initialize(symRefCount,numberOfNodes);
 
-   if (newOffer || new2Offer)
+   // Interested blocks consist of all blocks except for entry, exit and exception handlers
+   TR_BitVector interestedBlocks(numberOfNodes, comp()->trMemory()->currentStackRegion());
+   TR_BitVector tmp(numberOfNodes, comp()->trMemory()->currentStackRegion());
+   for (node = cfg->getFirstNode(); node != NULL; node = node->getNext())
       {
-      numInterested=0;
-      for (node = cfg->getFirstNode(); node != NULL; node = node->getNext())
-        {
-        block = toBlock(node);
-
-        if (block == startBlock || block == endBlock || (!block->getExceptionPredecessors().empty()))
-           continue;
-
-        interestedCFGNodes[numInterested++]=block->getNumber();
-        }
+      block = toBlock(node);
+      if (block == startBlock || block == endBlock || (!block->getExceptionPredecessors().empty()) || !cfgBlocks[block->getNumber()])
+         continue;
+      interestedBlocks.set(block->getNumber());
       }
 
-   vcount_t visitCount = comp()->incVisitCount();
-   for (block = comp()->getStartBlock(); block!=NULL; block = block->getNextBlock())
-      {
-      //block = toBlock(node);
-      referencedAutoSymRefsInBlock.collectReferencedAutoSymRefs(block);
-      }
-
-   int32_t origRefCount = comp()->getSymRefCount();
    //
    // Offer parameters first
    //
-   while (paramCursor != NULL)
+   for (TR::ParameterSymbol *paramCursor = paramIterator.getFirst(); paramCursor != NULL; paramCursor = paramIterator.getNext())
       {
-      TR::SymbolReference *symRef = methodSymbol->getParmSymRef(paramCursor->getSlot());
+      symRef = methodSymbol->getParmSymRef(paramCursor->getSlot());
 
       if ((paramCursor->isReferencedParameter() && isTypeAvailable(symRef)) &&
           !onlySelectedCandidates)
          {
-
          if (!isSymRefAvailable(symRef))
-            {
-            paramCursor = paramIterator.getNext();
             continue;
-            }
-
-
-         TR_RegisterCandidate *rc = NULL;
-         if (new2Offer)
-            {
-            if (paramCursor->getLinkageRegisterIndex() >= 0)
-               rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
-            else
-               rc = comp()->getGlobalRegisterCandidates()->find(symRef);
-            }
-         else
-            rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
 
          int32_t symRefNumber = symRef->getReferenceNumber();
-         if (rc)
-            {
-            for (auto itr = rc->_blocks.begin(), end = rc->_blocks.end(); itr != end; ++itr)
-               {
-               int32_t block_num = itr->first;
-               TR_ASSERT(block_num < numberOfNodes, "Overflow on candidate BB numbers");
-               block = cfgBlocks[block_num];
-               if (!block) continue;
 
-               int32_t weight = 1;
+         // Check there is an interested block that references the symref
+         tmp.empty();
+         tmp |= *candidates->getBlocksReferencingSymRef(symRefNumber);
+         tmp &= interestedBlocks;
+         if (tmp.isEmpty())
+            continue;
 
-               if ((block == startBlock || block == endBlock) ||
-                   !block->getExceptionPredecessors().empty())
-                  continue;
+         TR_RegisterCandidate *rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
 
-               TR_ASSERT(block_num == block->getNumber(),"blocks[x]->getNumber() != x");
-               if (!referencedAutoSymRefsInBlock[block_num]->get(symRefNumber))
-                  weight = 0;
+         // All interested blocks will be candidates
+         rc->_blocks.getCandidateBlocks() |= interestedBlocks;
 
-               rc->_blocks.incNumberOfLoadsAndStores(block_num, weight);
-               }
-            }
+         // Increment the number of loads and stores for all candidate blocks
+         // that also reference the symref
+         TR_BitVectorIterator bvi(tmp);
+         while (bvi.hasMoreElements())
+            rc->_blocks.incNumberOfLoadsAndStores(bvi.getNextElement(), 1);
 
-         if (new2Offer)
-            {
-            for (i = 0; i < numInterested; i++)
-               {
-               int32_t weight = 1;
-               int32_t blockNumber = interestedCFGNodes[i];
-               if ((rc && rc->_blocks.find(blockNumber)))
-                  continue;
-               if (!referencedAutoSymRefsInBlock[blockNumber]->get(symRefNumber))
-                  weight = 0;
-               // If there is a reference in some block then actually create a candidate
-               // and set all the previous block NumberOfLoadsAndStores to zero
-               if (!rc && weight != 0)
-                  {
-                  rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
-                  for (int32_t j = 0; j < i; j++)
-                     {
-                     rc->_blocks.setNumberOfLoadsAndStores(interestedCFGNodes[j], 0);
-                     }
-                  rc->_blocks.setNumberOfLoadsAndStores(blockNumber, weight);
-                  }
-               else if (rc)
-                  rc->_blocks.setNumberOfLoadsAndStores(blockNumber, weight);
-               }
-            }
-         else if (newOffer)
-            {
-            for (i = 0; i < numInterested; i++)
-               {
-               int32_t weight = 1;
-               int32_t blockNumber = interestedCFGNodes[i];
-               if (rc->_blocks.find(blockNumber))
-                  continue;
-               if (!referencedAutoSymRefsInBlock[blockNumber]->get(symRefNumber))
-                  weight = 0;
-               rc->_blocks.setNumberOfLoadsAndStores(blockNumber, weight);
-               }
-            }
-         else
-            {
-            for (node = cfg->getFirstNode(); node; node = node->getNext())
-               {
-               int32_t weight = 1;
-               block = toBlock(node);
-
-               if (rc->_blocks.find(block->getNumber()) ||
-                   (block == startBlock || block == endBlock) ||
-                   !block->getExceptionPredecessors().empty())
-                  continue;
-
-               if (!referencedAutoSymRefsInBlock[block->getNumber()]->get(symRefNumber))
-                  weight = 0;
-
-               rc->_blocks.setNumberOfLoadsAndStores(block->getNumber(), weight);
-               }
-            }
-
-         //traceMsg(comp(), "For rc %p symref %d getLinkageRegisterIndex = %d\n",rc,rc->getSymbolReference()->getReferenceNumber(),paramCursor->getLinkageRegisterIndex());
-         if (rc && paramCursor->getLinkageRegisterIndex() >= 0)
+         if (paramCursor->getLinkageRegisterIndex() >= 0)
             rc->addAllBlocks();
          }
-      paramCursor = paramIterator.getNext();
       }
+
    //
    // Offer all autos now
    //
-   //comp()->printMemStatsBefore("GRA_offer_autos");
-   int32_t symRefNumber;
-   for (symRefNumber = symRefTab->getIndexOfFirstSymRef(); symRefNumber < symRefCount; symRefNumber++)
+   for (int32_t symRefNumber = symRefTab->getIndexOfFirstSymRef(); symRefNumber < symRefCount; symRefNumber++)
       {
       symRef = symRefTab->getSymRef(symRefNumber);
       if (symRef && isSymRefAvailable(symRef))
@@ -3613,7 +3515,6 @@ void TR_GlobalRegisterAllocator::offerAllAutosAndRegisterParmAsCandidates(TR::Bl
          sym = symRef->getSymbol();
          if (sym)
             {
-
             if (candidates->aliasesPreventAllocation(comp(),symRef))
                {
                if (comp()->getOptions()->trace(OMR::tacticalGlobalRegisterAllocator))
@@ -3623,109 +3524,36 @@ void TR_GlobalRegisterAllocator::offerAllAutosAndRegisterParmAsCandidates(TR::Bl
 
             if ((sym->isAuto() &&
                 methodSymbol->getAutomaticList().find(sym->castToAutoSymbol()) &&
-                !onlySelectedCandidates)
-                )
+                !onlySelectedCandidates))
                {
 
-               TR_RegisterCandidate *rc;
-               if (new2Offer)
-                  rc = comp()->getGlobalRegisterCandidates()->find(symRef);
-               else
-                  rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
+               int32_t symRefNumber = symRef->getReferenceNumber();
 
+               // Check there is an interested block that references the symref
+               tmp.empty();
+               tmp |= *candidates->getBlocksReferencingSymRef(symRefNumber);
+               tmp &= interestedBlocks;
+               if (tmp.isEmpty())
+                  continue;
+
+               TR_RegisterCandidate *rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
                if (sym->isMethodMetaData() && rc && rc->initialBlocksWeightComputed())
                   continue;
 
-               int32_t symRefNumber=symRef->getReferenceNumber();
+               // All interested blocks will be candidates
+               rc->_blocks.getCandidateBlocks() |= interestedBlocks;
 
-               // Ensure all blocks have a LoadsAndStores count. If it already exists icrement it by one.
-               // If it is new then set the count to zero or one based on use in the block
-               if (rc)
-                  {
-                  for (auto itr = rc->_blocks.begin(), end = rc->_blocks.end(); itr != end; ++itr)
-                     {
-                     int32_t block_num = itr->first;
-                     TR_ASSERT(block_num < numberOfNodes, "Overflow on candidate BB numbers");
-                     block = cfgBlocks[block_num];
-                     if (!block) continue;
+               // Increment the number of loads and stores for all candidate blocks
+               // that also reference the symref
+               TR_BitVectorIterator bvi(tmp);
+               while (bvi.hasMoreElements())
+                  rc->_blocks.incNumberOfLoadsAndStores(bvi.getNextElement(), 1);
 
-                     int32_t weight = 1;
-
-                     if ((block == startBlock || block == endBlock) ||
-                         !block->getExceptionPredecessors().empty())
-                        continue;
-
-                     TR_ASSERT(block_num == block->getNumber(),"blocks[x]->getNumber() != x");
-                     if (!referencedAutoSymRefsInBlock[block_num]->get(symRefNumber))
-                        weight = 0;
-
-                     rc->_blocks.incNumberOfLoadsAndStores(block_num, weight);
-                     }
-                  }
-
-               if (new2Offer)
-                  {
-                  for (i = 0; i < numInterested; i++)
-                     {
-                     int32_t weight = 1;
-                     int32_t blockNumber = interestedCFGNodes[i];
-                     if ((rc && rc->_blocks.find(blockNumber))
-                        ) // handle reg(*) only in block with abnormal blocks
-                        continue;
-                     if (!referencedAutoSymRefsInBlock[blockNumber]->get(symRefNumber))
-                        weight = 0;
-                     // If there is a reference in some block then actually create a candidate
-                     // and set all the previous block NumberOfLoadsAndStores to zero
-                     if (!rc && weight != 0)
-                        {
-                        rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
-                        for (int32_t j = 0; j < i; j++)
-                           {
-                           rc->_blocks.setNumberOfLoadsAndStores(interestedCFGNodes[j], 0);
-                           }
-                        rc->_blocks.setNumberOfLoadsAndStores(blockNumber, weight);
-                        }
-                     else if(rc)
-                        rc->_blocks.setNumberOfLoadsAndStores(blockNumber, weight);
-                     }
-                  }
-               else if (newOffer)
-                  {
-                  for (i = 0; i < numInterested; i++)
-                     {
-                     int32_t weight = 1;
-                     int32_t blockNumber = interestedCFGNodes[i];
-                     if (rc->_blocks.find(blockNumber))
-                        continue;
-                     if (!referencedAutoSymRefsInBlock[blockNumber]->get(symRef->getReferenceNumber()))
-                        weight = 0;
-                     rc->_blocks.setNumberOfLoadsAndStores(blockNumber, weight);
-                     }
-                  }
-               else
-                  {
-                  for (node = cfg->getFirstNode(); node; node = node->getNext())
-                     {
-                     int32_t weight = 1;
-                     block = toBlock(node);
-
-                     if (rc->_blocks.find(block->getNumber()) ||
-                         (block == startBlock || block == endBlock) ||
-                         !block->getExceptionPredecessors().empty())
-                         continue;
-
-                     if (!referencedAutoSymRefsInBlock[block->getNumber()]->get(symRef->getReferenceNumber()))
-                        weight = 0;
-
-                     rc->_blocks.setNumberOfLoadsAndStores(block->getNumber(), weight);
-                     }
-                  }
-               if (rc) rc->setInitialBlocksWeightComputed(true);
+               rc->setInitialBlocksWeightComputed(true);
                }
             }
          }
       }
-   //comp()->printMemStatsAfter("GRA_offer_autos");
    }
 
 
@@ -3734,40 +3562,32 @@ void TR_GlobalRegisterAllocator::offerAllFPAutosAndParmsAsCandidates(TR::Block *
    {
    LexicalTimer t("TR_GlobalRegisterAllocator::offerAllFPAutosAndParmsAsCandidates", comp()->phaseTimer());
 
-   TR::CFG * cfg = comp()->getFlowGraph();
+   TR::CFG                  *cfg = comp()->getFlowGraph();
    TR::CFGNode              *node;
    TR::Block                *block, *startBlock=toBlock(cfg->getStart()), *endBlock=toBlock(cfg->getEnd());
    int32_t                  symRefCount = comp()->getSymRefCount();
    TR::SymbolReferenceTable *symRefTab   = comp()->getSymRefTab();
    TR::SymbolReference      *symRef;
-   TR::Symbol                *sym;
-   TR::ResolvedMethodSymbol              *methodSymbol = comp()->getJittedMethodSymbol();
+   TR::Symbol               *sym;
+   TR::ResolvedMethodSymbol *methodSymbol = comp()->getJittedMethodSymbol();
+   TR_RegisterCandidates    *candidates = comp()->getGlobalRegisterCandidates();
 
-   TR_RegisterCandidates * candidates = comp()->getGlobalRegisterCandidates();
-   TR::GlobalSet& referencedAutoSymRefsInBlock = candidates->getReferencedAutoSymRefs();
-   referencedAutoSymRefsInBlock.initialize(symRefCount,numberOfNodes);
-//   TR_BitVector **referencedAutoSymRefsInBlock; // = candidates->getReferencedAutoSymRefs();
-//   referencedAutoSymRefsInBlock = (TR_BitVector **)trMemory()->allocateStackMemory(numberOfNodes*sizeof(TR_BitVector *));
-//   memset(referencedAutoSymRefsInBlock, 0, numberOfNodes*sizeof(TR_BitVector *));
-//   candidates->setReferencedAutoSymRefs(referencedAutoSymRefsInBlock);
-//   int32_t i;
-//   for (i=0;i<numberOfNodes;i++)
-//      referencedAutoSymRefsInBlock[i] = new (trStackMemory()) TR_BitVector(symRefCount, trMemory(), stackAlloc);
-
-
-   vcount_t visitCount = comp()->incVisitCount();
-   //for (node = cfg->getFirstNode(); node!=NULL; node = node->getNext())
-   for (block = comp()->getStartBlock(); block!=NULL; block = block->getNextBlock())
+   // Interested blocks consist of all blocks except for entry, exit and exception handlers
+   TR_BitVector interestedBlocks(numberOfNodes, comp()->trMemory()->currentStackRegion());
+   TR_BitVector tmp(numberOfNodes, comp()->trMemory()->currentStackRegion());
+   for (node = cfg->getFirstNode(); node != NULL; node = node->getNext())
       {
-      //block = toBlock(node);
-      referencedAutoSymRefsInBlock.collectReferencedAutoSymRefs(block);
+      block = toBlock(node);
+      if (block == startBlock || block == endBlock || (!block->getExceptionPredecessors().empty()) || !cfgBlocks[block->getNumber()])
+         continue;
+
+      interestedBlocks.set(block->getNumber());
       }
 
    //
    // Offer all FP autos now
    //
-   int32_t symRefNumber;
-   for (symRefNumber = symRefTab->getIndexOfFirstSymRef(); symRefNumber < symRefCount; symRefNumber++)
+   for (int32_t symRefNumber = symRefTab->getIndexOfFirstSymRef(); symRefNumber < symRefCount; symRefNumber++)
       {
       symRef = symRefTab->getSymRef(symRefNumber);
       if (symRef)
@@ -3788,51 +3608,31 @@ void TR_GlobalRegisterAllocator::offerAllFPAutosAndParmsAsCandidates(TR::Block *
                 ((sym->isAuto() && methodSymbol->getAutomaticList().find(sym->castToAutoSymbol())) ||
                  (sym->isParm() && methodSymbol->getParameterList().find(sym->castToParmSymbol()) && sym->isReferencedParameter())))
                {
+
+               int32_t symRefNumber = symRef->getReferenceNumber();
+
+               // Check there is an interested block that references the symref
+               tmp.empty();
+               tmp |= *candidates->getBlocksReferencingSymRef(symRefNumber);
+               tmp &= interestedBlocks;
+               if (tmp.isEmpty())
+                  continue;
+
                TR_RegisterCandidate *rc = comp()->getGlobalRegisterCandidates()->findOrCreate(symRef);
-               
-               for (auto itr = rc->_blocks.begin(), end = rc->_blocks.end(); itr != end; ++itr)
-                  {
-                  int32_t block_num = itr->first;
-                  TR_ASSERT(block_num < numberOfNodes, "Overflow on candidate BB numbers");
-      block = cfgBlocks[block_num];
-                  if (!block) continue;
 
-      int32_t weight = 1;
+               // All interested blocks will be candidates
+               rc->_blocks.getCandidateBlocks() |= interestedBlocks;
 
-                  if ((block == startBlock || block == endBlock) ||
-                      !block->getExceptionPredecessors().empty())
-                      continue;
-
-                  if (!referencedAutoSymRefsInBlock[block->getNumber()]->get(symRef->getReferenceNumber()))
-                    weight = 0;
-
-      rc->_blocks.incNumberOfLoadsAndStores(block_num, weight);
-                  }
-
-               for (node = cfg->getFirstNode(); node; node = node->getNext())
-                  {
-                  int32_t weight = 1;
-                  block = toBlock(node);
-
-                  if (rc->_blocks.find(block->getNumber()) ||
-                      (block == startBlock || block == endBlock) ||
-                      !block->getExceptionPredecessors().empty())
-                      continue;
-
-                  if (!referencedAutoSymRefsInBlock[block->getNumber()]->get(symRef->getReferenceNumber()))
-                    weight = 0;
-
-      rc->_blocks.setNumberOfLoadsAndStores(block->getNumber(), weight);
-                  }
-
-               //rc->addAllBlocks();
+               // Increment the number of loads and stores for all candidate blocks
+               // that also reference the symref
+               TR_BitVectorIterator bvi(tmp);
+               while (bvi.hasMoreElements())
+                  rc->_blocks.incNumberOfLoadsAndStores(bvi.getNextElement(), 1);
                }
             }
          }
       }
    }
-
-
 
 void
 TR_GlobalRegisterAllocator::findLoopAutoRegisterCandidates()
@@ -3843,9 +3643,8 @@ TR_GlobalRegisterAllocator::findLoopAutoRegisterCandidates()
    TR::CFG * cfg = comp()->getFlowGraph();
    vcount_t visitCount = comp()->incVisitCount();
    TR_Structure *rootStructure = comp()->getFlowGraph()->getStructure();
-   TR_RegisterCandidate **registerCandidates = (TR_RegisterCandidate **)trMemory()->allocateStackMemory(comp()->getSymRefCount()*sizeof(TR_RegisterCandidate *));
-   memset(registerCandidates, 0, comp()->getSymRefCount()*sizeof(TR_RegisterCandidate *));
-   findLoopsAndCorrespondingAutos(NULL, visitCount, registerCandidates);
+   SymRefCandidateMap * registerCandidates = new (trStackMemory()) SymRefCandidateMap((SymRefCandidateMapComparator()), SymRefCandidateMapAllocator(trMemory()->currentStackRegion()));
+   findLoopsAndCorrespondingAutos(NULL, visitCount, *registerCandidates);
    }
 
 TR_GlobalRegisterAllocator::BlockInfo &
@@ -3857,7 +3656,7 @@ TR_GlobalRegisterAllocator::blockInfo(int32_t i)
    }
 
 void
-TR_GlobalRegisterAllocator::findLoopsAndCorrespondingAutos(TR_StructureSubGraphNode *structureNode, vcount_t visitCount, TR_RegisterCandidate **registerCandidates)
+TR_GlobalRegisterAllocator::findLoopsAndCorrespondingAutos(TR_StructureSubGraphNode *structureNode, vcount_t visitCount, SymRefCandidateMap &registerCandidates)
    {
    TR_Structure *structure;
    if (structureNode)
@@ -3969,7 +3768,7 @@ TR_GlobalRegisterAllocator::findLoopsAndCorrespondingAutos(TR_StructureSubGraphN
                   int32_t nextCandidate = bvi.getNextElement();
                   //dumpOptDetails(comp(), "For loop %d exit block_%d candidate %d\n", structureNode->getNumber(), exitBlock->getNumber(), nextCandidate);
                   TR_RegisterCandidate *rc = registerCandidates[nextCandidate];
-                  rc->addBlock(exitBlock, 0, trMemory());
+                  rc->addBlock(exitBlock, 0);
                   rc->addLoopExitBlock(exitBlock);
                   }
                }
@@ -4049,8 +3848,7 @@ bool TR_GlobalRegisterAllocator::isDependentStore(TR::Node *node, const TR_UseDe
          *seenLoad = true;
          int32_t useIndex = node->getUseDefIndex();
          TR_UseDefInfo::BitVector childDefs(comp()->allocator());
-         optimizer()->getUseDefInfo()->getUseDef(childDefs, useIndex);
-         if (!childDefs.IsZero())
+         if (optimizer()->getUseDefInfo()->getUseDef(childDefs, useIndex))
             {
             TR_UseDefInfo::BitVector temp(comp()->allocator());
             temp = childDefs;
@@ -4085,7 +3883,7 @@ TR_GlobalRegisterAllocator::markAutosUsedIn(
    List<TR::Block>        *blocksInLoop,
    vcount_t               visitCount,
    int32_t                executionFrequency,
-   TR_RegisterCandidate **registerCandidates,
+   SymRefCandidateMap    &registerCandidates,
    TR_BitVector          *assignedAutosInCurrentLoop,
    TR_BitVector          *symsThatShouldNotBeAssignedInCurrentLoop,
    bool                   hasCatchBlock)
@@ -4356,8 +4154,7 @@ TR_GlobalRegisterAllocator::markAutosUsedIn(
 
             int32_t useIndex = node->getUseDefIndex();
             TR_UseDefInfo::BitVector defs(comp()->allocator());
-            info->getUseDef(defs, useIndex);
-            if (!defs.IsZero())
+            if (info->getUseDef(defs, useIndex))
                {
                TR_UseDefInfo::BitVector::Cursor cursor(defs);
                for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
@@ -4433,8 +4230,7 @@ TR_GlobalRegisterAllocator::markAutosUsedIn(
          //printf("Skip sign extension at node %p in %s\n", node, comp->getCurrentMethod()->signature());
          int32_t useIndex = node->getUseDefIndex();
          TR_UseDefInfo::BitVector defs(comp()->allocator());
-         info->getUseDef(defs, useIndex);
-         if (!defs.IsZero())
+         if (info->getUseDef(defs, useIndex))
             {
             TR_UseDefInfo::BitVector::Cursor cursor(defs);
             for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
@@ -4515,7 +4311,7 @@ TR_GlobalRegisterAllocator::markAutosUsedIn(
                if (!rc->hasBlock(nextBlock))
                   {
                   if (nextBlock != cfg->getStart())
-                     rc->addBlock(nextBlock, 0, trMemory());
+                     rc->addBlock(nextBlock, 0);
                   }
                }
             }
@@ -4532,7 +4328,7 @@ TR_GlobalRegisterAllocator::markAutosUsedIn(
             if ((node->getOpCode().isStoreDirect() && isSplittingCopy(node)) ||
                 (node->getOpCode().isLoadVarDirect() && parent && parent->getOpCode().isStoreDirect() && isSplittingCopy(parent)))
                {
-               rc->addBlock(block, 0, trMemory());
+               rc->addBlock(block, 0);
                }
             else
                {
@@ -4547,13 +4343,13 @@ TR_GlobalRegisterAllocator::markAutosUsedIn(
                      (grandParent->getOpCode().isStoreIndirect() ||
                      grandParent->getOpCode().isLoadIndirect()))))
                   {
-                  rc->addBlock(block, executionFrequency*10, trMemory());
+                  rc->addBlock(block, executionFrequency*10);
                   if (trace())
                       dumpOptDetails(comp(), "Increased weight of candidate #%d in block_%d to reduce AGI\n", rc->getSymbolReference()->getReferenceNumber(), block->getNumber());
                   }
                else
                   {
-                  rc->addBlock(block, executionFrequency, trMemory());
+                  rc->addBlock(block, executionFrequency);
                   }
                }
             }
@@ -4645,8 +4441,7 @@ void TR_GlobalRegisterAllocator::signExtendAllDefNodes(TR::Node *defNode, List<T
 
       TR_UseDefInfo *info = optimizer()->getUseDefInfo();
       TR_UseDefInfo::BitVector defs(comp()->allocator());
-      info->getUseDef(defs, useIndex);
-      if (!defs.IsZero())
+      if (info->getUseDef(defs, useIndex))
          {
          TR_UseDefInfo::BitVector::Cursor cursor(defs);
          for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
@@ -5174,8 +4969,7 @@ TR_LiveRangeSplitter::splitLiveRanges(TR_StructureSubGraphNode *structureNode)
             _numberOfGPRs = 0;
             _numberOfFPRs = 0;
 
-            TR_RegisterCandidate **registerCandidates = (TR_RegisterCandidate **)trMemory()->allocateStackMemory(comp()->getSymRefCount()*sizeof(TR_RegisterCandidate *));
-            memset(registerCandidates, 0, comp()->getSymRefCount()*sizeof(TR_RegisterCandidate *));
+            SymRefCandidateMap *registerCandidates = new (trStackMemory()) SymRefCandidateMap((SymRefCandidateMapComparator()), SymRefCandidateMapAllocator(trMemory()->currentStackRegion()));
 
             TR_BitVector *replacedAutosInCurrentLoop = new (trStackMemory()) TR_BitVector(comp()->getSymRefCount(), trMemory(), stackAlloc);
             TR_BitVector *autosThatCannotBeReplacedInCurrentLoop = new (trStackMemory()) TR_BitVector(comp()->getSymRefCount(), trMemory(), stackAlloc);
@@ -5221,7 +5015,7 @@ TR_LiveRangeSplitter::splitLiveRanges(TR_StructureSubGraphNode *structureNode)
                   while (currentTree != exitTree)
                      {
                      TR::Node *currentNode = currentTree->getNode();
-                     replaceAutosUsedIn(currentTree, currentNode, NULL, nextBlock, &blocksInLoop, &exitBlocks, visitCount, executionFrequency, registerCandidates, correspondingSymRefs, replacedAutosInCurrentLoop, autosThatCannotBeReplacedInCurrentLoop, structureNode, loopInvariantBlock);
+                     replaceAutosUsedIn(currentTree, currentNode, NULL, nextBlock, &blocksInLoop, &exitBlocks, visitCount, executionFrequency, *registerCandidates, correspondingSymRefs, replacedAutosInCurrentLoop, autosThatCannotBeReplacedInCurrentLoop, structureNode, loopInvariantBlock);
                      currentTree = currentTree->getNextRealTreeTop();
                      }
                   }
@@ -5255,11 +5049,11 @@ TR_LiveRangeSplitter::splitLiveRanges(TR_StructureSubGraphNode *structureNode)
                    !replacedAutosInCurrentLoop->get(i) &&
                    !autosThatCannotBeReplacedInCurrentLoop->get(i))
                   {
-                  TR_RegisterCandidate *rc = registerCandidates[origSymRef->getReferenceNumber()];
+                  TR_RegisterCandidate *rc = (*registerCandidates)[origSymRef->getReferenceNumber()];
                   if (!rc)
                      {
                      rc = comp()->getGlobalRegisterCandidates()->find(origSymRef);
-                     registerCandidates[origSymRef->getReferenceNumber()] = rc;
+                     (*registerCandidates)[origSymRef->getReferenceNumber()] = rc;
                      }
 
                   if (trace() && origSymRef->getSymbol()->getAutoSymbol())
@@ -5318,7 +5112,7 @@ TR_LiveRangeSplitter::splitLiveRanges(TR_StructureSubGraphNode *structureNode)
                      TR_SymRefCandidatePair *correspondingSymRefCandidate = splitAndFixPreHeader(symRef, correspondingSymRefs, loopInvariantBlock, loopInvariantBlock->getEntry()->getNode());
                      TR::SymbolReference *correspondingSymRef = correspondingSymRefCandidate->_symRef;
                      //////printf("Splitting sym ref %d with new sym ref %d in method %s\n", symRef->getReferenceNumber(), correspondingSymRef->getReferenceNumber(), comp()->signature()); fflush(stdout);
-                     fixExitsAfterSplit(symRef, correspondingSymRefCandidate, correspondingSymRefs, loopInvariantBlock, &blocksInLoop, loopInvariantBlock->getEntry()->getNode(), registerCandidates, structureNode, replacedAutosInCurrentLoop, origSymRef);
+                     fixExitsAfterSplit(symRef, correspondingSymRefCandidate, correspondingSymRefs, loopInvariantBlock, &blocksInLoop, loopInvariantBlock->getEntry()->getNode(), *registerCandidates, structureNode, replacedAutosInCurrentLoop, origSymRef);
                      }
                   }
 
@@ -5371,7 +5165,7 @@ void
 TR_LiveRangeSplitter::replaceAutosUsedIn(
    TR::TreeTop *currentTree, TR::Node *node, TR::Node *parent, TR::Block * block, List<TR::Block> *blocksInLoop, List<TR::Block> *exitBlocks,
    vcount_t visitCount, int32_t executionFrequency,
-   TR_RegisterCandidate **registerCandidates, TR_SymRefCandidatePair **correspondingSymRefs, TR_BitVector *replacedAutosInCurrentLoop, TR_BitVector *autosThatCannotBeReplacedInCurrentLoop,
+   SymRefCandidateMap &registerCandidates, TR_SymRefCandidatePair **correspondingSymRefs, TR_BitVector *replacedAutosInCurrentLoop, TR_BitVector *autosThatCannotBeReplacedInCurrentLoop,
    TR_StructureSubGraphNode *loop, TR::Block *loopInvariantBlock)
    {
 
@@ -5405,7 +5199,7 @@ TR_LiveRangeSplitter::replaceAutosUsedIn(
 #endif
                             );
             int32_t numRegsForCandidate = 1;
-            if (comp()->nodeNeeds2Regs(node))
+            if (node->requiresRegisterPair(comp()))
                numRegsForCandidate = 2;
 
             bool candidateIsLiveOnExit = false;
@@ -5548,7 +5342,7 @@ TR_LiveRangeSplitter::splitAndFixPreHeader(TR::SymbolReference *symRef, TR_SymRe
 
 
 void
-TR_LiveRangeSplitter::fixExitsAfterSplit(TR::SymbolReference *symRef, TR_SymRefCandidatePair *correspondingSymRefCandidate, TR_SymRefCandidatePair **correspondingSymRefs, TR::Block *loopInvariantBlock, List<TR::Block> *blocksInLoop, TR::Node *node, TR_RegisterCandidate **registerCandidates, TR_StructureSubGraphNode *loop, TR_BitVector *replacedAutosInCurrentLoop, TR::SymbolReference *origSymRef)
+TR_LiveRangeSplitter::fixExitsAfterSplit(TR::SymbolReference *symRef, TR_SymRefCandidatePair *correspondingSymRefCandidate, TR_SymRefCandidatePair **correspondingSymRefs, TR::Block *loopInvariantBlock, List<TR::Block> *blocksInLoop, TR::Node *node, SymRefCandidateMap &registerCandidates, TR_StructureSubGraphNode *loop, TR_BitVector *replacedAutosInCurrentLoop, TR::SymbolReference *origSymRef)
    {
 
    TR::SymbolReference *correspondingSymRef = correspondingSymRefCandidate->_symRef;
@@ -5591,12 +5385,12 @@ TR_LiveRangeSplitter::fixExitsAfterSplit(TR::SymbolReference *symRef, TR_SymRefC
                if (rc->hasBlock(nextBlock))
                   {
                   int32_t numLoadsAndStores = rc->removeBlock(nextBlock);
-                  correspondingRc->addBlock(nextBlock, numLoadsAndStores, trMemory());
+                  correspondingRc->addBlock(nextBlock, numLoadsAndStores);
                   }
                blocksInInnerLoop->set(nextBlock->getNumber());
                }
 
-            correspondingRc->addBlock(loopInvariantBlock, 1, trMemory());
+            correspondingRc->addBlock(loopInvariantBlock, 1);
 
             TR_Structure *parentOfLoop = loop->getStructure()->getContainingLoop();
             if (parentOfLoop)
@@ -5611,7 +5405,7 @@ TR_LiveRangeSplitter::fixExitsAfterSplit(TR::SymbolReference *symRef, TR_SymRefC
                      {
          if (trace())
                         traceMsg(comp(), "Adding original candidate #%d in block_%d in outer loop %d (%p)\n", rc->getSymbolReference()->getReferenceNumber(), nextBlock->getNumber(), parentOfLoop->getNumber(), parentOfLoop);
-                     rc->addBlock(nextBlock, 0, trMemory());
+                     rc->addBlock(nextBlock, 0);
                      }
                   }
                }

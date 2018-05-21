@@ -1,24 +1,31 @@
 ###############################################################################
-#
-# (c) Copyright IBM Corp. 2016
-#
-#  This program and the accompanying materials are made available
-#  under the terms of the Eclipse Public License v1.0 and
-#  Apache License v2.0 which accompanies this distribution.
-#
-#      The Eclipse Public License is available at
-#      http://www.eclipse.org/legal/epl-v10.html
-#
-#      The Apache License v2.0 is available at
-#      http://www.opensource.org/licenses/apache2.0.php
-#
-# Contributors:
-#    Multiple authors (IBM Corp.) - initial implementation and documentation
+# Copyright (c) 2016, 2018 IBM Corp. and others
+# 
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+# or the Apache License, Version 2.0 which accompanies this distribution and
+# is available at https://www.apache.org/licenses/LICENSE-2.0.
+#      
+# This Source Code may also be made available under the following
+# Secondary Licenses when the conditions for such availability set
+# forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+# General Public License, version 2 with the GNU Classpath
+# Exception [1] and GNU General Public License, version 2 with the
+# OpenJDK Assembly Exception [2].
+#    
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
+# 
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
+language: cpp
 os:
   - linux
   - osx
-language: cpp
+compiler:
+  - gcc
+  - clang
 sudo: false
 cache: ccache # https://docs.travis-ci.com/user/caching/
 dist: trusty
@@ -29,38 +36,69 @@ addons:
     packages:
       - libnuma-dev
       - bison
-      - clang-3.4
-      - libclang-3.4-dev
-      - llvm-3.4
-      - gcc-multilib
-      - g++-multilib
-      - ninja-build
+      - libdwarf-dev
+      - libelf-dev
+before_install:
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install ccache; fi
 env:
-  matrix:
-    - BUILD_WITH_CMAKE=yes
   global:
     - GTEST_COLOR=1
-    - GTEST_FILTER=-*dump_test_create_dump_*:*NumaSetAffinity:*NumaSetAffinitySuspended
-    # Disable the core dump tests as container based builds don't allow setting
-    # core_pattern and don't have apport installed.  This can be removed when
-    # apport is available in apt whitelist
+    - BUILD_JOBS=2
+  matrix:
+    - BUILD_WITH_CMAKE=yes CMAKE_GENERATOR="Unix Makefiles"
 matrix:
   exclude:
     - os: osx
-      env: BUILD_WITH_CMAKE=yes
-  include:
+      compiler: gcc
     - os: linux
-      env: SPEC=linux_x86-64 PLATFORM=amd64-linux64-gcc
+      compiler: clang
+    - os: linux
+      env: BUILD_WITH_CMAKE=yes CMAKE_GENERATOR="Unix Makefiles"
+  include:
+    ## Auto tool builds
+    # 64 bit Linux x86 compressed pointers
     - os: linux
       env: SPEC=linux_x86-64_cmprssptrs PLATFORM=amd64-linux64-gcc
+    # 64 bit Linux AArch64
     - os: linux
-      env: RUN_LINT=yes RUN_BUILD=no SPEC=linux_x86-64 PLATFORM=amd64-linux64-gcc
-      dist: precise
+      env: SPEC=linux_aarch64 PLATFORM=aarch64-linux64-gcc
+    # Linter
     - os: linux
-      env: SPEC=linux_x86 PLATFORM=amd64-linux-gcc
-    - os: osx
-      env: SPEC=osx_x86-64
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty
+          packages:
+            - bison
+            - clang-3.8
+            - libclang-3.8-dev
+            - llvm-3.8
+            - llvm-3.8-dev
+      env: RUN_LINT=yes RUN_BUILD=no SPEC=linux_x86-64 PLATFORM=amd64-linux64-gcc LLVM_CONFIG=llvm-config-3.8 CLANG=clang++-3.8 CXX_PATH=clang++-3.8 CXX=clang++-3.8
+      dist: trusty
+    ## CMake builds
+    #  Ninja builds
+    #  32 bit Linux x86
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libnuma-dev
+            - bison
+            - libdwarf-dev
+            - libelf-dev 
+            - ninja-build
+            - gcc-multilib
+            - g++-multilib
+      env: BUILD_WITH_CMAKE=yes CMAKE_GENERATOR=Ninja CMAKE_DEFINES="-DOMR_ENV_DATA32=ON -DOMR_DDR=OFF -DOMR_JITBUILDER=OFF"
 before_script:
   - ulimit -c unlimited
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then export PATH=/usr/local/opt/ccache/libexec:$PATH ; fi
+  - ccache -s -z
 script:
   - bash ./scripts/build-on-travis.sh
+after_script:
+  - ccache -s

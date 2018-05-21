@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2014, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2014, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "compile/Method.hpp"
@@ -40,6 +44,7 @@ JitBuilder::ResolvedMethod::ResolvedMethod(TR_OpaqueMethodBlock *method)
    _lineNumber = resolvedMethod->getLineNumber();
    _returnType = resolvedMethod->returnIlType();
    _signature = resolvedMethod->getSignature();
+   _externalName = 0;
    _entryPoint = resolvedMethod->getEntryPoint();
    strncpy(_signatureChars, resolvedMethod->signatureChars(), 62); // TODO: introduce concept of robustness
    }
@@ -53,6 +58,7 @@ JitBuilder::ResolvedMethod::ResolvedMethod(TR::MethodBuilder *m)
      _returnType(m->getReturnType()),
      _entryPoint(0),
      _signature(0),
+     _externalName(0),
      _ilInjector(static_cast<TR::IlInjector *>(m))
    {
    computeSignatureChars();
@@ -73,6 +79,26 @@ JitBuilder::ResolvedMethod::signature(TR_Memory * trMemory, TR_AllocationKind al
       }
    else
       return _signature;
+   }
+
+const char *
+JitBuilder::ResolvedMethod::externalName(TR_Memory *trMemory, TR_AllocationKind allocKind)
+   {
+   if( !_externalName)
+      {
+      // For C++, need to mangle name
+      //char * s = (char *)trMemory->allocateMemory(1 + strlen(_name) + 1, allocKind);
+      //sprintf(s, "_Z%d%si", (int32_t)strlen(_name), _name);
+
+
+      // functions must be defined as extern "C"
+      _externalName = _name;
+
+      //if ( allocKind == heapAlloc)
+      //  _externalName = s;
+      }
+
+   return _externalName;
    }
 
 TR::DataType
@@ -127,7 +153,7 @@ JitBuilder::ResolvedMethod::makeParameterList(TR::ResolvedMethodSymbol *methodSy
       TR::DataType dt = type->getPrimitiveType();
       int32_t size = methodSym->convertTypeToSize(dt);
 
-      parmSymbol = methodSym->comp()->getSymRefTab()->createParameterSymbol(methodSym, slot, type->getPrimitiveType(), false);
+      parmSymbol = methodSym->comp()->getSymRefTab()->createParameterSymbol(methodSym, slot, type->getPrimitiveType());
       parmSymbol->setOrdinal(ordinal++);
 
       char *s = type->getSignatureName();

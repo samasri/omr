@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2015, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2015, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 /**
  * @file
@@ -176,8 +180,8 @@ WIN32_WINNT version constants :
 #define _WIN32_WINNT_WIN7                   0x0601
 #define _WIN32_WINNT_WIN8                   0x0602
 #define _WIN32_WINNT_WINBLUE                0x0603
-#define _WIN32_WINNT_WINTHRESHOLD           0x0A00 /* ABRACADABRA_THRESHOLD * /
-#define _WIN32_WINNT_WIN10                  0x0A00 /* ABRACADABRA_THRESHOLD * /
+#define _WIN32_WINNT_WINTHRESHOLD           0x0A00 / * ABRACADABRA_THRESHOLD * /
+#define _WIN32_WINNT_WIN10                  0x0A00 / * ABRACADABRA_THRESHOLD * /
 */
 
 	if (NULL == PPG_si_osType) {
@@ -769,6 +773,19 @@ omrsysinfo_get_memory_info(struct OMRPortLibrary *portLibrary, struct J9MemoryIn
 	return 0;
 }
 
+uint64_t
+omrsysinfo_get_addressable_physical_memory(struct OMRPortLibrary *portLibrary)
+{
+	uint64_t memoryLimit = 0;
+	uint64_t usableMemory = portLibrary->sysinfo_get_physical_memory(portLibrary);
+	
+	if (OMRPORT_LIMIT_LIMITED == portLibrary->sysinfo_get_limit(portLibrary, OMRPORT_RESOURCE_ADDRESS_SPACE, &memoryLimit)) {
+		/* there is a limit on the memory we can use so take the minimum of this usable amount and the physical memory */
+		usableMemory = OMR_MIN(memoryLimit, usableMemory);
+	}
+	return usableMemory;
+}
+
 /**
  * Determine the size of the total physical memory in the system, in bytes.
  *
@@ -1058,7 +1075,7 @@ copyEnvToBuffer(struct OMRPortLibrary *portLibrary, void *args)
 		} else {
 			envVars++; /* skip over single terminating null after each individual envVar */
 		}
-		storageRequired += WideCharToMultiByte(OS_ENCODING_CODE_PAGE, OS_ENCODING_WC_FLAGS, envVars, -1, cursor, 0, NULL, NULL);
+		storageRequired += WideCharToMultiByte(OS_ENCODING_CODE_PAGE, OS_ENCODING_WC_FLAGS, envVars, -1, (LPSTR)cursor, 0, NULL, NULL);
 		envVars += wcslen(envVars);
 	}
 
@@ -1092,9 +1109,9 @@ copyEnvToBuffer(struct OMRPortLibrary *portLibrary, void *args)
 		} else {
 			envVars++; /* skip over single terminating null after each individual envVar */
 		}
-		spaceForThisEntry = WideCharToMultiByte(OS_ENCODING_CODE_PAGE, OS_ENCODING_WC_FLAGS, envVars, -1, cursor, 0, NULL, NULL);
+		spaceForThisEntry = WideCharToMultiByte(OS_ENCODING_CODE_PAGE, OS_ENCODING_WC_FLAGS, envVars, -1, (LPSTR)cursor, 0, NULL, NULL);
 		if (spaceLeft >= (uintptr_t)spaceForThisEntry) {
-			WideCharToMultiByte(OS_ENCODING_CODE_PAGE, 0, envVars, -1, cursor, spaceForThisEntry, NULL, NULL);
+			WideCharToMultiByte(OS_ENCODING_CODE_PAGE, 0, envVars, -1, (LPSTR)cursor, spaceForThisEntry, NULL, NULL);
 			copyEnvToBufferArgs->numElements = copyEnvToBufferArgs->numElements + 1;
 			envVars += wcslen(envVars);
 			cursor += spaceForThisEntry;
@@ -1131,7 +1148,6 @@ omrsysinfo_env_iterator_init(struct OMRPortLibrary *portLibrary, J9SysinfoEnvIte
 {
 	int32_t rc;
 	CopyEnvToBufferArgs copyEnvToBufferArgs;
-	intptr_t length = 0;
 
 	copyEnvToBufferArgs.buffer = buffer;
 	copyEnvToBufferArgs.bufferSizeBytes = bufferSizeBytes;
@@ -1173,16 +1189,14 @@ omrsysinfo_env_iterator_hasNext(struct OMRPortLibrary *portLibrary, J9SysinfoEnv
 int32_t
 omrsysinfo_env_iterator_next(struct OMRPortLibrary *portLibrary, J9SysinfoEnvIteratorState *state, J9SysinfoEnvElement *envElement)
 {
-	int32_t rc = 0;
-
 	if (NULL == state->current) {
 		return OMRPORT_ERROR_SYSINFO_OPFAILED;
 	}
 
 	envElement->nameAndValue = state->current;
-	(char *)state->current += strlen(state->current) + 1;
+	state->current = (char *)state->current + strlen(state->current) + 1;
 
-	return rc;
+	return 0;
 }
 
 /* PDH processor object and associated counter names. */
@@ -1449,7 +1463,6 @@ intptr_t
 omrsysinfo_get_cwd(struct OMRPortLibrary *portLibrary, char *buf, uintptr_t bufLen)
 {
 	DWORD pathLengthInWChars = 0;
-	uintptr_t pathLengthInBytes = 0;
 	wchar_t *unicodeBuffer = NULL; /* unicode version of CWD, size: pathLengthInWChars*sizeof(wchar_t) plus 1 for terminator and 1 for terminating slash if required */
 	int32_t portConvertRC = -1;
 	DWORD unicodeBufferSizeBytes = 0;
@@ -1508,7 +1521,6 @@ intptr_t
 omrsysinfo_get_tmp(struct OMRPortLibrary *portLibrary, char *buf, uintptr_t bufLen, BOOLEAN ignoreEnvVariable)
 {
 	DWORD pathLengthInWChars = 0;
-	uintptr_t pathLengthInBytes = 0;
 	wchar_t *unicodeBuffer = NULL;
 	int32_t mutf8Size = -1;
 	DWORD unicodeBufferSizeBytes = 0;
@@ -1549,7 +1561,7 @@ omrsysinfo_get_tmp(struct OMRPortLibrary *portLibrary, char *buf, uintptr_t bufL
 	}
 
 	/* convert to modified UTF-8. */
-	mutf8Size = portLibrary->str_convert(portLibrary, J9STR_CODE_WIDE, J9STR_CODE_MUTF8, (uint8_t *) unicodeBuffer, (uintptr_t) pathLengthInWChars * sizeof(wchar_t), NULL, 0);
+	mutf8Size = portLibrary->str_convert(portLibrary, J9STR_CODE_WIDE, J9STR_CODE_MUTF8, (const char *) unicodeBuffer, (uintptr_t) pathLengthInWChars * sizeof(wchar_t), NULL, 0);
 	if (mutf8Size >= 0) {
 		mutf8Size += 1; /* leave enough space to null-terminate the string */
 		/*is buflen big enough? */
@@ -1557,7 +1569,7 @@ omrsysinfo_get_tmp(struct OMRPortLibrary *portLibrary, char *buf, uintptr_t bufL
 			portLibrary->mem_free_memory(portLibrary, unicodeBuffer);
 			return (intptr_t)mutf8Size;
 		} else {
-			mutf8Size = portLibrary->str_convert(portLibrary, J9STR_CODE_WIDE, J9STR_CODE_MUTF8, (uint8_t *) unicodeBuffer, (uintptr_t) pathLengthInWChars * sizeof(wchar_t), buf, bufLen);
+			mutf8Size = portLibrary->str_convert(portLibrary, J9STR_CODE_WIDE, J9STR_CODE_MUTF8, (const char *) unicodeBuffer, (uintptr_t) pathLengthInWChars * sizeof(wchar_t), buf, bufLen);
 			if (mutf8Size < 0) {
 				Trc_PRT_sysinfo_get_tmp_failed_str_covert(mutf8Size);
 			}
@@ -1600,7 +1612,7 @@ omrsysinfo_os_has_feature(struct OMRPortLibrary *portLibrary, struct OMROSDesc *
 		uint32_t featureIndex = feature / 32;
 		uint32_t featureShift = feature % 32;
 
-		rc = J9_ARE_ALL_BITS_SET(desc->features[featureIndex], 1 << featureShift);
+		rc = OMR_ARE_ALL_BITS_SET(desc->features[featureIndex], 1 << featureShift);
 	}
 
 	Trc_PRT_sysinfo_os_has_feature_Exit((uintptr_t)rc);
@@ -1613,22 +1625,40 @@ omrsysinfo_os_kernel_info(struct OMRPortLibrary *portLibrary, struct OMROSKernel
 	return FALSE;
 }
 
-int32_t 
-omrsysinfo_cgroup_is_limits_supported(struct OMRPortLibrary *portLibrary)
-{
-	return OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM;
-}
-
-BOOLEAN 
-omrsysinfo_cgroup_is_limits_enabled(struct OMRPortLibrary *portLibrary)
+BOOLEAN
+omrsysinfo_cgroup_is_system_available(struct OMRPortLibrary *portLibrary)
 {
 	return FALSE;
 }
 
-int32_t 
-omrsysinfo_cgroup_enable_limits(struct OMRPortLibrary *portLibrary)
+uint64_t
+omrsysinfo_cgroup_get_available_subsystems(struct OMRPortLibrary *portLibrary)
 {
-	return OMRPORT_ERROR_SYSINFO_CGROUP_UNSUPPORTED_PLATFORM;
+	return 0;
+}
+
+uint64_t
+omrsysinfo_cgroup_are_subsystems_available(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlags)
+{
+	return 0;
+}
+
+uint64_t
+omrsysinfo_cgroup_get_enabled_subsystems(struct OMRPortLibrary *portLibrary)
+{
+	return 0;
+}
+
+uint64_t
+omrsysinfo_cgroup_enable_subsystems(struct OMRPortLibrary *portLibrary, uint64_t requestedSubsystems)
+{
+	return 0;
+}
+
+uint64_t
+omrsysinfo_cgroup_are_subsystems_enabled(struct OMRPortLibrary *portLibrary, uint64_t subsystemsFlags)
+{
+	return 0;
 }
 
 int32_t

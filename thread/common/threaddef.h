@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef threaddef_h
@@ -170,25 +174,25 @@ enum {
 #define GLOBAL_LOCK(self, caller) \
 	do { \
 		ASSERT(global_lock_owner != (self)); \
-		J9OSMUTEX_ENTER((self)->library->monitor_mutex); \
+		OMROSMUTEX_ENTER((self)->library->monitor_mutex); \
 		ASSERT(UNOWNED == global_lock_owner); \
 		global_lock_owner = (self); \
 	} while(0)
 #else
-#define GLOBAL_LOCK(self, caller) J9OSMUTEX_ENTER((self)->library->monitor_mutex)
+#define GLOBAL_LOCK(self, caller) OMROSMUTEX_ENTER((self)->library->monitor_mutex)
 #endif
 
-#define GLOBAL_TRY_LOCK(self, caller) J9OSMUTEX_TRY_ENTER((self)->library->monitor_mutex)
+#define GLOBAL_TRY_LOCK(self, caller) OMROSMUTEX_TRY_ENTER((self)->library->monitor_mutex)
 
 #ifdef THREAD_ASSERTS
 #define GLOBAL_UNLOCK(self) \
 	do { \
 		ASSERT((self) == global_lock_owner); \
 		global_lock_owner = UNOWNED; \
-		J9OSMUTEX_EXIT((self)->library->monitor_mutex); \
+		OMROSMUTEX_EXIT((self)->library->monitor_mutex); \
 	} while(0)
 #else
-#define GLOBAL_UNLOCK(self) J9OSMUTEX_EXIT((self)->library->monitor_mutex)
+#define GLOBAL_UNLOCK(self) OMROSMUTEX_EXIT((self)->library->monitor_mutex)
 #endif
 
 /*
@@ -200,12 +204,12 @@ enum {
 	do { \
 		omrthread_t self = MACRO_SELF(); \
 		ASSERT(self != global_lock_owner); \
-		J9OSMUTEX_ENTER((lib)->monitor_mutex); \
+		OMROSMUTEX_ENTER((lib)->monitor_mutex); \
 		ASSERT(UNOWNED == global_lock_owner); \
 		global_lock_owner = self; \
 	} while(0)
 #else
-#define GLOBAL_LOCK_SIMPLE(lib) J9OSMUTEX_ENTER((lib)->monitor_mutex)
+#define GLOBAL_LOCK_SIMPLE(lib) OMROSMUTEX_ENTER((lib)->monitor_mutex)
 #endif
 
 /*
@@ -217,17 +221,17 @@ enum {
 	do { \
 		ASSERT(MACRO_SELF() == global_lock_owner); \
 		global_lock_owner = UNOWNED; \
-		J9OSMUTEX_EXIT((lib)->monitor_mutex); \
+		OMROSMUTEX_EXIT((lib)->monitor_mutex); \
 	} while(0)
 #else /* THREAD_ASSERTS */
-#define GLOBAL_UNLOCK_SIMPLE(lib) J9OSMUTEX_EXIT((lib)->monitor_mutex)
+#define GLOBAL_UNLOCK_SIMPLE(lib) OMROSMUTEX_EXIT((lib)->monitor_mutex)
 #endif /* THREAD_ASSERTS */
 
-#define THREAD_LOCK(thread, caller) J9OSMUTEX_ENTER((thread)->mutex)
+#define THREAD_LOCK(thread, caller) OMROSMUTEX_ENTER((thread)->mutex)
 
-#define THREAD_UNLOCK(thread) J9OSMUTEX_EXIT((thread)->mutex)
+#define THREAD_UNLOCK(thread) OMROSMUTEX_EXIT((thread)->mutex)
 
-#define MONITOR_LOCK(monitor, caller) J9OSMUTEX_ENTER((monitor)->mutex)
+#define MONITOR_LOCK(monitor, caller) OMROSMUTEX_ENTER((monitor)->mutex)
 
 #ifdef FORCE_TO_USE_IS_THREAD
 /*
@@ -236,10 +240,10 @@ enum {
  */
 #define MONITOR_TRY_LOCK(monitor)  (-1)
 #else /* FORCE_TO_USE_IS_THREAD */
-#define MONITOR_TRY_LOCK(monitor) J9OSMUTEX_TRY_ENTER((monitor)->mutex)
+#define MONITOR_TRY_LOCK(monitor) OMROSMUTEX_TRY_ENTER((monitor)->mutex)
 #endif /* FORCE_TO_USE_IS_THREAD */
 
-#define MONITOR_UNLOCK(monitor) J9OSMUTEX_EXIT((monitor)->mutex)
+#define MONITOR_UNLOCK(monitor) OMROSMUTEX_EXIT((monitor)->mutex)
 
 #define IS_OBJECT_MONITOR(monitor) (J9THREAD_MONITOR_OBJECT == ((monitor)->flags & J9THREAD_MONITOR_OBJECT))
 
@@ -350,7 +354,7 @@ enum {
 				if (0 == ((monitor)->flags & J9THREAD_MONITOR_DISABLE_SPINNING)) { \
 					(monitor)->flags |= J9THREAD_MONITOR_DISABLE_SPINNING; \
 					DISABLE_RAW_MONITOR_SPIN((thread), (monitor)); \
-					if (!J9_ARE_ALL_BITS_SET((thread)->library->flags, J9THREAD_LIB_FLAG_ADAPTIVE_SPIN_KEEP_SAMPLING)) { \
+					if (!OMR_ARE_ALL_BITS_SET((thread)->library->flags, J9THREAD_LIB_FLAG_ADAPTIVE_SPIN_KEEP_SAMPLING)) { \
 						ADAPT_DISABLE_SAMPLING((thread), (monitor)); \
 					} \
 				} \

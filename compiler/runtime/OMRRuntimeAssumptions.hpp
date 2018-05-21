@@ -1,22 +1,23 @@
-/******************************************************************************* 
+/*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
-
 
 #ifndef OMR_RUNTIME_ASSUMPTIONS_INCL
 #define OMR_RUNTIME_ASSUMPTIONS_INCL
@@ -32,6 +33,7 @@
 class TR_FrontEnd;
 class TR_PatchJNICallSite;
 namespace TR { class PatchNOPedGuardSite; }
+namespace TR { class PatchMultipleNOPedGuardSites; }
 class TR_PreXRecompile;
 class TR_RedefinedClassPicSite;
 class TR_UnloadedClassPicSite;
@@ -46,6 +48,11 @@ enum RuntimeAssumptionCategory
    ValueModification,
    SentinelCategory,
    LastRuntimeAssumptionCategory = SentinelCategory
+   };
+
+enum AssumptionSameJittedBodyFlags
+   {
+   MARK_FOR_DELETE=1
    };
 
 class RuntimeAssumption : public TR_Link0<RuntimeAssumption>
@@ -63,7 +70,15 @@ class RuntimeAssumption : public TR_Link0<RuntimeAssumption>
    virtual void     reclaim() {}
    virtual void     compensate(TR_FrontEnd *vm, bool isSMP, void *data) = 0;
    virtual bool     equals(RuntimeAssumption &other) = 0;
-   virtual uint8_t *getAssumingPC() = 0;
+
+   /*
+    * These functions are used to determine whether the runtime assumption falls within
+    * a given range. Both bounds are inclusive.
+    */
+   virtual uint8_t *getFirstAssumingPC() = 0;
+   virtual uint8_t *getLastAssumingPC() = 0;
+   bool assumptionInRange(uintptrj_t start, uintptrj_t end) { return ((uintptrj_t)getFirstAssumingPC()) <= end && start <= ((uintptrj_t)getLastAssumingPC()); }
+
    virtual uintptrj_t getKey() { return _key; }
 
    virtual uintptrj_t hashCode() { return TR_RuntimeAssumptionTable::hashCode(getKey()); }
@@ -71,6 +86,7 @@ class RuntimeAssumption : public TR_Link0<RuntimeAssumption>
    virtual bool matches(char *sig, uint32_t sigLen) { return false; }
 
    virtual TR::PatchNOPedGuardSite   *asPNGSite() { return 0; }
+   virtual TR::PatchMultipleNOPedGuardSites   *asPMNGSite() { return 0; }
    virtual TR_PreXRecompile         *asPXRecompile() { return 0; }
    virtual TR_UnloadedClassPicSite  *asUCPSite() { return 0; }
    virtual TR_RedefinedClassPicSite *asRCPSite() { return 0; }
@@ -95,9 +111,23 @@ class RuntimeAssumption : public TR_Link0<RuntimeAssumption>
       setNext(NULL);
       }
 
+   /**
+    * Mark this assumption for future removal
+    * The caller of this routine must insure that the assumption has been dequeueFromListOfAssumptionsForJittedBody
+    * prior to this call. Using this marking feature will allow for removing a number of items from the linked-list
+    * of assumptions using one pass through the linked-list
+    */
+   void markForDetach() { _nextAssumptionForSameJittedBody = (RuntimeAssumption *)(((uintptr_t)_nextAssumptionForSameJittedBody)|MARK_FOR_DELETE); }
+
+   /**
+    * Returns true when the assumption has previously been marked using the markForDetach routine
+    */
+   bool isMarkedForDetach() { return(((uintptr_t)(_nextAssumptionForSameJittedBody)&MARK_FOR_DELETE) == MARK_FOR_DELETE); }
+
    protected:
    RuntimeAssumption *_nextAssumptionForSameJittedBody; // links assumptions that pertain to the same method body
-                                                           // These should form a circular linked list with a sentinel
+                                                        // These should form a circular linked list with a sentinel
+                                                        // Lower bit is used to mark assumptions that will be removed after all marking is completed
    uintptrj_t _key; // key for searching in the hashtable
    };
 
@@ -144,7 +174,8 @@ class SentinelRuntimeAssumption : public OMR::RuntimeAssumption
    virtual void     compensate(TR_FrontEnd *vm, bool isSMP, void *data) {}
    virtual bool     equals(RuntimeAssumption &other) { return false; }
 
-   virtual uint8_t *getAssumingPC() { return NULL; }
+   virtual uint8_t *getFirstAssumingPC() { return NULL; }
+   virtual uint8_t *getLastAssumingPC() { return NULL; }
    virtual void     dumpInfo() {};
    }; // TR::SentinelRuntimeAssumption
 
@@ -173,7 +204,8 @@ class PatchNOPedGuardSite : public OMR::LocationRedirectRuntimeAssumption
          }
 
    virtual PatchNOPedGuardSite *asPNGSite() { return this; }
-   virtual uint8_t *getAssumingPC() { return _location; }
+   virtual uint8_t *getFirstAssumingPC() { return _location; }
+   virtual uint8_t *getLastAssumingPC() { return _location; }
    uint8_t* getLocation() { return _location; }
    uint8_t* getDestination() { return _destination; }
 
@@ -183,6 +215,80 @@ class PatchNOPedGuardSite : public OMR::LocationRedirectRuntimeAssumption
    uint8_t *_location;
    uint8_t *_destination;
    }; // TR::PatchNOPedGuardSite
+
+class PatchSites
+   {
+   private:
+   size_t    _refCount;
+   size_t    _size;
+   size_t    _maxSize;
+
+   /**
+    * List of location and destination pairs, eg. {loc0, dest0, loc1, dest1, ...}
+    * This improves locality and reduces memory overhead
+    */
+   uint8_t **_patchPoints;
+
+   // Cache lower and upper bounds
+   uint8_t *_firstLocation;
+   uint8_t *_lastLocation;
+
+   bool internalContainsLocation(uint8_t *location);
+
+   public:
+   TR_PERSISTENT_ALLOC_THROW(TR_Memory::PatchSites);
+   PatchSites(TR_PersistentMemory *pm, size_t maxSize);
+
+   size_t   getSize() { return _size; }
+   uint8_t *getLocation(size_t index);
+   uint8_t *getDestination(size_t index);
+   uint8_t *getFirstLocation() { return _firstLocation; }
+   uint8_t *getLastLocation() { return _lastLocation; }
+
+   void add(uint8_t *location, uint8_t *destination);
+
+   bool equals(PatchSites *other);
+   bool containsLocation(uint8_t *location);   
+
+   void addReference();
+   static void reclaim(PatchSites *sites);
+   };
+
+class PatchMultipleNOPedGuardSites : public OMR::LocationRedirectRuntimeAssumption
+   {
+   protected:
+   PatchMultipleNOPedGuardSites(TR_PersistentMemory *pm, uintptrj_t key, TR_RuntimeAssumptionKind kind, PatchSites *sites)
+      : OMR::LocationRedirectRuntimeAssumption(pm, key), _patchSites(sites) {}
+   public:
+
+   virtual void compensate(TR_FrontEnd *vm, bool isSMP, void *)
+      {
+      for (size_t i = 0; i < _patchSites->getSize(); ++i)
+         TR::PatchNOPedGuardSite::compensate(isSMP, _patchSites->getLocation(i), _patchSites->getDestination(i));
+      }
+
+   virtual bool equals(OMR::RuntimeAssumption &other)
+      {
+      PatchMultipleNOPedGuardSites *site = other.asPMNGSite(); 
+      return site != 0 && _patchSites->equals(site->getPatchSites());
+      }
+
+   virtual void reclaim()
+      {
+      PatchSites::reclaim(_patchSites);
+      }
+
+   virtual PatchMultipleNOPedGuardSites *asPMNGSite() { return this; }
+
+   virtual uint8_t *getFirstAssumingPC() { return _patchSites->getFirstLocation(); }
+   virtual uint8_t *getLastAssumingPC() { return _patchSites->getLastLocation(); }
+
+   virtual PatchSites* getPatchSites() { return _patchSites; }
+   virtual void dumpInfo();
+
+   private:
+   PatchSites *_patchSites;
+   }; // TR::PatchMultipleNOPedGuardSites
 
 }  // namespace TR
 

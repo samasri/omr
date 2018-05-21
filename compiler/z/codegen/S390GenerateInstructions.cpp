@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "z/codegen/S390GenerateInstructions.hpp"
@@ -726,7 +729,7 @@ generateRXInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::N
    TR::Compilation *comp = cg->comp();
 
    TR_ASSERT(treg->getRealRegister()!=NULL || // Not in RA
-           op != TR::InstOpCode::L || n->couldIgnoreExtend() || !n->force64BitLoad(), "Generating an TR::InstOpCode::L, when LLGF|LGF should be used");
+           op != TR::InstOpCode::L || !n->isExtendedTo64BitAtSource(), "Generating an TR::InstOpCode::L, when LLGF|LGF should be used");
    if (cg->supportsHighWordFacility() && !comp->getOption(TR_DisableHighWordRA) && treg->assignToHPR())
       {
       switch(op)
@@ -991,13 +994,13 @@ generateRIInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::N
     }
 
 TR::Instruction *
-generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * treg, TR::SymbolReference * sr, uintptrj_t imm, TR::Instruction * preced)
+generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * treg, TR::SymbolReference * sr, void * addr, TR::Instruction * preced)
    {
    if (preced)
       {
-      return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, imm, sr, preced, cg);
+      return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, addr, sr, preced, cg);
       }
-   return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, imm, sr, cg);
+   return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, addr, sr, cg);
    }
 
 TR::Instruction *
@@ -1009,24 +1012,43 @@ generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::
    }
 
 TR::Instruction *
-generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * treg, uintptrj_t imm, TR::Instruction * preced)
+generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * treg, uint32_t imm, TR::Instruction * preced)
    {
-   if (cg->supportsHighWordFacility() && cg->comp()->getOption(TR_DisableHighWordRA) && treg->assignToHPR())
-      {
-      switch(op)
-         {
-         case TR::InstOpCode::AFI:
-            return generateRILInstruction(cg, TR::InstOpCode::AIH, n, treg, imm, preced);
-            break;
-         default:
-            break;
-         }
-      }
    if (preced)
       {
       return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, imm, preced, cg);
       }
    return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, imm, cg);
+   }
+
+TR::Instruction *
+generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * treg, int32_t imm, TR::Instruction * preced)
+   {
+   if (preced)
+      {
+      return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, imm, preced, cg);
+      }
+   return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, imm, cg);
+   }
+
+TR::Instruction *
+generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * treg, void * addr, TR::Instruction * preced)
+   {
+   if (preced)
+      {
+      return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, addr, preced, cg);
+      }
+   return new (INSN_HEAP) TR::S390RILInstruction(op, n, treg, addr, cg);
+   }
+
+TR::Instruction *
+generateRILInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, uint32_t mask, void * addr, TR::Instruction * preced)
+   {
+   if (preced)
+      {
+      return new (INSN_HEAP) TR::S390RILInstruction(op, n, mask, addr, preced, cg);
+      }
+   return new (INSN_HEAP) TR::S390RILInstruction(op, n, mask, addr, cg);
    }
 
 TR::Instruction *
@@ -2049,6 +2071,7 @@ TR::Instruction *
 generateVRSbInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * targetReg, TR::Register * sourceReg, TR::MemoryReference * mr,
                         uint8_t mask4 /* 4 bits */)
    {
+   mr->separateIndexRegister(n, cg, true, NULL);
    return new (INSN_HEAP) TR::S390VRSbInstruction(cg, op, n, targetReg, sourceReg, mr, mask4);
    }
 
@@ -2101,6 +2124,9 @@ TR::Instruction * generateVSIInstruction(
                       TR::MemoryReference    * mr ,
                       uint8_t                  imm3)  /* 8 bits */
    {
+   TR_ASSERT_FATAL(mr != NULL, "NULL memory reference for VSI instruction\n");
+   mr->separateIndexRegister(n, cg, true, NULL);
+
    return new (INSN_HEAP) TR::S390VSIInstruction(cg, op, n, reg, mr, imm3);
    }
 
@@ -2175,17 +2201,6 @@ generateS390DebugCounterBumpInstruction(TR::CodeGenerator * cg, TR::InstOpCode::
          return new (INSN_HEAP) TR::S390DebugCounterBumpInstruction(op, n, cs, cg, delta, preced);
       }
    return new (INSN_HEAP) TR::S390DebugCounterBumpInstruction(op, n, cs, cg, delta);
-   }
-
-TR::Instruction *
-generateRegRegInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::Node * n, TR::Register * sreg, TR::Register * treg,
-                          TR::RegisterDependencyConditions * cond, TR::Instruction * preced)
-   {
-   if (preced)
-      {
-      return new (INSN_HEAP) TR::S390RRInstruction(op, n, sreg, treg, cond, preced, cg);
-      }
-   return new (INSN_HEAP) TR::S390RRInstruction(op, n, sreg, treg, cond, cg);
    }
 
 TR::Instruction *
@@ -2334,7 +2349,7 @@ generateDirectCall(TR::CodeGenerator * cg, TR::Node * callNode, bool myself, TR:
          if (comp->getOption(TR_EnableRMODE64))
 #endif
             {
-            tempInst = (new (INSN_HEAP) TR::S390RILInstruction(TR::InstOpCode::BRASL, callNode, RegRA, imm, callSymRef, cg));
+            tempInst = (new (INSN_HEAP) TR::S390RILInstruction(TR::InstOpCode::BRASL, callNode, RegRA, reinterpret_cast<void*>(imm), callSymRef, cg));
             }
 #endif
 #if !defined(TR_TARGET_64BIT) || (defined(TR_TARGET_64BIT) && defined(J9ZOS390))
@@ -2343,7 +2358,7 @@ generateDirectCall(TR::CodeGenerator * cg, TR::Node * callNode, bool myself, TR:
 #endif
 
             {
-            tempInst = new (INSN_HEAP) TR::S390RILInstruction(TR::InstOpCode::BRASL, callNode, RegRA, imm, cg);
+            tempInst = new (INSN_HEAP) TR::S390RILInstruction(TR::InstOpCode::BRASL, callNode, RegRA, reinterpret_cast<void*>(imm), cg);
 
 
             if (isHelper)
@@ -2436,7 +2451,7 @@ generateLoadLiteralPoolAddress(TR::CodeGenerator * cg, TR::Node * node, TR::Regi
    TR::Instruction *cursor;
 
    //support f/w only so far
-   TR::S390RILInstruction *LARLinst = (TR::S390RILInstruction *) generateRILInstruction(cg, TR::InstOpCode::LARL, node, treg, 0xBABE, 0);
+   TR::S390RILInstruction *LARLinst = (TR::S390RILInstruction *) generateRILInstruction(cg, TR::InstOpCode::LARL, node, treg, reinterpret_cast<void*>(0xBABE), 0);
    LARLinst->setIsLiteralPoolAddress();
    cursor = LARLinst;
 
@@ -2964,7 +2979,7 @@ generateEXDispatch(TR::Node * node, TR::CodeGenerator *cg, TR::Register * maskRe
       TR::MemoryReference * tempMR = generateS390MemoryReference(cis, cg, litPool, node);
 
       //the memory reference should create a constant data snippet
-      cursor = generateRXInstruction(cg, TR::InstOpCode::EX, node, maskReg, tempMR, (preced != NULL ? preced : comp->getAppendInstruction()));
+      cursor = generateRXInstruction(cg, TR::InstOpCode::EX, node, maskReg, tempMR, (preced != NULL ? preced : cg->getAppendInstruction()));
       if (maskReg->getRealRegister() == NULL && maskReg->getAssignedRegister() == NULL)
          {
          conditions->addPostConditionIfNotAlreadyInserted(maskReg, TR::RealRegister::AssignAny);

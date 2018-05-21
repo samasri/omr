@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 //On zOS XLC linker can't handle files with same name at link time
@@ -133,7 +136,7 @@ void OMR::Z::MemoryReference::addToTemporaryNegativeOffset(TR::Node *node, int32
 void OMR::Z::MemoryReference::setupCheckForLongDispFlag(TR::CodeGenerator *cg)
    {
    // Enable a check for the long disp slot in generateBin phase
-   if (cg->getDoingInstructionSelection())
+   if (cg->getCodeGeneratorPhase() == TR::CodeGenPhase::InstructionSelectionPhase)
       {
       self()->setCheckForLongDispSlot();
       }
@@ -1491,8 +1494,6 @@ OMR::Z::MemoryReference::populateShiftLeftTree(TR::Node * subTree, TR::CodeGener
       {
       TR::Node *firstChild=subTree->getFirstChild();
       TR::Register *firstRegister = firstChild->getRegister();
-      if(firstRegister == NULL && firstChild->getOpCode().hasSymbolReference() && firstChild->getSymbolReference()->getSymbol()->isRegisterSymbol())
-        firstRegister = cg->evaluate(firstChild);
       if (firstRegister && !_baseRegister && !_indexRegister)
          {
          strengthReducedShift = true;
@@ -1640,8 +1641,6 @@ bool OMR::Z::MemoryReference::tryBaseIndexDispl(TR::CodeGenerator* cg, TR::Node*
    if (!loadStore->getOpCode().isLoadVar() &&
        !loadStore->getOpCode().isStore())
       return false;
-   if (topAdd->getRegister() == NULL && topAdd->getOpCode().hasSymbolReference() && topAdd->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     cg->evaluate(topAdd);
    if (topAdd->getRegister() != NULL) return false;
    if (integerChild->getOpCode().isLoadConst()) return false;
 
@@ -1691,12 +1690,8 @@ bool OMR::Z::MemoryReference::tryBaseIndexDispl(TR::CodeGenerator* cg, TR::Node*
 
    if (!cg->isDispInRange(offset)) return false;
    breg = base->getRegister();
-   if (breg == NULL && base->getOpCode().hasSymbolReference() && base->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     breg = cg->evaluate(base);
    if (breg == NULL && base->getReferenceCount() <= 1) return false;
    ireg = index->getRegister();
-   if (ireg == NULL && index->getOpCode().hasSymbolReference() && index->getSymbolReference()->getSymbol()->isRegisterSymbol())
-     ireg = cg->evaluate(index);
    if (ireg == NULL && index->getReferenceCount() <= 1) return false;
    if (breg == NULL)
       breg = cg->evaluate(base);
@@ -2417,8 +2412,9 @@ OMR::Z::MemoryReference::assignRegisters(TR::Instruction * currentInstruction, T
          }
 
       if (_baseRegister != NULL && _baseRegister->getRealRegister() == NULL)
-         assignedBaseRegister = (TR::RealRegister *)
-           machine->assignBestRegisterSingle(_baseRegister, currentInstruction, NOBOOKKEEPING,~(TR::RealRegister::getBitMask(TR::RealRegister::GPR0)));
+         {
+         assignedBaseRegister = static_cast<TR::RealRegister*>(machine->assignBestRegisterSingle(_baseRegister, currentInstruction, NOBOOKKEEPING, ~TR::RealRegister::GPR0Mask));
+         }
       else if (_baseRegister != NULL && _baseRegister->getRealRegister() != NULL)
          assignedBaseRegister = _baseRegister->getRealRegister();
 
@@ -2442,8 +2438,7 @@ OMR::Z::MemoryReference::assignRegisters(TR::Instruction * currentInstruction, T
 
       // Assign a real reg to _indexRegister.  This real reg now points to the old virt
       // reg that _indexRegister was.
-      assignedIndexRegister = (TR::RealRegister *)
-      machine->assignBestRegisterSingle(_indexRegister, currentInstruction, BOOKKEEPING,~(TR::RealRegister::getBitMask(TR::RealRegister::GPR0)));
+      assignedIndexRegister = static_cast<TR::RealRegister*>(machine->assignBestRegisterSingle(_indexRegister, currentInstruction, BOOKKEEPING, ~TR::RealRegister::GPR0Mask));
 
       _indexRegister = assignedIndexRegister;
 
@@ -3283,6 +3278,7 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
          {
          if (instr->getKind()==TR::Instruction::IsRS ||
             instr->getKind()==TR::Instruction::IsRSY ||
+            instr->getKind()==TR::Instruction::IsRSL ||
             instr->getKind()==TR::Instruction::IsSI  ||
             instr->getKind()==TR::Instruction::IsSIY ||
             instr->getKind()==TR::Instruction::IsSIL ||
@@ -3291,7 +3287,7 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
             instr->getKind()==TR::Instruction::IsSS4 ||
             instr->getKind()==TR::Instruction::IsS    )
             {
-            TR_ASSERT( base!=NULL,"OMR::Z::MemoryReference::generateBinaryEncoding --  Expected non-NULL base reg for RS/S/SI type inst.");
+            TR_ASSERT_FATAL(base != NULL, "Expected non-NULL base register for long displacement on %s [%p] instruction", cg->getDebug()->getOpCodeName(&instr->getOpCode()), instr);
 
             //   ICM GPRt, DISP(,base)
             // becomes:
@@ -3352,13 +3348,13 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
             }
          else if (index==NULL)                                      // Since index reg is free, use it directly
             {
-            TR_ASSERT(instr->getKind()==TR::Instruction::IsRX  ||
-                    instr->getKind()==TR::Instruction::IsVRX  ||
-                    instr->getKind()==TR::Instruction::IsRXY ||
-                    instr->getKind()==TR::Instruction::IsRXYb ||
-                    instr->getKind()==TR::Instruction::IsRXE ||
-                    instr->getKind()==TR::Instruction::IsRXF  ,
-                "OMR::Z::MemoryReference::generateBinaryEncoding -- Unexpected instruction type %p.",instr);
+            TR_ASSERT_FATAL(instr->getKind()==TR::Instruction::IsRX ||
+                    instr->getKind() == TR::Instruction::IsVRX ||
+                    instr->getKind() == TR::Instruction::IsRXY ||
+                    instr->getKind() == TR::Instruction::IsRXYb ||
+                    instr->getKind() == TR::Instruction::IsRXE ||
+                    instr->getKind() == TR::Instruction::IsRXF,
+                "Unexpected instruction type for long displacement on %s [%p] instruction", cg->getDebug()->getOpCodeName(&instr->getOpCode()), instr);
 
             //    A GPRt, DISP(,base)
             // becomes:
@@ -3369,12 +3365,12 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
             }
          else // base is NULL                                       // Since base reg is free, use it directly
             {
-            TR_ASSERT(instr->getKind()==TR::Instruction::IsRX  ||
-                    instr->getKind()==TR::Instruction::IsRXY ||
-                    instr->getKind()==TR::Instruction::IsRXYb ||
-                    instr->getKind()==TR::Instruction::IsRXE ||
-                    instr->getKind()==TR::Instruction::IsRXF  ,
-               "OMR::Z::MemoryReference::generateBinaryEncoding -- Unexpected instruction type %p.",instr);
+            TR_ASSERT_FATAL(instr->getKind() == TR::Instruction::IsRX  ||
+                    instr->getKind() == TR::Instruction::IsRXY ||
+                    instr->getKind() == TR::Instruction::IsRXYb ||
+                    instr->getKind() == TR::Instruction::IsRXE ||
+                    instr->getKind() == TR::Instruction::IsRXF,
+                "Unexpected instruction type for long displacement on %s [%p] instruction", cg->getDebug()->getOpCodeName(&instr->getOpCode()), instr);
 
             //    A GPRt, DISP(,index)
             // becomes:
@@ -3550,7 +3546,6 @@ OMR::Z::MemoryReference::generateBinaryEncodingTouchUpForLongDisp(uint8_t *curso
             nbytes += currInstr->getOpCode().getInstructionLength();
             }
          currInstr->setNext(nextInstr);
-         //May need to copy some attributes of instr into currInstr e.g. lastWarm etc.
          }
       else if (TR::Compiler->target.is64Bit())
          {
@@ -3701,6 +3696,12 @@ generateS390MemoryReference(TR::Register * br, int32_t disp, TR::CodeGenerator *
 TR::MemoryReference *
 generateS390MemoryReference(TR::Node * node, TR::CodeGenerator * cg, bool canUseRX)
    {
+   // The TR::MemoryReference(TR::Node*, TR::CodeGenerator*, bool); constructor (below) is made for store or load nodes
+   // that have symbol references.
+   // A symbol reference is needed to adjust memory reference displacement (TR::MemoryReference::calcDisplacement).
+   // If the node has no sym ref, this memory reference's gets a NULL symbol reference, which can lead to crashes in displacement
+   // calculations.
+   TR_ASSERT(node->getOpCode().hasSymbolReference(), "Memory reference generation API needs a node with symbol reference\n");
    return new (cg->trHeapMemory()) TR::MemoryReference(node, cg, canUseRX);
    }
 

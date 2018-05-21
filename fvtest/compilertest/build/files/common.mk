@@ -1,21 +1,23 @@
-################################################################################
-##
-## (c) Copyright IBM Corp. 2016, 2017
-##
-##  This program and the accompanying materials are made available
-##  under the terms of the Eclipse Public License v1.0 and
-##  Apache License v2.0 which accompanies this distribution.
-##
-##      The Eclipse Public License is available at
-##      http://www.eclipse.org/legal/epl-v10.html
-##
-##      The Apache License v2.0 is available at
-##      http://www.opensource.org/licenses/apache2.0.php
-##
-## Contributors:
-##    Multiple authors (IBM Corp.) - initial implementation and documentation
-################################################################################
-
+###############################################################################
+# Copyright (c) 2016, 2017 IBM Corp. and others
+#
+# This program and the accompanying materials are made available under
+# the terms of the Eclipse Public License 2.0 which accompanies this
+# distribution and is available at http://eclipse.org/legal/epl-2.0
+# or the Apache License, Version 2.0 which accompanies this distribution
+# and is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the
+# Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+# version 2 with the GNU Classpath Exception [1] and GNU General Public
+# License, version 2 with the OpenJDK Assembly Exception [2].
+#
+# [1] https://www.gnu.org/software/classpath/license.html
+# [2] http://openjdk.java.net/legal/assembly-exception.html
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+###############################################################################
 
 JIT_PRODUCT_BACKEND_SOURCES+=\
     $(JIT_OMR_DIRTY_DIR)/compile/OSRData.cpp \
@@ -29,9 +31,12 @@ JIT_PRODUCT_BACKEND_SOURCES+=\
     $(JIT_OMR_DIRTY_DIR)/infra/BitVector.cpp \
     $(JIT_OMR_DIRTY_DIR)/infra/Checklist.cpp \
     $(JIT_OMR_DIRTY_DIR)/infra/HashTab.cpp \
+    $(JIT_OMR_DIRTY_DIR)/infra/STLUtils.cpp \
     $(JIT_OMR_DIRTY_DIR)/infra/IGBase.cpp \
     $(JIT_OMR_DIRTY_DIR)/infra/IGNode.cpp \
     $(JIT_OMR_DIRTY_DIR)/infra/ILWalk.cpp \
+    $(JIT_OMR_DIRTY_DIR)/ras/ILValidationRules.cpp \
+    $(JIT_OMR_DIRTY_DIR)/ras/ILValidationUtils.cpp \
     $(JIT_OMR_DIRTY_DIR)/ras/ILValidator.cpp \
     $(JIT_OMR_DIRTY_DIR)/infra/InterferenceGraph.cpp \
     $(JIT_OMR_DIRTY_DIR)/infra/OMRMonitor.cpp \
@@ -145,9 +150,9 @@ JIT_PRODUCT_BACKEND_SOURCES+=\
     $(JIT_OMR_DIRTY_DIR)/optimizer/PartialRedundancy.cpp \
     $(JIT_OMR_DIRTY_DIR)/optimizer/PreExistence.cpp \
     $(JIT_OMR_DIRTY_DIR)/optimizer/PrefetchInsertion.cpp \
-    $(JIT_OMR_DIRTY_DIR)/optimizer/ReachingBlocks.cpp \
     $(JIT_OMR_DIRTY_DIR)/optimizer/Reachability.cpp \
     $(JIT_OMR_DIRTY_DIR)/optimizer/ReachingDefinitions.cpp \
+    $(JIT_OMR_DIRTY_DIR)/optimizer/OMRRecognizedCallTransformer.cpp \
     $(JIT_OMR_DIRTY_DIR)/optimizer/RedundantAsyncCheckRemoval.cpp \
     $(JIT_OMR_DIRTY_DIR)/optimizer/RegisterAnticipatability.cpp \
     $(JIT_OMR_DIRTY_DIR)/optimizer/RegisterAvailability.cpp \
@@ -184,7 +189,6 @@ JIT_PRODUCT_BACKEND_SOURCES+=\
     $(JIT_OMR_DIRTY_DIR)/codegen/OMRLinkage.cpp \
     $(JIT_OMR_DIRTY_DIR)/codegen/LiveRegister.cpp \
     $(JIT_OMR_DIRTY_DIR)/codegen/OutOfLineCodeSection.cpp \
-    $(JIT_OMR_DIRTY_DIR)/codegen/OMRRegisterDependency.cpp \
     $(JIT_OMR_DIRTY_DIR)/codegen/Relocation.cpp \
     $(JIT_OMR_DIRTY_DIR)/codegen/ScratchRegisterManager.cpp \
     $(JIT_OMR_DIRTY_DIR)/codegen/StorageInfo.cpp \
@@ -202,22 +206,26 @@ JIT_PRODUCT_BACKEND_SOURCES+=\
     $(JIT_OMR_DIRTY_DIR)/codegen/OMRRealRegister.cpp \
     $(JIT_OMR_DIRTY_DIR)/codegen/OMRRegisterPair.cpp \
     $(JIT_OMR_DIRTY_DIR)/codegen/OMRInstruction.cpp \
+    $(JIT_OMR_DIRTY_DIR)/codegen/ELFObjectFileGenerator.cpp \
+    $(JIT_OMR_DIRTY_DIR)/codegen/OMRELFRelocationResolver.cpp \
+
 
 JIT_PRODUCT_SOURCE_FILES+=\
-    $(JIT_PRODUCT_DIR)/ilgen/BinaryOpIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/ilgen/ChildlessUnaryOpIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/ilgen/CmpBranchOpIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/ilgen/OpIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/ilgen/StoreOpIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/ilgen/TernaryOpIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/ilgen/UnaryOpIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/tests/BarIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/BinaryOpIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/ChildlessUnaryOpIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/CmpBranchOpIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/OpIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/StoreOpIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/TernaryOpIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/UnaryOpIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/BarIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/CallIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/IndirectLoadIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/IndirectStoreIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/FooIlInjector.cpp \
+    $(JIT_PRODUCT_DIR)/tests/injectors/Qux2IlInjector.cpp \
     $(JIT_PRODUCT_DIR)/tests/BuilderTest.cpp \
-    $(JIT_PRODUCT_DIR)/tests/CallIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/tests/IndirectLoadIlInjector.cpp \
-    $(JIT_PRODUCT_DIR)/tests/IndirectStoreIlInjector.cpp \
     $(JIT_PRODUCT_DIR)/tests/FooBarTest.cpp \
-    $(JIT_PRODUCT_DIR)/tests/FooIlInjector.cpp \
     $(JIT_PRODUCT_DIR)/tests/LimitFileTest.cpp \
     $(JIT_PRODUCT_DIR)/tests/LogFileTest.cpp \
     $(JIT_PRODUCT_DIR)/tests/OMRTestEnv.cpp \
@@ -225,7 +233,6 @@ JIT_PRODUCT_SOURCE_FILES+=\
     $(JIT_PRODUCT_DIR)/tests/OpCodesTest.cpp \
     $(JIT_PRODUCT_DIR)/tests/PPCOpCodesTest.cpp \
     $(JIT_PRODUCT_DIR)/tests/Qux2Test.cpp \
-    $(JIT_PRODUCT_DIR)/tests/Qux2IlInjector.cpp \
     $(JIT_PRODUCT_DIR)/tests/SimplifierFoldAndTest.cpp \
     $(JIT_PRODUCT_DIR)/tests/S390OpCodesTest.cpp \
     $(JIT_PRODUCT_DIR)/tests/OptTestDriver.cpp \
@@ -261,7 +268,6 @@ JIT_PRODUCT_SOURCE_FILES+=\
     $(JIT_PRODUCT_DIR)/env/FrontEnd.cpp \
     $(JIT_PRODUCT_DIR)/ilgen/IlInjector.cpp \
     $(JIT_PRODUCT_DIR)/ilgen/TestIlGeneratorMethodDetails.cpp \
-    $(JIT_PRODUCT_DIR)/optimizer/TestOptimizer.cpp \
     $(JIT_PRODUCT_DIR)/runtime/TestCodeCacheManager.cpp \
     $(JIT_PRODUCT_DIR)/runtime/TestJitConfig.cpp
 

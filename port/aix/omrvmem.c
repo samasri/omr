@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2015 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2015
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -46,7 +50,7 @@
 #define INVALID_KEY -1
 
 #if 0
-#define J9VMEM_DEBUG
+#define OMRVMEM_DEBUG
 #endif
 
 /* LIR 1394: Search for 64K page support and set it as default if it exists for AIX PPC. */
@@ -371,7 +375,7 @@ omrvmem_reserve_memory_ex(struct OMRPortLibrary *portLibrary, struct J9PortVmemI
 
 	Trc_PRT_vmem_omrvmem_reserve_memory_Entry_replacement(params->startAddress, params->byteAmount, params->pageSize);
 
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\n\tomrvmem_reserve_memory_ex byteAmount: %p, startAddress: %p, endAddress: %p, pageSize: 0x%zX, %s, %s, %s\n ",
 		   params->byteAmount, params->startAddress, params->endAddress, params->pageSize,
 		   (OMRPORT_VMEM_STRICT_PAGE_SIZE & params->options) ? "OMRPORT_VMEM_STRICT_PAGE_SIZE" : "\t",
@@ -452,7 +456,7 @@ omrvmem_reserve_memory_ex(struct OMRPortLibrary *portLibrary, struct J9PortVmemI
 					 * Try again with default size pages using another allocation methods
 					 * Do it only if known page size allocation was requested - for compatibility with old code
 					 */
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 					printf("\t\t\t NULL == memoryPointer, reverting to default pages\n");
 					fflush(stdout);
 #endif
@@ -471,7 +475,7 @@ omrvmem_reserve_memory_ex(struct OMRPortLibrary *portLibrary, struct J9PortVmemI
 		}
 	}
 
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\t\t omrvmem_reserve_memory_ex returning address: %p\n", memoryPointer);
 #endif
 	Trc_PRT_vmem_omrvmem_reserve_memory_Exit_replacement(memoryPointer, params->startAddress);
@@ -552,7 +556,7 @@ reserveLargePages(struct OMRPortLibrary *portLibrary, struct J9PortVmemIdentifie
 
 	/* Reserve and attach memory */
 	addressKey = shmget(IPC_PRIVATE, (size_t)byteAmount, shmgetFlags);
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\t\t omrvmem_reserve_memory_ex shmget(byteAmount 0x%zX, shmgetFlags = 0x%x) returning addressKey: 0x%zx\n", byteAmount, shmgetFlags, addressKey);
 #endif
 	if (-1 == addressKey) {
@@ -567,7 +571,7 @@ reserveLargePages(struct OMRPortLibrary *portLibrary, struct J9PortVmemIdentifie
 			/* Failed to set page size, this will happen if the env var EXTSHM=ON is set
 			 * It is safe to continue with the memory request.
 			 * detectAndRecordPageSize() (below) will determine if the page size we get is acceptable */
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 			printf("\t\t shmctl() failed\n");
 #endif
 		}
@@ -608,7 +612,7 @@ reserveLargePages(struct OMRPortLibrary *portLibrary, struct J9PortVmemIdentifie
 	}
 
 	Trc_PRT_vmem_omrvmem_reserve_memory_Exit_replacement(memoryPointer, startAddress);
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\t\t reserveLargePages returning address: 0x%zX\n", memoryPointer);
 #endif
 	return memoryPointer;
@@ -650,7 +654,7 @@ detectAndRecordPageSize(struct OMRPortLibrary *portLibrary, struct J9PortVmemIde
 	} else if (page_info.pagesize != pageSize) {
 		/* if we got here then one of the calls to vmgetinfo succeeded */
 
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 		if (!vmgetinfoFailedFirstTime) {
 			portLibrary->tty_printf(portLibrary, "Warning: large pages not available\n");
 		} else {
@@ -748,7 +752,7 @@ default_pageSize_reserve_memory(struct OMRPortLibrary *portLibrary, void *addres
 	if (0 != (OMRPORT_VMEM_MEMORY_MODE_EXECUTE & mode)) {
 		/* Allocate code memory  */
 		result = portLibrary->mem_allocate_memory(portLibrary, byteAmount, OMR_GET_CALLSITE(), category->categoryCode);
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 		printf("\t\t mem_allocate_memory(byteAmount = 0x%zx) returned 0x%zx \n", byteAmount, result);
 #endif
 		if (NULL == result) {
@@ -779,7 +783,7 @@ default_pageSize_reserve_memory(struct OMRPortLibrary *portLibrary, void *addres
 
 		/* mmap and protect the memory */
 		result = mmap(address, (size_t)byteAmount, protMask, flags, fd, 0);
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 		printf("\t\t mmap(address = 0x%xz, byteAmount = 0x%zx) returned 0x%zx \n", address, byteAmount, result);
 #endif
 
@@ -1310,7 +1314,7 @@ allocateMemoryForLargePages(struct OMRPortLibrary *portLibrary, struct J9PortVme
 		identifier->size = byteAmount;
 		omrmem_categories_increment_counters(category, byteAmount);
 	}
-#if defined(J9VMEM_DEBUG)
+#if defined(OMRVMEM_DEBUG)
 	printf("\t\t shmat(currentAddress = 0x%zx) returned 0x%zx\n", currentAddress, ptr);
 #endif
 	return ptr;

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include <assert.h>                                // for assert
@@ -62,7 +65,7 @@
 #include "infra/Assert.hpp"                        // for TR_ASSERT
 #include "infra/Bit.hpp"                           // for isOdd
 #include "infra/List.hpp"                          // for List, etc
-#include "infra/TRCfgEdge.hpp"                     // for CFGEdge
+#include "infra/CfgEdge.hpp"                       // for CFGEdge
 #include "optimizer/Structure.hpp"
 #include "ras/Debug.hpp"                           // for TR_DebugBase
 #include "runtime/Runtime.hpp"
@@ -691,7 +694,7 @@ TR::S390BranchInstruction::assignRegistersAndDependencies(TR_RegisterKinds kindT
          // in the OOL section can jump to the end of section and then only one branch (the
          // last instruction of an OOL section) jumps to the merge-point. In other words, OOL
          // section must contain exactly one exit point.
-         TR_ASSERT(comp->getAppendInstruction() == this, "OOL section must have only one branch to the merge point\n");
+         TR_ASSERT(cg()->getAppendInstruction() == this, "OOL section must have only one branch to the merge point\n");
          // Start RA for OOL cold path, restore register state from snap shot
          TR::Machine *machine = cg()->machine();
          if (comp->getOptions()->getRegisterAssignmentTraceOption(TR_TraceRARegisterStates))
@@ -1263,11 +1266,11 @@ TR::S390PseudoInstruction::estimateBinaryLength(int32_t currentEstimate)
  * The valid opcode is TR::InstOpCode::DCB
  *
  * Either 2 or 4 instructions are encoded matching the following conditions:
- * 
+ *
  * If a free register was saved:                      Otherwise if a spill is required:
  *                                                    STG     Rscrtch,   offToLongDispSlot(,GPR5)
- * LGRL    Rscrtch,   counterRelocation               LGRL    Rscrtch,   counterRelocation       
- * AGSI 0(Rscrtch),   delta                           AGSI 0(Rscrtch),   delta                   
+ * LGRL    Rscrtch,   counterRelocation               LGRL    Rscrtch,   counterRelocation
+ * AGSI 0(Rscrtch),   delta                           AGSI 0(Rscrtch),   delta
  *                                                    LG      Rscrtch,   offToLongDispSlot(,GPR5)
  *
  * If the platform is 32-bit, ASI replaces AGSI
@@ -1298,7 +1301,7 @@ TR::S390DebugCounterBumpInstruction::generateBinaryEncoding()
    TR_ASSERT(scratchReg!=NULL, "TR_S390DebugCounterBumpInstruction::generateBinaryEncoding -- A scratch reg should always be found.");
 
    traceMsg(comp, "[%p] DCB using %s as scratch reg with spill=%s\n", this, cg()->getDebug()->getName(scratchReg), spillNeeded ? "true" : "false");
-   
+
    if (spillNeeded)
       {
       *(int32_t *) cursor  = boi(0xE3005000 | (offsetToLongDispSlot&0xFFF));              // STG Rscrtch,offToLongDispSlot(,GPR5)
@@ -2010,7 +2013,7 @@ TR::S390RILInstruction::adjustCallOffsetWithTrampoline(int32_t offset, uint8_t *
 
    // Check to make sure that we can reach our target!  Otherwise, we need to look up appropriate
    // trampoline and branch through the trampoline.
-   
+
    if (cg()->comp()->getOption(TR_StressTrampolines) || (!CHECK_32BIT_TRAMPOLINE_RANGE(getTargetPtr(), (uintptrj_t)currentInst)))
       {
       intptrj_t targetAddr;
@@ -2513,7 +2516,7 @@ TR::S390RILInstruction::generateBinaryEncoding()
                {
                i2 = (int32_t)(((uintptrj_t)(callSymbol->getMethodAddress()) - (uintptrj_t)cursor) / 2);
                }
-#if defined(TR_TARGET_64BIT) 
+#if defined(TR_TARGET_64BIT)
 #if defined(J9ZOS390)
             if (comp->getOption(TR_EnableRMODE64))
 #endif
@@ -2990,8 +2993,11 @@ TR::S390RIEInstruction::generateBinaryEncoding()
          // mask the I3 field as bits 1-3 must be 0
          *(int8_t *) (cursor) |= (int8_t)getSourceImmediate8One() & 0x1F;
       else if (getOpCodeValue() == TR::InstOpCode::RISBG || getOpCodeValue() == TR::InstOpCode::RISBGN)
-         // mask the I3 field as bits 1-2 must be 0
+         {
+         // mask the I3 field as bits 0-1 must be 0
          *(int8_t *) (cursor) |= (int8_t)getSourceImmediate8One() & 0x3F;
+         TR_ASSERT(((int8_t)getSourceImmediate8One() & 0xC0) == 0, "Bits 0-1 in the I3 field for %s must be 0", getOpCodeValue() == TR::InstOpCode::RISBG ? "RISBG" : "RISBGN");
+         }
       else
          *(int8_t *) (cursor) |= (int8_t)getSourceImmediate8One();
 
@@ -3001,7 +3007,10 @@ TR::S390RIEInstruction::generateBinaryEncoding()
          // mask the I4 field as bits 1-2 must be 0
          *(int8_t *) (cursor) |= (int8_t)getSourceImmediate8Two() & 0x9F;
       else if (getOpCodeValue() == TR::InstOpCode::RISBG || getOpCodeValue() == TR::InstOpCode::RISBGN)
+         {
          *(int8_t *) (cursor) |= (int8_t)getSourceImmediate8Two() & 0xBF;
+         TR_ASSERT(((int8_t)getSourceImmediate8Two() & 0x40) == 0, "Bit 1 in the I4 field for %s must be 0", getOpCodeValue() == TR::InstOpCode::RISBG ? "RISBG" : "RISBGN");
+         }
       else
          *(int8_t *) (cursor) |= (int8_t)getSourceImmediate8Two();
       cursor -= 1;
@@ -5801,17 +5810,17 @@ TR::S390VirtualGuardNOPInstruction::generateBinaryEncoding()
    // in) if the patching occurs during GC pause times.  The patching of up to 6-bytes is potentially
    // not atomic.
 
-   bool performEmptyPatch = getNode()->isHCRGuard() || getNode()->isProfiledGuard() || getNode()->isOSRGuard();
+   bool performEmptyPatch = getNode()->isStopTheWorldGuard() || getNode()->isProfiledGuard();
 
-   // HCR guards that are merged with profiled guards never need to generate NOPs for patching because
-   // the profiled guard will generate the NOP branch to the same location the HCR guard needs to branch
-   // to, so we can always use the NOP branch form the profiled guard as our HCR patch point.
+   // Stop the world guards that are merged with profiled guards never need to generate NOPs for patching because
+   // the profiled guard will generate the NOP branch to the same location the stop the world guard needs to branch
+   // to, so we can always use the NOP branch form the profiled guard as our stop the world patch point.
 
    int32_t sumEstimatedBinaryLength = getNode()->isProfiledGuard() ? 6 : 0;
 
    if (performEmptyPatch)
       {
-      // so at this point we know we are an HCR guard and that there may be other HCR guards
+      // so at this point we know we are an stop the world guard and that there may be other stop the world guards
       // after us that will use us as their patch point. We now calculate how much space we
       // are sure to have to overwrite to inform us about what to do next
       TR::Node *firstBBEnd = NULL;

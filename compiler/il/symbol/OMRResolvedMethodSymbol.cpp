@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- ******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+ *******************************************************************************/
 
 #include "il/symbol/OMRResolvedMethodSymbol.hpp"
 
@@ -60,8 +63,8 @@
 #include "infra/Flags.hpp"                      // for flags32_t
 #include "infra/List.hpp"                       // for List, etc
 #include "infra/Random.hpp"
-#include "infra/TRCfgEdge.hpp"                  // for CFGEdge
-#include "infra/TRCfgNode.hpp"                  // for CFGNode
+#include "infra/CfgEdge.hpp"                    // for CFGEdge
+#include "infra/CfgNode.hpp"                    // for CFGNode
 #include "optimizer/Optimizer.hpp"              // for Optimizer
 #include "ras/Debug.hpp"                        // for TR_Debug
 #include "runtime/Runtime.hpp"
@@ -157,7 +160,7 @@ OMR::ResolvedMethodSymbol::ResolvedMethodSymbol(TR_ResolvedMethod * method, TR::
    // Set the interpreted flag for an interpreted method unless we're calling
    // the method that's being jitted
    //
-   if (_methodIndex > JITTED_METHOD_INDEX && !_resolvedMethod->isSameMethod(comp->getJittedMethodSymbol()->getResolvedMethod()) || comp->isDLT())
+   if ((_methodIndex > JITTED_METHOD_INDEX && !_resolvedMethod->isSameMethod(comp->getJittedMethodSymbol()->getResolvedMethod())) || comp->isDLT())
       {
       if (_resolvedMethod->isInterpreted())
          {
@@ -327,22 +330,7 @@ OMR::ResolvedMethodSymbol::getThisTempForObjectCtorIndex()
 List<TR::ParameterSymbol>&
 OMR::ResolvedMethodSymbol::getLogicalParameterList(TR::Compilation *comp)
    {
-   if (comp->getMethodSymbol() == self())
-      {
-      List<TR::ParameterSymbol>* l = comp->cg()->getLinkage()->getMainBodyLogicalParameterList();
-      if (l == NULL)
-         {
-         return self()->getParameterList();
-         }
-      else
-         {
-         return *l;
-         }
-      }
-   else
-      {
       return self()->getParameterList();
-      }
    }
 
 template <typename AllocatorType>
@@ -548,7 +536,7 @@ OMR::ResolvedMethodSymbol::genInduceOSRCallNode(TR::TreeTop* insertionPoint,
    TR_Array<int32_t> *stashedArgs = osrMethodData->getArgInfo(refNode->getByteCodeIndex());
    int32_t firstArgIndex = 0;
    if (stashedArgs)
-      numChildren = stashedArgs->size(); 
+      numChildren = stashedArgs->size();
    else if ((refNode->getNumChildren() > 0) &&
        refNode->getFirstChild()->getOpCode().isCall())
       {
@@ -591,7 +579,8 @@ OMR::ResolvedMethodSymbol::genInduceOSRCallNode(TR::TreeTop* insertionPoint,
 
 
 bool
-OMR::ResolvedMethodSymbol::induceOSRAfter(TR::TreeTop *insertionPoint, TR_ByteCodeInfo induceBCI, TR::TreeTop* branch, bool extendRemainder, int32_t offset)
+OMR::ResolvedMethodSymbol::induceOSRAfter(TR::TreeTop *insertionPoint, TR_ByteCodeInfo induceBCI, TR::TreeTop* branch,
+    bool extendRemainder, int32_t offset, TR::TreeTop ** lastTreeTop)
    {
    TR::Block *block = insertionPoint->getEnclosingBlock();
 
@@ -625,7 +614,13 @@ OMR::ResolvedMethodSymbol::induceOSRAfter(TR::TreeTop *insertionPoint, TR_ByteCo
       osrBlock->getEntry()->getNode()->setByteCodeInfo(induceBCI);
       osrBlock->getExit()->getNode()->setByteCodeInfo(induceBCI);
 
-      cfg->findLastTreeTop()->join(osrBlock->getEntry());
+      // Load the cached last treetop if available, and store it when finished
+      TR::TreeTop *end = lastTreeTop && (*lastTreeTop) ? (*lastTreeTop) : cfg->findLastTreeTop();
+      TR_ASSERT(end->getNextTreeTop() == NULL, "The last treetop must not have a treetop after it");
+      end->join(osrBlock->getEntry());
+      if (lastTreeTop)
+         (*lastTreeTop) = osrBlock->getExit();
+
       cfg->addNode(osrBlock);
       cfg->addEdge(block, osrBlock);
 
@@ -782,7 +777,9 @@ OMR::ResolvedMethodSymbol::genInduceOSRCall(TR::TreeTop* insertionPoint,
 
    self()->insertRematableStoresFromCallSites(self()->comp(), inlinedSiteIndex, induceOSRCallTree);
    self()->insertStoresForDeadStackSlotsBeforeInducingOSR(self()->comp(), inlinedSiteIndex, insertionPoint->getNode()->getByteCodeInfo(), induceOSRCallTree);
-   traceMsg(self()->comp(), "last real tree n%dn\n", enclosingBlock->getLastRealTreeTop()->getNode()->getGlobalIndex());
+
+   if (self()->comp()->getOption(TR_TraceOSR))
+      traceMsg(self()->comp(), "last real tree n%dn\n", enclosingBlock->getLastRealTreeTop()->getNode()->getGlobalIndex());
    return induceOSRCallTree;
    }
 
@@ -1169,7 +1166,7 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
    TR::TreeTop *osrTT = TR::TreeTop::create(self()->comp(), osrNode);
    OSRCodeBlock->append(osrTT);
 
-   bool disableOSRwithTM = feGetEnv("TR_disableOSRwithTM") ? true: false;
+   static bool disableOSRwithTM = feGetEnv("TR_disableOSRwithTM") ? true: false;
    if (self()->comp()->cg()->getSupportsTM() && !self()->comp()->getOption(TR_DisableTLE) && !disableOSRwithTM)
       {
       TR::Node *tabortNode = TR::Node::create(osrNode, TR::tabort, 0, 0);
@@ -1254,7 +1251,7 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
 
    TR::Optimizer *optimizer = NULL;
    TR::Optimizer *previousOptimizer = NULL;
-   try 
+   try
       {
       if (!_firstTreeTop || !comp->isPeekingMethod())
          {
@@ -1277,7 +1274,11 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
 
          auto genIL_rc = ilGen->genIL();
          _methodFlags.set(IlGenSuccess, genIL_rc);
-         traceMsg(self()->comp(), "genIL() returned %d\n", genIL_rc);
+
+         if (comp->getOutFile() != NULL && comp->getOption(TR_TraceBC))
+            {
+            traceMsg(self()->comp(), "genIL() returned %d\n", genIL_rc);
+            }
 
          if (_methodFlags.testAny(IlGenSuccess))
             {
@@ -1608,11 +1609,11 @@ OMR::ResolvedMethodSymbol::cannotAttemptOSRDuring(int32_t callSite, TR::Compilat
          break;
       }
 
-   // Store the result against the call site now that it is known 
+   // Store the result against the call site now that it is known
    //
    if (origCallSite > -1 && !comp->cannotAttemptOSRDuring(origCallSite) && cannotAttemptOSR)
       comp->setCannotAttemptOSRDuring(origCallSite, cannotAttemptOSR);
-   return cannotAttemptOSR; 
+   return cannotAttemptOSR;
    }
 
 /*
@@ -1760,7 +1761,7 @@ OMR::ResolvedMethodSymbol::insertRematableStoresFromCallSites(TR::Compilation *c
          storeTree->join(next);
          prev = storeTree;
          }
-      
+
       siteIndex = comp->getInlinedCallSite(siteIndex)._byteCodeInfo.getCallerIndex();
       }
    }
@@ -1782,7 +1783,7 @@ OMR::ResolvedMethodSymbol::getOSRByteCodeInfo(TR::Node *node)
  * Checks the provided node is pending push store or load expected to be
  * around an OSR point.
  *
- * Pending push stores are used to ensure the stack can be reconstructed 
+ * Pending push stores are used to ensure the stack can be reconstructed
  * after the transition, whilst anchored loads are also related as they
  * may be used to avoid the side effects of the prior mentioned stores.
  * As these anchored loads can be placed before the stores, they may
@@ -1934,7 +1935,7 @@ OMR::ResolvedMethodSymbol::insertStoresForDeadStackSlots(TR::Compilation *comp, 
  * \endverbatim
  * This function adds the dead stores for the current BCI.
  * It does not have to concern itself with dead stores for any outer call sites, as they are located in the OSRCodeBlocks for
- * each frame, as demonstrated in the above example. This is safe as all OSR transitions in a callee will have the same liveness 
+ * each frame, as demonstrated in the above example. This is safe as all OSR transitions in a callee will have the same liveness
  * in the caller's frame.
  *
  * \param byteCodeInfo BCI the OSR transition targets, used to look up dead symrefs in OSRLiveRangeAnalysis results.
@@ -2259,6 +2260,7 @@ OMR::ResolvedMethodSymbol::detectInternalCycles(TR::CFG *cfg, TR::Compilation *c
                      gotoBlock->setIsCold();
                      clonedCatch->setFrequency(CATCH_COLD_BLOCK_COUNT);
                      gotoBlock->setFrequency(CATCH_COLD_BLOCK_COUNT);
+
                      break;
                      }
                   }

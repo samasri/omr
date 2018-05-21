@@ -1,23 +1,26 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#ifndef OMR_POWER_CODEGENERATORBASE_INCL
-#define OMR_POWER_CODEGENERATORBASE_INCL
+#ifndef OMR_POWER_CODEGENERATOR_INCL
+#define OMR_POWER_CODEGENERATOR_INCL
 
 /*
  * The following #define and typedef must appear before any #includes in this file
@@ -27,7 +30,7 @@
 namespace OMR { namespace Power { class CodeGenerator; } }
 namespace OMR { typedef OMR::Power::CodeGenerator CodeGeneratorConnector; }
 #else
-#error OMR::Power::CodeGenerator expected to be a primary connector, but a OMR connector is already defined
+#error OMR::Power::CodeGenerator expected to be a primary connector, but an OMR connector is already defined
 #endif
 
 #include "compiler/codegen/OMRCodeGenerator.hpp"
@@ -154,12 +157,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
 
    public:
 
-   typedef enum
-      {
-      Backward = 0,
-      Forward  = 1
-      } RegisterAssignmentDirection;
-
    List<TR_BackingStore> * conversionBuffer;
    ListIterator<TR_BackingStore> * conversionBufferIt;
    TR_BackingStore * allocateStackSlot();
@@ -214,12 +211,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    TR::Register *gprClobberEvaluate(TR::Node *node);
 
    const TR::PPCLinkageProperties &getProperties() { return *_linkageProperties; }
-
-   RegisterAssignmentDirection getAssignmentDirection() {return _assignmentDirection;}
-   RegisterAssignmentDirection setAssignmentDirection(RegisterAssignmentDirection d)
-      {
-      return (_assignmentDirection = d);
-      }
 
    using OMR::CodeGenerator::apply16BitLabelRelativeRelocation;
    void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
@@ -413,8 +404,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
       return  ((size < (lineSize<<1)) && (size > (lineSize >> 2)));
       }
 
-   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method);
-
    using OMR::CodeGenerator::getSupportsConstantOffsetInAddressing;
    bool getSupportsConstantOffsetInAddressing(int64_t value) { return (value>=LOWER_IMMED) && (value<=UPPER_IMMED);}
 
@@ -439,23 +428,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    int32_t getMaximumNumbersOfAssignableFPRs();
    int32_t getMaximumNumbersOfAssignableVRs();
    bool doRematerialization();
-
-
-   bool specializedEpilogues() { return _specializedEpilogues; }
-   TR_BitVector *getBlocksThatModifyRegister(TR::RealRegister::RegNum reg)
-      {
-      return _blocksThatModifyRegister[reg];
-      }
-
-   // checks if reg has to be restored in block blockNumber during epilogue
-   bool restoreRegister(TR::RealRegister::RegNum reg, int32_t blockNumber)
-      {
-      if (_specializedEpilogues)
-         return _reachingBlocks->_blockAnalysisInfo[blockNumber]->intersects(*_blocksThatModifyRegister[reg]) ||
-                _blocksThatModifyRegister[reg]->get(blockNumber);
-      else
-         return true;
-      }
 
    bool isRotateAndMask(TR::Node * node);
 
@@ -570,7 +542,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    TR_Array<TR::Register *>          _transientLongRegisters;
    TR::list<TR_PPCOutOfLineCodeSection*> _outOfLineCodeSectionList;
    flags32_t                        _flags;
-   RegisterAssignmentDirection      _assignmentDirection;
 
    uint32_t                         _numGPR;
    uint32_t                         _firstGPR;
@@ -586,10 +557,6 @@ class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
    uint32_t *                       _tbTabletbOff;
    uint32_t *                       _tbTableEnd;
    uint32_t                         _numVRF;
-
-   bool                             _specializedEpilogues;
-   TR_ReachingBlocks                *_reachingBlocks;
-   TR_BitVector                     **_blocksThatModifyRegister;
 
    };
 
@@ -607,4 +574,3 @@ class TR_PPCScratchRegisterManager : public TR_ScratchRegisterManager
    };
 
 #endif
-

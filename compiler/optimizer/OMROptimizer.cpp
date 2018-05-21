@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/Optimizer.hpp"
@@ -58,7 +61,7 @@
 #include "infra/Cfg.hpp"                                 // for CFG
 #include "infra/List.hpp"                                // for List, etc
 #include "infra/SimpleRegex.hpp"
-#include "infra/TRCfgNode.hpp"                           // for CFGNode
+#include "infra/CfgNode.hpp"                             // for CFGNode
 #include "infra/Timer.hpp"
 #include "optimizer/LoadExtensions.hpp"
 #include "optimizer/Optimization.hpp"
@@ -107,6 +110,7 @@
 #include "optimizer/FieldPrivatizer.hpp"
 #include "optimizer/ReorderIndexExpr.hpp"
 #include "optimizer/GlobalRegisterAllocator.hpp"
+#include "optimizer/RecognizedCallTransformer.hpp"
 #include "env/RegionProfiler.hpp"
 
 #if defined (_MSC_VER) && _MSC_VER < 1900
@@ -289,7 +293,7 @@ const OptimizationStrategy partialRedundancyEliminationOpts[] =
    { loopVersionerGroup,          IfEnabledAndLoops },
    { treeSimplification,          IfEnabled }, // loop reduction block should be after PRE so that privatization
    { treesCleansing                         }, // clean up gotos in code and convert to fall-throughs for loop reducer
-   { redundantGotoElimination, IfNotProfiling }, // clean up for loop reducer.  Note: NEVER run this before PRE
+   { redundantGotoElimination,    IfNotJitProfiling }, // clean up for loop reducer.  Note: NEVER run this before PRE
    { loopReduction,               IfLoops   }, // will have happened and it needs to be before loopStrider
    { localCSE,                   IfEnabled },  // so that it will not get confused with internal pointers.
    { globalDeadStoreElimination, IfEnabledAndMoreThanOneBlock}, // It may need to be run twice if deadstore elimination is required,
@@ -446,10 +450,10 @@ const OptimizationStrategy blockManipulationOpts[] =
    {
 //   { generalLoopUnroller,       IfLoops   }, //Unroll Loops
    { coldBlockOutlining } ,
-   { CFGSimplification, IfNotProfiling    },
-   { basicBlockHoisting, IfNotProfiling   },
+   { CFGSimplification,        IfNotJitProfiling },
+   { basicBlockHoisting,       IfNotJitProfiling },
    { treeSimplification                   },
-   { redundantGotoElimination, IfNotProfiling }, // redundant gotos gone
+   { redundantGotoElimination, IfNotJitProfiling }, // redundant gotos gone
    { treesCleansing                       }, // maximize fall throughs
    { virtualGuardHeadMerger               },
    { basicBlockExtension,     MarkLastRun}, // extend blocks; move trees around if reqd
@@ -496,7 +500,7 @@ static const OptimizationStrategy tacticalGlobalRegisterAllocatorOpts[] =
    { OMR::inductionVariableAnalysis,             OMR::IfLoops                      },
    { OMR::loopCanonicalization,                  OMR::IfLoops                      },
    { OMR::liveRangeSplitter,                     OMR::IfLoops                      },
-   { OMR::redundantGotoElimination,              OMR::IfNotProfiling               }, // need to be run before global register allocator
+   { OMR::redundantGotoElimination,              OMR::IfNotJitProfiling            }, // need to be run before global register allocator
    { OMR::treeSimplification,                    OMR::MarkLastRun                  }, // Cleanup the trees after redundantGotoElimination
    { OMR::tacticalGlobalRegisterAllocator,       OMR::IfEnabled                    },
    { OMR::localCSE                                                            },
@@ -504,7 +508,7 @@ static const OptimizationStrategy tacticalGlobalRegisterAllocatorOpts[] =
    { OMR::globalCopyPropagation,                 OMR::IfEnabledAndMoreThanOneBlock }, // if live range splitting created copies
    { OMR::localCSE                                                            }, // localCSE after post-PRE + post-GRA globalCopyPropagation to clean up whole expression remat (rtc 64659)
    { OMR::globalDeadStoreGroup,                  OMR::IfEnabled                    },
-   { OMR::redundantGotoElimination,              OMR::IfEnabledAndNotProfiling     }, // if global register allocator created new block
+   { OMR::redundantGotoElimination,              OMR::IfEnabledAndNotJitProfiling  }, // if global register allocator created new block
    { OMR::deadTreesElimination                                                }, // remove dangling GlRegDeps
    { OMR::deadTreesElimination,                  OMR::IfEnabled                    }, // remove dead RegStores produced by previous deadTrees pass
    { OMR::deadTreesElimination,                  OMR::IfEnabled                    }, // remove dead RegStores produced by previous deadTrees pass
@@ -518,7 +522,7 @@ const OptimizationStrategy finalGlobalOpts[] =
    { deadTreesElimination                 },
    //{ treeSimplification,       IfEnabled  },
    { localLiveRangeReduction              },
-   { compactLocals,            IfNotProfiling }, // analysis results are invalidated by profilingGroup
+   { compactLocals,             IfNotJitProfiling }, // analysis results are invalidated by profilingGroup
 #ifdef J9_PROJECT_SPECIFIC
    { globalLiveVariablesForGC             },
 #endif
@@ -538,11 +542,12 @@ static const OptimizationStrategy ilgenStrategyOpts[] =
 #ifdef J9_PROJECT_SPECIFIC
    { varHandleTransformer,          MustBeDone     },
    { unsafeFastPath                                },
+   { recognizedCallTransformer                     },
    { coldBlockMarker                               },
    { allocationSinking,             IfNews         },
-   { invariantArgumentPreexistence, IfNotClassLoadPhaseAndNotProfiling },
-   { osrLiveRangeAnalysis                          },
-   { osrDefAnalysis                                },
+   { invariantArgumentPreexistence, IfNotClassLoadPhaseAndNotProfiling }, // Should not run if a recompilation is possible
+   { osrLiveRangeAnalysis,          IfOSR   },
+   { osrDefAnalysis,                IfInvoluntaryOSR },
 #endif
    { endOpts },
    };
@@ -727,6 +732,13 @@ OMR::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *metho
    // zero opts table
    memset(_opts, 0, sizeof(_opts));
 
+/*
+ * Allow downstream projects to disable the default initialization of optimizations
+ * and allow them to take full control over this process.  This can be an advantage
+ * if they don't use all of the optimizations initialized here as they can avoid
+ * getting linked in to the binary in their entirety.
+ */
+#if !defined(TR_OVERRIDE_OPTIMIZATION_INITIALIZATION)
    // initialize OMR optimizations
 
    _opts[OMR::andSimplification] =
@@ -771,6 +783,8 @@ OMR::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *metho
       new (comp->allocator()) TR::OptimizationManager(self(), TR_CopyPropagation::create, OMR::globalCopyPropagation);
    _opts[OMR::globalDeadStoreElimination] =
       new (comp->allocator()) TR::OptimizationManager(self(), TR_DeadStoreElimination::create, OMR::globalDeadStoreElimination);
+   _opts[OMR::inlining] =
+      new (comp->allocator()) TR::OptimizationManager(self(), TR_TrivialInliner::create, OMR::inlining);
    _opts[OMR::innerPreexistence] =
       new (comp->allocator()) TR::OptimizationManager(self(), TR_InnerPreexistence::create, OMR::innerPreexistence);
    _opts[OMR::invariantArgumentPreexistence] =
@@ -855,6 +869,8 @@ OMR::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *metho
       new (comp->allocator()) TR::OptimizationManager(self(), TR_LiveRangeSplitter::create, OMR::liveRangeSplitter);
    _opts[OMR::loopSpecializer] =
       new (comp->allocator()) TR::OptimizationManager(self(), TR_LoopSpecializer::create, OMR::loopSpecializer);
+   _opts[OMR::recognizedCallTransformer] =
+      new (comp->allocator()) TR::OptimizationManager(self(), TR::RecognizedCallTransformer::create, OMR::recognizedCallTransformer);
 
    // NOTE: Please add new OMR optimizations here!
 
@@ -906,6 +922,7 @@ OMR::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *metho
       new (comp->allocator()) TR::OptimizationManager(self(), NULL, OMR::finalGlobalGroup, finalGlobalOpts);
 
    // NOTE: Please add new OMR optimization groups here!
+#endif
 
 }
 
@@ -1111,9 +1128,6 @@ void OMR::Optimizer::optimize()
       self()->switchToProfiling(2, 30);
       }
 
-   if (comp()->isOutermostMethod())
-      comp()->printMemStatsBefore("optimization");
-
    const OptimizationStrategy *opt = _strategy;
    while (opt->_num != endOpts)
       {
@@ -1245,11 +1259,6 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
    {
    OMR::Optimizations optNum = optimization->_num;
    TR::OptimizationManager *manager = getOptimization(optNum);
-   char description[256];
-   snprintf(description, sizeof(description), "performOptimization - %s", getOptimizationName(optNum));
-   description[255] = '\0';
-   TR::RegionProfiler heapMemoryProfiler(comp()->trMemory()->heapMemoryRegion(), *comp(), description);
-
    TR_ASSERT(manager != NULL, "Optimization manager should have been initialized for %s.",
       getOptimizationName(optNum));
 
@@ -1304,6 +1313,11 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
 
       case IfNotProfiling:
          if (!comp()->isProfilingCompilation() || debug("ignoreIfNotProfiling"))
+            doThisOptimization = true;
+         break;
+
+      case IfNotJitProfiling:
+         if (comp()->getProfilingMode() != JitProfiling)
             doThisOptimization = true;
          break;
 
@@ -1413,6 +1427,14 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
             }
          break;
 
+      case IfEnabledAndNotJitProfiling:
+         if (comp()->getProfilingMode() != JitProfiling && manager->requested())
+            {
+            doThisOptimizationIfEnabled = true;
+            doThisOptimization = true;
+            }
+         break;
+
       case IfLoopsAndNotProfiling:
          if (comp()->mayHaveLoops() && !comp()->isProfilingCompilation())
             doThisOptimization = true;
@@ -1432,15 +1454,21 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
             doThisOptimization = true;
      break;
 
-     case IfOSR:
-     if (comp()->getOption(TR_EnableOSR))
+      case IfOSR:
+         if (comp()->getOption(TR_EnableOSR))
             doThisOptimization = true;
-     break;
+         break;
 
-     case IfOSRAndNoDebug:
-     if (comp()->getOption(TR_EnableOSR) && !comp()->getOption(TR_FullSpeedDebug))
+      case IfVoluntaryOSR:
+         if (comp()->getOption(TR_EnableOSR) && comp()->getOSRMode() == TR::voluntaryOSR)
             doThisOptimization = true;
-     break;
+         break;
+
+      case IfInvoluntaryOSR:
+         if (comp()->getOption(TR_EnableOSR) && comp()->getOSRMode() == TR::involuntaryOSR)
+            doThisOptimization = true;
+         break;
+
 
       case IfEnabled:
          if (manager->requested())
@@ -1617,6 +1645,8 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
    //
    // This is a real optimization.
    //
+   TR::RegionProfiler rp(comp()->trMemory()->heapMemoryRegion(), *comp(), "opt/%s/%s", comp()->getHotnessName(comp()->getMethodHotness()),
+      getOptimizationName(optNum));
 
    if (comp()->isOutermostMethod())
       comp()->incOptIndex(); // Note that we count the opt even if we're not doing it, to keep the opt indexes more stable
@@ -1783,7 +1813,6 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
                                    manager->getCannotOmitTrivialDefs(),
                                    false, // conversionRegsOnly
                                    true); // doCompletion
-            comp()->printMemStatsAfter("computeUseDefInfo");
 
 #ifdef OPT_TIMING
             if (doTiming)
@@ -1830,7 +1859,6 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
                                                manager->getCannotOmitTrivialDefs(),
                                                false, // conversionRegsOnly
                                                true); // doCompletion
-            comp()->printMemStatsAfter("computeUseDefInfoGL");
 
 #ifdef OPT_TIMING
             if (doTiming)
@@ -2050,6 +2078,10 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
          }
 
       delete opt;
+      // we cannot easily invalidate during IL gen since we could be peeking and we cannot destroy our
+      // caller's alias sets
+      if (!isIlGenOpt())
+         comp()->invalidateAliasRegion();
       breakForTesting(-optNum);
       comp()->setAllocatorName(NULL);
 
@@ -2109,9 +2141,6 @@ int32_t OMR::Optimizer::performOptimization(const OptimizationStrategy *optimiza
          }
 
    #endif
-
-   if (comp()->isOutermostMethod())
-      comp()->printMemStatsAfter(manager->name());
 
    if ((optIndex >= _firstDumpOptPhaseTrees && optIndex <= _lastDumpOptPhaseTrees) &&
        comp()->isOutermostMethod())
@@ -2238,7 +2267,6 @@ int32_t OMR::Optimizer::doStructuralAnalysis()
       LexicalTimer t("StructuralAnalysis", comp()->phaseTimer());
       rootStructure = TR_RegionAnalysis::getRegions(comp());
       comp()->getFlowGraph()->setStructure(rootStructure);
-      comp()->printMemStatsAfter("StructuralAnalysis");
 
       if (debug("dumpStructure"))
          {
@@ -2795,7 +2823,8 @@ void OMR::Optimizer::doStructureChecks()
 
 bool OMR::Optimizer::getLastRun(OMR::Optimizations opt)
    {
-   TR_ASSERT(_opts[opt], "Optimization manager for %d should be initialized first", opt);
+   if (!_opts[opt])
+      return false;
    return _opts[opt]->getLastRun();
    }
 
@@ -2813,10 +2842,19 @@ void OMR::Optimizer::setAliasSetsAreValid(bool b, bool setForWCode)
    _aliasSetsAreValid = b;
    }
 
+const OptimizationStrategy *OMR::Optimizer::_mockStrategy = NULL;
 
 const OptimizationStrategy *
 OMR::Optimizer::optimizationStrategy(TR::Compilation *c)
    {
+   // Mock strategies are used for testing, and override
+   // the compilation strategy.
+   if (NULL != OMR::Optimizer::_mockStrategy)
+      {
+      traceMsg(c, "Using mock optimization strategy %p\n", OMR::Optimizer::_mockStrategy);
+      return OMR::Optimizer::_mockStrategy;
+      }
+
    TR_Hotness strategy = c->getMethodHotness();
    TR_ASSERT(strategy <= lastOMRStrategy, "Invalid optimization strategy");
 

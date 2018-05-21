@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/OMRValuePropagation.hpp"
@@ -62,8 +65,8 @@
 #include "infra/Cfg.hpp"                        // for CFG, etc
 #include "infra/Link.hpp"                       // for TR_LinkHead, TR_Pair
 #include "infra/List.hpp"                       // for ListIterator, List, etc
-#include "infra/TRCfgEdge.hpp"                  // for CFGEdge
-#include "infra/TRCfgNode.hpp"                  // for CFGNode
+#include "infra/CfgEdge.hpp"                    // for CFGEdge
+#include "infra/CfgNode.hpp"                    // for CFGNode
 #include "optimizer/Inliner.hpp"                // for TR_InlineCall, etc
 #include "optimizer/Optimization.hpp"           // for Optimization
 #include "optimizer/Optimization_inlines.hpp"
@@ -1697,7 +1700,7 @@ void OMR::ValuePropagation::checkTypeRelationship(TR::VPConstraint *lhs, TR::VPC
 
 #ifdef J9_PROJECT_SPECIFIC
    jlKlass = comp()->getClassClassPointer();
-#endif   
+#endif
 
    if (lhs->asClass() && rhs->asClass())
       {
@@ -1903,8 +1906,7 @@ TR::VPConstraint *OMR::ValuePropagation::mergeDefConstraints(TR::Node *node, int
       }
 
    TR_UseDefInfo::BitVector defs(comp()->allocator());
-   _useDefInfo->getUseDef(defs, useDefIndex);
-   if (defs.IsZero())
+   if (!_useDefInfo->getUseDef(defs, useDefIndex))
       return NULL;
 
    int32_t baseValueNumber = -1;
@@ -2129,8 +2131,7 @@ TR::VPConstraint *OMR::ValuePropagation::mergeDefConstraints(TR::Node *node, int
                                  avoidMerge = true;
 
                               TR_UseDefInfo::BitVector thisDefs(comp()->allocator());
-                              _useDefInfo->getUseDef(thisDefs, thisUseDefIndex);
-                              if (thisDefs.IsZero() || (!(thisDefs == defs)))
+                              if (!_useDefInfo->getUseDef(thisDefs, thisUseDefIndex) || (!(thisDefs == defs)))
                                  avoidMerge = true;
                               }
 
@@ -2414,8 +2415,7 @@ TR::VPConstraint *OMR::ValuePropagation::mergeDefConstraints(TR::Node *node, int
                                     avoidMerge = true;
 
                                  TR_UseDefInfo::BitVector thisDefs(comp()->allocator());
-                                 _useDefInfo->getUseDef(thisDefs, thisUseDefIndex);
-                                 if (thisDefs.IsZero() || (!(thisDefs == defs)))
+                                 if (!_useDefInfo->getUseDef(thisDefs, thisUseDefIndex) || (!(thisDefs == defs)))
                                     avoidMerge = true;
                                  }
 
@@ -2973,8 +2973,7 @@ void OMR::ValuePropagation::checkForInductionVariableIncrement(TR::Node *node)
    if (isInductionVariable)
       {
       TR_UseDefInfo::BitVector defs(comp()->allocator());
-      _useDefInfo->getUseDef(defs, useIndex);
-      if (defs.IsZero())
+      if (!_useDefInfo->getUseDef(defs, useIndex))
          isInductionVariable = false;
       else
          {
@@ -5412,7 +5411,7 @@ int64_t TR::ArraycopyTransformation::arraycopyHighFrequencySpecificLength(TR::No
       {
       if (TR::Compiler->target.is64Bit())
          {
-         TR_LongValueInfo *valueInfo = (TR_LongValueInfo *)TR_ValueProfiler::getProfiledValueInfo(arrayCopyNode, comp());
+         TR_LongValueInfo *valueInfo = static_cast<TR_LongValueInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(arrayCopyNode, comp(), LongValueInfo));
          if (valueInfo && valueInfo->getTopProbability() > MIN_ARRAYCOPY_FREQ_FOR_SPECIALIZATION)
             {
             return ((int64_t) valueInfo->getTopValue());
@@ -5420,7 +5419,7 @@ int64_t TR::ArraycopyTransformation::arraycopyHighFrequencySpecificLength(TR::No
          }
       else
          {
-         TR_ValueInfo *valueInfo = (TR_ValueInfo *)TR_ValueProfiler::getProfiledValueInfo(arrayCopyNode, comp());
+         TR_ValueInfo *valueInfo = static_cast<TR_ValueInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(arrayCopyNode, comp(), ValueInfo));
          if (valueInfo && valueInfo->getTopProbability() > MIN_ARRAYCOPY_FREQ_FOR_SPECIALIZATION)
             {
             return ((int64_t) valueInfo->getTopValue());
@@ -7357,6 +7356,9 @@ void OMR::ValuePropagation::doDelayedTransformations()
 
    // If there were unreachable edges that still exist, remove them
    //
+   TR::Region &stackRegion = comp()->trMemory()->currentStackRegion();
+   TR::list<TR::Block*, TR::Region&> removedEdgeSources(stackRegion);
+
    if (_edgesToBeRemoved)
       {
       for (i = _edgesToBeRemoved->size()-1; i >= 0; --i)
@@ -7366,6 +7368,7 @@ void OMR::ValuePropagation::doDelayedTransformations()
          // NB: this following transformation is not conditional - it must be done otherwise the CFG could
          // be incorrect (for example, if a conditional branch was converted to a goto, you have to remove
          // the extra edge in the CFG or else madness will ensue.
+         removedEdgeSources.push_back(toBlock(edge->getFrom()));
          if (std::find(edge->getTo()->getPredecessors().begin(), edge->getTo()->getPredecessors().end(), edge) != edge->getTo()->getPredecessors().end())
             {
             if (trace())
@@ -7389,6 +7392,8 @@ void OMR::ValuePropagation::doDelayedTransformations()
             }
          }
       }
+
+   TR_RegionStructure::extractUnconditionalExits(comp(), removedEdgeSources);
 
 #ifdef J9_PROJECT_SPECIFIC
    if (!_multiLeafCallsToInline.isEmpty())
@@ -7628,7 +7633,7 @@ void OMR::ValuePropagation::doDelayedTransformations()
                {
                if (comp()->getMethodHotness() <= warm && comp()->getOption(TR_DisableInliningDuringVPAtWarm))
                   {
-                  traceMsg(comp(), "\tDo not inline call at [%p]\n", callNode);
+                  if (trace()) traceMsg(comp(), "\tDo not inline call at [%p]\n", callNode);
                   }
                else
                   {
@@ -8028,9 +8033,11 @@ void OMR::ValuePropagation::doDelayedTransformations()
 
          if ((staticName && (staticNameLen > 0) &&
              (!strncmp(staticName, "com/ibm/websphere/ras/TraceComponent.fineTracingEnabled", 55) ||
-              !strncmp(staticName, "com/ibm/ejs/ras/TraceComponent.anyTracingEnabled", 48))) ||
+              !strncmp(staticName, "com/ibm/ejs/ras/TraceComponent.anyTracingEnabled", 48) ||
+              !strncmp(staticName, "java/lang/String.compressionFlag", 32))) ||
              ((cii->_len == 41) && !strncmp(cii->_sig, "Lcom/ibm/websphere/ras/TraceEnabledToken;", cii->_len)) ||
-             ((cii->_len == 35) && !strncmp(cii->_sig, "Lcom/ibm/ejs/ras/TraceEnabledToken;", cii->_len)))
+             ((cii->_len == 35) && !strncmp(cii->_sig, "Lcom/ibm/ejs/ras/TraceEnabledToken;", cii->_len)) ||
+             ((cii->_len == 40) && !strncmp(cii->_sig, "Ljava/lang/String$StringCompressionFlag;", cii->_len)))
             {
             recognizedStatic = true;
             ifNode->setAndIncChild(0, origFirst->duplicateTree());

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "optimizer/InductionVariable.hpp"
@@ -55,8 +58,8 @@
 #include "infra/Checklist.hpp"                   // for {Node,Block}Checklist
 #include "infra/ILWalk.hpp"                      // for PostorderNodeIterator
 #include "infra/List.hpp"                        // for List, ListIterator, etc
-#include "infra/TRCfgEdge.hpp"                   // for CFGEdge
-#include "infra/TRCfgNode.hpp"                   // for CFGNode
+#include "infra/CfgEdge.hpp"                     // for CFGEdge
+#include "infra/CfgNode.hpp"                     // for CFGNode
 #include "optimizer/Optimization.hpp"            // for Optimization
 #include "optimizer/Optimization_inlines.hpp"
 #include "optimizer/Optimizations.hpp"
@@ -81,7 +84,8 @@
 
 TR_LoopStrider::TR_LoopStrider(TR::OptimizationManager *manager)
    : TR_LoopTransformer(manager),
-   _reassociatedNodes(trMemory())
+   _reassociatedNodes(trMemory()),
+   _storeTreesSingleton((StoreTreeMapComparator()), StoreTreeMapAllocator(comp()->trMemory()->currentStackRegion()))
    {
    _indirectInductionVariable = false; // TODO: add this c->getMethodHotness() >= scorching;
    _autosAccessed = NULL;
@@ -107,6 +111,8 @@ int32_t TR_LoopStrider::perform()
 
    TR::StackMemoryRegion stackMemoryRegion(*trMemory());
 
+   _hoistedAutos = new (stackMemoryRegion) SymRefPairMap((SymRefPairMapComparator()), SymRefPairMapAllocator(stackMemoryRegion));
+   _reassociatedAutos = new (stackMemoryRegion) SymRefMap((SymRefMapComparator()), SymRefMapAllocator(stackMemoryRegion));
    _count = 0;
    _newTempsCreated = false;
    _newNonAddressTempsCreated = false;
@@ -160,15 +166,19 @@ bool TR_LoopStrider::foundLoad(TR::TreeTop *storeTreeTop, TR::Node *node, int32_
       {
       if (_storeTreesList)
          {
-         List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[symRefNum];
-         ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-         TR_StoreTreeInfo *storeTree;
-         for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+         auto lookup = _storeTreesList->find(symRefNum);
+         if (lookup != _storeTreesList->end())
             {
-            if (storeTree->_tt == storeTreeTop)
+            List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+            ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+            TR_StoreTreeInfo *storeTree;
+            for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
                {
-               if (node != storeTree->_loadUsedInLoopIncrement)
-                  return true;
+               if (storeTree->_tt == storeTreeTop)
+                  {
+                  if (node != storeTree->_loadUsedInLoopIncrement)
+                     return true;
+                  }
                }
             }
          }
@@ -282,21 +292,23 @@ int32_t TR_LoopStrider::detectCanonicalizedPredictableLoops(TR_Structure *loopSt
       _numSymRefs = symRefCount;
       initializeSymbolsWrittenAndReadExactlyOnce(symRefCount, notGrowable);
 
-      _storeTreesList = (List<TR_StoreTreeInfo> **)trMemory()->allocateStackMemory(symRefCount*sizeof(List<TR_StoreTreeInfo> *));
+      if (_storeTreesList == NULL)
+         _storeTreesList = &_storeTreesSingleton;
+      _storeTreesList->clear();
+
+      //_storeTreesList = (List<TR_StoreTreeInfo> **)trMemory()->allocateStackMemory(symRefCount*sizeof(List<TR_StoreTreeInfo> *));
       //_loadUsedInNewLoopIncrementList = (List<TR::Node> **)trMemory()->allocateStackMemory(symRefCount*sizeof(List<TR::Node> *));
       //memset(_storeTreesList, 0, symRefCount*sizeof(List<TR::TreeTop> *));
-      int32_t i = 0;
-      while (i < symRefCount)
-         {
-         _storeTreesList[i] = new (trStackMemory()) TR_ScratchList<TR_StoreTreeInfo>(trMemory());
-         //_loadUsedInNewLoopIncrementList[i] = new (trStackMemory()) TR_ScratchList<TR::Node>(trMemory());
-         i++;
-         }
+      //int32_t i = 0;
+      //while (i < symRefCount)
+      //   {
+      //   _storeTreesList[i] = new (trStackMemory()) TR_ScratchList<TR_StoreTreeInfo>(trMemory());
+      //   //_loadUsedInNewLoopIncrementList[i] = new (trStackMemory()) TR_ScratchList<TR::Node>(trMemory());
+      //   i++;
+      //   }
 
-      _reassociatedAutos = (TR::SymbolReference **)trMemory()->allocateStackMemory(symRefCount*sizeof(TR::SymbolReference *));
-      memset(_reassociatedAutos, 0, symRefCount*sizeof(TR::SymbolReference *));
-      _hoistedAutos = (SymRefPair **)trMemory()->allocateStackMemory(symRefCount*sizeof(SymRefPair *));
-      memset(_hoistedAutos, 0, symRefCount*sizeof(SymRefPair *));
+      _reassociatedAutos->clear();
+      _hoistedAutos->clear();
       _reassociatedNodes.deleteAll();
       // compute the number of internal pointer temps or pinning array temps already initialized in
       // the loop pre-header.
@@ -412,17 +424,21 @@ int32_t TR_LoopStrider::detectCanonicalizedPredictableLoops(TR_Structure *loopSt
 
                if (storeInRequiredForm && _storeTreesList)
                   {
-                  List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[nextInductionVariableNumber];
-                  ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-                  TR_StoreTreeInfo *storeTree;
-                  for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+                  auto lookup = _storeTreesList->find(nextInductionVariableNumber);
+                  if (lookup != _storeTreesList->end())
                      {
-                     //traceMsg(comp(), "store tree %p\n", storeTree->_tt->getNode());
-                     storeInRequiredForm = foundLoad(storeTree->_tt, nextInductionVariableNumber, comp());
-                     if (!storeInRequiredForm)
+                     List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+                     ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+                     TR_StoreTreeInfo *storeTree;
+                     for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
                         {
-                        //traceMsg(comp(), "reject store tree %p\n", storeTree->_tt->getNode());
-                        break;
+                        //traceMsg(comp(), "store tree %p\n", storeTree->_tt->getNode());
+                        storeInRequiredForm = foundLoad(storeTree->_tt, nextInductionVariableNumber, comp());
+                        if (!storeInRequiredForm)
+                           {
+                           //traceMsg(comp(), "reject store tree %p\n", storeTree->_tt->getNode());
+                           break;
+                           }
                         }
                      }
                   }
@@ -470,23 +486,27 @@ int32_t TR_LoopStrider::detectCanonicalizedPredictableLoops(TR_Structure *loopSt
                      {
                      if (_storeTreesList)
                         {
-                        List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[nextInductionVariableNumber];
-                        ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-                        TR_StoreTreeInfo *storeTree;
-                        for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+                        auto lookup = _storeTreesList->find(nextInductionVariableNumber);
+                        if (lookup != _storeTreesList->end())
                            {
-                           TR::Node *storeNode = storeTree->_tt->getNode();
-
-                           if (!storeNode->getOpCode().isStore())
-                              storeNode = storeNode->getFirstChild();
-
-                           TR_ASSERT(storeNode->getOpCode().isStore(), "Expected to find a store\n");
-
-                           if (firstChildOfLoopTestNode == storeNode->getFirstChild() &&
-                              storeTree->_loadUsedInLoopIncrement)
+                           List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+                           ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+                           TR_StoreTreeInfo *storeTree;
+                           for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
                               {
-                              indexSymRef = storeNode->getSymbolReference();
-                              break;
+                              TR::Node *storeNode = storeTree->_tt->getNode();
+
+                              if (!storeNode->getOpCode().isStore())
+                                 storeNode = storeNode->getFirstChild();
+
+                              TR_ASSERT(storeNode->getOpCode().isStore(), "Expected to find a store\n");
+
+                              if (firstChildOfLoopTestNode == storeNode->getFirstChild() &&
+                                 storeTree->_loadUsedInLoopIncrement)
+                                 {
+                                 indexSymRef = storeNode->getSymbolReference();
+                                 break;
+                                 }
                               }
                            }
                         }
@@ -895,7 +915,9 @@ int32_t TR_LoopStrider::detectCanonicalizedPredictableLoops(TR_Structure *loopSt
       int32_t j;
       for (j=0;j<symRefCount;j++)
          {
-         TR::SymbolReference *reassociatedAuto = _reassociatedAutos[j];
+         auto reassociatedAutoSearchResult = _reassociatedAutos->find(j);
+         TR::SymbolReference *reassociatedAuto = reassociatedAutoSearchResult != _reassociatedAutos->end() ?
+                                                    reassociatedAutoSearchResult->second : NULL;
          if (reassociatedAuto)
             {
             //dumpOptDetails(comp(), "j = %d reassociated auto = %d (%p)\n", j,
@@ -922,19 +944,16 @@ int32_t TR_LoopStrider::detectCanonicalizedPredictableLoops(TR_Structure *loopSt
                      TR::Node::create(byteCodeInfoNode, TR::iconst, 0, hdrSize));
             arrayRefNode->setIsInternalPointer(true);
 
-            if (comp()->isPinningNeeded())
-               {
-               if (!origAuto->getSymbol()->isInternalPointer())
-                  {
-                  arrayRefNode->setPinningArrayPointer(reassociatedAuto->getSymbol()-> \
-                        castToInternalPointerAutoSymbol()->getPinningArrayPointer());
-                  reassociatedAuto->getSymbol()->castToInternalPointerAutoSymbol()-> \
-                        getPinningArrayPointer()->setPinningArrayPointer();
-                  }
-               else
-                  arrayRefNode->setPinningArrayPointer(origAuto->getSymbol()-> \
-                        castToInternalPointerAutoSymbol()->getPinningArrayPointer());
-               }
+            if (!origAuto->getSymbol()->isInternalPointer())
+                {
+                arrayRefNode->setPinningArrayPointer(reassociatedAuto->getSymbol()-> \
+                    castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+                reassociatedAuto->getSymbol()->castToInternalPointerAutoSymbol()-> \
+                    getPinningArrayPointer()->setPinningArrayPointer();
+                }
+            else
+                arrayRefNode->setPinningArrayPointer(origAuto->getSymbol()-> \
+                    castToInternalPointerAutoSymbol()->getPinningArrayPointer());
 
             TR::Node *newStore = TR::Node::createWithSymRef(TR::astore, 1, 1, arrayRefNode, reassociatedAuto);
             newStore->setLocalIndex(~0);
@@ -957,7 +976,8 @@ int32_t TR_LoopStrider::detectCanonicalizedPredictableLoops(TR_Structure *loopSt
                newInductionCandidate->addAllBlocksInStructure(loopStructure, comp(), trace()?"strider auto":NULL);
             }
 
-         SymRefPair *symRefPair = _hoistedAutos[j];
+         auto symRefPairSearchResult = _hoistedAutos->find(j);
+         SymRefPair *symRefPair = symRefPairSearchResult != _hoistedAutos->end() ? symRefPairSearchResult->second : NULL;
 
          if (symRefPair)
             {
@@ -992,17 +1012,13 @@ int32_t TR_LoopStrider::detectCanonicalizedPredictableLoops(TR_Structure *loopSt
 
                arrayRefNode->setIsInternalPointer(true);
 
-               if (comp()->isPinningNeeded())
+               if (!origAuto->getSymbol()->isInternalPointer())
                   {
-                  if (!origAuto->getSymbol()->isInternalPointer())
-                     {
-                     symRefPair->_derivedSymRef->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer()->setPinningArrayPointer();
-
-                     arrayRefNode->setPinningArrayPointer(symRefPair->_derivedSymRef->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
-                     }
-                  else
-                     arrayRefNode->setPinningArrayPointer(origAuto->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+                  symRefPair->_derivedSymRef->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer()->setPinningArrayPointer();
+                  arrayRefNode->setPinningArrayPointer(symRefPair->_derivedSymRef->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
                   }
+                else
+                    arrayRefNode->setPinningArrayPointer(origAuto->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
 
                TR::Node *newStore = TR::Node::createWithSymRef(TR::astore, 1, 1, arrayRefNode, symRefPair->_derivedSymRef);
                newStore->setLocalIndex(~0);
@@ -1075,16 +1091,26 @@ TR::VPIntRange* TR_LoopStrider::genVPIntRange(TR::VPConstraint* cons, int64_t co
 
 void TR_LoopStrider::findOrCreateStoreInfo(TR::TreeTop *tree, int32_t i)
    {
-   List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[i];
-   ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-   TR_StoreTreeInfo *storeTree;
-   for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+   auto lookup = _storeTreesList->find(i);
+   if (lookup != _storeTreesList->end())
       {
-      if (storeTree->_tt == tree)
-         return;
-      }
+      List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+      ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+      TR_StoreTreeInfo *storeTree;
+      for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+         {
+         if (storeTree->_tt == tree)
+            return;
+         }
 
-   _storeTreesList[i]->add(new (trStackMemory()) TR_StoreTreeInfo(tree, NULL, NULL, NULL, NULL, false, NULL, false));
+      lookup->second->add(new (trStackMemory()) TR_StoreTreeInfo(tree, NULL, NULL, NULL, NULL, false, NULL, false));
+      }
+   else
+      {
+      TR_ScratchList<TR_StoreTreeInfo> *newList = new (trStackMemory()) TR_ScratchList<TR_StoreTreeInfo>(trMemory());
+      newList->add(new (trStackMemory()) TR_StoreTreeInfo(tree, NULL, NULL, NULL, NULL, false, NULL, false));
+      (*_storeTreesList)[i] = newList;
+      }
    }
 
 
@@ -1104,37 +1130,41 @@ TR::Node *TR_LoopStrider::getNewLoopIncrement(TR::Node *oldLoad, int32_t k, int3
       {
       if (_storeTreesList)
          {
-         List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[symRefNum];
-         ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-         TR_StoreTreeInfo *storeTree;
-         for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+         auto lookup = _storeTreesList->find(symRefNum);
+         if (lookup != _storeTreesList->end())
             {
-            if (oldLoad == storeTree->_loadUsedInLoopIncrement &&
-                storeTree->_load)
+            List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+            ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+            TR_StoreTreeInfo *storeTree;
+            for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
                {
-               TR_NodeIndexPair *head = storeTree->_loads;
-               TR_NodeIndexPair *cursor = head;
-
-               while (cursor)
+               if (oldLoad == storeTree->_loadUsedInLoopIncrement &&
+                   storeTree->_load)
                   {
-                  if (cursor->_index == k)
+                  TR_NodeIndexPair *head = storeTree->_loads;
+                  TR_NodeIndexPair *cursor = head;
+
+                  while (cursor)
                      {
-                     newLoad = cursor->_node;
-                     if (newLoad)
-		        break;
+                     if (cursor->_index == k)
+                        {
+                        newLoad = cursor->_node;
+                        if (newLoad)
+	                   break;
+                        }
+
+                     cursor = cursor->_next;
                      }
 
-                  cursor = cursor->_next;
+                  if (newLoad)
+	             break;
+                  //newLoad = storeTree->_load;
+                  //break;
                   }
-
-               if (newLoad)
-	          break;
-               //newLoad = storeTree->_load;
-               //break;
                }
             }
-        }
-    }
+         }
+      }
 
    if (!newLoad &&
        (oldLoad == _loadUsedInLoopIncrement) &&
@@ -1279,16 +1309,13 @@ void TR_LoopStrider::changeLoopCondition(TR_BlockStructure *loopInvariantBlock, 
          addNode = TR::Node::create(TR::aiadd, 2, newAload, addNode);
       addNode->setIsInternalPointer(true);
 
-      if (comp()->isPinningNeeded())
-         {
-         if (!newAload->getSymbolReference()->getSymbol()->castToAutoSymbol()->isInternalPointer())
-            {
-            addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToAutoSymbol());
-            newAload->getSymbolReference()->getSymbol()->setPinningArrayPointer();
-            }
-         else
-            addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
-         }
+      if (!newAload->getSymbolReference()->getSymbol()->castToAutoSymbol()->isInternalPointer())
+          {
+          addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToAutoSymbol());
+          newAload->getSymbolReference()->getSymbol()->setPinningArrayPointer();
+          }
+      else
+          addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
 
       addNode->setLocalIndex(~0);
       addNode->getSecondChild()->setLocalIndex(~0);
@@ -1297,19 +1324,16 @@ void TR_LoopStrider::changeLoopCondition(TR_BlockStructure *loopInvariantBlock, 
       _numInternalPointers++;
       TR::Symbol *symbol = newSymbolReference->getSymbol();
 
-      if (comp()->isPinningNeeded())
+      TR::AutomaticSymbol *pinningArrayPointer = newAload->getSymbolReference()->getSymbol()->castToAutoSymbol();
+      if (!pinningArrayPointer->isInternalPointer())
          {
-         TR::AutomaticSymbol *pinningArrayPointer = newAload->getSymbolReference()->getSymbol()->castToAutoSymbol();
-         if (!pinningArrayPointer->isInternalPointer())
-            {
-            symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer);
-            pinningArrayPointer->setPinningArrayPointer();
-            }
-         else
-            symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+         symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer);
+         pinningArrayPointer->setPinningArrayPointer();
          }
-      newStore = TR::Node::createWithSymRef(TR::astore, 1, 1, addNode, newSymbolReference);
+      else
+         symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
 
+      newStore = TR::Node::createWithSymRef(TR::astore, 1, 1, addNode, newSymbolReference);
       }
       else
          {
@@ -1349,19 +1373,23 @@ void TR_LoopStrider::changeLoopCondition(TR_BlockStructure *loopInvariantBlock, 
             {
             if (_storeTreesList)
                {
-               List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[bestCandidate];
-               ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-               TR_StoreTreeInfo *storeTree;
-               for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+               auto lookup = _storeTreesList->find(bestCandidate);
+               if (lookup != _storeTreesList->end())
                   {
-                  if (firstChildOfLoopTestNode == storeTree->_loadUsedInLoopIncrement &&
-                      storeTree->_load)
-                      {
-                      newLoad = storeTree->_load;
-                      break;
-                      }
-                   }
-                }
+                  List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+                  ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+                  TR_StoreTreeInfo *storeTree;
+                  for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+                     {
+                     if (firstChildOfLoopTestNode == storeTree->_loadUsedInLoopIncrement &&
+                         storeTree->_load)
+                         {
+                         newLoad = storeTree->_load;
+                         break;
+                         }
+                     }
+                  }
+               }
             }
          */
 
@@ -1792,16 +1820,14 @@ void TR_LoopStrider::examineOpCodesForInductionVariableUse(TR::Node* node, TR::N
       if (node->getOpCodeValue() == TR::aiadd || node->getOpCodeValue() == TR::aladd)
          {
          node->setIsInternalPointer(true);
-         if (comp()->isPinningNeeded())
+
+         if (!pinningArrayPointer->isInternalPointer())
             {
-            if (!pinningArrayPointer->isInternalPointer())
-               {
-               node->setPinningArrayPointer(pinningArrayPointer);
-               pinningArrayPointer->setPinningArrayPointer();
-               }
-            else
-               node->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+            node->setPinningArrayPointer(pinningArrayPointer);
+            pinningArrayPointer->setPinningArrayPointer();
             }
+         else
+            node->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
          }
 
       node->setNumChildren(2);
@@ -1946,7 +1972,7 @@ bool TR_LoopStrider::examineTreeForInductionVariableUse(TR::Block *loopInvariant
             //traceMsg(comp(), "looking for store at node = %p\n", node);
 
             TR::Node *replacingNode = NULL, *mulTerm = NULL, *linearTerm = NULL;
-            if (replacingNode = findReplacingNode(node->getFirstChild()->getFirstChild(), usingAladd, -1))
+            if ((replacingNode = findReplacingNode(node->getFirstChild()->getFirstChild(), usingAladd, -1)))
                {
                linearTerm = node->getFirstChild()->getFirstChild();
                mulTerm = node->getFirstChild()->getSecondChild();
@@ -1993,8 +2019,7 @@ bool TR_LoopStrider::examineTreeForInductionVariableUse(TR::Block *loopInvariant
                   TR_ASSERT(dataType, "dataType cannot be NoType\n");
 
                   *newSymbolReference = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), dataType, isInternalPointer);
-                  if (isInternalPointer &&
-                      !pinningArrayPointer && comp()->isPinningNeeded())
+                  if (isInternalPointer && !pinningArrayPointer)
                      {
                      TR::SymbolReference *newPinningArray = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), TR::Address, false);
                      pinningArrayPointer = newPinningArray->getSymbol()->castToAutoSymbol();
@@ -2070,7 +2095,7 @@ bool TR_LoopStrider::examineTreeForInductionVariableUse(TR::Block *loopInvariant
 
 
       TR::Node *replacingNode = NULL, *mulTerm = NULL, *linearTerm = NULL;
-      if (replacingNode = findReplacingNode(node->getFirstChild(), usingAladd, -1))
+      if ((replacingNode = findReplacingNode(node->getFirstChild(), usingAladd, -1)))
          {
          linearTerm = node->getFirstChild();
          mulTerm = node->getSecondChild();
@@ -2119,8 +2144,7 @@ bool TR_LoopStrider::examineTreeForInductionVariableUse(TR::Block *loopInvariant
             TR_ASSERT(dataType, "dataType cannot be TR::NoType\n");
 
             *newSymbolReference = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), dataType, isInternalPointer);
-            if (isInternalPointer &&
-               !pinningArrayPointer && comp()->isPinningNeeded())
+            if (isInternalPointer && !pinningArrayPointer)
                {
                TR::SymbolReference *newPinningArray = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), TR::Address, false);
                pinningArrayPointer = newPinningArray->getSymbol()->castToAutoSymbol();
@@ -2260,7 +2284,6 @@ void TR_LoopStrider::populateLinearEquation(TR::Node *node, int32_t loopDrivingI
 void TR_LoopStrider::setInternalPointer(TR::Symbol *symbol, TR::AutomaticSymbol *pinningArrayPointer)
    {
    _numInternalPointers++;
-   if (!comp()->isPinningNeeded()) return;
 
    if (!pinningArrayPointer->isInternalPointer())
       {
@@ -2432,16 +2455,13 @@ TR::Node *TR_LoopStrider::placeInitializationTreeInLoopInvariantBlock(TR_BlockSt
                    TR::Node::create(TR::aiadd, 2, newAload, addNode);
       addNode->setIsInternalPointer(true);
 
-      if (comp()->isPinningNeeded())
+      if (!newAload->getSymbolReference()->getSymbol()->castToAutoSymbol()->isInternalPointer())
          {
-         if (!newAload->getSymbolReference()->getSymbol()->castToAutoSymbol()->isInternalPointer())
-            {
-            addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToAutoSymbol());
-            newAload->getSymbolReference()->getSymbol()->setPinningArrayPointer();
-            }
-         else
-            addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+         addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToAutoSymbol());
+         newAload->getSymbolReference()->getSymbol()->setPinningArrayPointer();
          }
+      else
+         addNode->setPinningArrayPointer(newAload->getSymbolReference()->getSymbol()->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
 
       addNode->setLocalIndex(~0);
       addNode->getSecondChild()->setLocalIndex(~0);
@@ -2482,9 +2502,10 @@ TR::Node *TR_LoopStrider::placeNewInductionVariableIncrementTree(TR_BlockStructu
    int32_t loopTestBlockNum = _loopTestTree->getNextTreeTop()->getNode()->getBlock()->startOfExtendedBlock()->getNumber();
 
    int32_t symRefNum = inductionVarSymRef->getReferenceNumber();
-   if (_storeTreesList[symRefNum])
+   auto lookup = _storeTreesList->find(symRefNum);
+   if (lookup != _storeTreesList->end())
       {
-      List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[symRefNum];
+      List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
       ListIterator<TR_StoreTreeInfo> si(storeTreesList);
       ListElement<TR_StoreTreeInfo> *storeTree;
       storeTree = storeTreesList->getListHead();
@@ -2695,17 +2716,15 @@ TR::Node *TR_LoopStrider::placeNewInductionVariableIncrementTree(TR_BlockStructu
                               TR::Node::create(TR::aiadd, 2, newIvLoad, newMulNode);
          loopIncrementer->setIsInternalPointer(true);
 
-         if (comp()->isPinningNeeded())
+         TR::AutomaticSymbol *autoSym = symRefTab->getSymRef((int32_t)_linearEquations[k][4])->getSymbol()->castToAutoSymbol();
+         if (!autoSym->isInternalPointer())
             {
-            TR::AutomaticSymbol *autoSym = symRefTab->getSymRef((int32_t)_linearEquations[k][4])->getSymbol()->castToAutoSymbol();
-            if (!autoSym->isInternalPointer())
-               {
-               loopIncrementer->setPinningArrayPointer(autoSym);
-               autoSym->setPinningArrayPointer();
-               }
-            else
-               loopIncrementer->setPinningArrayPointer(autoSym->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+            loopIncrementer->setPinningArrayPointer(autoSym);
+            autoSym->setPinningArrayPointer();
             }
+         else
+            loopIncrementer->setPinningArrayPointer(autoSym->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+
          }
       else
          {
@@ -2762,18 +2781,15 @@ TR::Node *TR_LoopStrider::placeNewInductionVariableIncrementTree(TR_BlockStructu
                               TR::Node::create(TR::aiadd, 2, newIvLoad, newMulNode);
          loopIncrementer->setIsInternalPointer(true);
 
-
-         if (comp()->isPinningNeeded())
+         TR::AutomaticSymbol *autoSym = symRefTab->getSymRef((int32_t)_linearEquations[k][4])->getSymbol()->castToAutoSymbol();
+         if (!autoSym->isInternalPointer())
             {
-            TR::AutomaticSymbol *autoSym = symRefTab->getSymRef((int32_t)_linearEquations[k][4])->getSymbol()->castToAutoSymbol();
-            if (!autoSym->isInternalPointer())
-               {
-               loopIncrementer->setPinningArrayPointer(autoSym);
-               autoSym->setPinningArrayPointer();
-               }
-            else
-               loopIncrementer->setPinningArrayPointer(autoSym->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+            loopIncrementer->setPinningArrayPointer(autoSym);
+            autoSym->setPinningArrayPointer();
             }
+         else
+            loopIncrementer->setPinningArrayPointer(autoSym->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+
          }
       else
          {
@@ -3010,21 +3026,25 @@ bool TR_LoopStrider::identifyExpressionLinearInInductionVariable(TR::Node *node,
          }
       else
          {
-         List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[symRefNum];
-         ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-         TR_StoreTreeInfo *storeTree;
-         bool flag = false;
-         for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
-             {
-             if (_currTree == storeTree->_tt)
+         auto lookup = _storeTreesList->find(symRefNum);
+         if (lookup != _storeTreesList->end())
+            {
+            List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+            ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+            TR_StoreTreeInfo *storeTree;
+            bool flag = false;
+            for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
                 {
-                flag = true;
-                break;
+                if (_currTree == storeTree->_tt)
+                   {
+                   flag = true;
+                   break;
+                   }
                 }
-             }
 
-         if (!flag)
-            _cannotBeEliminated->set(symRefNum);
+            if (!flag)
+               _cannotBeEliminated->set(symRefNum);
+            }
          }
       }
    else if (((node->getOpCodeValue() == TR::iadd) || (node->getOpCodeValue() == TR::isub))
@@ -3140,19 +3160,23 @@ TR::Node *TR_LoopStrider::setUsesLoadUsedInLoopIncrement(TR::Node *node, int32_t
    {
    if (_storeTreesList)
       {
-      List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[_loopDrivingInductionVar];
-      ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-      TR_StoreTreeInfo *storeTree;
-      for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+      auto lookup = _storeTreesList->find(_loopDrivingInductionVar);
+      if (lookup != _storeTreesList->end())
          {
-         if (!storeTree->_loadUsedInLoopIncrement &&
-             node->getReferenceCount() > 1)
-            return NULL;
-         if (node == storeTree->_loadUsedInLoopIncrement && !storeTree->_incrementInDifferentExtendedBlock)
+         List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+         ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+         TR_StoreTreeInfo *storeTree;
+         for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
             {
-            _usesLoadUsedInLoopIncrement = true;
-            _storeTreeInfoForLoopIncrement = storeTree;
-            //_loadUsedInNewLoopIncrement[k] = node;
+            if (!storeTree->_loadUsedInLoopIncrement &&
+                node->getReferenceCount() > 1)
+               return NULL;
+            if (node == storeTree->_loadUsedInLoopIncrement && !storeTree->_incrementInDifferentExtendedBlock)
+               {
+               _usesLoadUsedInLoopIncrement = true;
+               _storeTreeInfoForLoopIncrement = storeTree;
+               //_loadUsedInNewLoopIncrement[k] = node;
+               }
             }
          }
       }
@@ -3422,7 +3446,8 @@ bool TR_LoopStrider::reassociateAndHoistComputations(TR::Block *loopInvariantBlo
            performTransformation(comp(), "%s Replacing invariant internal pointer %p based on symRef #%d\n", OPT_DETAILS, node, internalPointerSymbol))
          {
          TR::SymbolReference *internalPointerSymRef = NULL;
-         SymRefPair *symRefPair = _hoistedAutos[originalInternalPointerSymbol];
+         auto symRefPairSearchResult = _hoistedAutos->find(originalInternalPointerSymbol);
+         SymRefPair *symRefPair = symRefPairSearchResult != _hoistedAutos->end() ? symRefPairSearchResult->second : NULL;
          while (symRefPair)
             {
             bool matched = false;
@@ -3456,8 +3481,7 @@ bool TR_LoopStrider::reassociateAndHoistComputations(TR::Block *loopInvariantBlo
          if (!internalPointerSymRef)
             {
             TR::SymbolReference *newSymbolReference = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), TR::Address, isInternalPointer);
-            if (isInternalPointer &&
-                !pinningArrayPointer && comp()->isPinningNeeded())
+            if (isInternalPointer && !pinningArrayPointer)
                {
                TR::SymbolReference *newPinningArray = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), TR::Address, false);
                pinningArrayPointer = newPinningArray->getSymbol()->castToAutoSymbol();
@@ -3485,16 +3509,14 @@ bool TR_LoopStrider::reassociateAndHoistComputations(TR::Block *loopInvariantBlo
                _newNonAddressTempsCreated = true;
 
             TR::Symbol *symbol = newSymbolReference->getSymbol();
-            if (comp()->isPinningNeeded())
+
+            if (!pinningArrayPointer->isInternalPointer())
                {
-               if (!pinningArrayPointer->isInternalPointer())
-                  {
-                  symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer);
-                  pinningArrayPointer->setPinningArrayPointer();
-                  }
-               else
-                  symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+               symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer);
+               pinningArrayPointer->setPinningArrayPointer();
                }
+            else
+               symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
 
             SymRefPair *pair = (SymRefPair *) trMemory()->allocateStackMemory(sizeof(SymRefPair));
             if (isConst)
@@ -3515,8 +3537,8 @@ bool TR_LoopStrider::reassociateAndHoistComputations(TR::Block *loopInvariantBlo
                }
 
             pair->_derivedSymRef = newSymbolReference;
-            pair->_next = _hoistedAutos[originalInternalPointerSymbol];
-            _hoistedAutos[originalInternalPointerSymbol] = pair;
+            pair->_next = (*_hoistedAutos)[originalInternalPointerSymbol];
+            (*_hoistedAutos)[originalInternalPointerSymbol] = pair;
             internalPointerSymRef = newSymbolReference;
             }
 
@@ -3557,11 +3579,10 @@ bool TR_LoopStrider::reassociateAndHoistComputations(TR::Block *loopInvariantBlo
                   _numInternalPointerOrPinningArrayTempsInitialized < MAX_INTERNAL_POINTER_AUTOS_INITIALIZED) &&
               performTransformation(comp(), "%s Replacing reassociated internal pointer based on symRef #%d\n", OPT_DETAILS, internalPointerSymbol))
             {
-            if (!_reassociatedAutos[originalInternalPointerSymbol])
+            if (_reassociatedAutos->find(originalInternalPointerSymbol) == _reassociatedAutos->end())
                {
                TR::SymbolReference *newSymbolReference = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), TR::Address, isInternalPointer);
-               if (isInternalPointer &&
-                   !pinningArrayPointer && comp()->isPinningNeeded())
+               if (isInternalPointer && !pinningArrayPointer)
                   {
                   TR::SymbolReference *newPinningArray = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), TR::Address, false);
                   pinningArrayPointer = newPinningArray->getSymbol()->castToAutoSymbol();
@@ -3588,21 +3609,20 @@ bool TR_LoopStrider::reassociateAndHoistComputations(TR::Block *loopInvariantBlo
                   _newNonAddressTempsCreated = true;
 
                TR::Symbol *symbol = newSymbolReference->getSymbol();
-               if (comp()->isPinningNeeded())
+
+               if (!pinningArrayPointer->isInternalPointer())
                   {
-                  if (!pinningArrayPointer->isInternalPointer())
-                     {
-                     symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer);
-                     pinningArrayPointer->setPinningArrayPointer();
-                     }
-                  else
-                     symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+                  symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer);
+                  pinningArrayPointer->setPinningArrayPointer();
                   }
-               _reassociatedAutos[originalInternalPointerSymbol] = newSymbolReference;
+               else
+                  symbol->castToInternalPointerAutoSymbol()->setPinningArrayPointer(pinningArrayPointer->castToInternalPointerAutoSymbol()->getPinningArrayPointer());
+
+               (*_reassociatedAutos)[originalInternalPointerSymbol] = newSymbolReference;
                dumpOptDetails(comp(), "reass num %d newsymref %d\n", internalPointerSymbol, newSymbolReference->getReferenceNumber());
                }
 
-            TR::SymbolReference *internalPointerSymRef = _reassociatedAutos[originalInternalPointerSymbol];
+            TR::SymbolReference *internalPointerSymRef = (*_reassociatedAutos)[originalInternalPointerSymbol];
             originalNode->getFirstChild()->recursivelyDecReferenceCount();
             //node->recursivelyDecReferenceCount();
             node->decReferenceCount();
@@ -3651,28 +3671,33 @@ bool TR_LoopStrider::isStoreInRequiredForm(int32_t symRefNum, TR_Structure *loop
 
    if (_storeTreesList)
       {
-      List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[symRefNum];
-      ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-      TR_StoreTreeInfo *storeTree;
-      bool b = false;
-      for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+      auto lookup = _storeTreesList->find(symRefNum);
+      if (lookup != _storeTreesList->end())
          {
-         TR::Node *storeNode = storeTree->_tt->getNode();
-         if ((!storeNode->getType().isInt32() && !storeNode->getType().isInt64()) ||
-             (!storeNode->getSymbolReference()->getSymbol()->getType().isInt32() && !storeNode->getSymbolReference()->getSymbol()->getType().isInt64()))
-            return false;
+         List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+         ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+         TR_StoreTreeInfo *storeTree;
+         bool b = false;
+         for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+            {
+            TR::Node *storeNode = storeTree->_tt->getNode();
+            if ((!storeNode->getType().isInt32() && !storeNode->getType().isInt64()) ||
+                (!storeNode->getSymbolReference()->getSymbol()->getType().isInt32() && !storeNode->getSymbolReference()->getSymbol()->getType().isInt64()))
+               return false;
 
-         b = isStoreInRequiredForm(storeNode, symRefNum, loopStructure);
-         storeTree->_loadUsedInLoopIncrement = _loadUsedInLoopIncrement;
+            b = isStoreInRequiredForm(storeNode, symRefNum, loopStructure);
+            storeTree->_loadUsedInLoopIncrement = _loadUsedInLoopIncrement;
 
-         if (!b)
-            return false;
+            if (!b)
+               return false;
 
-         if (storeTree->_tt->getEnclosingBlock()->getStructureOf()->getContainingLoop() != loopStructure)
-            return false;
+            if (storeTree->_tt->getEnclosingBlock()->getStructureOf()->getContainingLoop() != loopStructure)
+               return false;
+            }
+
+         return b;
          }
-
-      return b;
+      return false;
       }
 
    TR::Node *storeNode = _storeTrees[symRefNum]->getNode();
@@ -3697,16 +3722,20 @@ void TR_LoopStrider::checkIfIncrementInDifferentExtendedBlock(TR::Block *block, 
 
    if (_storeTreesList)
       {
-      List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[inductionVariable];
-      ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-      TR_StoreTreeInfo *storeTree;
-      for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+      auto lookup = _storeTreesList->find(inductionVariable);
+      if (lookup != _storeTreesList->end())
          {
-         if (block !=
-             storeTree->_tt->getEnclosingBlock()->startOfExtendedBlock())
+         List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+         ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+         TR_StoreTreeInfo *storeTree;
+         for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
             {
-            storeTree->_incrementInDifferentExtendedBlock = true;
-            return;
+            if (block !=
+                storeTree->_tt->getEnclosingBlock()->startOfExtendedBlock())
+               {
+               storeTree->_incrementInDifferentExtendedBlock = true;
+               return;
+               }
             }
          }
       }
@@ -3721,7 +3750,7 @@ TR::Node *TR_LoopStrider::updateLoadUsedInLoopIncrement(TR::Node *node, int32_t 
        opCode.isLoadVar() &&
        (node->getSymbolReference()->getReferenceNumber() < _numSymRefs) &&
        ((!_storeTreesList && _writtenExactlyOnce.ValueAt(node->getSymbolReference()->getReferenceNumber())) ||
-        (_storeTreesList && _storeTreesList[node->getSymbolReference()->getReferenceNumber()]->isSingleton())))
+        (_storeTreesList && _storeTreesList->find(node->getSymbolReference()->getReferenceNumber()) != _storeTreesList->end() && (*_storeTreesList)[node->getSymbolReference()->getReferenceNumber()]->isSingleton())))
       {
       TR_UseDefInfo *useDefInfo = optimizer()->getUseDefInfo();
       if (!useDefInfo)
@@ -3732,8 +3761,7 @@ TR::Node *TR_LoopStrider::updateLoadUsedInLoopIncrement(TR::Node *node, int32_t 
          return NULL;
 
       TR_UseDefInfo::BitVector defs(comp()->allocator());
-      useDefInfo->getUseDef(defs, useIndex);
-      if (!defs.IsZero() && (defs.PopulationCount() == 1))
+      if (useDefInfo->getUseDef(defs, useIndex) && (defs.PopulationCount() == 1))
          {
          TR_UseDefInfo::BitVector::Cursor cursor(defs);
          for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
@@ -3865,18 +3893,22 @@ bool TR_LoopStrider::isStoreInRequiredForm(TR::Node *storeNode, int32_t symRefNu
 
    if (_storeTreesList)
       {
-      List<TR_StoreTreeInfo> *storeTreesList = _storeTreesList[symRefNum];
-      ListIterator<TR_StoreTreeInfo> si(storeTreesList);
-      TR_StoreTreeInfo *storeTree;
-      for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
+      auto lookup = _storeTreesList->find(symRefNum);
+      if (lookup != _storeTreesList->end())
          {
-         //traceMsg(comp(), "storeTree %p storeNode = %p cursor %p\n", storeTree, storeNode, storeTree->_tt->getNode());
-         if (storeNode == storeTree->_tt->getNode())
+         List<TR_StoreTreeInfo> *storeTreesList = lookup->second;
+         ListIterator<TR_StoreTreeInfo> si(storeTreesList);
+         TR_StoreTreeInfo *storeTree;
+         for (storeTree = si.getCurrent(); storeTree != NULL; storeTree = si.getNext())
             {
-            storeTree->_insertionTreeTop = storeTree->_tt;
-            storeTree->_constNode = _constNode;
-            storeTree->_isAddition = _isAddition;
-            break;
+            //traceMsg(comp(), "storeTree %p storeNode = %p cursor %p\n", storeTree, storeNode, storeTree->_tt->getNode());
+            if (storeNode == storeTree->_tt->getNode())
+               {
+               storeTree->_insertionTreeTop = storeTree->_tt;
+               storeTree->_constNode = _constNode;
+               storeTree->_isAddition = _isAddition;
+               break;
+               }
             }
          }
       }
@@ -4218,8 +4250,8 @@ void TR_LoopStrider::detectLoopsForIndVarConversion(
          return;
 
       //bail out if there is any exception edges to OSRCatchBlock because there is no
-      //safe way to split those edges. Also, there is no need to check if the OSRCatchBlock is 
-      //within the loop because loop strider already skips any loop that contains a 
+      //safe way to split those edges. Also, there is no need to check if the OSRCatchBlock is
+      //within the loop because loop strider already skips any loop that contains a
       //catch block
       if (nextBlock->hasExceptionSuccessors())
          {
@@ -4268,13 +4300,13 @@ void TR_LoopStrider::detectLoopsForIndVarConversion(
 
       initializeSymbolsWrittenAndReadExactlyOnce(symRefCount, growable);
 
+      if (_storeTreesList)
+         _storeTreesList->clear();
       _storeTreesList = NULL;
       //_loadUsedInNewLoopIncrementList = NULL;
 
-      _reassociatedAutos = (TR::SymbolReference **)trMemory()->allocateStackMemory(symRefCount*sizeof(TR::SymbolReference *));
-      memset(_reassociatedAutos, 0, symRefCount*sizeof(TR::SymbolReference *));
-      _hoistedAutos = (SymRefPair **)trMemory()->allocateStackMemory(symRefCount*sizeof(SymRefPair *));
-      memset(_hoistedAutos, 0, symRefCount*sizeof(SymRefPair *));
+      _reassociatedAutos->clear();
+      _hoistedAutos->clear();
 
       _numberOfLinearExprs = 0;
       _autosAccessed = NULL;

@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "runtime/OMRCodeCacheManager.hpp"
@@ -43,7 +46,15 @@
 #ifdef LINUX
 #include <elf.h>                        // for EV_CURRENT, SHT_STRTAB, etc
 #include <unistd.h>                     // for getpid, pid_t
+#include "codegen/ELFObjectFileGenerator.hpp"
 #endif
+
+OMR::CodeCacheManager::CodeCacheManager(TR::RawAllocator rawAllocator) :
+   _rawAllocator(rawAllocator),
+   _initialized(false),
+   _codeCacheIsFull(false)
+   {
+   }
 
 TR::CodeCacheManager *
 OMR::CodeCacheManager::self()
@@ -72,6 +83,7 @@ OMR::CodeCacheManager::initialize(
    TR_ASSERT(!self()->initialized(), "cannot initialize code cache manager more than once");
 
 #if (HOST_OS == OMR_LINUX)
+   _objectFileGenerator = NULL;
    _elfHeader = NULL;
 #endif // HOST_OS == OMR_LINUX
 
@@ -175,6 +187,11 @@ OMR::CodeCacheManager::destroy()
    {
 #if (HOST_OS == OMR_LINUX)
    // if code cache should be written out as shared object, do that now before destroying anything
+   if (_objectFileGenerator)
+      {
+      _objectFileGenerator->emitObjectFile();
+      }
+
    if (_elfHeader)
       {
       self()->initializeELFTrailer();
@@ -210,6 +227,17 @@ OMR::CodeCacheManager::destroy()
    _initialized = false;
    }
 
+void *
+OMR::CodeCacheManager::getMemory(size_t sizeInBytes)
+   {
+   return _rawAllocator.allocate(sizeInBytes, std::nothrow);
+   }
+
+void
+OMR::CodeCacheManager::freeMemory(void *memoryToFree)
+   {
+   _rawAllocator.deallocate(memoryToFree);
+   }
 
 TR::CodeCache *
 OMR::CodeCacheManager::allocateCodeCacheObject(TR::CodeCacheMemorySegment *codeCacheSegment,
@@ -943,6 +971,10 @@ OMR::CodeCacheManager::repositoryCodeCacheCreated()
    TR::CodeCacheConfig &config = self()->codeCacheConfig();
    if (config.emitElfObject())
       self()->initializeELFHeader();
+   if (config.emitELFObjectFile())
+      {
+      self()->initializeObjectFileGenerator();
+      }
 #endif // HOST_OS == OMR_LINUX
    }
 
@@ -950,6 +982,11 @@ void
 OMR::CodeCacheManager::registerCompiledMethod(const char *sig, uint8_t *startPC, uint32_t codeSize)
    {
 #if (HOST_OS == OMR_LINUX)
+   if (_objectFileGenerator)
+      {
+      _objectFileGenerator->registerCompiledMethod(sig, startPC, codeSize);
+      }
+
    CodeCacheSymbol *newSymbol = static_cast<CodeCacheSymbol *> (self()->getMemory(sizeof(CodeCacheSymbol)));
 
    uint32_t nameLength = strlen(sig) + 1;
@@ -964,6 +1001,17 @@ OMR::CodeCacheManager::registerCompiledMethod(const char *sig, uint8_t *startPC,
    _numELFSymbols++;
    _totalELFSymbolNamesLength += nameLength;
 #endif // HOST_OS == OMR_LINUX
+   }
+
+void
+OMR::CodeCacheManager::registerStaticRelocation(const TR::StaticRelocation &relocation)
+   {
+#if (HOST_OS == OMR_LINUX)
+   if (_objectFileGenerator)
+      {
+      _objectFileGenerator->registerStaticRelocation(relocation);
+      }
+#endif
    }
 
 void *
@@ -1135,11 +1183,24 @@ OMR::CodeCacheSymbol * OMR::CodeCacheManager::_symbols = NULL;
 uint32_t OMR::CodeCacheManager::_numELFSymbols = 0; // does not include UNDEF symbol: embedded in ELfCodeCacheTrailer
 uint32_t OMR::CodeCacheManager::_totalELFSymbolNamesLength = 1; // pre-count 0 for the UNDEF symbol name
 
+
+void
+OMR::CodeCacheManager::initializeObjectFileGenerator()
+   {
+   _objectFileGenerator =
+      new (_rawAllocator) TR::ELFObjectFileGenerator(
+         _rawAllocator,
+         _codeCacheRepositorySegment->segmentBase(),
+         _codeCacheRepositorySegment->segmentTop() - _codeCacheRepositorySegment->segmentBase(),
+         TR::Options::getCmdLineOptions()->getObjectFileName()
+         );
+   }
+
 void
 OMR::CodeCacheManager::initializeELFHeader()
    {
    //fprintf(stderr,"segmentAlloc: %p, base %p, diff %d\n", _codeCacheRepositorySegment->segmentAlloc(), _codeCacheRepositorySegment->segmentBase(), _codeCacheRepositorySegment->segmentAlloc() - _codeCacheRepositorySegment->segmentBase());
-   ELFCodeCacheHeader *hdr = static_cast<ELFCodeCacheHeader *>(self()->getMemory(sizeof(ELFCodeCacheHeader)));
+   ELFCodeCacheHeader *hdr = static_cast<ELFCodeCacheHeader *>(_rawAllocator.allocate(sizeof(ELFCodeCacheHeader), std::nothrow));
 
    // main elf header
    hdr->hdr.e_ident[EI_MAG0] = ELFMAG0;

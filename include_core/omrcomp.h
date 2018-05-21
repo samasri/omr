@@ -1,20 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
- *    Multiple authors (IBM Corp.) - z/TPF platform initial port to OMR environment
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMRCOMP_H
@@ -23,12 +26,14 @@
 #include <stddef.h>
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
-/* mingw is used in compilation on some windows platforms. The version used
- * does not support __thiscall, used in stdint.h on windows. Defining it to
+/* mingw is used in compilation on some windows platforms. Earlier versions
+ * do not support __thiscall, used in stdint.h on windows. Defining it to
  * nothing allows compilation and therefore allows us to use the types
  * defined within stdint.h.
  */
+#ifndef __thiscall
 #define __thiscall
+#endif /* __thiscall */
 #endif /* __MINGW32__ || __MINGW64__ */
 
 #include <stdint.h>
@@ -533,11 +538,6 @@ typedef struct U_128 {
 #define PTR_LONG_VALUE(dstPtr, aLongPtr) (*(aLongPtr) = *(dstPtr))
 #endif
 
-/* Macro used when declaring tables which require relocations. */
-#ifndef J9CONST_TABLE
-#define J9CONST_TABLE const
-#endif
-
 /* ANSI qsort is not always available */
 #ifndef J9_SORT
 #define J9_SORT(base, nmemb, size, compare) qsort((base), (nmemb), (size), (compare))
@@ -572,9 +572,10 @@ typedef struct U_128 {
 #define OMR_MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 /* Provide macros which can be used for bit testing */
-#define J9_ARE_ANY_BITS_SET(value, bits) (0 != ((value) & (bits)))
-#define J9_ARE_ALL_BITS_SET(value, bits) ((bits) == ((value) & (bits)))
-#define J9_ARE_NO_BITS_SET(value, bits) (!J9_ARE_ANY_BITS_SET(value, bits))
+#define OMR_ARE_ANY_BITS_SET(value, bits) (0 != ((value) & (bits)))
+#define OMR_ARE_ALL_BITS_SET(value, bits) ((bits) == ((value) & (bits)))
+#define OMR_ARE_NO_BITS_SET(value, bits) (!OMR_ARE_ANY_BITS_SET(value, bits))
+#define OMR_IS_ONLY_ONE_BIT_SET(value) (0 == (value & (value - 1)))
 
 /* Workaround for gcc -Wunused-result, which was added in 4.5.4 */
 #if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 5)))
@@ -587,9 +588,9 @@ typedef struct U_128 {
 #define J9_IGNORE_RETURNVAL(funcCall) (funcCall)
 #endif /* defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 5))) */
 
-#define J9_STR_(x) #x
-#define J9_STR(x) J9_STR_(x)
-#define OMR_GET_CALLSITE() __FILE__ ":" J9_STR(__LINE__)
+#define OMR_STR_(x) #x
+#define OMR_STR(x) OMR_STR_(x)
+#define OMR_GET_CALLSITE() __FILE__ ":" OMR_STR(__LINE__)
 
 /* Legacy defines - remove once code cleanup is complete */
 #define J9VM_ENV_DIRECT_FUNCTION_POINTERS

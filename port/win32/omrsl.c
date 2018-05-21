@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial API and implementation and/or initial documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 /**
@@ -77,8 +81,8 @@ omrsl_open_shared_library(struct OMRPortLibrary *portLibrary, char *name, uintpt
 	char *openName = name;
 	wchar_t portLibDir[EsMaxPath];
 	wchar_t unicodeBuffer[UNICODE_BUFFER_SIZE], *unicodeName;
-	BOOLEAN decorate = J9_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_DECORATE);
-	BOOLEAN openExec = J9_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_OPEN_EXECUTABLE);
+	BOOLEAN decorate = OMR_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_DECORATE);
+	BOOLEAN openExec = OMR_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_OPEN_EXECUTABLE);
 	uintptr_t pathLength = 0;
 
 	Trc_PRT_sl_open_shared_library_Entry(name, flags);
@@ -102,7 +106,7 @@ omrsl_open_shared_library(struct OMRPortLibrary *portLibrary, char *name, uintpt
 
 		/* Check for any errors. */
 		if (NULL == dllHandle) {
-			BOOLEAN useNlsMessage = J9_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_NO_LOOKUP_MSG_FOR_NOT_FOUND);
+			BOOLEAN useNlsMessage = OMR_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_NO_LOOKUP_MSG_FOR_NOT_FOUND);
 			BOOLEAN platformErrorFailed = FALSE;
 
 			error = GetLastError();
@@ -244,7 +248,7 @@ omrsl_open_shared_library(struct OMRPortLibrary *portLibrary, char *name, uintpt
 		}
 		/* When the flag OMRPORT_SLOPEN_NO_LOOKUP_MSG_FOR_NOT_FOUND is set and the error is ERROR_MOD_NOT_FOUND,
 		 * do not call FormatMessageW() since it cost 700K of memory when called the first time. */
-		if ((ERROR_MOD_NOT_FOUND == error) && J9_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_NO_LOOKUP_MSG_FOR_NOT_FOUND)) {
+		if ((ERROR_MOD_NOT_FOUND == error) && OMR_ARE_ALL_BITS_SET(flags, OMRPORT_SLOPEN_NO_LOOKUP_MSG_FOR_NOT_FOUND)) {
 			const char errorString[] = "The specified module could not be found";
 			SetErrorMode(prevMode);
 			if (unicodeBuffer != unicodeName) {

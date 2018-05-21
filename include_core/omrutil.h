@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMRUTIL_H_INCLUDED
@@ -40,7 +44,7 @@ extern "C" {
 
 #if defined(J9ZOS390)
 #pragma map(getdsa, "GETDSA")
-/* ----------------- j9getdsa.s ---------------- */
+/* ----------------- omrgetdsa.s ---------------- */
 /**
  * Returns the caa and dsa respectively on z/OS
  */
@@ -141,26 +145,26 @@ uintptr_t getSupportedBiggestNumberByPrimeNumberHelper(void);
 
 #if defined(WIN32) && !defined(WIN32_IBMC)
 
-/* ---------------- j9getdbghelp.c ---------------- */
+/* ---------------- omrgetdbghelp.c ---------------- */
 
 /**
 * @brief Load the version of dbghelp.dll that shipped with the JRE. If we can't find the shipped version, try to find it somewhere else.
 * @return A handle to dbghelp.dll if we were able to find one, NULL otherwise.
 */
-uintptr_t j9getdbghelp_loadDLL(void);
+uintptr_t omrgetdbghelp_loadDLL(void);
 
 /**
 * @brief Get a previously loaded version of dbghelp.dll that shipped with the JRE.
 * @return A handle to dbghelp.dll if we were able to find a previously loaded version, NULL otherwise.
 */
-uintptr_t j9getdbghelp_getDLL(void);
+uintptr_t omrgetdbghelp_getDLL(void);
 
 /**
 * @brief Free the supplied version of dbgHelpDLL
 * @param dbgHelpDLL
 * @return 0 if the library was freed, non-zero otherwise.
 */
-void j9getdbghelp_freeDLL(uintptr_t dbgHelpDLL);
+void omrgetdbghelp_freeDLL(uintptr_t dbgHelpDLL);
 
 #endif  /* defined(WIN32) && !defined(WIN32_IBMC) */
 

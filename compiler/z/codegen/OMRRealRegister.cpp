@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 //On zOS XLC linker can't handle files with same name at link time
@@ -301,23 +304,14 @@ OMR::Z::RealRegister::setRegister4Field(uint32_t *instruction,RegNum reg)
 bool
 OMR::Z::RealRegister::isPseudoRealReg(RegNum reg)
   {
-  if (reg < FirstGPR                              ||
-      (reg > LastAssignableGPR && reg < FirstFPR) ||
-       reg > LastAssignableFPR)
-     {
-     return true;
-     }
-  else
-     {
-    return false;
-    }
+  return (reg < FirstGPR || reg > LastHPR);
   }
 
 // static method
 bool
 OMR::Z::RealRegister::isRealReg(RegNum reg)
    {
-   return !TR::RealRegister::isPseudoRealReg(reg);
+   return (reg >= FirstGPR && reg <= LastHPR);
    }
 
 // static method
@@ -369,32 +363,6 @@ OMR::Z::RealRegister::isVRF(RegNum reg)
    else
       return false;
    }
-
-// static method
-uint64_t
-OMR::Z::RealRegister::getBitMask(RegNum reg)
-   {
-   if (TR::RealRegister::isGPR(reg))
-      return 0x1 << (reg - FirstGPR);
-   else if (TR::RealRegister::isHPR(reg))
-      return 0x1 << (reg - FirstHPR + LastGPR);
-   else if (TR::RealRegister::isAR(reg))
-      return 0x1 << (reg - FirstAR);
-   else if (TR::RealRegister::isFPR(reg))
-      return 0x1 << (reg - FirstFPR);
-   else if (TR::RealRegister::isVRF(reg))
-      return 0x1 << (reg - FirstVRF);
-   else
-      return 0;
-   }
-
-// static method
-uint64_t
-OMR::Z::RealRegister::getBitMask(int32_t regNum)
-   {
-   return TR::RealRegister::getBitMask((TR::RealRegister::RegNum)regNum);
-   }
-
 
 const uint8_t OMR::Z::RealRegister::_fullRegBinaryEncodings[TR::RealRegister::NumRegisters] =
    {
@@ -500,4 +468,3 @@ const uint8_t OMR::Z::RealRegister::_fullRegBinaryEncodings[TR::RealRegister::Nu
    0x0E,        // HPR14
    0x0F,        // HPR15
    };
-

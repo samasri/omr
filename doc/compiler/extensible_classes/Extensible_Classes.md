@@ -1,3 +1,25 @@
+<!--
+Copyright (c) 2016, 2017 IBM Corp. and others
+
+This program and the accompanying materials are made available under
+the terms of the Eclipse Public License 2.0 which accompanies this
+distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+or the Apache License, Version 2.0 which accompanies this distribution and
+is available at https://www.apache.org/licenses/LICENSE-2.0.
+
+This Source Code may also be made available under the following
+Secondary Licenses when the conditions for such availability set
+forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+General Public License, version 2 with the GNU Classpath 
+Exception [1] and GNU General Public License, version 2 with the
+OpenJDK Assembly Exception [2].
+
+[1] https://www.gnu.org/software/classpath/license.html
+[2] http://openjdk.java.net/legal/assembly-exception.html
+
+SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+-->
+
 # Extensible Classes {#ExtensibleClasses}
 
 ## Introduction
@@ -87,7 +109,7 @@ calling the member function. If the function is not defined in a given
 extensible class, then the compiler will search the extensible class' parent.
 
 We can tell the compiler what the most derived type is with a forward
-declaration. To know the name of this class, we decide upfront what the name of
+declaration. To know the name of this class, we decide up-front what the name of
 the most derived type will be and force the hierarchy to end at this name. By
 ensuring that only the most derived type can be instantiated, we guaranty that
 the cast is always to the type of the object referenced by `this`. This is why

@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 2012, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2012, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
  
 #include "LargeObjectAllocateStats.hpp"
@@ -39,7 +43,7 @@ MM_FreeEntrySizeClassStats::initialize(MM_EnvironmentBase *env, uintptr_t maxAll
 	_maxVeryLargeEntrySizes = 0;
 
 	if (0 != _maxSizeClasses) {
-		_count = (uintptr_t *)env->getForge()->allocate(sizeof(uintptr_t) * _maxSizeClasses, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+		_count = (uintptr_t *)env->getForge()->allocate(sizeof(uintptr_t) * _maxSizeClasses, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 		if (NULL == _count) {
 			return false;
@@ -47,20 +51,20 @@ MM_FreeEntrySizeClassStats::initialize(MM_EnvironmentBase *env, uintptr_t maxAll
 
 		/* _maxFrequentAllocateSizes is set to 0 when we use this structure to gather TLH allocation profile, which has no need for frequent allocations */
 		if (0 != _maxFrequentAllocateSizes) {
-			_frequentAllocationHead = (FrequentAllocation **)env->getForge()->allocate(sizeof(FrequentAllocation *) * _maxSizeClasses, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+			_frequentAllocationHead = (FrequentAllocation **)env->getForge()->allocate(sizeof(FrequentAllocation *) * _maxSizeClasses, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 			if (NULL == _frequentAllocationHead) {
 				return false;
 			}
 
-			_frequentAllocation = (FrequentAllocation *)env->getForge()->allocate(sizeof(FrequentAllocation) * MAX_FREE_ENTRY_COUNTERS_PER_FREQ_ALLOC_SIZE * _maxFrequentAllocateSizes, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+			_frequentAllocation = (FrequentAllocation *)env->getForge()->allocate(sizeof(FrequentAllocation) * MAX_FREE_ENTRY_COUNTERS_PER_FREQ_ALLOC_SIZE * _maxFrequentAllocateSizes, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 			if (NULL == _frequentAllocation) {
 				return false;
 			}
 
 			if (simulation) {
-				_fractionFrequentAllocation = (float *)env->getForge()->allocate(sizeof(float)*_maxFrequentAllocateSizes, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+				_fractionFrequentAllocation = (float *)env->getForge()->allocate(sizeof(float)*_maxFrequentAllocateSizes, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 				if (NULL == _fractionFrequentAllocation) {
 					return false;
 				}
@@ -78,7 +82,7 @@ MM_FreeEntrySizeClassStats::initialize(MM_EnvironmentBase *env, uintptr_t maxAll
 					guarantyEnoughPoolSizeForVeryLargeEntry = false;
 				}
 
-				_veryLargeEntryPool = (FrequentAllocation *)env->getForge()->allocate(sizeof(FrequentAllocation) * count, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+				_veryLargeEntryPool = (FrequentAllocation *)env->getForge()->allocate(sizeof(FrequentAllocation) * count, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 				if (NULL == _veryLargeEntryPool) {
 					return false;
@@ -482,7 +486,7 @@ MM_LargeObjectAllocateStats::newInstance(MM_EnvironmentBase *env, uint16_t maxAl
 {
 	MM_LargeObjectAllocateStats *largeObjectAllocateStats;
 
-	largeObjectAllocateStats = (MM_LargeObjectAllocateStats *)env->getForge()->allocate(sizeof(MM_LargeObjectAllocateStats), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	largeObjectAllocateStats = (MM_LargeObjectAllocateStats *)env->getForge()->allocate(sizeof(MM_LargeObjectAllocateStats), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 	if(NULL != largeObjectAllocateStats) {
 		new(largeObjectAllocateStats) MM_LargeObjectAllocateStats();
@@ -568,7 +572,7 @@ MM_LargeObjectAllocateStats::initialize(MM_EnvironmentBase *env, uint16_t maxAll
 	}
 #endif
 
-	_sizeClassSizes = (uintptr_t *)env->getForge()->allocate(sizeof(uintptr_t) * _freeEntrySizeClassStats._maxSizeClasses, MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	_sizeClassSizes = (uintptr_t *)env->getForge()->allocate(sizeof(uintptr_t) * _freeEntrySizeClassStats._maxSizeClasses, OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 
 	if (NULL == _sizeClassSizes) {
 		return false;

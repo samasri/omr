@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2017, 2018 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #ifndef OMR_VIRTUALMACHINEOPERANDARRAY_INCL
@@ -36,7 +39,7 @@ namespace OMR
  * that represent the value computed by the bytecodes.
  *
  * The array is represented as an array of pointers to TR::IlValue's, making it
- * easy to use IlBuilder services to consume and compute new values. 
+ * easy to use IlBuilder services to consume and compute new values.
  *
  * The current implementation does not share anything among different
  * VirtualMachineOperandArray objects. Possibly, some of the state could be
@@ -77,11 +80,11 @@ class VirtualMachineOperandArray : public VirtualMachineState
     * @param b the builder where the operations will be placed to recreate the virtual machine operand array
     */
    virtual void Commit(TR::IlBuilder *b);
-   
+
    /**
     * @brief read the virtual machine array back into the simulated operand array
     * @param b the builder where the operations will be placed to recreate the simulated operand array
-    * stack accounts for new or dropped virtual machine stack elements. 
+    * stack accounts for new or dropped virtual machine stack elements.
     */
    virtual void Reload(TR::IlBuilder *b);
 
@@ -97,7 +100,7 @@ class VirtualMachineOperandArray : public VirtualMachineState
     * @param b builder object where the operations will be added to make the current operand array the same as the other
     */
    virtual void MergeInto(OMR::VirtualMachineState *other, TR::IlBuilder *b);
-   
+
    /**
     * @brief update the values used to read and write the virtual machine array
     * @param b the builder where the values will be placed
@@ -111,19 +114,19 @@ class VirtualMachineOperandArray : public VirtualMachineState
     * @returns the expression at the given index
     */
    virtual TR::IlValue *Get(int32_t index);
-   
+
    /**
     * @brief Set the expression into the simulated operand array at the given index
     * @param index the location to store the expression
     * @param value expression to store into the simulated operand array
     */
    virtual void Set(int32_t index, TR::IlValue *value);
-  
+
    /**
     * @brief Move the expression from one index to another index in the simulated operand array
     * @param dstIndex the location to store the expression
     * @param srcIndex the location to copy the expression from
-    */ 
+    */
    virtual void Move(TR::IlBuilder *b, int32_t dstIndex, int32_t srcIndex);
 
    private:

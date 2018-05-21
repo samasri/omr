@@ -1,19 +1,22 @@
 /*******************************************************************************
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 2000, 2016
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at http://eclipse.org/legal/epl-2.0
+ * or the Apache License, Version 2.0 which accompanies this distribution
+ * and is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License, v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception [1] and GNU General Public
+ * License, version 2 with the OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 //On zOS XLC linker can't handle files with same name at link time
@@ -77,26 +80,25 @@
 	   _sourceUsedInMemoryReference(NULL), _flags(0), _longDispSpillReg1(NULL), _longDispSpillReg2(NULL), _binFreeRegs(0), \
    _targetRegSize(0), _sourceRegSize(0), _sourceMemSize(0), _targetMemSize(0), _sourceStart(-1), _targetStart(-1)
 
-OMR::Z::Instruction::Instruction(TR::CodeGenerator *cg,
-                   TR::InstOpCode::Mnemonic    op,
-                   TR::Node          *n)
- : OMR::Instruction(cg, op, n),
+OMR::Z::Instruction::Instruction(TR::CodeGenerator* cg, TR::InstOpCode::Mnemonic op, TR::Node* node)
+   : 
+   OMR::Instruction(cg, op, node),
    CTOR_INITIALIZER_LIST
-  {
-  self()->initialize();
-  }
+   {
+   TR_ASSERT(cg->getS390ProcessorInfo()->supportsArch(_opcode.getMinimumALS()), "Processor detected does not support instruction %s\n", cg->getDebug()? cg->getDebug()->getOpCodeName(&_opcode) : "(unknown)");
 
-OMR::Z::Instruction::Instruction(TR::CodeGenerator *cg,
-                   TR::Instruction *precedingInstruction,
-                   TR::InstOpCode::Mnemonic op,
-                   TR::Node * n)
- : OMR::Instruction(cg, precedingInstruction, op, n),
+   self()->initialize();
+   }
+
+OMR::Z::Instruction::Instruction(TR::CodeGenerator*cg, TR::Instruction* precedingInstruction, TR::InstOpCode::Mnemonic op, TR::Node* node)
+   : 
+   OMR::Instruction(cg, precedingInstruction, op, node),
    CTOR_INITIALIZER_LIST
-  {
-  self()->initialize(precedingInstruction, true);
-  }
+   {
+   TR_ASSERT(cg->getS390ProcessorInfo()->supportsArch(_opcode.getMinimumALS()), "Processor detected does not support instruction %s\n", cg->getDebug()? cg->getDebug()->getOpCodeName(&_opcode) : "(unknown)");
 
-
+   self()->initialize(precedingInstruction, true);
+   }
 
 TR::RegisterDependencyConditions *
 OMR::Z::Instruction::setDependencyConditionsNoBookKeeping(TR::RegisterDependencyConditions *cond)
@@ -2290,8 +2292,8 @@ OMR::Z::Instruction::assignOrderedRegisters(TR_RegisterKinds kindToBeAssigned)
              _targetReg[i]->getRegisterPair()->getHighOrder()->getKind() != TR_VRF)
             {
             uint32_t availHPRMask = self()->cg()->getAvailableHPRSpillMask();
-            availHPRMask &= ~(TR::RealRegister::getBitMask(toRealRegister(_targetReg[i]->getRegisterPair()->getHighOrder())->getHighWordRegister()->getRegisterNumber()));
-            availHPRMask &= ~(TR::RealRegister::getBitMask(toRealRegister(_targetReg[i]->getRegisterPair()->getLowOrder())->getHighWordRegister()->getRegisterNumber()));
+            availHPRMask &= ~(toRealRegister(_targetReg[i]->getRegisterPair()->getHighOrder())->getHighWordRegister()->getRealRegisterMask());
+            availHPRMask &= ~(toRealRegister(_targetReg[i]->getRegisterPair()->getLowOrder())->getHighWordRegister()->getRealRegisterMask());
             self()->cg()->setAvailableHPRSpillMask(availHPRMask);
             }
          }
@@ -2387,7 +2389,7 @@ OMR::Z::Instruction::assignOrderedRegisters(TR_RegisterKinds kindToBeAssigned)
 
             // make sure we do not spill to the targetReg's HPR later (even if it's free)
             uint32_t availHPRMask = self()->cg()->getAvailableHPRSpillMask();
-            availHPRMask &= ~(TR::RealRegister::getBitMask(toRealRegister(_targetReg[i])->getHighWordRegister()->getRegisterNumber()));
+            availHPRMask &= ~(toRealRegister(_targetReg[i])->getHighWordRegister()->getRealRegisterMask());
             self()->cg()->setAvailableHPRSpillMask(availHPRMask);
             }
 

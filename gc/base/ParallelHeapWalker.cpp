@@ -1,19 +1,23 @@
 /*******************************************************************************
+ * Copyright (c) 1991, 2017 IBM Corp. and others
  *
- * (c) Copyright IBM Corp. 1991, 2017
+ * This program and the accompanying materials are made available under
+ * the terms of the Eclipse Public License 2.0 which accompanies this
+ * distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+ * or the Apache License, Version 2.0 which accompanies this distribution and
+ * is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
- *  This program and the accompanying materials are made available
- *  under the terms of the Eclipse Public License v1.0 and
- *  Apache License v2.0 which accompanies this distribution.
+ * This Source Code may also be made available under the following
+ * Secondary Licenses when the conditions for such availability set
+ * forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+ * General Public License, version 2 with the GNU Classpath
+ * Exception [1] and GNU General Public License, version 2 with the
+ * OpenJDK Assembly Exception [2].
  *
- *      The Eclipse Public License is available at
- *      http://www.eclipse.org/legal/epl-v10.html
+ * [1] https://www.gnu.org/software/classpath/license.html
+ * [2] http://openjdk.java.net/legal/assembly-exception.html
  *
- *      The Apache License v2.0 is available at
- *      http://www.opensource.org/licenses/apache2.0.php
- *
- * Contributors:
- *    Multiple authors (IBM Corp.) - initial implementation and documentation
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
 #include "ParallelHeapWalker.hpp"
@@ -47,7 +51,7 @@ class MM_ParallelObjectDoTask : public MM_ParallelTask
 private:
 	MM_HeapWalkerObjectFunc _function;
 	void *_userData;
-	UDATA _walkFlags;
+	uintptr_t _walkFlags;
 
 	MM_ParallelHeapWalker *_heapWalker;
 
@@ -58,14 +62,14 @@ public:
 	 * Function members
 	 */
 public:
-	virtual UDATA getVMStateID() { return J9VMSTATE_GC_PARALLEL_OBJECT_DO; };
+	virtual uintptr_t getVMStateID() { return J9VMSTATE_GC_PARALLEL_OBJECT_DO; };
 
 	virtual void run(MM_EnvironmentBase *env);
 
 	/*
 	 * Create a ParallelObjectAndVMSlotsDoTask object.
 	 */
-	MM_ParallelObjectDoTask(MM_EnvironmentBase *env, MM_ParallelHeapWalker *heapWalker, MM_HeapWalkerObjectFunc function, void *userData, UDATA walkFlags, bool parallel)
+	MM_ParallelObjectDoTask(MM_EnvironmentBase *env, MM_ParallelHeapWalker *heapWalker, MM_HeapWalkerObjectFunc function, void *userData, uintptr_t walkFlags, bool parallel)
 		: MM_ParallelTask(env, env->getExtensions()->dispatcher)
 		, _function(function)
 		, _userData(userData)
@@ -84,7 +88,7 @@ MM_ParallelHeapWalker::newInstance(MM_ParallelGlobalGC *globalCollector, MM_Mark
 {
 	MM_ParallelHeapWalker *heapWalker;
 
-	heapWalker = (MM_ParallelHeapWalker *)env->getForge()->allocate(sizeof(MM_ParallelHeapWalker), MM_AllocationCategory::FIXED, OMR_GET_CALLSITE());
+	heapWalker = (MM_ParallelHeapWalker *)env->getForge()->allocate(sizeof(MM_ParallelHeapWalker), OMR::GC::AllocationCategory::FIXED, OMR_GET_CALLSITE());
 	if (heapWalker) {
 		new(heapWalker) MM_ParallelHeapWalker(globalCollector, markMap);
 	}
@@ -96,22 +100,22 @@ MM_ParallelHeapWalker::newInstance(MM_ParallelGlobalGC *globalCollector, MM_Mark
  * Walk through all live objects of the heap in parallel and apply the provided function.
  */
 void
-MM_ParallelHeapWalker::allObjectsDoParallel(MM_EnvironmentBase *env, MM_HeapWalkerObjectFunc function, void *userData, UDATA walkFlags)
+MM_ParallelHeapWalker::allObjectsDoParallel(MM_EnvironmentBase *env, MM_HeapWalkerObjectFunc function, void *userData, uintptr_t walkFlags)
 {
 	Trc_MM_ParallelHeapWalker_allObjectsDoParallel_Entry(env->getLanguageVMThread());
 	MM_GCExtensionsBase *extensions = env->getExtensions();
 
 	/* determine the size of the segment chunks to use for parallel walks */
-	UDATA threadCount = env->_currentTask->getThreadCount();
-	UDATA heapChunkFactor = 1;
+	uintptr_t threadCount = env->_currentTask->getThreadCount();
+	uintptr_t heapChunkFactor = 1;
 	if ((threadCount > 1) && _markMap->isMarkMapValid()) {
 		heapChunkFactor = threadCount * 8;
 	}
-	UDATA parallelChunkSize = extensions->heap->getMemorySize() / heapChunkFactor;
+	uintptr_t parallelChunkSize = extensions->heap->getMemorySize() / heapChunkFactor;
 	parallelChunkSize = MM_Math::roundToCeiling(extensions->heapAlignment, parallelChunkSize);
 
 	/* Perform the parallel object heap iteration */
-	UDATA objectsWalked = 0;
+	uintptr_t objectsWalked = 0;
 	MM_Heap *heap = extensions->heap;
 	MM_HeapRegionManager *regionManager = heap->getHeapRegionManager();
 	regionManager->lock();
@@ -120,11 +124,13 @@ MM_ParallelHeapWalker::allObjectsDoParallel(MM_EnvironmentBase *env, MM_HeapWalk
 	OMR_VMThread *omrVMThread = env->getOmrVMThread();
 
 	while (NULL != (region = regionIterator.nextRegion())) {
-		GC_ParallelObjectHeapIterator objectHeapIterator(env, region, region->getLowAddress(), region->getHighAddress(), _markMap, parallelChunkSize);
-		omrobjectptr_t object = NULL;
-		while ((object = objectHeapIterator.nextObject()) != NULL) {
-			function(omrVMThread, region, object, userData);
-			objectsWalked += 1;
+		if (walkFlags == (region->getTypeFlags() & walkFlags)) {
+			GC_ParallelObjectHeapIterator objectHeapIterator(env, region, region->getLowAddress(), region->getHighAddress(), _markMap, parallelChunkSize);
+			omrobjectptr_t object = NULL;
+			while ((object = objectHeapIterator.nextObject()) != NULL) {
+				function(omrVMThread, region, object, userData);
+				objectsWalked += 1;
+			}
 		}
 	}
 	regionManager->unlock();
@@ -137,7 +143,7 @@ MM_ParallelHeapWalker::allObjectsDoParallel(MM_EnvironmentBase *env, MM_HeapWalk
  * otherwise walk all objects in the heap in a single threaded linear fashion.
  */
 void
-MM_ParallelHeapWalker::allObjectsDo(MM_EnvironmentBase *env, MM_HeapWalkerObjectFunc function, void *userData, UDATA walkFlags, bool parallel, bool prepareHeapForWalk)
+MM_ParallelHeapWalker::allObjectsDo(MM_EnvironmentBase *env, MM_HeapWalkerObjectFunc function, void *userData, uintptr_t walkFlags, bool parallel, bool prepareHeapForWalk)
 {
 	if (parallel) {
 		GC_OMRVMInterface::flushCachesForWalk(env->getOmrVM());
