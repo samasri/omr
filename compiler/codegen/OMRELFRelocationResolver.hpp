@@ -53,7 +53,7 @@ public:
     * @param relocation The relocation object containing the information that requires translation.
     * @return The ELF relocation type appropriate for the platform
     */
-   virtual OMR_EXTENSIBLE uint32_t resolveRelocationType(const TR::StaticRelocation &relocation);
+   virtual OMR_EXTENSION uint32_t resolveRelocationType(const TR::StaticRelocation &relocation);
 
 private:
    };
