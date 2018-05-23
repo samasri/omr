@@ -1,13 +1,16 @@
 # Path to OMR main directory
 OMR = ../../../
 # Path to clang bin (if using Ubuntu, use the clang that is provided by Ubuntu packages, rebuilding clang from source code and running it doesn't work for some reason)
-CXX = clang++-3.8
-# Path to compiler that compiles the plugin
-GXX = clang++-3.8
+CXX = clang++-5.0
+#clang++-3.8
+LLVM_CONFIG = llvm-config-5.0
+#llvm-config-3.8
 
 # Get defines and includes for all architectures
 include crossCompilationDefines.mk
-COMPILATION_INCLUDES = -I/home/se-team/Desktop/llvm-clang/3.8-llvm/tools/clang/include/ -I/home/se-team/Desktop/llvm-clang/3.8-build/tools/clang/include/
+COMPILATION_INCLUDES = 
+#-I/home/se-team/Desktop/llvm-clang/3.8-llvm/tools/clang/include/ -I/home/se-team/Desktop/llvm-clang/3.8-build/tools/clang/include/
+
 
 # Path to shared object file. NOTE: when adding this to plugin always remember to put ./ before the path.
 SO = ./plugin.so
@@ -23,8 +26,8 @@ CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@echo "Building my plugin..."
-	@$(GXX) `llvm-config-3.8 --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
-	@$(GXX) -shared `llvm-config-3.8 --ldflags` -o $(SO) $(O)
+	@$(CXX) `$(LLVM_CONFIG) --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
+	@$(CXX) -shared `$(LLVM_CONFIG) --ldflags` -o $(SO) $(O)
 	@rm $(O)
 
 clean: 
@@ -90,7 +93,6 @@ output/lastCreated: $(SO)
 	@mv -f output/p.* output/"original (trimmed) result"/
 	@mv -f output/z.* output/"original (trimmed) result"/
 	
-#@python visualization/Overloads/makeHTML.py visualization/Overloads/overloads
 	@python visualization/Hierarchy/makeDot.py
 	@dot -Tpdf visualization/Hierarchy/graph.dot -o visualization/Hierarchy/graph.pdf
 	
