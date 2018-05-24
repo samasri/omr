@@ -2,14 +2,10 @@
 OMR = ../../../
 # Path to clang bin (if using Ubuntu, use the clang that is provided by Ubuntu packages, rebuilding clang from source code and running it doesn't work for some reason)
 CXX = clang++-5.0
-#clang++-3.8
 LLVM_CONFIG = llvm-config-5.0
-#llvm-config-3.8
 
 # Get defines and includes for all architectures
 include crossCompilationDefines.mk
-COMPILATION_INCLUDES = 
-#-I/home/se-team/Desktop/llvm-clang/3.8-llvm/tools/clang/include/ -I/home/se-team/Desktop/llvm-clang/3.8-build/tools/clang/include/
 
 
 # Path to shared object file. NOTE: when adding this to plugin always remember to put ./ before the path.
@@ -26,7 +22,7 @@ CC1_MAINARG = -Xclang -load -Xclang $(SO) -Xclang -plugin-arg-$(PL) -Xclang OMR_
 
 $(SO): $(CPP) $(CPP:.cpp=.hpp)
 	@echo "Building my plugin..."
-	@$(CXX) `$(LLVM_CONFIG) --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) $(COMPILATION_INCLUDES) -g
+	@$(CXX) `$(LLVM_CONFIG) --cxxflags` -std=c++0x -Wno-strict-aliasing -c -o $(O) $(CPP) -g
 	@$(CXX) -shared `$(LLVM_CONFIG) --ldflags` -o $(SO) $(O)
 	@rm $(O)
 
@@ -56,8 +52,10 @@ ARCHS = amd64 i386 p z
 OUTPUTS = hierarchy weirdHierarchy allClasses allFunctions overrides functionLocation avg functionCalls
 
 # JIT_OMR_DIRTY_DIR: path to 'compiler' dir starting from where clang is going to compile the files, that is: from OMRStatistics/sources
-JIT_OMR_DIRTY_DIR = ../../../../compiler
-JIT_PRODUCT_DIR = ../../../../fvtest/compilertest
+OMR_DIR ?= /home/sam/omr
+JIT_OMR_DIRTY_DIR = $(OMR_DIR)/compiler
+JIT_PRODUCT_DIR = $(OMR_DIR)/fvtest/compilertest
+JIT_MAKE_DIR = $(JIT_PRODUCT_DIR)/build
 
 # Exporting variables so that other makefiles (trigerred by execute.py in output/lastCreated)
 export SO
@@ -67,6 +65,7 @@ export PL
 export ARCHS
 export JIT_OMR_DIRTY_DIR
 export JIT_PRODUCT_DIR
+export JIT_MAKE_DIR
 
 produceVisualizations: $(SO)
 	@make output/lastCreated --no-print-directory
@@ -80,6 +79,7 @@ output/lastCreated: $(SO)
 	@python sources/execute.py i386
 	@python sources/execute.py p
 	@python sources/execute.py z
+	
 	@touch output/lastCreated
 	
 	@make copyOriginal
