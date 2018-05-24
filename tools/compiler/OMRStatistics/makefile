@@ -51,11 +51,18 @@ include tests.mk
 ARCHS = amd64 i386 p z
 OUTPUTS = hierarchy weirdHierarchy allClasses allFunctions overrides functionLocation avg functionCalls
 
-# JIT_OMR_DIRTY_DIR: path to 'compiler' dir starting from where clang is going to compile the files, that is: from OMRStatistics/sources
+# These variables have to be changed/overridden based on the parent project that OMRStatistics is analyzing.
 OMR_DIR ?= /home/sam/omr
-JIT_OMR_DIRTY_DIR = $(OMR_DIR)/compiler
+JIT_OMR_DIRTY_DIR ?= $(OMR_DIR)/compiler
 JIT_PRODUCT_DIR = $(OMR_DIR)/fvtest/compilertest
-JIT_MAKE_DIR = $(JIT_PRODUCT_DIR)/build
+JIT_MAKE_DIR ?= $(JIT_PRODUCT_DIR)/build
+
+# For openJ9:
+# OMR_DIR ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr
+# JIT_OMR_DIRTY_DIR ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9
+# JIT_MAKE_DIR ?= $(JIT_OMR_DIRTY_DIR)/build
+# FIXED_SRCBASE ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm
+# export FIXED_SRCBASE
 
 # Exporting variables so that other makefiles (trigerred by execute.py in output/lastCreated)
 export SO
