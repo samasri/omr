@@ -1,7 +1,7 @@
 #P includes
 
-# JIT_OMR_DIRTY_DIR: path to 'compiler' dir starting from where clang is going to compile the files, that is: from OMRStatistics/sources
-HOST_ARCH = p
+HOST_ARCH = x
+HOST_SUBARCH = amd64
 TARGET_ARCH = p
 
 include $(JIT_MAKE_DIR)/files/common.mk
