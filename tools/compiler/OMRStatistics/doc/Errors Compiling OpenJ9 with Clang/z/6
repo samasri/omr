@@ -1,0 +1,5 @@
+(Arch: Z): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/z/env/J9CPU.cpp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/z/env/J9CPU.cpp:656:65: error: use of undeclared identifier 'j9ri_enableRISupport'
+   if (TR::Compiler->target.cpu.getS390SupportsZEC12() && (0 == j9ri_enableRISupport()))
+                                                                ^
+1 error generated.

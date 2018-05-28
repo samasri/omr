@@ -1,0 +1,8 @@
+(Arch: Z): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/z/codegen/S390Recompilation.cpp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/z/codegen/S390Recompilation.cpp:570:48: error: use of undeclared identifier 'OFFSET_INTEP_JITEP_SAVE_RESTORE_LOCATION'
+   uint32_t * saveLocn = (uint32_t*)(startPC + OFFSET_INTEP_JITEP_SAVE_RESTORE_LOCATION);
+                                               ^
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/z/codegen/S390Recompilation.cpp:577:4: error: use of undeclared identifier 'saveJitEntryPoint'
+   saveJitEntryPoint(startPC, (uint8_t*)jitEntryPoint);
+   ^
+2 errors generated.

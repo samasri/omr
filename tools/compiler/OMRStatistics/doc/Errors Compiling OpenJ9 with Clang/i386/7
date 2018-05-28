@@ -1,0 +1,5 @@
+(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/runtime/RelocationRecord.cpp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/runtime/RelocationRecord.cpp:2555:106: error: use of undeclared identifier 'classChainIdentifyingLoader'
+         RELO_LOG(reloRuntime->reloLogger(), 1,"\tpreparePrivateData: classChainIdentifyingLoader %p\n", classChainIdentifyingLoader);
+                                                                                                         ^
+1 error generated.

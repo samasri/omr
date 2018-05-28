@@ -1,0 +1,5 @@
+(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/OMRMachine.cpp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/OMRMachine.cpp:1670:32: error: no member named 'r8' in 'TR::RealRegister'
+   for(reg = TR::RealRegister::r8; reg <= TR::RealRegister::LastAssignableGPR; reg++)
+             ~~~~~~~~~~~~~~~~~~^
+1 error generated.

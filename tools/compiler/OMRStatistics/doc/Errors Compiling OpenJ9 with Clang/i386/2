@@ -1,0 +1,11 @@
+(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/ras/Tree.cpp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/ras/Tree.cpp:1845:29: error: no member named 'isPackedArithmeticSelect' in 'TR::ILOpCode'
+      if (node->getOpCode().isPackedArithmeticSelect())
+          ~~~~~~~~~~~~~~~~~ ^
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/ras/Tree.cpp:1850:30: error: no member named 'getSelectDividendPrecision' in 'TR::Node'
+                       node->getSelectDividendPrecision(),
+                       ~~~~  ^
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/ras/Tree.cpp:1851:30: error: no member named 'getSelectDivisorPrecision' in 'TR::Node'
+                       node->getSelectDivisorPrecision());
+                       ~~~~  ^
+3 errors generated.

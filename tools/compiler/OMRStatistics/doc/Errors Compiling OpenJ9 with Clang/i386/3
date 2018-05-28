@@ -1,0 +1,6 @@
+(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/OMRCodeGenerator.cpp
+In file included from /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/OMRCodeGenerator.cpp:50:
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/amd64/codegen/AMD64SystemLinkage.hpp:60:126: error: no member named 'r11' in 'TR::RealRegister'
+   virtual TR::RealRegister* getSingleWordFrameAllocationRegister() { return machine()->getX86RealRegister(TR::RealRegister::r11); }
+                                                                                                           ~~~~~~~~~~~~~~~~~~^
+1 error generated.
