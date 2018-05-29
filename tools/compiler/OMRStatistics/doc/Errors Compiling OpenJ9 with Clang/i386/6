@@ -1,0 +1,8 @@
+(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/x/codegen/J9TreeEvaluator.cpp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/x/codegen/J9TreeEvaluator.cpp:10833:84: error: cast from pointer to smaller type 'int32_t' (aka 'int') loses information
+   TR::X86ImmSymInstruction *callInstr = generateImmSymInstruction(CALLImm4, node, (int32_t)&gettimeofday, gtod, cg);
+                                                                                   ^~~~~~~~~~~~~~~~~~~~~~
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/x/codegen/J9TreeEvaluator.cpp:11254:82: error: cast from pointer to smaller type 'int32_t' (aka 'int') loses information
+      TR::X86ImmInstruction  *callInstr = generateImmInstruction(CALLImm4, node, (int32_t)&clock_gettime, deps, cg);
+                                                                                 ^~~~~~~~~~~~~~~~~~~~~~~
+2 errors generated.
