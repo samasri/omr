@@ -25,4 +25,4 @@
 
 *File column: Paths starting from openj9 build directory
 
-*Error column: Paths starting from OMRStatistics "[github repo]/doc/Errors Compiling OpenJ9 with Clang/"
+*Error column: Paths starting from "[OMRStatistics Github repo]/doc/Errors Compiling OpenJ9 with Clang/"
