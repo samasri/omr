@@ -3,7 +3,6 @@ CC1_MAINARG = -Xclang -load -Xclang ../$(SO) -Xclang -plugin-arg-$(PL) -Xclang O
 LINTER_FLAGS = -std=c++0x -w -fsyntax-only -ferror-limit=0 $(LINTER_FLAGS_EXTRA)
 
 OMR = ../../../../
-include ../crossCompilationDefines.mk
 
 # Includes and defines are generated differently between omr and openJ9
 ifdef J9SRC
