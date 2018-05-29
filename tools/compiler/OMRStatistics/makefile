@@ -61,8 +61,8 @@ JIT_MAKE_DIR ?= $(JIT_PRODUCT_DIR)/build
 # OMR_DIR ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr
 # JIT_OMR_DIRTY_DIR ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9
 # JIT_MAKE_DIR ?= $(JIT_OMR_DIRTY_DIR)/build
-# FIXED_SRCBASE ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm
-# export FIXED_SRCBASE
+# export FIXED_SRCBASE ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm
+# export J9SRC ?= /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm
 
 # Exporting variables so that other makefiles (trigerred by execute.py in output/lastCreated)
 export SO
