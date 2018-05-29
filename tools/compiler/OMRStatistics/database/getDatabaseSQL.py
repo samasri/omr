@@ -320,6 +320,8 @@ for row in allFunctions:
 
 	fileID = functionToFileIDMap[functionQualifiedName]
 	classID = classToIDMap[classQualifiedName]
+	
+	#print row[0] + ';' + row[1]
 	functionQualNametoID[str(classID) + '::' + row[1]] = id
 	
 	if not debug:
@@ -431,10 +433,13 @@ for row in functionCalls:
 	callerNamespace = row[0]
 	callerClassName = row[1]
 	callerFuncSig = row[2]
+	if callerFuncSig in ignoredFunctionSignatures: continue
+	
 	calledFuncSignature = row[3]
 	receiverNamespace = row[4]
 	receiverClassName = row[5]
 	callSite = row[6]
+	
 	# Making path relative, starting from the omr directory
 	callSite = callSite.replace("../../../../", pathToOMR);
 	callSite = callSite.replace("//", "/");

@@ -81,6 +81,9 @@ output/lastCreated: $(SO)
 	@for output in $(OUTPUTS) ; do \
 		rm -f output/$$output ; \
 	done \
+	@for output in $(ARCHS) ; do \
+		rm -f output/$$output.* ; \
+	done \
 	
 	@python sources/execute.py amd64
 	@python sources/execute.py i386
