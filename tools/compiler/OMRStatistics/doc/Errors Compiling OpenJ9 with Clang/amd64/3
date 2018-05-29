@@ -216,8 +216,3 @@ U_8 isUnloadedInlinedMethod(J9Method *m)
    int32_t  _callerIndex    : 13; /* index into TR_InlinedCallSite array.  -1 implies outermost function */
             ^
 35 errors generated.
-(Arch: AMD64): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/runtime/RelocationRecord.cpp
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/runtime/RelocationRecord.cpp:2555:106: error: use of undeclared identifier 'classChainIdentifyingLoader'
-         RELO_LOG(reloRuntime->reloLogger(), 1,"\tpreparePrivateData: classChainIdentifyingLoader %p\n", classChainIdentifyingLoader);
-                                                                                                         ^
-1 error generated.
