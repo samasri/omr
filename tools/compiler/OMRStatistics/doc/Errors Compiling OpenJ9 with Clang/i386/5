@@ -1,60 +1,8 @@
-(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1879:30: error: no member named 'r8' in 'TR::RealRegister'
-      case TR::RealRegister::r8:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1881:30: error: no member named 'r9' in 'TR::RealRegister'
-      case TR::RealRegister::r9:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1883:30: error: no member named 'r10' in 'TR::RealRegister'
-      case TR::RealRegister::r10:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1885:30: error: no member named 'r11' in 'TR::RealRegister'
-      case TR::RealRegister::r11:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1887:30: error: no member named 'r12' in 'TR::RealRegister'
-      case TR::RealRegister::r12:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1889:30: error: no member named 'r13' in 'TR::RealRegister'
-      case TR::RealRegister::r13:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1891:30: error: no member named 'r14' in 'TR::RealRegister'
-      case TR::RealRegister::r14:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1893:30: error: no member named 'r15' in 'TR::RealRegister'
-      case TR::RealRegister::r15:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1947:30: error: no member named 'xmm8' in 'TR::RealRegister'
-      case TR::RealRegister::xmm8:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1949:30: error: no member named 'xmm9' in 'TR::RealRegister'
-      case TR::RealRegister::xmm9:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1951:30: error: no member named 'xmm10' in 'TR::RealRegister'
-      case TR::RealRegister::xmm10:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1953:30: error: no member named 'xmm11' in 'TR::RealRegister'; did you mean 'xmm1'?
-      case TR::RealRegister::xmm11:
-           ~~~~~~~~~~~~~~~~~~^~~~~
-                             xmm1
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/i386/codegen/RealRegisterEnum.hpp:73:4: note: 'xmm1' declared here
-   xmm1                    = 27,
-   ^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1955:30: error: no member named 'xmm12' in 'TR::RealRegister'
-      case TR::RealRegister::xmm12:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1957:30: error: no member named 'xmm13' in 'TR::RealRegister'
-      case TR::RealRegister::xmm13:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1959:30: error: no member named 'xmm14' in 'TR::RealRegister'
-      case TR::RealRegister::xmm14:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1961:30: error: no member named 'xmm15' in 'TR::RealRegister'
-      case TR::RealRegister::xmm15:
-           ~~~~~~~~~~~~~~~~~~^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1953:12: error: duplicate case value 'xmm1'
-      case TR::RealRegister::xmm11:
-           ^
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/X86Debug.cpp:1932:12: note: previous case defined here
-      case TR::RealRegister::xmm1:
-           ^
-17 errors generated.
+(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/x/codegen/J9TreeEvaluator.cpp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/x/codegen/J9TreeEvaluator.cpp:10833:84: error: cast from pointer to smaller type 'int32_t' (aka 'int') loses information
+   TR::X86ImmSymInstruction *callInstr = generateImmSymInstruction(CALLImm4, node, (int32_t)&gettimeofday, gtod, cg);
+                                                                                   ^~~~~~~~~~~~~~~~~~~~~~
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/x/codegen/J9TreeEvaluator.cpp:11254:82: error: cast from pointer to smaller type 'int32_t' (aka 'int') loses information
+      TR::X86ImmInstruction  *callInstr = generateImmInstruction(CALLImm4, node, (int32_t)&clock_gettime, deps, cg);
+                                                                                 ^~~~~~~~~~~~~~~~~~~~~~~
+2 errors generated.

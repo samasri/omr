@@ -1,5 +1,16 @@
-(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/OMRMachine.cpp
-/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/omr/compiler/x/codegen/OMRMachine.cpp:1670:32: error: no member named 'r8' in 'TR::RealRegister'
-   for(reg = TR::RealRegister::r8; reg <= TR::RealRegister::LastAssignableGPR; reg++)
-             ~~~~~~~~~~~~~~~~~~^
-1 error generated.
+(Arch: I386): Compiling /home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/runtime/SignalHandler.c
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/runtime/SignalHandler.c:347:81: error: no member named 'jit_ebp' in 'J9VMJITRegisterState'; did you mean 'jit_rbp'?
+                                ((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_ebp = *ebpPtr;
+                                                                                                            ^~~~~~~
+                                                                                                            jit_rbp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/oti/j9nonbuilder.h:4119:8: note: 'jit_rbp' declared here
+        UDATA jit_rbp;
+              ^
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/compiler/trj9/runtime/SignalHandler.c:381:81: error: no member named 'jit_ebp' in 'J9VMJITRegisterState'; did you mean 'jit_rbp'?
+                                ((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_ebp = (UDATA) *ebpPtr;
+                                                                                                            ^~~~~~~
+                                                                                                            jit_rbp
+/home/sam/3openj9/openj9-openjdk-jdk9/build/linux-x86_64-normal-server-release/vm/oti/j9nonbuilder.h:4119:8: note: 'jit_rbp' declared here
+        UDATA jit_rbp;
+              ^
+2 errors generated.
