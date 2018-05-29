@@ -1,7 +1,7 @@
 #Z includes
 
 HOST_ARCH = x
-TARGET_SUBARCH = amd64
+HOST_SUBARCH = amd64
 TARGET_ARCH = z
 
 include $(JIT_MAKE_DIR)/files/common.mk
@@ -16,6 +16,12 @@ endif
 
 export TARGETS
 
+ifdef J9SRC
+include $(JIT_MAKE_DIR)/toolcfg/common.mk
+
+export CXX_DEFINES
+export CXX_INCLUDES
+endif
 
 default:
 	make -C ../../

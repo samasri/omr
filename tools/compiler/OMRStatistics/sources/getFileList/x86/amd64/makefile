@@ -17,7 +17,12 @@ endif
 
 export TARGETS
 
+ifdef J9SRC
+include $(JIT_MAKE_DIR)/toolcfg/common.mk
+
+export CXX_DEFINES
+export CXX_INCLUDES
+endif
+
 default:
-	@echo "test"
-	@echo $(JIT_MAKE_DIR)
 	make -C ../../../
