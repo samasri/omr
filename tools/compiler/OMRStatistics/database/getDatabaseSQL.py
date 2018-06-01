@@ -1,13 +1,19 @@
-# This python script creates SQL files containing queries that create the database. The script does not support more than one argument.
-# Passing no arguments for the script creates the SQL files in the same directory as the python file.
-# Passing 'd' to the script will run it in debug mode (no output generated).
-# Passing anything else to the script will be considered as the path to the directory for the output to be placed in. The passed path relative to where the python file is. For example passing 'foo' to the script means the files will be placed in omrstatistics/output/foo
+# This python script creates SQL files containing queries that create the database.
+# PROJECT_PATH and TARGET_PROJECT variables should be configured
 import csv
 import sys
 import os
 import warnings
 import random
 
+# Configured per project
+PROJECTS_PATH = ['/home/sam/omr/', '/home/sam/3openj9/openj9-openjdk-jdk9/build/'] #Path to build directory
+TARGET_PROJECT = 0 # The project that this python file is targetting
+# In case the database already have entries
+FILE_ID_OFFSET = 0
+CLASS_ID_OFFSET = 0
+FUNCTION_ID_OFFSET = 0
+HIERARCHY_ID_OFFSET = 0
 # ------------------------------------------Define Tables------------------------------------------
 class FunctionTable:
 	def __init__(self, functionNameLength, signatureLength):
@@ -35,18 +41,6 @@ class FileTable:
 		# Columns
 		self.ID = 'INT'
 		self.Location = 'VARCHAR(' + str(maxLocationLength) + ')'
-
-class OverrideTable:
-	def __init__(self):
-		self.tableName = 'Override'
-		self.columns = ['BaseFunctionID', 'OverridingFunctionID']
-		self.primaryKey = 'BaseFunctionID, OverridingFunctionID'
-		self.foreignKeys = {}
-		self.foreignKeys['BaseFunctionID'] = [FunctionTable(-1,-1), 'ID']
-		self.foreignKeys['OverridingFunctionID'] = [FunctionTable(-1,-1), 'ID']
-		# Columns
-		self.BaseFunctionID = 'INT'
-		self.OverridingFunctionID = 'INT'
 
 class PolymorphismTable:
 	def __init__(self):
@@ -100,13 +94,12 @@ class FunctionCall:
 
 # ------------------------------------------Configurations-----------------------------------------
 
-# Get the absolute path to the OMR directory
-pathToOMR = os.path.dirname(os.path.realpath(__file__)) + sys.argv[0]
-pathToOMR = pathToOMR[:pathToOMR.index('/omr/tools/compiler/') + 5]
-
-# Get path from OMRStatistics directory to the outputDir
-path = pathToOMR + 'tools/compiler/OMRStatistics/output/'
-fileWritePath = pathToOMR  + 'tools/compiler/OMRStatistics/database/'
+# Configure Paths
+pathToProject = PROJECTS_PATH[TARGET_PROJECT]
+pathToFile = os.path.dirname(os.path.realpath(__file__))
+OMRStatisticsDir = os.path.abspath(os.path.join(pathToFile, os.pardir))
+outputPath = OMRStatisticsDir + '/output/'
+fileWritePath = OMRStatisticsDir + '/database/'
 
 # Setting debug
 if len(sys.argv) == 2 and sys.argv[1] == 'd': debug = 1
@@ -146,9 +139,9 @@ def createTable(table):
 	file.write(result)
 	return file
 
-def getOMRLongestPath(pathToOMR):
+def getOMRLongestPathIn(directory):
 	maxPathLength = -1
-	for root, subdirs, files in os.walk(pathToOMR):
+	for root, subdirs, files in os.walk(directory):
 		maxFileLength = -1
 		for currentFile in files:
 			if maxFileLength < len(str(currentFile)): maxFileLength = len(str(currentFile))
@@ -169,11 +162,22 @@ def insertTo(table, vector):
 	return result
 
 def getSignature(qualifiedName):
+	# Handle special case when the class is in an anonymous namespace
+	if '(anonymous namespace)' == qualifiedName[:21]: 
+		qualifiedName = qualifiedName[23:]
 	parenIndex = qualifiedName.find('(')
 	inputTrimmed = qualifiedName[:parenIndex]
 	lastColonIndex = inputTrimmed.rfind('::')
 	signature = qualifiedName[lastColonIndex + 2:]
 	return signature
+
+def getRelativePath(path):
+	path = path.replace("//", "/");
+	if TARGET_PROJECT == 0: return path[len(pathToProject) - 4:] # since "omr/" is of lenght = 4
+	elif TARGET_PROJECT == 1:
+		relPath = path[len(pathToProject) - 7:]
+		relPath = relPath.replace('/build/linux-x86_64-normal-server-release/', 'openj9/')
+		return relPath
 # -----------------------------------End of Defining Functions-------------------------------------
 
 # Global data structures
@@ -185,16 +189,15 @@ ignoredFunctionSignatures = []
 if not debug: allSQLQueries = open(fileWritePath + 'all.sql', 'w') # Write all queries in one file
 
 # Import CSV files for reading and processing
-allFunctions = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
-allClasses = csv.reader(open(path + 'allClasses','r'), delimiter=";")
-overrides = csv.reader(open(path + '../visualization/Overrides/overrides','r'), delimiter=";")
-hierarchies = csv.reader(open(path + '../visualization/Hierarchy/hierarchy','r'), delimiter=";")
-functionLocations = csv.reader(open(path + 'functionLocation','r'), delimiter=";")
-functionCalls = csv.reader(open(path + 'functionCalls','r'), delimiter=";")
+allFunctions = csv.reader(open(outputPath + 'allFunctions','r'), delimiter=";")
+allClasses = csv.reader(open(outputPath + 'allClasses','r'), delimiter=";")
+hierarchies = csv.reader(open(outputPath + '../visualization/Hierarchy/hierarchy','r'), delimiter=";")
+functionLocations = csv.reader(open(outputPath + 'functionLocation','r'), delimiter=";")
+functionCalls = csv.reader(open(outputPath + 'functionCalls','r'), delimiter=";")
 #Can iterate only once on one variable, need to iterate through these file twice
-allFunctions2 = csv.reader(open(path + 'allFunctions','r'), delimiter=";")
-functionCalls2 = csv.reader(open(path + 'functionCalls','r'), delimiter=";")
-allClasses2 = csv.reader(open(path + 'allClasses','r'), delimiter=";")
+allFunctions2 = csv.reader(open(outputPath + 'allFunctions','r'), delimiter=";")
+functionCalls2 = csv.reader(open(outputPath + 'functionCalls','r'), delimiter=";")
+allClasses2 = csv.reader(open(outputPath + 'allClasses','r'), delimiter=";")
 
 # Find max fields length to create database
 maxFunctionNameLength = -1
@@ -224,7 +227,6 @@ if not debug:
 	dropQueries = 'DROP TABLE IF EXISTS FunctionCall;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Polymorphism;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Hierarchy;\n'
-	dropQueries += 'DROP TABLE IF EXISTS Override;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Function;\n'
 	dropQueries += 'DROP TABLE IF EXISTS File;\n'
 	dropQueries += 'DROP TABLE IF EXISTS Class;\n'
@@ -233,32 +235,31 @@ if not debug:
 
 # Create tables
 functions = FunctionTable(maxFunctionNameLength, maxSignatureLength)
-files = FileTable(getOMRLongestPath(pathToOMR))
-overridesTable = OverrideTable()
+files = FileTable(getOMRLongestPathIn(pathToProject))
 polymorphism = PolymorphismTable()
 hierarchiesTable = Hierarchy()
 classes = ClassTable(maxNamespaceLength, maxClassNameLength)
 functionCallsTable = FunctionCall(maxLocationLength)
 
 # Fill Files table
-id = 0
+id = FILE_ID_OFFSET
 if not debug: FileFile = createTable(files)
-for root, subdirs, files in os.walk(pathToOMR):
+for root, subdirs, files in os.walk(pathToProject):
 	for currentFile in files:
 		id += 1
 		filePath = root + '/' + currentFile
-		filePath = filePath.replace('//', '/')
-		filePath = filePath[len(pathToOMR) - 4:] # Get relative path
+		filePath = getRelativePath(filePath)
+				
 		if not debug: FileFile.write(insertTo('File', [id, filePath]))
 		fileToIDMap[filePath] = id
 
 
 # Fill Class Table
 if not debug: ClassFile = createTable(classes)
-id = 0
+id = CLASS_ID_OFFSET
 for row in allClasses:
 	#['ID', 'Namespace', 'ClassName', 'IsExtensible']
-	if id == 0:
+	if id == CLASS_ID_OFFSET:
 		id += 1
 		continue
 	id += 1
@@ -277,15 +278,14 @@ for row in functionLocations:
 	functionLocation = row[1]
 
 	#Ignore cases where declaration is outside the OMR directory
-	if functionLocation[:9] != "../../../":
+	path = PROJECTS_PATH[TARGET_PROJECT]
+	if functionLocation[:len(path)] != path:
 		signature = getSignature(functionQualifiedName)
 		ignoredFunctionSignatures.append(signature)
 		continue
-	#Get relative source location path
-	functionLocation = functionLocation.replace("../../../../", pathToOMR);
-	functionLocation = functionLocation.replace("//", "/");
-	functionLocation = functionLocation[len(pathToOMR)-4:]
-
+	
+	functionLocation = getRelativePath(functionLocation)
+	
 	colonIndex = functionLocation.find(':')
 	functionLocation = functionLocation[:colonIndex]
 	fileID = fileToIDMap[functionLocation]
@@ -293,13 +293,13 @@ for row in functionLocations:
 
 # Fill Functions table
 if not debug: FunctionFile = createTable(functions)
-id = 0
+id = FUNCTION_ID_OFFSET
 f2r = {} # Function --> row
 dupKeys = set() # Functions in visitedFunctions that have more than one value
 for row in allFunctions:
 	#Function table: ['ID', 'FunctionName', 'Signature', 'ClassID', 'IsVirtual', 'IsImplicit', 'FileID']
 	if 'Arch:' in row[0]: continue
-	if id == 0:
+	if id == FUNCTION_ID_OFFSET:
 		id += 1
 		continue
 	classQualifiedName = row[2] + '::' + row[3] if row[2] != '' else row[3]
@@ -317,7 +317,7 @@ for row in allFunctions:
 
 	# Ignore signatures declared in a non-OMR file
 	if row[1] in ignoredFunctionSignatures: continue
-
+	
 	fileID = functionToFileIDMap[functionQualifiedName]
 	classID = classToIDMap[classQualifiedName]
 	
@@ -339,50 +339,14 @@ for k in dupKeys:
 			printWarning = 1
 if printWarning: warnings.warn(warning)
 
-# Fill Override table
-if not debug: OverrideFile = createTable(overridesTable)
-id = 0
-firstClassMap = {}
-firstClassID = -1
-for row in overrides:
-	if 'Arch:' in row[0]: continue
-	# ['BaseFunctionID', 'OverridingFunctionID']
-	if id == 0:
-		id += 1
-		continue
-	id += 1
-
-	sig = row[2]
-
-	# Ignore signatures declared in a non-OMR file
-	if sig in ignoredFunctionSignatures: continue
-
-	# Reconstruct qualified names of classes & get IDs
-	qualifiedBaseName = row[0] + '::' + row[1] if row[0] != '' else row[1]
-	qualifiedOverridingName = row[3] + '::' + row[4] if row[3] != '' else row[4]
-	baseClassID = classToIDMap[qualifiedBaseName]
-	overridingClassID = classToIDMap[qualifiedOverridingName]
-	baseFunctionID = functionQualNametoID[str(baseClassID) + '::' + sig]
-	overridingFunctionID = functionQualNametoID[str(overridingClassID) + '::' + sig]
-
-	# If first line, store info in variables and move on
-	if id == 1:
-		continue
-
-	# Ignore functions outside omr
-	funcQualifiedName = qualifiedBaseName + '::' + sig
-	if sig in ignoredFunctionSignatures: continue
-
-	if not debug: OverrideFile.write(insertTo('Override', [baseFunctionID, overridingFunctionID]))
-
 # Fill Polymorphism and Hierarchy tables
 if not debug: HierarchiesFile = createTable(hierarchiesTable)
 if not debug: PolymorphismFile = createTable(polymorphism)
-hierarchyID = 0
+hierarchyID = HIERARCHY_ID_OFFSET
 duplicateEntries = set()
 for row in hierarchies:
 	# ['HierarchyID', 'ChildClassID', 'ParentClassID']
-	if hierarchyID == 0:
+	if hierarchyID == HIERARCHY_ID_OFFSET:
 		hierarchyID += 1
 		continue
 	hierarchy = row[1]
@@ -440,10 +404,7 @@ for row in functionCalls:
 	receiverClassName = row[5]
 	callSite = row[6]
 	
-	# Making path relative, starting from the omr directory
-	callSite = callSite.replace("../../../../", pathToOMR);
-	callSite = callSite.replace("//", "/");
-	callSite = callSite[len(pathToOMR)-4:]
+	callSite = getRelativePath(callSite)
 	
 	callerQualName = callerNamespace + '::' + callerClassName if callerNamespace != '' else callerClassName
 	receiverQualName = receiverNamespace + '::' + receiverClassName if receiverNamespace != '' else receiverClassName
