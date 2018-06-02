@@ -8,23 +8,52 @@ fileAgain = open(sys.argv[1],'r') # File need to be processed twice
 write = open(sys.argv[1] + '.trimmed','w')
 
 keySet = {}
-idMapping = {}
+classIDMapping = {}
+functionIDMapping = {}
 
-def saveIDMapping():
-	w = open('idMapping.csv', 'w')
-	for id in idMapping:
-		w.write(id + "," + idMapping[id] + "\n")
+def saveClassIDMapping():
+	w = open('classIDMapping.csv', 'w')
+	for id in classIDMapping:
+		w.write(id + "," + classIDMapping[id] + "\n")
 
-def loadIDMapping():
-	r = open('idMapping.csv', 'r')
+def loadClassIDMapping():
+	r = open('classIDMapping.csv', 'r')
 	for row in r:
 		if not row: continue
 		row = row.split(',')
-		idMapping[int(row[0])] = int(row[1].strip())
+		classIDMapping[int(row[0])] = int(row[1].strip())
+
+def saveFunctionIDMapping():
+	w = open('functionIDMapping.csv', 'w')
+	for id in functionIDMapping:
+		w.write(id + "," + functionIDMapping[id] + "\n")
+
+def loadFunctionIDMapping():
+	r = open('functionIDMapping.csv', 'r')
+	for row in r:
+		if not row: continue
+		row = row.split(',')
+		functionIDMapping[int(row[0])] = int(row[1].strip())
 
 if filename == 'File.sql':
-	for row in file: write.write(row)
-	# TODO: Keep only one CREATE and QUERY statements
+	maxLocationSize = -1
+	for row in fileAgain:
+		for row in fileAgain:
+			if 'Location VARCHAR' in row: 
+				locationSize = int(row[row.index('(') + 1:row.index(')')])
+				if maxLocationSize < locationSize: maxLocationSize = locationSize
+	
+	rc = 0
+	for row in file: 
+		rc += 1
+		if rc < 7: 
+			if 'Location VARCHAR' in row:
+				locationSize = row[row.index('('):row.index(')') + 1]
+				newRow = row.replace(locationSize,'(' + str(maxLocationSize) + ')')
+				write.write(newRow)
+				continue
+			write.write(row)
+		if row[:6] == 'INSERT': write.write(row)
 
 if filename == 'Class.sql':
 	# Find namespace and className sizes
@@ -63,17 +92,19 @@ if filename == 'Class.sql':
 		namespace = query[1]
 		clas = query[2]
 		key = namespace + '-->' + clas
-		# Make sure (namespace, className) are not redundant
+		# Make sure (namespace, className) are not redundant (issue #51)
 		if key in keySet:
-			idMapping[id] = keySet[key] # We need to keep track of removed IDs and their replacement since these IDs are foreign keys for the Function table
+			# Keep track of removed IDs and what IDs are they duplicate of (issue #51)
+			classIDMapping[id] = keySet[key]
 			continue
 		keySet[key] = id
 		# Write the row to the file
 		write.write(row)
-	saveIDMapping();
+	saveClassIDMapping();
 
 if filename == 'Function.sql':
-	loadIDMapping()
+	temp = open('temp', 'w')
+	loadClassIDMapping()
 	# Find namespace and className sizes
 	maxFunctionNameSize = -1
 	maxSigSize = -1
@@ -103,22 +134,79 @@ if filename == 'Function.sql':
 				continue
 			write.write(row)
 		if row[:6] != 'INSERT': continue
+		
 		# Get info from row
 		query = row[row.index('(') + 2 : row.rfind(')') - 1]
 		query = query.split("','")
+		id = query[0]
 		classID = int(query[3])
-		# If ClassID points to a duplicate class that was removed, replaced it with the original ClassID
-		if classID in idMapping:
-			row = row.replace("'" + str(classID) + "'", "'" + str(idMapping[classID]) + "'")
-			# reload the query object
+		
+		wasReplaced = 0
+		# Replace duplicate ClassIDs with the duplicated ClassID (issue #51)
+		if classID in classIDMapping:
+			row = row.replace("'" + str(classID) + "'", "'" + str(classIDMapping[classID]) + "'")
+			# reload the query object for further analysis
 			query = row[row.index('(') + 2 : row.rfind(')') - 1]
 			query = query.split("','")
 			classID = query[3]
-		# Check for duplicate (signature, classID)
+			wasReplaced = 1
+		
+		# Check for duplicate (signature, classID) (issue #51)
 		sig = query[2]
 		key = str(classID) + "::" + sig
+		if key in keySet: 
+			# Keep track of removed IDs and what IDs are they duplicate of (issue #51)
+			functionIDMapping[id] = keySet[key]
+			temp.write(id + ',' + keySet[key] + '\n')
+			continue
+		keySet[key] = id
+		write.write(row)
+	saveFunctionIDMapping()
+
+if filename == "Override.sql":
+	temp = open('temp', 'r')
+	repMap = {}
+	for row in temp:
+		if not row: continue
+		split = row.split(',')
+		repMap[split[0].strip()] = split[1].strip()
+		
+	loadFunctionIDMapping()
+	rc = 0
+	for row in file:
+		rc += 1
+		if rc < 9: write.write(row)
+		if row[:6] != 'INSERT': continue
+		# Get info from row
+		query = row[row.index('(') + 2 : row.rfind(')') - 1]
+		query = query.split("','")
+		baseFunctionID = int(query[0])
+		overridingFunctionID = int(query[1])
+		# Replace duplicate ClassIDs with the duplicated ClassID (issue #51)
+		changed = 0
+		if baseFunctionID in functionIDMapping: 
+			changed = 1 
+			row = row.replace("'" + str(baseFunctionID) + "'", "'" + str(functionIDMapping[baseFunctionID]) + "'")
+		if overridingFunctionID in functionIDMapping: 
+			changed = 1
+			row = row.replace("'" + str(overridingFunctionID) + "'", "'" + str(functionIDMapping[overridingFunctionID]) + "'")
+		
+		if changed:
+			
+			if str(baseFunctionID) in repMap and str(overridingFunctionID) in repMap: 
+				print 'BaseFunctionID: ' + str(baseFunctionID) + ' --> ' + str(functionIDMapping[baseFunctionID])
+				print 'OverridingFunctionID: ' + str(overridingFunctionID) + ' --> ' + str(functionIDMapping[overridingFunctionID])
+				print '---------------------'
+			query = row[row.index('(') + 2 : row.rfind(')') - 1]
+			query = query.split("','")
+			baseFunctionID = int(query[0])
+			overridingFunctionID = int(query[1])
+		
+		# Check the uniqueness of (baseFunctionID, overridingFunctionID)
+		key = str(baseFunctionID) + ',' + str(overridingFunctionID)
 		if key in keySet: continue
 		keySet[key] = 1
+		
 		write.write(row)
 
 if filename == 'Hierarchy.sql':
@@ -126,8 +214,7 @@ if filename == 'Hierarchy.sql':
 	for row in file:
 		rc += 1
 		if rc < 8: write.write(row)
-		if row[:6] != 'INSERT': continue
-		write.write(row)
+		if row[:6] == 'INSERT': write.write(row)
 
 if filename == 'Polymorphism.sql':
 	rc = 0
