@@ -103,7 +103,6 @@ if filename == 'Class.sql':
 	saveClassIDMapping();
 
 if filename == 'Function.sql':
-	temp = open('temp', 'w')
 	loadClassIDMapping()
 	# Find namespace and className sizes
 	maxFunctionNameSize = -1
@@ -157,20 +156,12 @@ if filename == 'Function.sql':
 		if key in keySet: 
 			# Keep track of removed IDs and what IDs are they duplicate of (issue #51)
 			functionIDMapping[id] = keySet[key]
-			temp.write(id + ',' + keySet[key] + '\n')
 			continue
 		keySet[key] = id
 		write.write(row)
 	saveFunctionIDMapping()
 
-if filename == "Override.sql":
-	temp = open('temp', 'r')
-	repMap = {}
-	for row in temp:
-		if not row: continue
-		split = row.split(',')
-		repMap[split[0].strip()] = split[1].strip()
-		
+if filename == "Override.sql":		
 	loadFunctionIDMapping()
 	rc = 0
 	for row in file:
@@ -192,11 +183,6 @@ if filename == "Override.sql":
 			row = row.replace("'" + str(overridingFunctionID) + "'", "'" + str(functionIDMapping[overridingFunctionID]) + "'")
 		
 		if changed:
-			
-			if str(baseFunctionID) in repMap and str(overridingFunctionID) in repMap: 
-				print 'BaseFunctionID: ' + str(baseFunctionID) + ' --> ' + str(functionIDMapping[baseFunctionID])
-				print 'OverridingFunctionID: ' + str(overridingFunctionID) + ' --> ' + str(functionIDMapping[overridingFunctionID])
-				print '---------------------'
 			query = row[row.index('(') + 2 : row.rfind(')') - 1]
 			query = query.split("','")
 			baseFunctionID = int(query[0])
