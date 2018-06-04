@@ -658,7 +658,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGenerator
 
    public:
 
-   bool allowGuardMerging() { return false; }
+   OMR_API virtual bool allowGuardMerging() { return false; }
 
    bool enableBetterSpillPlacements()
       {
