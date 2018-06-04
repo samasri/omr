@@ -1070,7 +1070,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
                                           char *generatingFileName,
                                           uintptr_t generatingLineNumber,
                                           TR::Node *node) {}
-   void addProjectSpecializedPairRelocation(uint8_t *location1,
+   OMR_API virtual void addProjectSpecializedPairRelocation(uint8_t *location1,
                                           uint8_t *location2,
                                           uint8_t *target,
                                           TR_ExternalRelocationTargetKind kind,
