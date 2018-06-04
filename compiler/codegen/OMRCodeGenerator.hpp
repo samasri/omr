@@ -489,7 +489,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
 
 
-   TR::Recompilation *allocateRecompilationInfo() { return NULL; }
+   OMR_API virtual TR::Recompilation *allocateRecompilationInfo() { return NULL; }
 
    /**
     * @brief This determines if it is necessary to emit a prefetch instruction.
