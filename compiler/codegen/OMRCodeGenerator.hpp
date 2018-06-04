@@ -1046,7 +1046,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void addAOTRelocation(TR::Relocation *r, TR::RelocationDebugInfo *info);
    void addStaticRelocation(const TR::StaticRelocation &relocation);
 
-   void addProjectSpecializedRelocation(uint8_t *location,
+   OMR_API virtual void addProjectSpecializedRelocation(uint8_t *location,
                                           uint8_t *target,
                                           uint8_t *target2,
                                           TR_ExternalRelocationTargetKind kind,
@@ -1060,7 +1060,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
                                           char *generatingFileName,
                                           uintptr_t generatingLineNumber,
                                           TR::Node *node) {}
-   void addProjectSpecializedRelocation(TR::Instruction *instr,
+   OMR_API virtual void addProjectSpecializedRelocation(TR::Instruction *instr,
                                           uint8_t *target,
                                           uint8_t *target2,
                                           TR_ExternalRelocationTargetKind kind,
