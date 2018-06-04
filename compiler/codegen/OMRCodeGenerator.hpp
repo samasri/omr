@@ -299,11 +299,11 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void lowerTreesPropagateBlockToNode(TR::Node *node);
 
    void setUpForInstructionSelection();
-   void doInstructionSelection();
-   void createStackAtlas();
+   OMR_API virtual void doInstructionSelection();
+   OMR_API virtual void createStackAtlas();
 
    OMR_API virtual void beginInstructionSelection() {}
-   void endInstructionSelection() {}
+   OMR_API virtual void endInstructionSelection() {}
 
    bool use64BitRegsOn32Bit();
 
@@ -368,7 +368,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool supportsMethodEntryPadding() { return true; }
    bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
    OMR_API virtual bool buildInterpreterEntryPoint() { return false; }
-   void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
+   OMR_API virtual void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
    bool supportsUnneededLabelRemoval() { return true; }
    bool allowSplitWarmAndColdBlocks() { return false; }
 
@@ -1174,10 +1174,10 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // currently can only return a value other than vgdnop for HCR guards
    TR::Instruction* getVirtualGuardForPatching(TR::Instruction *vgdnop);
 
-   void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
-   void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
-   void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
-   void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
+   OMR_API virtual void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
+   OMR_API virtual void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
+   OMR_API virtual void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
+   OMR_API virtual void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9

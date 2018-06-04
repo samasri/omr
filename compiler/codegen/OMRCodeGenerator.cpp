@@ -843,7 +843,7 @@ OMR::CodeGenerator::doInstructionSelection()
       self()->getDebug()->roundAddressEnumerationCounters();
       }
 
-   self()->endInstructionSelection();
+   endInstructionSelection();
 
    if (comp->getOption(TR_TraceCG))
       {
