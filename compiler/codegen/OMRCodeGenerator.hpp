@@ -310,7 +310,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void doInstructionSelection();
    void createStackAtlas();
 
-   void beginInstructionSelection() {}
+   OMR_API virtual void beginInstructionSelection() {}
    void endInstructionSelection() {}
 
    bool use64BitRegsOn32Bit();
@@ -375,7 +375,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool supportsMethodEntryPadding() { return true; }
    bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
-   bool buildInterpreterEntryPoint() { return false; }
+   OMR_API virtual bool buildInterpreterEntryPoint() { return false; }
    void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
    bool supportsUnneededLabelRemoval() { return true; }
    bool allowSplitWarmAndColdBlocks() { return false; }
@@ -429,7 +429,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // Hardware profiling
    //
-   void createHWPRecords() {}
+   OMR_API virtual void createHWPRecords() {}
 
    // --------------------------------------------------------------------------
    // Tree evaluation
@@ -573,8 +573,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Linkage
    //
    void initializeLinkage(); // no virt, default, cast
-   TR::Linkage *createLinkage(TR_LinkageConventions lc); // no virt, default, cast
-   TR::Linkage *createLinkageForCompilation();
+   OMR_API virtual TR::Linkage *createLinkage(TR_LinkageConventions lc); // no virt, default, cast
+   OMR_API virtual TR::Linkage *createLinkageForCompilation();
 
    TR::Linkage *getLinkage() {return _bodyLinkage;}
    TR::Linkage *setLinkage(TR::Linkage * l) {return (_bodyLinkage = l);}
