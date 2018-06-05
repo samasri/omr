@@ -127,7 +127,7 @@
 
 #if J9_PROJECT_SPECIFIC
 #include "z/codegen/S390Register.hpp"
-#include "trj9/z/codegen/J9S390PrivateLinkage.hpp"
+#include "z/codegen/J9S390PrivateLinkage.hpp"
 #endif
 
 class TR_IGNode;
@@ -157,7 +157,7 @@ OMR::Z::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, 
 
    parent->setVisitCount(visitCount);
 
-   self()->lowerTreesPreChildrenVisit(parent, treeTop, visitCount);
+   lowerTreesPreChildrenVisit(parent, treeTop, visitCount);
 
    // Go through the subtrees and lower any nodes that need to be lowered. This
    // involves a call to the VM to replace the trees with other trees.
@@ -171,7 +171,7 @@ OMR::Z::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, 
       if (child->getVisitCount() != visitCount)
          {
          self()->lowerTreesWalk(child, treeTop, visitCount);
-         self()->lowerTreeIfNeeded(child, childCount, parent, treeTop);
+         lowerTreeIfNeeded(child, childCount, parent, treeTop);
          }
 
       self()->checkIsUnneededIALoad(parent, child, treeTop);

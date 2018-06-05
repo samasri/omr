@@ -353,7 +353,7 @@ void OMR::CodeGenerator::lowerTrees()
    // visitCount should not be incremented until it finishes
    //
 
-   self()->preLowerTrees();
+   preLowerTrees();
 
    TR::TreeTop * tt;
    TR::Node * node;
@@ -367,7 +367,7 @@ void OMR::CodeGenerator::lowerTrees()
       TR_ASSERT(node->getVisitCount() != visitCount, "Code Gen: error in lowering trees");
       TR_ASSERT(node->getReferenceCount() == 0, "Code Gen: error in lowering trees");
 
-      self()->lowerTreesPreTreeTopVisit(tt, visitCount);
+      lowerTreesPreTreeTopVisit(tt, visitCount);
 
 
       // First lower the children
@@ -376,7 +376,7 @@ void OMR::CodeGenerator::lowerTrees()
 
       // If the tree needs to be lowered, call the VM to lower it
       //
-      self()->lowerTreeIfNeeded(node, 0, 0, tt);
+      lowerTreeIfNeeded(node, 0, 0, tt);
 
 
       self()->lowerTreesPostTreeTopVisit(tt, visitCount);
@@ -393,7 +393,7 @@ OMR::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vco
 
    parent->setVisitCount(visitCount);
 
-   self()->lowerTreesPreChildrenVisit(parent, treeTop, visitCount);
+   lowerTreesPreChildrenVisit(parent, treeTop, visitCount);
 
    // Go through the subtrees and lower any nodes that need to be lowered. This
    // involves a call to the VM to replace the trees with other trees.
@@ -407,7 +407,7 @@ OMR::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vco
       if (child->getVisitCount() != visitCount)
          {
          self()->lowerTreesWalk(child, treeTop, visitCount);
-         self()->lowerTreeIfNeeded(child, childCount, parent, treeTop);
+         lowerTreeIfNeeded(child, childCount, parent, treeTop);
          }
       }
 
