@@ -157,7 +157,7 @@ OMR::Z::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, 
 
    parent->setVisitCount(visitCount);
 
-   self()->lowerTreesPreChildrenVisit(parent, treeTop, visitCount);
+   lowerTreesPreChildrenVisit(parent, treeTop, visitCount);
 
    // Go through the subtrees and lower any nodes that need to be lowered. This
    // involves a call to the VM to replace the trees with other trees.
@@ -171,7 +171,7 @@ OMR::Z::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, 
       if (child->getVisitCount() != visitCount)
          {
          self()->lowerTreesWalk(child, treeTop, visitCount);
-         self()->lowerTreeIfNeeded(child, childCount, parent, treeTop);
+         lowerTreeIfNeeded(child, childCount, parent, treeTop);
          }
 
       self()->checkIsUnneededIALoad(parent, child, treeTop);

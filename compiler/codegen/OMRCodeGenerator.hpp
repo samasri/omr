@@ -289,24 +289,24 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void uncommonCallConstNodes();
 
-   void preLowerTrees();
+   OMR_API virtual void preLowerTrees();
    void postLowerTrees() {}
 
    TR::TreeTop *lowerTree(TR::Node *root, TR::TreeTop *tt);
    void lowerTrees();
    void lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
-   void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
+   OMR_API virtual void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
 
-   void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
+   OMR_API virtual void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
    void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
 
-   void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   OMR_API vritual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
    void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
-   void lowerTreesPropagateBlockToNode(TR::Node *node);
+   OMR_API virtual void lowerTreesPropagateBlockToNode(TR::Node *node);
 
-   void setUpForInstructionSelection();
+   OMR_API virtual void setUpForInstructionSelection();
    OMR_API virtual void doInstructionSelection();
    OMR_API virtual void createStackAtlas();
 
@@ -373,8 +373,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void setNextAvailableBlockIndex(int32_t blockIndex) {}
    int32_t getNextAvailableBlockIndex() { return -1; }
 
-   bool supportsMethodEntryPadding() { return true; }
-   bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
+   OMR_API virtual bool supportsMethodEntryPadding() { return true; }
+   OMR_API virtual bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
    OMR_API virtual bool buildInterpreterEntryPoint() { return false; }
    OMR_API virtual void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
    bool supportsUnneededLabelRemoval() { return true; }
@@ -415,7 +415,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void prepareNodeForInstructionSelection(TR::Node*node);
    void remapGCIndicesInInternalPtrFormat();
-   void processRelocations();
+   OMR_API virtual void processRelocations();
 
    void findAndFixCommonedReferences();
    void findCommonedReferences(TR::Node*node, TR::TreeTop *treeTop);
@@ -783,7 +783,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    uint8_t * allocateCodeMemory(uint32_t size, bool isCold, bool isMethodHeaderNeeded=true);
    uint8_t * allocateCodeMemory(uint32_t warmSize, uint32_t coldSize, uint8_t **coldCode, bool isMethodHeaderNeeded=true);
    void  resizeCodeMemory();
-   void  registerAssumptions() {}
+   OMR_API virtual void  registerAssumptions() {}
 
    static void syncCode(uint8_t *codeStart, uint32_t codeSize);
 
@@ -1098,8 +1098,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
-   bool needClassAndMethodPointerRelocations() { return false; }
-   bool needRelocationsForStatics() { return false; }
+   OMR_API virtual bool needClassAndMethodPointerRelocations() { return false; }
+   OMR_API virtual bool needRelocationsForStatics() { return false; }
 
    // --------------------------------------------------------------------------
    // Snippets
@@ -1195,7 +1195,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    OMR_API virtual void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    OMR_API virtual void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    OMR_API virtual void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
-   void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
+   OMR_API virtual void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9
 
