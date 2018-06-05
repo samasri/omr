@@ -301,7 +301,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    OMR_API virtual void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
    void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
 
-   OMR_API vritual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   OMR_API virtual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
    void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
    OMR_API virtual void lowerTreesPropagateBlockToNode(TR::Node *node);
@@ -1098,7 +1098,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
-   OMR_API virtual bool needClassAndMethodPointerRelocations() { return false; }
+   bool needClassAndMethodPointerRelocations() { return false; }
    OMR_API virtual bool needRelocationsForStatics() { return false; }
 
    // --------------------------------------------------------------------------
