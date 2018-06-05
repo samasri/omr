@@ -257,6 +257,7 @@ struct  {
 
 #define OMR_CGROUP_V1_MOUNT_POINT "/sys/fs/cgroup"
 #define ROOT_CGROUP "/"
+#define SYSTEMD_INIT_CGROUP "/init.scope"
 #define OMR_PROC_PID_ONE_CGROUP_FILE "/proc/1/cgroup"
 
 /* An entry in /proc/<pid>/cgroup is of following form:
@@ -266,6 +267,7 @@ struct  {
  * 	7:cpuacct,cpu:/mycgroup
  */
 #define PROC_PID_CGROUP_ENTRY_FORMAT "%d:%[^:]:%s"
+#define PROC_PID_CGROUP_SYSTEMD_ENTRY_FORMAT "%d::%s"
 
 /* Currently 12 subsystems or resource controllers are defined.
  */
@@ -349,6 +351,7 @@ static int32_t readCgroupFile(struct OMRPortLibrary *portLibrary, int pid, BOOLE
 static OMRCgroupSubsystem getCgroupSubsystemFromFlag(uint64_t subsystemFlag);
 static int32_t readCgroupSubsystemFile(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlag, const char *fileName, int32_t numItemsToRead, const char *format, ...);
 static int32_t isRunningInContainer(struct OMRPortLibrary *portLibrary, BOOLEAN *inContainer);
+static int32_t getCgroupMemoryLimit(struct OMRPortLibrary *portLibrary, uint64_t *limit);
 #endif /* defined(LINUX) */
 
 
@@ -1187,7 +1190,6 @@ omrsysinfo_get_number_CPUs_by_type(struct OMRPortLibrary *portLibrary, uintptr_t
 				}
 			}
 		}
-
 		if (0 == toReturn) {
 			Trc_PRT_sysinfo_get_number_CPUs_by_type_failedBound("errno: ", errno);
 		}
@@ -3516,25 +3518,42 @@ readCgroupFile(struct OMRPortLibrary *portLibrary, int pid, BOOLEAN inContainer,
 	}
 
 	while (0 == feof(cgroupFile)) {
+		char buffer[PATH_MAX];
 		char cgroup[PATH_MAX];
 		/* This array should be large enough to read names of all subsystems. 1024 should be enough based on current supported subsystems. */
-		char subsystems[1024];
+		char subsystems[PATH_MAX];
 		char *cursor = NULL;
 		char *separator = NULL;
 		int32_t hierId = -1;
-
-		rc = fscanf(cgroupFile, PROC_PID_CGROUP_ENTRY_FORMAT, &hierId, subsystems, cgroup);
-		/* Ensure we didn't overflow */
-		Assert_PRT_true(strlen(subsystems) < 1024);
-		Assert_PRT_true(strlen(cgroup) < PATH_MAX);
-
+		
+		fgets(buffer, PATH_MAX, cgroupFile);
+		if (0 != ferror(cgroupFile)) {
+			int32_t osErrCode = errno;
+			Trc_PRT_readCgroupFile_fgets_failed(cgroupFilePath, osErrCode);
+			rc = portLibrary->error_set_last_error_with_message_format(portLibrary, OMRPORT_ERROR_SYSINFO_PROCESS_CGROUP_FILE_READ_FAILED, "fgets failed to read %s file stream with errno=%d", cgroupFilePath, osErrCode);
+			goto _end;
+		} else if (NULL == buffer) {
+			break;
+		}
+		rc = sscanf(buffer, PROC_PID_CGROUP_ENTRY_FORMAT, &hierId, subsystems, cgroup);
+		
 		if (EOF == rc) {
 			break;
+		} else if (1 == rc) {
+			rc = sscanf(buffer, PROC_PID_CGROUP_SYSTEMD_ENTRY_FORMAT, &hierId, cgroup);
+
+			if (2 != rc) {
+				Trc_PRT_readCgroupFile_unexpected_format(cgroupFilePath);
+				rc = portLibrary->error_set_last_error_with_message_format(portLibrary, OMRPORT_ERROR_SYSINFO_PROCESS_CGROUP_FILE_READ_FAILED, "unexpected format of %s", cgroupFilePath);
+				goto _end;
+			}
+			subsystems[0] = '\0';
 		} else if (3 != rc) {
 			Trc_PRT_readCgroupFile_unexpected_format(cgroupFilePath);
 			rc = portLibrary->error_set_last_error_with_message_format(portLibrary, OMRPORT_ERROR_SYSINFO_PROCESS_CGROUP_FILE_READ_FAILED, "unexpected format of %s", cgroupFilePath);
 			goto _end;
 		}
+
 		cursor = subsystems;
 		do {
 			int32_t i = 0;
@@ -3721,24 +3740,39 @@ isRunningInContainer(struct OMRPortLibrary *portLibrary, BOOLEAN *inContainer)
 		}
 
 		while (0 == feof(cgroupFile)) {
+			char buffer[PATH_MAX];
 			char cgroup[PATH_MAX];
-			char subsystems[1024];
+			char subsystems[PATH_MAX];
 			int32_t hierId = -1;
 
-			rc = fscanf(cgroupFile, PROC_PID_CGROUP_ENTRY_FORMAT, &hierId, subsystems, cgroup);
-			/* Ensure we didn't overflow */
-			Assert_PRT_true(strlen(subsystems) < 1024);
-			Assert_PRT_true(strlen(cgroup) < PATH_MAX);
+			fgets(buffer, PATH_MAX, cgroupFile);
+			if(0 != ferror(cgroupFile)){
+				int32_t osErrCode = errno;
+				Trc_PRT_isRunningInContainer_fgets_failed(OMR_PROC_PID_ONE_CGROUP_FILE, osErrCode);
+				rc = portLibrary->error_set_last_error_with_message_format(portLibrary, OMRPORT_ERROR_SYSINFO_PROCESS_CGROUP_FILE_READ_FAILED, "fgets failed to read %s file stream with errno=%d", OMR_PROC_PID_ONE_CGROUP_FILE, osErrCode);
+				goto _end;
+			} else if (NULL == buffer) {
+				break;
+			}
+			rc = sscanf(buffer, PROC_PID_CGROUP_ENTRY_FORMAT, &hierId, subsystems, cgroup);
 
 			if (EOF == rc) {
 				break;
+			} else if (1 == rc) {
+				rc = sscanf(buffer, PROC_PID_CGROUP_SYSTEMD_ENTRY_FORMAT, &hierId, cgroup);
+
+				if (2 != rc) {
+					Trc_PRT_isRunningInContainer_unexpected_format(OMR_PROC_PID_ONE_CGROUP_FILE);
+					rc = portLibrary->error_set_last_error_with_message_format(portLibrary, OMRPORT_ERROR_SYSINFO_PROCESS_CGROUP_FILE_READ_FAILED, "unexpected format of %s file", OMR_PROC_PID_ONE_CGROUP_FILE);
+					goto _end;
+				}
 			} else if (3 != rc) {
 				Trc_PRT_isRunningInContainer_unexpected_format(OMR_PROC_PID_ONE_CGROUP_FILE);
 				rc = portLibrary->error_set_last_error_with_message_format(portLibrary, OMRPORT_ERROR_SYSINFO_PROCESS_CGROUP_FILE_READ_FAILED, "unexpected format of %s file", OMR_PROC_PID_ONE_CGROUP_FILE);
 				goto _end;
 			}
 
-			if (0 != strcmp(ROOT_CGROUP, cgroup)) {
+			if ((0 != strcmp(ROOT_CGROUP, cgroup)) && (0 != strcmp(SYSTEMD_INIT_CGROUP, cgroup))) {
 				*inContainer = TRUE;
 				break;
 			}
@@ -3747,6 +3781,40 @@ isRunningInContainer(struct OMRPortLibrary *portLibrary, BOOLEAN *inContainer)
 	}
 	Trc_PRT_isRunningInContainer_container_detected((uintptr_t)*inContainer);
 _end:
+	return rc;
+}
+
+static int32_t
+getCgroupMemoryLimit(struct OMRPortLibrary *portLibrary, uint64_t *limit)
+{
+	uint64_t cgroupMemLimit = 0;
+	uint64_t physicalMemLimit = 0;
+	int32_t numItemsToRead = 1; /* memory.limit_in_bytes file contains only one integer value */
+	int32_t rc = 0;
+
+	Trc_PRT_sysinfo_cgroup_get_memlimit_Entry();
+
+	rc = readCgroupSubsystemFile(portLibrary, OMR_CGROUP_SUBSYSTEM_MEMORY, "memory.limit_in_bytes", numItemsToRead, "%lu", &cgroupMemLimit);
+	if (0 != rc) {
+		Trc_PRT_sysinfo_cgroup_get_memlimit_memory_limit_read_failed("memory.limit_in_bytes", rc);
+		goto _end;
+	}
+
+	physicalMemLimit = getPhysicalMemory(portLibrary);
+	/* If the cgroup is not imposing any memory limit then the value in memory.limit_in_bytes
+	 * is close to max value of 64-bit integer, and is more than the physical memory in the system.
+	 */
+	if (cgroupMemLimit > physicalMemLimit) {
+		Trc_PRT_sysinfo_cgroup_get_memlimit_unlimited();
+		rc = portLibrary->error_set_last_error_with_message(portLibrary, OMRPORT_ERROR_SYSINFO_CGROUP_MEMLIMIT_NOT_SET, "memory limit is not set");
+                goto _end;
+	}
+	if (NULL != limit) {
+		*limit = cgroupMemLimit;
+	}
+
+_end:
+	Trc_PRT_sysinfo_cgroup_get_memlimit_Exit(rc);
 	return rc;
 }
 
@@ -3874,34 +3942,26 @@ omrsysinfo_cgroup_get_memlimit(struct OMRPortLibrary *portLibrary, uint64_t *lim
 	Assert_PRT_true(NULL != limit);
 
 #if defined(LINUX) && !defined(OMRZTPF)
-	uint64_t cgroupMemLimit = 0;
-	uint64_t physicalMemLimit = 0;
-	int32_t numItemsToRead = 1; /* memory.limit_in_bytes file contains only one integer value */
-
-	Trc_PRT_sysinfo_cgroup_get_memlimit_Entry();
-
-	rc = readCgroupSubsystemFile(portLibrary, OMR_CGROUP_SUBSYSTEM_MEMORY, "memory.limit_in_bytes", numItemsToRead, "%lu", &cgroupMemLimit);
-	if (0 != rc) {
-		Trc_PRT_sysinfo_cgroup_get_memlimit_memory_limit_read_failed("memory.limit_in_bytes", rc);
-		goto _end;
-	}
-
-	physicalMemLimit = getPhysicalMemory(portLibrary);
-	/* If the cgroup is not imposing any memory limit then the value in memory.limit_in_bytes
-	 * is close to max value of 64-bit integer, and is more than the physical memory in the system.
-	 */
-	if (cgroupMemLimit > physicalMemLimit) {
-		Trc_PRT_sysinfo_cgroup_get_memlimit_unlimited();
-		rc = portLibrary->error_set_last_error_with_message(portLibrary, OMRPORT_ERROR_SYSINFO_CGROUP_MEMLIMIT_NOT_SET, "memory limit is not set");
-                goto _end;
-	} else {
-		*limit = cgroupMemLimit;
-		rc = 0;
-	}
-_end:
-	Trc_PRT_sysinfo_cgroup_get_memlimit_Exit(rc);
+	rc = getCgroupMemoryLimit(portLibrary, limit);
 #endif /* defined(LINUX) && !defined(OMRZTPF) */
+
 	return rc;
+}
+
+
+BOOLEAN
+omrsysinfo_cgroup_is_memlimit_set(struct OMRPortLibrary *portLibrary)
+{
+#if defined(LINUX) && !defined(OMRZTPF)
+	int32_t rc = getCgroupMemoryLimit(portLibrary, NULL);
+	if (0 == rc) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+#else /* defined(LINUX) && !defined(OMRZTPF) */
+	return FALSE;
+#endif /* defined(LINUX) && !defined(OMRZTPF) */
 }
 
 #if defined(OMRZTPF)

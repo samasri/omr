@@ -68,9 +68,6 @@ namespace OMR { typedef OMR::Compilation CompilationConnector; }
 #include "ras/DebugCounter.hpp"               // for TR_DebugCounter, etc
 #include "ras/ILValidationStrategies.hpp"
 
-
-#include "omr.h"
-
 #include "il/symbol/ResolvedMethodSymbol.hpp"
 
 
@@ -423,6 +420,8 @@ public:
 
    TR::ResolvedMethodSymbol *getMethodSymbol();
    TR_ResolvedMethod *getCurrentMethod();
+
+   TR_ResolvedMethod *getMethodBeingCompiled() { return _method; }
 
    TR::PersistentInfo *getPersistentInfo();
 

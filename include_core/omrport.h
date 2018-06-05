@@ -878,12 +878,12 @@ typedef struct J9ProcessorInfos {
  * Use J9STR_CODE_PLATFORM_OMR_INTERNAL to when processing the output of these calls.  Otherwise, use J9STR_CODE_PLATFORM_RAW.
  */
 #define J9STR_CODE_PLATFORM_OMR_INTERNAL J9STR_CODE_LATIN1
-#elif defined(WIN32)
+#elif defined(OMR_OS_WINDOWS)
 /*
  * Most system calls on Windows use the "wide" versions which return UTF-16, which OMR then converts to UTF-8.
  */
 #define J9STR_CODE_PLATFORM_OMR_INTERNAL J9STR_CODE_UTF8
-#else /* defined(WIN32) */
+#else /* defined(OMR_OS_WINDOWS) */
 /* on other platforms the internal encoding is the actual operating system encoding */
 #define J9STR_CODE_PLATFORM_OMR_INTERNAL J9STR_CODE_PLATFORM_RAW
 #endif /* defined(J9ZOS390) */
@@ -928,7 +928,7 @@ typedef struct J9MmapHandle {
 #include "omrcuda.h"
 #endif /* OMR_OPT_CUDA */
 
-#if !defined(WIN32)
+#if !defined(OMR_OS_WINDOWS)
 #if defined(OSX)
 #define _XOPEN_SOURCE
 #endif /* defined(OSX) */
@@ -936,7 +936,7 @@ typedef struct J9MmapHandle {
 #if defined(OSX)
 #undef _XOPEN_SOURCE
 #endif /* OSX */
-#endif /* !WIN32 */
+#endif /* !OMR_OS_WINDOWS */
 
 #if defined(J9ZOS390)
 struct __mcontext;
@@ -959,7 +959,7 @@ typedef struct J9PlatformThread {
 	uintptr_t stack_base;
 	uintptr_t stack_end;
 	uintptr_t priority;
-#if defined(WIN32)
+#if defined(OMR_OS_WINDOWS)
 	void *context;
 #elif defined(J9ZOS390)
 	/* This should really be 'struct __mcontext*' however DDR cannot parse the zos system header
@@ -971,11 +971,11 @@ typedef struct J9PlatformThread {
 	ucontext_t *context;
 #endif
 	struct J9PlatformStackFrame *callstack;
-#if defined(WIN32)
+#if defined(OMR_OS_WINDOWS)
 	void *sigmask;
-#else /* WIN32 */
+#else /* OMR_OS_WINDOWS */
 	sigset_t *sigmask;
-#endif /* WIN32 */
+#endif /* OMR_OS_WINDOWS */
 	intptr_t error;
 	void *dsa;
 	uintptr_t dsa_format;
@@ -1391,6 +1391,8 @@ typedef struct OMRPortLibrary {
 	int32_t (*sig_map_portlib_signal_to_os_signal)(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag) ;
 	/** see @ref omrsignal.c::omrsig_register_os_handler "omrsig_register_os_handler"*/
 	int32_t (*sig_register_os_handler)(struct OMRPortLibrary *portLibrary, uint32_t portlibSignalFlag, void *newOSHandler, void **oldOSHandler) ;
+	/** see @ref omrsignal.c::omrsig_is_master_signal_handler "omrsig_is_master_signal_handler"*/
+	BOOLEAN (*sig_is_master_signal_handler)(struct OMRPortLibrary *portLibrary, void *osHandler) ;
 	/** see @ref omrsignal.c::omrsig_info "omrsig_info"*/
 	uint32_t (*sig_info)(struct OMRPortLibrary *portLibrary, void *info, uint32_t category, int32_t index, const char **name, void **value) ;
 	/** see @ref omrsignal.c::omrsig_info_count "omrsig_info_count"*/
@@ -1485,6 +1487,8 @@ typedef struct OMRPortLibrary {
 	uint64_t ( *sysinfo_cgroup_are_subsystems_enabled)(struct OMRPortLibrary *portLibrary, uint64_t subsystemFlags);
 	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_get_memlimit "omrsysinfo_cgroup_get_memlimit"*/
 	int32_t (*sysinfo_cgroup_get_memlimit)(struct OMRPortLibrary *portLibrary, uint64_t *limit);
+	/** see @ref omrsysinfo.c::omrsysinfo_cgroup_is_memlimit_set "omrsysinfo_cgroup_is_memlimit_set"*/
+	BOOLEAN (*sysinfo_cgroup_is_memlimit_set)(struct OMRPortLibrary *portLibrary);
 	/** see @ref omrport.c::omrport_init_library "omrport_init_library"*/
 	int32_t (*port_init_library)(struct OMRPortLibrary *portLibrary, uintptr_t size) ;
 	/** see @ref omrport.c::omrport_startup_library "omrport_startup_library"*/
@@ -1893,6 +1897,7 @@ extern J9_CFUNC int32_t omrport_getVersion(struct OMRPortLibrary *portLibrary);
 #define omrsig_map_os_signal_to_portlib_signal(param1) privateOmrPortLibrary->sig_map_os_signal_to_portlib_signal(privateOmrPortLibrary, (param1))
 #define omrsig_map_portlib_signal_to_os_signal(param1) privateOmrPortLibrary->sig_map_portlib_signal_to_os_signal(privateOmrPortLibrary, (param1))
 #define omrsig_register_os_handler(param1,param2,param3) privateOmrPortLibrary->sig_register_os_handler(privateOmrPortLibrary, (param1), (param2), (param3))
+#define omrsig_is_master_signal_handler(param1) privateOmrPortLibrary->sig_is_master_signal_handler(privateOmrPortLibrary, (param1))
 #define omrsig_info(param1,param2,param3,param4,param5) privateOmrPortLibrary->sig_info(privateOmrPortLibrary, (param1), (param2), (param3), (param4), (param5))
 #define omrsig_info_count(param1,param2) privateOmrPortLibrary->sig_info_count(privateOmrPortLibrary, (param1), (param2))
 #define omrsig_set_options(param1) privateOmrPortLibrary->sig_set_options(privateOmrPortLibrary, (param1))
@@ -1937,6 +1942,7 @@ extern J9_CFUNC int32_t omrport_getVersion(struct OMRPortLibrary *portLibrary);
 #define omrsysinfo_cgroup_enable_subsystems(param1) privateOmrPortLibrary->sysinfo_cgroup_enable_subsystems(privateOmrPortLibrary, param1)
 #define omrsysinfo_cgroup_are_subsystems_enabled(param1) privateOmrPortLibrary->sysinfo_cgroup_are_subsystems_enabled(privateOmrPortLibrary, param1)
 #define omrsysinfo_cgroup_get_memlimit(param1) privateOmrPortLibrary->sysinfo_cgroup_get_memlimit(privateOmrPortLibrary, param1)
+#define omrsysinfo_cgroup_is_memlimit_set() privateOmrPortLibrary->sysinfo_cgroup_is_memlimit_set(privateOmrPortLibrary)
 #define omrintrospect_startup() privateOmrPortLibrary->introspect_startup(privateOmrPortLibrary)
 #define omrintrospect_shutdown() privateOmrPortLibrary->introspect_shutdown(privateOmrPortLibrary)
 #define omrintrospect_set_suspend_signal_offset(param1) privateOmrPortLibrary->introspect_set_suspend_signal_offset(privateOmrPortLibrary, param1)

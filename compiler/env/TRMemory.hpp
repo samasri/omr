@@ -952,7 +952,7 @@ namespace TR
       {
       return GlobalAllocator(GlobalSingletonAllocator::instance());
       }
-
+ 
    /*
     * some common CS2 datatypes
     */
