@@ -177,7 +177,7 @@ OMR::Z::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, 
       self()->checkIsUnneededIALoad(parent, child, treeTop);
       }
 
-   self()->lowerTreesPostChildrenVisit(parent, treeTop, visitCount);
+   lowerTreesPostChildrenVisit(parent, treeTop, visitCount);
 
    }
 
@@ -6281,7 +6281,7 @@ OMR::Z::CodeGenerator::doBinaryEncoding()
    static char *disableAlignJITEP = feGetEnv("TR_DisableAlignJITEP");
 
    // Adjust the binary buffer cursor with appropriate padding.
-   if (!disableAlignJITEP && !self()->comp()->compileRelocatableCode() && self()->allowSplitWarmAndColdBlocks())
+   if (!disableAlignJITEP && !self()->comp()->compileRelocatableCode() && allowSplitWarmAndColdBlocks())
       {
       int32_t alignedBase = 256 - self()->getPreprologueOffset();
       int32_t padBase = ( 256 + alignedBase - ((intptrj_t)temp) % 256) % 256;
@@ -11307,7 +11307,7 @@ bool OMR::Z::CodeGenerator::reliesOnAParticularSignEncoding(TR::Node *node)
       return false;
 
    // left shifts do not rely on a clean sign so the only thing to check is if a clean sign property has been propagated thru it (if not then can return false)
-   if (node->getType().isBCD() && op.isLeftShift() && !self()->propagateSignThroughBCDLeftShift(node->getType()))
+   if (node->getType().isBCD() && op.isLeftShift() && !propagateSignThroughBCDLeftShift(node->getType()))
       return false;
 
    if (node->getType().isBCD() && op.isRightShift())

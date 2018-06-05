@@ -291,10 +291,10 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    OMR_API virtual void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
 
    OMR_API virtual void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
-   void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
+   OMR_API virtual void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
 
    OMR_API virtual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
-   void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   OMR_API virtual void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
    OMR_API virtual void lowerTreesPropagateBlockToNode(TR::Node *node);
 
@@ -369,8 +369,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    OMR_API virtual bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
    OMR_API virtual bool buildInterpreterEntryPoint() { return false; }
    OMR_API virtual void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
-   bool supportsUnneededLabelRemoval() { return true; }
-   bool allowSplitWarmAndColdBlocks() { return false; }
+   OMR_API virtual bool supportsUnneededLabelRemoval() { return true; }
+   OMR_API virtual bool allowSplitWarmAndColdBlocks() { return false; }
 
    TR_HasRandomGenerator randomizer;
 
@@ -453,7 +453,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    rcount_t recursivelyDecReferenceCount(TR::Node*node);
    void evaluateChildrenWithMultipleRefCount(TR::Node*node);
 
-   void incRefCountForOpaquePseudoRegister(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp) {}
+   OMR_API virtual void incRefCountForOpaquePseudoRegister(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp) {}
 
    void startUsingRegister(TR::Register *reg);
    void stopUsingRegister(TR::Register *reg);
@@ -576,7 +576,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
     * @param method : the recognized method to consider
     * @return true if inlining should be suppressed; false otherwise
     */
-   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method) {return false;}
+   OMR_API virtual bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method) {return false;}
 
    // --------------------------------------------------------------------------
    // Optimizer, not code generator
@@ -1179,8 +1179,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    OMR_API virtual void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    OMR_API virtual void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    OMR_API virtual void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
-   bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
-   bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9
+   OMR_API virtual bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
+   OMR_API virtual bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9
 
    // --------------------------------------------------------------------------
    // Unclassified
@@ -1280,7 +1280,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; } // no virt
    bool supportsHighWordFacility() { return false; } // no virt, default, cast
 
-   bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
+   OMR_API virtual bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
 
    // J9 only, move to trj9
    TR_OpaqueClassBlock* getMonClass(TR::Node* monNode);
@@ -1334,7 +1334,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::DataType IntJ() { return TR::Compiler->target.is64Bit() ? TR::Int64 : TR::Int32; }
 
    // will a BCD left shift always leave the sign code unchanged and thus allow it to be propagated through and upwards
-   bool propagateSignThroughBCDLeftShift(TR::DataType type) { return false; } // no virt
+   OMR_API virtual bool propagateSignThroughBCDLeftShift(TR::DataType type) { return false; } // no virt
 
    bool supportsLengthMinusOneForMemoryOpts() {return false;} // no virt, cast
 
