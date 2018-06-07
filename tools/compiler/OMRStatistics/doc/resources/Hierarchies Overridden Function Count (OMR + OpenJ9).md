@@ -1,4 +1,4 @@
-# Possible cases for overrides
+# Possible cases for overrides and assumptions
 
 | Case # | BaseNamespace | BaseClassName | Signature | OverridingNamespace | OverridingClassName |
 | --- | --- | --- | --- | --- | --- |
@@ -27,6 +27,8 @@ Notes:
 | OMR::Symbol::isReferenced() | OMR::AutomaticSymbol |
 | OMR::Symbol::isStatic() | OMR::MethodSymbol |
 | J9::Symbol::getRecognizedField() | J9::StaticSymbol |
+
+I also filtered out virtual and implicit functions
 
 # Results
 | ID | Hierarchy | Number of Overridden Functions in OMR | Number of Overridden functions in J9 |
