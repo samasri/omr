@@ -1,3 +1,7 @@
+| Hierarchy | Number of Overridden Functions in OMR | Number of Classes in J9 |
+
+| --- | --- | --- |
+
 | CodeGenerator | 247 | 20 |
 
 | MemoryReference | 118 | 10 |
