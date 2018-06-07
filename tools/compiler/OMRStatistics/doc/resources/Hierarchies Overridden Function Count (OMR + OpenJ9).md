@@ -1,4 +1,4 @@
-# Possible cases for overrides:
+# Possible cases for overrides
 
 | Case # | BaseNamespace | BaseClassName | Signature | OverridingNamespace | OverridingClassName |
 | --- | --- | --- | --- | --- | --- |
