@@ -10,7 +10,7 @@
 | 5 | OMR | Symbol | isStatic()() | OMR::X86 | MethodSymbol
 | 5 | J9 | Symbol | getRecognizedField() | J9 | StaticSymbol
 
-Notes:
+Notes about cases:
 1. Same classname; the base and overriding classes are from a `OMR` namespace
 2. Same classname; the base class is from an `OMR` namespace and the overriding class is from a `J9` namespace
 3. Same classname; the base and overriding classes are from a `J9` namespace
