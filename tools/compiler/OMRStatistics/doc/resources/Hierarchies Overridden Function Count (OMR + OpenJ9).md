@@ -1,4 +1,4 @@
-| Hierarchy | Number of Overridden Functions in OMR | Number of Classes in J9 |
+| Hierarchy | Number of Overridden Functions in OMR + OpenJ9 | Number of Functions in openJ9 |
 | --- | --- | --- |
 | CodeGenerator | 209 | 5 |
 | Instruction | 75 | 0 |
