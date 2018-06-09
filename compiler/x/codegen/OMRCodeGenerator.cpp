@@ -1947,7 +1947,7 @@ void OMR::X86::CodeGenerator::doBinaryEncoding()
       int32_t numTrampolinesToReserve = self()->getPicSlotCount() - self()->comp()->getNumReservedIPICTrampolines();
       TR_ASSERT(numTrampolinesToReserve >= 0, "Discrepancy with number of IPIC trampolines to reserve getPicSlotCount()=%d getNumReservedIPICTrampolines()=%d",
          self()->getPicSlotCount(), self()->comp()->getNumReservedIPICTrampolines());
-      reserveNTrampolines(numTrampolinesToReserve);
+      self()->reserveNTrampolines(numTrampolinesToReserve);
       }
 
    self()->setBinaryBufferStart(temp);

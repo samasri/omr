@@ -339,7 +339,7 @@ OMR::CodeGenerator::lowerTreeIfNeeded(
          node->recursivelyDecReferenceCount();
          }
       else
-         lowerTree(node, tt);
+         self()->lowerTree(node, tt);
       }
 
    if (node->getOpCodeValue() == TR::loadaddr || node->getOpCode().isLoadVarDirect())

@@ -281,22 +281,22 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void uncommonCallConstNodes();
 
-   OMR_API virtual void preLowerTrees();
+   void preLowerTrees();
    void postLowerTrees() {}
 
    TR::TreeTop *lowerTree(TR::Node *root, TR::TreeTop *tt);
    void lowerTrees();
    void lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
-   OMR_API virtual void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
+   void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
 
-   OMR_API virtual void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
-   OMR_API virtual void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
+   void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
+   void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
 
-   OMR_API virtual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
-   OMR_API virtual void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
-   OMR_API virtual void lowerTreesPropagateBlockToNode(TR::Node *node);
+   void lowerTreesPropagateBlockToNode(TR::Node *node);
 
    void setUpForInstructionSelection();
    void doInstructionSelection();
@@ -407,7 +407,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void prepareNodeForInstructionSelection(TR::Node*node);
    void remapGCIndicesInInternalPtrFormat();
-   OMR_API virtual void processRelocations();
+   void processRelocations();
 
    void findAndFixCommonedReferences();
    void findCommonedReferences(TR::Node*node, TR::TreeTop *treeTop);
@@ -766,7 +766,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    uint8_t * allocateCodeMemory(uint32_t size, bool isCold, bool isMethodHeaderNeeded=true);
    uint8_t * allocateCodeMemory(uint32_t warmSize, uint32_t coldSize, uint8_t **coldCode, bool isMethodHeaderNeeded=true);
    void  resizeCodeMemory();
-   OMR_API virtual void  registerAssumptions() {}
+   void  registerAssumptions() {}
 
    static void syncCode(uint8_t *codeStart, uint32_t codeSize);
 
@@ -1082,7 +1082,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
    bool needClassAndMethodPointerRelocations() { return false; }
-   OMR_API virtual bool needRelocationsForStatics() { return false; }
+   bool needRelocationsForStatics() { return false; }
 
    // --------------------------------------------------------------------------
    // Snippets
