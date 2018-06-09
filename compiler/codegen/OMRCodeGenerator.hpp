@@ -1081,8 +1081,13 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
+<<<<<<< HEAD
    bool needClassAndMethodPointerRelocations() { return false; }
    bool needRelocationsForStatics() { return false; }
+=======
+   OMR_API virtual bool needClassAndMethodPointerRelocations() { return false; }
+   OMR_API virtual bool needRelocationsForStatics() { return false; }
+>>>>>>> parent of b020339c... Fixed type #52
 
    // --------------------------------------------------------------------------
    // Snippets
