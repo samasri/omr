@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corp. and others
+ * Copyright (c) 2000, 2016 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -74,21 +74,19 @@
 // OMR_EXTENSIBLE
 #if defined(__clang__) // Only clang is checking this macro for now
 #define OMR_EXTENSIBLE __attribute__((annotate("OMR_Extensible")))
-#deine OMR_API __attribute__((annotate("OMR_API")))
 #else
 #define OMR_EXTENSIBLE
-#define OMR_API
 #endif
 
 // OMR_LIKELY and OMR_UNLIKELY
 // TODO: check if the definition of these macros is too broad,
 //       __builtin_expect() may not have any effect on xlC
-#if defined(TR_HOST_X86) && defined(OMR_OS_WINDOWS)
+#if defined(TR_HOST_X86) && defined(WINDOWS)
    #define OMR_LIKELY(expr) (expr)
    #define OMR_UNLIKELY(expr) (expr)
 #else
    #define OMR_LIKELY(expr)   __builtin_expect((expr), 1)
    #define OMR_UNLIKELY(expr) __builtin_expect((expr), 0)
-#endif /* defined(TR_HOST_X86) && defined(OMR_OS_WINDOWS) */
+#endif
 
 #endif
