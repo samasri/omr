@@ -301,7 +301,7 @@ class OMR_EXTENSIBLE CodeGenerator
    void doInstructionSelection();
    void createStackAtlas();
 
-   OMR_API virtual void beginInstructionSelection() {}
+   void beginInstructionSelection() {}
    void endInstructionSelection() {}
 
    bool use64BitRegsOn32Bit();
