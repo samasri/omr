@@ -298,11 +298,11 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    OMR_API virtual void lowerTreesPropagateBlockToNode(TR::Node *node);
 
-   OMR_API virtual void setUpForInstructionSelection();
-   OMR_API virtual void doInstructionSelection();
-   OMR_API virtual void createStackAtlas();
+   void setUpForInstructionSelection();
+   void doInstructionSelection();
+   void createStackAtlas();
 
-   void beginInstructionSelection() {}
+   OMR_API virtual void beginInstructionSelection() {}
    void endInstructionSelection() {}
 
    bool use64BitRegsOn32Bit();
@@ -1174,13 +1174,13 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // currently can only return a value other than vgdnop for HCR guards
    TR::Instruction* getVirtualGuardForPatching(TR::Instruction *vgdnop);
 
-   OMR_API virtual void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
-   OMR_API virtual void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
-   OMR_API virtual void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
-   OMR_API virtual void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
-   OMR_API virtual void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
-   OMR_API virtual bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
-   OMR_API virtual bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9
+   void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
+   void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
+   void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
+   void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
+   void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
+   bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
+   bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9
 
    // --------------------------------------------------------------------------
    // Unclassified
