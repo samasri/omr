@@ -302,8 +302,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    OMR_API virtual void doInstructionSelection();
    OMR_API virtual void createStackAtlas();
 
-   OMR_API virtual void beginInstructionSelection() {}
-   OMR_API virtual void endInstructionSelection() {}
+   void beginInstructionSelection() {}
+   void endInstructionSelection() {}
 
    bool use64BitRegsOn32Bit();
 
@@ -365,12 +365,12 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void setNextAvailableBlockIndex(int32_t blockIndex) {}
    int32_t getNextAvailableBlockIndex() { return -1; }
 
-   OMR_API virtual bool supportsMethodEntryPadding() { return true; }
-   OMR_API virtual bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
-   OMR_API virtual bool buildInterpreterEntryPoint() { return false; }
-   OMR_API virtual void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
-   OMR_API virtual bool supportsUnneededLabelRemoval() { return true; }
-   OMR_API virtual bool allowSplitWarmAndColdBlocks() { return false; }
+   bool supportsMethodEntryPadding() { return true; }
+   bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
+   bool buildInterpreterEntryPoint() { return false; }
+   void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
+   bool supportsUnneededLabelRemoval() { return true; }
+   bool allowSplitWarmAndColdBlocks() { return false; }
 
    TR_HasRandomGenerator randomizer;
 
@@ -421,7 +421,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // Hardware profiling
    //
-   OMR_API virtual void createHWPRecords() {}
+   void createHWPRecords() {}
 
    // --------------------------------------------------------------------------
    // Tree evaluation
@@ -556,8 +556,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Linkage
    //
    void initializeLinkage(); // no virt, default, cast
-   OMR_API virtual TR::Linkage *createLinkage(TR_LinkageConventions lc); // no virt, default, cast
-   OMR_API virtual TR::Linkage *createLinkageForCompilation();
+   TR::Linkage *createLinkage(TR_LinkageConventions lc); // no virt, default, cast
+   TR::Linkage *createLinkageForCompilation();
 
    TR::Linkage *getLinkage() {return _bodyLinkage;}
    TR::Linkage *setLinkage(TR::Linkage * l) {return (_bodyLinkage = l);}
