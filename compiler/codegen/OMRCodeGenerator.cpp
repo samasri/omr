@@ -379,7 +379,7 @@ void OMR::CodeGenerator::lowerTrees()
       self()->lowerTreeIfNeeded(node, 0, 0, tt);
 
 
-      lowerTreesPostTreeTopVisit(tt, visitCount);
+      self()->lowerTreesPostTreeTopVisit(tt, visitCount);
 
       }
 
@@ -411,7 +411,7 @@ OMR::CodeGenerator::lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vco
          }
       }
 
-   lowerTreesPostChildrenVisit(parent, treeTop, visitCount);
+   self()->lowerTreesPostChildrenVisit(parent, treeTop, visitCount);
 
    }
 
