@@ -481,7 +481,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
 
 
-   OMR_API virtual TR::Recompilation *allocateRecompilationInfo() { return NULL; }
+   TR::Recompilation *allocateRecompilationInfo() { return NULL; }
 
    // --------------------------------------------------------------------------
    // Capabilities
