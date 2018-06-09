@@ -628,7 +628,9 @@ int32_t OMR::X86::CodeGenerator::getMaximumNumbersOfAssignableGPRs()
 
 /*
  * This method returns TRUE for all the cases we decide NOT to replace the call to CAS
- * with inline assembly. The GRA and Evaluator should be consistent about whether to inline CAS natives.
+ * with inline assembly.
+ * It checks the same condition as inlineCompareAndSwapNative in tr.source/trj9/x/codegen/J9TreeEvaluator.cpp
+ * so that GRA and Evaluator should be consistent about whether to inline CAS natives
  */
 static bool willNotInlineCompareAndSwapNative(TR::Node *node,
       int8_t size,
@@ -1080,7 +1082,7 @@ OMR::X86::CodeGenerator::supportsMergingGuards()
    {
    return self()->getSupportsVirtualGuardNOPing() &&
           self()->comp()->performVirtualGuardNOPing() &&
-          allowGuardMerging();
+          self()->allowGuardMerging();
    }
 
 TR::RealRegister *
