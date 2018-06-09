@@ -1988,7 +1988,7 @@ void OMR::Power::CodeGenerator::doBinaryEncoding()
    TR_PPCBinaryEncodingData data;
    data.estimate = 0;
 
-   generateBinaryEncodingPrologue(&data);
+   self()->generateBinaryEncodingPrologue(&data);
 
    bool skipOneReturn = false;
    while (data.cursorInstruction)

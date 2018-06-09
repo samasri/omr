@@ -461,7 +461,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    rcount_t recursivelyDecReferenceCount(TR::Node*node);
    void evaluateChildrenWithMultipleRefCount(TR::Node*node);
 
-   OMR_API virtual void incRefCountForOpaquePseudoRegister(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp) {}
+   void incRefCountForOpaquePseudoRegister(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp) {}
 
    void startUsingRegister(TR::Register *reg);
    void stopUsingRegister(TR::Register *reg);
@@ -593,7 +593,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
     * @param method : the recognized method to consider
     * @return true if inlining should be suppressed; false otherwise
     */
-   OMR_API virtual bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method) {return false;}
+   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method) {return false;}
 
    // --------------------------------------------------------------------------
    // Optimizer, not code generator
@@ -1098,13 +1098,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
-<<<<<<< HEAD
    bool needClassAndMethodPointerRelocations() { return false; }
    bool needRelocationsForStatics() { return false; }
-=======
-   OMR_API virtual bool needClassAndMethodPointerRelocations() { return false; }
-   OMR_API virtual bool needRelocationsForStatics() { return false; }
->>>>>>> parent of b020339c... Fixed type #52
 
    // --------------------------------------------------------------------------
    // Snippets
@@ -1302,7 +1297,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; } // no virt
    bool supportsHighWordFacility() { return false; } // no virt, default, cast
 
-   OMR_API virtual bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
+   bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
 
    // J9 only, move to trj9
    TR_OpaqueClassBlock* getMonClass(TR::Node* monNode);
@@ -1356,7 +1351,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::DataType IntJ() { return TR::Compiler->target.is64Bit() ? TR::Int64 : TR::Int32; }
 
    // will a BCD left shift always leave the sign code unchanged and thus allow it to be propagated through and upwards
-   OMR_API virtual bool propagateSignThroughBCDLeftShift(TR::DataType type) { return false; } // no virt
+   bool propagateSignThroughBCDLeftShift(TR::DataType type) { return false; } // no virt
 
    bool supportsLengthMinusOneForMemoryOpts() {return false;} // no virt, cast
 
