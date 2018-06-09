@@ -239,8 +239,7 @@ TR::Node* generatePoisonNode(TR::Compilation *comp, TR::Block *currentBlock, TR:
 namespace OMR
 {
 
-class /*OMR_EXTENSIBLE*/ CodeGenerator
-
+class OMR_EXTENSIBLE CodeGenerator
    {
    private:
 
