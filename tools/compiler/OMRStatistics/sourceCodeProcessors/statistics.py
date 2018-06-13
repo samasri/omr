@@ -13,9 +13,16 @@ f = csv.reader(f, delimiter=';')
 
 extensibleCounter = 0
 allCounter = 0
+classCounter = 0
 for row in f:
 	isExtensible = row[0]
 	hierarchy = row[1]
-	if isExtensible == '1': extensibleCounter += 1
+	classes = hierarchy.split(' --> ')
+	if isExtensible == '1': 
+		extensibleCounter += 1
+		classCounter += len(classes)
 	allCounter += 1
+
+avgLength = float(classCounter) / float(extensibleCounter)
 print 'Number of extensible hierarchies: ' + str(extensibleCounter)
+print 'Average number of classes in extensible hierarchies: ' + str(avgLength)
