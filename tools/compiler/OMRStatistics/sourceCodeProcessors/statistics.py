@@ -90,9 +90,9 @@ for row in file:
 	if not row: continue
 	row = row.split('\t')
 	r1 = row[0].strip() + '::' + row[1].strip() # Get first qualified class name in record
-	r2 = row[2].strip() + '::' + row[3].strip() # Get second qualified class name in record
+	#r2 = row[2].strip() + '::' + row[3].strip() # Get second qualified class name in record
 	recordSet.add(r1)
-	recordSet.add(r2)
+	#recordSet.add(r2)
 
 print 'Number of extensible classes with overridden functions: ' + str(len(recordSet))
 
