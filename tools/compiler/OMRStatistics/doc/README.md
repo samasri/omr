@@ -77,3 +77,9 @@ To run all tests and identify the failed ones, run `make test` in the main OMRSt
 * Run OMRStatistics over bruteclang to collect results from all architectures
 * Package OMRStatistics as a command-line tool
 * Consider using Doxygen as our documentation tool
+
+# Updating Documentation outline
+* How to run this OMRStatistics tool
+* What are the different outputs
+* Use cases of the generated database: examples of different queries that and what information do they yield (for example to get overrides, what query should be used)
+* Description of external python scripts
