@@ -6,7 +6,7 @@
 # INNER JOIN Function as of on of.id = o.overridingFunctionID
 # INNER JOIN Class as bc on bc.id = bf.classID
 # INNER JOIN Class as oc on oc.id = of.classID
-# WHERE bc.isExtensible = 1 and oc.isExtensible = 1 and bc.className='CodeGenerator';
+# WHERE bc.isExtensible = 1 and oc.isExtensible = 1 and bf.isVirtual = 0 and of.isVirtual = 0 and bf.isImplicit = 0 and of.isImplicit = 0 and bc.className='CodeGenerator';
 
 import warnings
 
