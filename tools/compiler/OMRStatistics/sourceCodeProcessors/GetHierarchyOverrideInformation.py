@@ -1,5 +1,7 @@
 # Processes file sql.out to get the amount of overridden functions per hierarchy
-# sql.out is the output table of an sql query that has the following format
+
+# sql.out is the output table of an sql query that has the following format:
+
 # BaseNamespace BaseClassName Signature OverridingNamespace OverridingClassName
 # The columns are separated by tabs, this script processed them, takes the unique overridden functions from each class, and joins them in a hierarchy. The results are in the [resources section](https://github.com/samasri/omr/blob/master/tools/compiler/OMRStatistics/doc/resources/Hierarchies%20Overridden%20Function%20Count%20(OMR%20+%20OpenJ9).md)
 
