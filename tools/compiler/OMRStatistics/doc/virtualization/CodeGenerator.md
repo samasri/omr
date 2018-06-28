@@ -3,7 +3,7 @@
 | emitDataSnippets() | OMR::OMR::X86 | 0 |
 | yankIndexScalingOp() | OMR::OMR::Z | 0 |
 | apply16BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *) | OMR::OMR::Power | 0 |
-| calculateRegisterPressure() | OMR::OMR::Power | 0 |
+| getSupportsBitOpCodes() | OMR::OMR::X86 | 0 |
 | supportsMergingGuards() | OMR::OMR::X86 | 0 |
 | alwaysGeneratesAKnownCleanSign(TR::Node *) | J9::J9::Z | 0 |
 | generateSwitchToInterpreterPrePrologue(TR::Instruction *,uint8_t,uint8_t) | OMR::X86::J9::X86 | 0 |
@@ -12,7 +12,6 @@
 | allocateRecompilationInfo() | OMR::J9::X86 | 0 |
 | createLinkageForCompilation() | OMR::J9 | 0 |
 | jitAddPicToPatchOnClassUnload(void *,void *) | OMR::J9 | 0 |
-| getSupportsBitOpCodes() | OMR::OMR::X86 | 0 |
 | beginInstructionSelection() | OMR::OMR::X86 | 0 |
 | getMinimumNumberOfNodesBetweenMonitorsForTLE() | J9::J9::Z | 0 |
 | reserveNTrampolines(int32_t) | OMR::X86::J9::X86 | 0 |
@@ -29,7 +28,6 @@
 | generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,TR::RegisterDependencyConditions *) | OMR::OMR::X86 | 0 |
 | getSupportsConstantOffsetInAddressing(int64_t) | OMR::OMR::Power | 0 |
 | incRefCountForOpaquePseudoRegister(TR::Node *,TR::CodeGenerator *,TR::Compilation *) | OMR::J9::Z | 0 |
-| getSupportsIbyteswap() | OMR::OMR::X86 | 0 |
 | shouldYankCompressedRefs() | OMR::OMR::Z | 0 |
 | canTransformUnsafeSetMemory() | OMR::OMR::Power | 0 |
 | processIncomingParameterUsage(class TR_BitVector **,int32_t) | OMR::OMR::X86 | 0 |
@@ -48,16 +46,14 @@
 | needsNormalizationBeforeShifts() | OMR::OMR::Power | 0 |
 | suppressInliningOfRecognizedMethod(TR::RecognizedMethod) | OMR::J9::X86 | 0 |
 | nodeMayCauseException(TR::Node *) | OMR::OMR::Z | 0 |
-| longClobberEvaluate(TR::Node *) | OMR::X86::OMR::X86::AMD64 | 0 |
 | createStackAtlas() | OMR::J9 | 0 |
-| nodeResultGPRCount(TR::Node *,struct OMR::CodeGenerator::TR_RegisterPressureState *) | OMR::OMR::X86 | 0 |
 | codegenSupportsLoadlessBNDCheck() | OMR::OMR::Z | 0 |
 | branchesAreExpensive() | OMR::OMR::Power | 0 |
 | emitTargetAddressSnippets() | OMR::OMR::Z | 0 |
 | allowGlobalRegisterAcrossBranch(class TR_RegisterCandidate *,TR::Node *) | OMR::OMR::X86 | 0 |
 | needRelocationsForStatics() | OMR::J9 | 0 |
 | supportsInliningOfIsInstance() | OMR::OMR::X86 | 0 |
-| getSupportsTLE() | OMR::OMR::Power | 0 |
+| supportsHighWordFacility() | OMR::OMR::Z | 0 |
 | isRotateAndMask(TR::Node *) | OMR::OMR::Power | 0 |
 | getSupportsTenuredObjectAlignment() | OMR::OMR::X86 | 0 |
 | arrayInitMinimumNumberOfBytes() | OMR::OMR::X86 | 0 |
@@ -73,7 +69,6 @@
 | opCodeIsNoOpOnThisPlatform(TR::ILOpCode &) | OMR::OMR::X86::AMD64 | 0 |
 | arithmeticNeedsLiteralFromPool(TR::Node *) | OMR::OMR::Z | 0 |
 | shouldValueBeInACommonedNode(int64_t) | OMR::OMR::Power | 0 |
-| willBeEvaluatedAsCallByCodeGen(TR::Node *,TR::Compilation *) | OMR::OMR::X86 | 0 |
 | getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *) | OMR::OMR::Power | 0 |
 | arrayTranslateTableRequiresAlignment(_Bool,_Bool) | OMR::OMR::Z | 0 |
 | isObjectOfSizeWorthAligning(uint32_t) | OMR::OMR::X86 | 0 |
@@ -90,16 +85,12 @@
 | jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *) | OMR::J9 | 0 |
 | getSizeOfCombinedBuffer() | OMR::OMR::X86 | 0 |
 | splitBlockEntry(TR::Instruction *) | OMR::OMR::X86 | 0 |
-| ~CodeGenerator() | OMR::OMR::X86 | 0 |
 | getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *) | OMR::OMR::Z | 0 |
 | needClassAndMethodPointerRelocations() | OMR::J9 | 0 |
 | inlineDirectCall(TR::Node *,TR::Register *&) | OMR::J9::Power | 0 |
 | createHWPRecords() | OMR::J9 | 0 |
 | isBranchInstruction(TR::Instruction *) | OMR::OMR::X86 | 0 |
 | doInstructionSelection() | OMR::OMR::Z | 0 |
-| getGlobalRegisters(enum TR_SpillKinds,enum TR_LinkageConventions) | OMR::OMR::X86 | 0 |
-| getSupportsBitPermute() | OMR::OMR::X86 | 0 |
-| supportsHighWordFacility() | OMR::OMR::Z | 0 |
 | apply24BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *) | OMR::OMR::Power | 0 |
 | getSupportsNewObjectAlignment() | OMR::OMR::X86 | 0 |
 | generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,class TR_ScratchRegisterManager &) | OMR::OMR::X86 | 0 |
@@ -150,7 +141,6 @@
 | isLiteralPoolOnDemandOn() | OMR::OMR::Z | 0 |
 | supportsDirectIntegralLoadStoresFromLiteralPool() | OMR::OMR::Z | 0 |
 | splitEdge(TR::Instruction *,_Bool,_Bool,TR::Instruction *,TR::list<TR::Instruction *> *,_Bool) | OMR::OMR::X86 | 0 |
-| simulateNodeEvaluation(TR::Node *,struct OMR::CodeGenerator::TR_RegisterPressureState *,struct OMR::CodeGenerator::TR_RegisterPressureSummary *) | OMR::OMR::X86 | 0 |
 | supportsDirectJNICallsForAOT() | OMR::OMR::X86 | 0 |
 | canTransformUnsafeCopyToArrayCopy() | OMR::OMR::X86 | 0 |
 | CodeGenerator() | OMR::OMR::X86 | 0 |
