@@ -1,4 +1,4 @@
-# This script takes a file '1' that is the output of the following SQL query, processes the file and generate a list of all unique signatures of the found functions in a table based on documentation [here](). The SQL query is inteded to find overridden functions in a specific hierarchy (specified in `bc.className=<hierarchyName>`)
+# This script takes a file '1' that is the output of the following SQL query, processes the file and generate a list of all unique signatures of the found functions in a table based on documentation [here](https://github.com/samasri/omr/tree/master/tools/compiler/OMRStatistics/doc/virtualization). The SQL query is inteded to find overridden functions in a specific hierarchy (specified in `bc.className=<hierarchyName>`)
 
 # SELECT DISTINCT bc.namespace, bc.classname, of.signature, oc.namespace, oc.classname
 # FROM Override as o
