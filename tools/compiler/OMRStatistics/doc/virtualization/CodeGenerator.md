@@ -1,40 +1,40 @@
 | Signature | First occurrence of function in hierarchy (starting the search from base class) | isVirtualized |
 | --- | --- | --- |
-| emitDataSnippets() | OMR::OMR::X86 | 0 |
-| yankIndexScalingOp() | OMR::OMR::Z | 0 |
-| apply16BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *) | OMR::OMR::Power | 0 |
-| getSupportsBitOpCodes() | OMR::OMR::X86 | 0 |
-| supportsMergingGuards() | OMR::OMR::X86 | 0 |
+| emitDataSnippets() | OMR::OMR::X86 | 1 |
+| yankIndexScalingOp() | OMR::OMR::Z | 1 |
+| apply16BitLabelRelativeRelocation(int32_t *,TR::LabelSymbol *) | OMR::OMR::Power | 1 |
+| getSupportsBitOpCodes() | OMR::OMR::X86 | 1 |
+| supportsMergingGuards() | OMR::OMR::X86 | 1 |
 | alwaysGeneratesAKnownCleanSign(TR::Node *) | J9::J9::Z | 1 |
 | generateSwitchToInterpreterPrePrologue(TR::Instruction *,uint8_t,uint8_t) | OMR::X86::J9::X86 | 1 |
-| supportsNegativeFusedMultiplyAdd() | OMR::OMR::Power | 0 |
-| hasComplexAddressingMode() | OMR::OMR::X86 | 0 |
+| supportsNegativeFusedMultiplyAdd() | OMR::OMR::Power | 1 |
+| hasComplexAddressingMode() | OMR::OMR::X86 | 1 |
 | allocateRecompilationInfo() | OMR::J9::X86 | 1 |
 | createLinkageForCompilation() | OMR::J9 | 1 |
 | jitAddPicToPatchOnClassUnload(void *,void *) | OMR::J9 | 1 |
 | beginInstructionSelection() | OMR::OMR::X86 | 1 |
 | getMinimumNumberOfNodesBetweenMonitorsForTLE() | J9::J9::Z | 1 |
 | reserveNTrampolines(int32_t) | OMR::X86::J9::X86 | 1 |
-| pickRegister(class TR_RegisterCandidate *,TR::Block **,class TR_BitVector &,TR_GlobalRegisterNumber &,TR_LinkHead<class TR_RegisterCandidate> *) | OMR::OMR::X86::I386 | 0 |
-| isFenceInstruction(TR::Instruction *) | OMR::OMR::X86 | 0 |
-| getMinShortForLongCompareNarrower() | OMR::OMR::Z | 0 |
-| lowerTreesPropagateBlockToNode(TR::Node *) | OMR::OMR::Z | 0 |
-| processInstruction(TR::Instruction *,class TR_BitVector **,int32_t &,int32_t &,_Bool) | OMR::OMR::X86 | 0 |
-| getLinkageGlobalRegisterNumber(int8_t,TR::DataType) | OMR::OMR::X86::AMD64 | 0 |
-| needToAvoidCommoningInGRA() | OMR::OMR::X86 | 0 |
-| materializesHeapBase() | OMR::OMR::X86 | 0 |
-| hasTMEvaluator() | OMR::OMR::X86 | 0 |
-| getMaximumNumbersOfAssignableFPRs() | OMR::OMR::X86 | 0 |
-| generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,TR::RegisterDependencyConditions *) | OMR::OMR::X86 | 0 |
-| getSupportsConstantOffsetInAddressing(int64_t) | OMR::OMR::Power | 0 |
+| pickRegister(class TR_RegisterCandidate *,TR::Block **,class TR_BitVector &,TR_GlobalRegisterNumber &,TR_LinkHead<class TR_RegisterCandidate> *) | OMR::OMR::X86::I386 | 1 |
+| isFenceInstruction(TR::Instruction *) | OMR::OMR::X86 | 1 |
+| getMinShortForLongCompareNarrower() | OMR::OMR::Z | 1 |
+| lowerTreesPropagateBlockToNode(TR::Node *) | OMR::OMR::Z | 1 |
+| processInstruction(TR::Instruction *,class TR_BitVector **,int32_t &,int32_t &,_Bool) | OMR::OMR::X86 | 1 |
+| getLinkageGlobalRegisterNumber(int8_t,TR::DataType) | OMR::OMR::X86::AMD64 | 1 |
+| needToAvoidCommoningInGRA() | OMR::OMR::X86 | 1 |
+| materializesHeapBase() | OMR::OMR::X86 | 1 |
+| hasTMEvaluator() | OMR::OMR::X86 | 1 |
+| getMaximumNumbersOfAssignableFPRs() | OMR::OMR::X86 | 1 |
+| generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,TR::Register *,TR::RegisterDependencyConditions *) | OMR::OMR::X86 | 1 |
+| getSupportsConstantOffsetInAddressing(int64_t) | OMR::OMR::Power | 1 |
 | incRefCountForOpaquePseudoRegister(TR::Node *,TR::CodeGenerator *,TR::Compilation *) | OMR::J9::Z | 1 |
-| shouldYankCompressedRefs() | OMR::OMR::Z | 0 |
-| canTransformUnsafeSetMemory() | OMR::OMR::Power | 0 |
-| processIncomingParameterUsage(class TR_BitVector **,int32_t) | OMR::OMR::X86 | 0 |
+| shouldYankCompressedRefs() | OMR::OMR::Z | 1 |
+| canTransformUnsafeSetMemory() | OMR::OMR::Power | 1 |
+| processIncomingParameterUsage(class TR_BitVector **,int32_t) | OMR::OMR::X86 | 1 |
 | supportsUnneededLabelRemoval() | OMR::J9 | 1 |
-| canUseImmedInstruction(int64_t) | OMR::OMR::Z | 0 |
-| apply16BitLoadLabelRelativeRelocation(TR::Instruction *,TR::LabelSymbol *,TR::LabelSymbol *,int32_t) | OMR::OMR::Power | 0 |
-| doRematerialization() | OMR::OMR::X86 | 0 |
+| canUseImmedInstruction(int64_t) | OMR::OMR::Z | 1 |
+| apply16BitLoadLabelRelativeRelocation(TR::Instruction *,TR::LabelSymbol *,TR::LabelSymbol *,int32_t) | OMR::OMR::Power | 1 |
+| doRematerialization() | OMR::OMR::X86 | 1 |
 | hasDataSnippets() | OMR::OMR::X86 | 0 |
 | addProjectSpecializedPairRelocation(uint8_t *,uint8_t *,uint8_t *,TR_ExternalRelocationTargetKind,char *,uintptr_t,TR::Node *) | OMR::J9 | 1 |
 | generateDebugCounterBump(TR::Instruction *,TR::DebugCounterBase *,int32_t,class TR_ScratchRegisterManager &) | OMR::OMR::X86 | 0 |
