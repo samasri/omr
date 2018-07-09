@@ -198,3 +198,11 @@
 * codegenSupportsUnsignedIntegerDivide()
 * endInstructionSelection()
 * isOutOfLineHotPath()
+
+# Functions declared as pure virtual
+* OMR::CodeGenerator::buildRegisterMapForInstruction(TR_GCStackMap*)
+* OMR::CodeGenerator::doBinaryEncoding()
+* OMR::CodeGenerator::doRegisterAssignment(TR_RegisterKinds)
+
+# Provided default implementation for the following functions
+* generateSwitchToInterpreterPrePrologue(TR::Instruction *prev, uint8_t alignment, uint8_t alignmentMargin)

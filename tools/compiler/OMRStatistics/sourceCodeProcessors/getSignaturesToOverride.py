@@ -29,6 +29,5 @@ for row in f:
 	elif 'OMR' in on or 'OMR' in bn: omrcount += 1
 	else: warnings.warn('Class found that is neither in OMR nor J9: ' + bn + ' --> ' + on, Warning)
 
-print "| Signature | First occurrence of function in hierarchy (starting the search from base class) | isVirtualized |"
-print "| --- | --- | --- |"
-for sig in keySet: print "| " + sig + " | " + keySet[sig] + " | 0 |"
+print '# Functions to virtualize'
+for sig in keySet: print "* " + sig
