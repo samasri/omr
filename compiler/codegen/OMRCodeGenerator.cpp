@@ -2221,7 +2221,7 @@ OMR::CodeGenerator::setEstimatedLocationsForSnippetLabels(int32_t estimatedSnipp
       estimatedSnippetStart += (*iterator)->getLength(estimatedSnippetStart);
       }
 
-   if (self()->hasDataSnippets())
+   if (hasDataSnippets())
       {
       estimatedSnippetStart = self()->setEstimatedLocationsForDataSnippetLabels(estimatedSnippetStart);
       }
@@ -2253,7 +2253,7 @@ OMR::CodeGenerator::emitSnippets()
 
    // Emit constant data snippets last.
    //
-   if (self()->hasDataSnippets())
+   if (hasDataSnippets())
       {
       self()->emitDataSnippets();
       }
