@@ -1,0 +1,41 @@
+root@6d4436d6c9d0:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/jdk/bin# ./java -version
+JVMJ9VM019E Unrecoverable error: Unable to find and initialize required class java/lang/Object
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/amd64/compressedrefs/jclSC180/vm.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/se-service.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/rt.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/resources.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/jsse.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/charsets.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/jce.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/tools.jar
+_______________________________________________
+root@6d4436d6c9d0:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/jdk/bin# ./java -Xjit:count=0,optlevel=hot -version
+JVMJ9VM019E Unrecoverable error: Unable to find and initialize required class java/lang/Object
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/amd64/compressedrefs/jclSC180/vm.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/se-service.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/rt.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/resources.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/jsse.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/charsets.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/jce.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/tools.jar
+JVMJ9VM023I This may indicate that JAVA_HOME is incorrect, or that class libraries are not installed
+Unrecognized option: -Xjit:count=0,optlevel=hot
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.
+_______________________________________________
+root@6d4436d6c9d0:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/jdk/bin# ./java -Xint -version
+JVMJ9VM019E Unrecoverable error: Unable to find and initialize required class java/lang/Object
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/amd64/compressedrefs/jclSC180/vm.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/se-service.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/rt.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/resources.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/jsse.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/charsets.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/jce.jar
+JVMJ9VM020I Searched in /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/jdk/lib/tools.jar
+JVMJ9VM023I This may indicate that JAVA_HOME is incorrect, or that class libraries are not installed
+_______________________________________________
