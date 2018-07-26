@@ -1,0 +1,87 @@
+root@662d37e9a041:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/images/j2re-image/bin# ./java -version
+Segmentation fault (core dumped)
+_______________________________________________
+root@662d37e9a041:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/images/j2re-image/bin# ./java -Xjit -version
+Segmentation fault (core dumped)
+_______________________________________________
+root@662d37e9a041:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/images/j2re-image/bin# ./java -Xint -version
+openjdk version "1.8.0_172-internal"
+OpenJDK Runtime Environment (build 1.8.0_172-internal-_2018_07_19_16_05-b00)
+Eclipse OpenJ9 VM (build Virtualizing-CodeGenerator-Testing-1b15415, JRE 1.8.0 Linux amd64-64-Bit Compressed References 20180719_000000 (JIT disabled, AOT disabled)
+OpenJ9   - 1b15415
+OMR      - a424309
+JCL      - 5bbcbdb based on jdk8u172-b11)
+_______________________________________________
+root@662d37e9a041:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/images/j2re-image/bin# ./java -Xjit:optLevel=noOpt -version
+Segmentation fault (core dumped)
+_______________________________________________
+root@662d37e9a041:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/images/j2re-image/bin# ./java -Xjit:count=0,optlevel=hot -version
+Unhandled exception
+Type=Segmentation error vmState=0x00000000
+J9Generic_Signal_Number=00000004 Signal_Number=0000000b Error_Value=00000000 Signal_Code=00000002
+Handler1=00007FCDDA5C2820 Handler2=00007FCDD99B4520 InaccessibleAddress=0000000001FBE790
+RDI=0000000001FBE790 RSI=00007FCDD05EED87 RAX=000000000000000E RBX=0000000000000011
+RCX=0000000000000000 RDX=0000000000000000 R8=0000000000000000 R9=0000000000004000
+R10=0000000000000000 R11=00007FCDDA8B2944 R12=0000000000000000 R13=00007FCDD4007C80
+R14=00007FCDD40A35B8 R15=00007FCDD40A3638
+RIP=0000000001FBE790 GS=0000 FS=0000 RSP=0000000001FBE790
+EFlags=0000000000010283 CS=0033 RBP=0000000001FBE900 ERR=0000000000000015
+TRAPNO=000000000000000E OLDMASK=0000000000000000 CR2=0000000001FBE790
+xmm0 0000000000000000 (f: 0.000000, d: 0.000000e+00)
+xmm1 6c2f6176616a4c28 (f: 1634356224.000000, d: 1.320535e+213)
+xmm2 0000000000000000 (f: 0.000000, d: 0.000000e+00)
+xmm3 43e0000000000000 (f: 0.000000, d: 9.223372e+18)
+xmm4 3fe6ca7c80000000 (f: 2147483648.000000, d: 7.122176e-01)
+xmm5 402f34be77da4179 (f: 2010792320.000000, d: 1.560302e+01)
+xmm6 0000000001fe0fd0 (f: 33427408.000000, d: 1.651533e-316)
+xmm7 0000000000000000 (f: 0.000000, d: 0.000000e+00)
+xmm8 3bbcc86800000000 (f: 0.000000, d: 6.095003e-21)
+xmm9 3fd5b844a9c3407c (f: 2848145408.000000, d: 3.393718e-01)
+xmm10 3d763ffb5f50217a (f: 1599086976.000000, d: 1.264762e-12)
+xmm11 402f34be2939967c (f: 691639936.000000, d: 1.560301e+01)
+xmm12 3cb0000000000000 (f: 0.000000, d: 2.220446e-16)
+xmm13 3fd5b844a9c34080 (f: 2848145408.000000, d: 3.393718e-01)
+xmm14 402fe2804e87b080 (f: 1317515392.000000, d: 1.594239e+01)
+xmm15 3c766d18cf4fc4fb (f: 3478111488.000000, d: 1.945159e-17)
+Target=2_90_20180719_000000 (Linux 4.4.0-128-generic)
+CPU=amd64 (32 logical CPUs) (0x1f76163000 RAM)
+----------- Stack Backtrace -----------
+(0x00007FCDD99CF722 [libj9prt29.so+0x3a722])
+(0x00007FCDD99B50ED [libj9prt29.so+0x200ed])
+(0x00007FCDD99CF79C [libj9prt29.so+0x3a79c])
+(0x00007FCDD99CF8A6 [libj9prt29.so+0x3a8a6])
+(0x00007FCDD99B50ED [libj9prt29.so+0x200ed])
+(0x00007FCDD99CF5F1 [libj9prt29.so+0x3a5f1])
+(0x00007FCDDA5C231B [libj9vm29.so+0x9931b])
+(0x00007FCDD99B50ED [libj9prt29.so+0x200ed])
+(0x00007FCDDA5C2560 [libj9vm29.so+0x99560])
+(0x00007FCDDA5EF695 [libj9vm29.so+0xc6695])
+---------------------------------------
+JVMDUMP039I Processing dump event "gpf", detail "" at 2018/07/26 20:25:11 - please wait.
+JVMDUMP032I JVM requested System dump using '/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/core.20180726.202511.418.0001.dmp' in response to an event
+JVMDUMP010I System dump written to /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/core.20180726.202511.418.0001.dmp
+JVMDUMP032I JVM requested Java dump using '/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/javacore.20180726.202511.418.0002.txt' in response to an event
+JVMDUMP010I Java dump written to /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/javacore.20180726.202511.418.0002.txt
+JVMDUMP032I JVM requested Snap dump using '/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/Snap.20180726.202511.418.0003.trc' in response to an event
+JVMDUMP010I Snap dump written to /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/Snap.20180726.202511.418.0003.trc
+JVMDUMP007I JVM Requesting JIT dump using '/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/jitdump.20180726.202511.418.0004.dmp'
+JVMDUMP010I JIT dump written to /sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/build/linux-x86_64-normal-server-release/images/j2re-image/bin/jitdump.20180726.202511.418.0004.dmp
+JVMDUMP013I Processed dump event "gpf", detail "".
+_______________________________________________
+root@662d37e9a041:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/images/j2re-image/bin# ./java -Xnosigcatch -Xint -version
+openjdk version "1.8.0_172-internal"
+OpenJDK Runtime Environment (build 1.8.0_172-internal-_2018_07_19_16_05-b00)
+Eclipse OpenJ9 VM (build Virtualizing-CodeGenerator-Testing-1b15415, JRE 1.8.0 Linux amd64-64-Bit Compressed References 20180719_000000 (JIT disabled, AOT disabled)
+OpenJ9   - 1b15415
+OMR      - a424309
+JCL      - 5bbcbdb based on jdk8u172-b11)
+_______________________________________________
+root@662d37e9a041:/sandbox/jdk8-VirtualizingCodeGeneratorTesting-VirtualizingCodeGeneratorTesting/bu
+ild/linux-x86_64-normal-server-release/images/j2re-image/bin# ./java -Xnosigcatch -Xrs -version
+Segmentation fault (core dumped)

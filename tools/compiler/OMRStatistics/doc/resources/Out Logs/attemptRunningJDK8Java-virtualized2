@@ -1,0 +1,89 @@
+root@e49cf3745980:/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re
+-image/bin# ./java -version
+Segmentation fault (core dumped)
+_______________________________________________
+root@e49cf3745980:/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re
+-image/bin# ./java -Xjit -version
+Segmentation fault (core dumped)
+_______________________________________________
+root@e49cf3745980:/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re
+-image/bin# ./java -Xint -version
+openjdk version "1.8.0_172-internal-debug"
+OpenJDK Runtime Environment (build 1.8.0_172-internal-debug-_2018_07_25_18_48-b00)
+Eclipse OpenJ9 VM (build Virtualizing-CodeGenerator-Testing-1b15415, JRE 1.8.0 Linux amd64-64-Bit Compressed References 20180725_000000 (JIT disabled, AOT disabled)
+OpenJ9   - 1b15415
+OMR      - a424309
+JCL      - 5bbcbdb based on jdk8u172-b11)
+_______________________________________________
+root@e49cf3745980:/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re
+-image/bin# ./java -Xjit:optLevel=noOpt -version
+Segmentation fault (core dumped)
+_______________________________________________
+root@e49cf3745980:/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re
+-image/bin# ./java -Xjit:count=0,optlevel=hot -version
+Unhandled exception
+Type=Segmentation error vmState=0x00000000
+J9Generic_Signal_Number=00000004 Signal_Number=0000000b Error_Value=00000000 Signal_Code=00000002
+Handler1=00007F595E783C40 Handler2=00007F595DB115BD InaccessibleAddress=00007F595F7610C0
+RDI=00007F595F7610C0 RSI=00007F595F761028 RAX=000000000000000E RBX=0000000000CE1D00
+RCX=00007F595F761028 RDX=0000000000CE0990 R8=00007F5943400034 R9=00007F595E483C8E
+R10=00007F5957141BE5 R11=00007F59580A2AA8 R12=00007F595811FBA0 R13=00007F5958007710
+R14=00007F595F7611E0 R15=00007F59579CB0FC
+RIP=00007F595F7610C0 GS=0000 FS=0000 RSP=0000000000CB3790
+EFlags=0000000000010283 CS=0033 RBP=0000000000CB3900 ERR=0000000000000015
+TRAPNO=000000000000000E OLDMASK=0000000000000000 CR2=00007F595F7610C0
+xmm0 0000000000000000 (f: 0.000000, d: 0.000000e+00)
+xmm1 6c2f6176616a4c28 (f: 1634356224.000000, d: 1.320535e+213)
+xmm2 0000000000000000 (f: 0.000000, d: 0.000000e+00)
+xmm3 402f34be77da4179 (f: 2010792320.000000, d: 1.560302e+01)
+xmm4 3fe6ca7c80000000 (f: 2147483648.000000, d: 7.122176e-01)
+xmm5 402f34be77da4179 (f: 2010792320.000000, d: 1.560302e+01)
+xmm6 0000000000cd5fd0 (f: 13459408.000000, d: 6.649831e-317)
+xmm7 0000000000000000 (f: 0.000000, d: 0.000000e+00)
+xmm8 3bbcc86800000000 (f: 0.000000, d: 6.095003e-21)
+xmm9 3fd5b844a9c3407c (f: 2848145408.000000, d: 3.393718e-01)
+xmm10 3d763ffb5f50217a (f: 1599086976.000000, d: 1.264762e-12)
+xmm11 402f34be2939967c (f: 691639936.000000, d: 1.560301e+01)
+xmm12 3cb0000000000000 (f: 0.000000, d: 2.220446e-16)
+xmm13 3fd5b844a9c34080 (f: 2848145408.000000, d: 3.393718e-01)
+xmm14 402fe2804e87b080 (f: 1317515392.000000, d: 1.594239e+01)
+xmm15 3c766d18cf4fc4fb (f: 3478111488.000000, d: 1.945159e-17)
+Target=2_90_20180725_000000 (Linux 4.4.0-128-generic)
+CPU=amd64 (32 logical CPUs) (0x1f76163000 RAM)
+----------- Stack Backtrace -----------
+(0x00007F595DB365AF [libj9prt29.so+0x4e5af])
+(0x00007F595DB1009F [libj9prt29.so+0x2809f])
+(0x00007F595DB3663B [libj9prt29.so+0x4e63b])
+(0x00007F595DB367B1 [libj9prt29.so+0x4e7b1])
+(0x00007F595DB363B6 [libj9prt29.so+0x4e3b6])
+(0x00007F595DB1009F [libj9prt29.so+0x2809f])
+(0x00007F595DB3642D [libj9prt29.so+0x4e42d])
+(0x00007F595E7854E7 [libj9vm29.so+0xef4e7])
+(0x00007F595E784EC1 [libj9vm29.so+0xeeec1])
+(0x00007F595DB1009F [libj9prt29.so+0x2809f])
+(0x00007F595E7840D9 [libj9vm29.so+0xee0d9])
+(0x00007F595E7C4355 [libj9vm29.so+0x12e355])
+---------------------------------------
+JVMDUMP039I Processing dump event "gpf", detail "" at 2018/07/26 20:27:01 - please wait.
+JVMDUMP032I JVM requested System dump using '/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/core.20180726.202701.88.0001.dmp' in response to an event
+JVMDUMP010I System dump written to /sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/core.20180726.202701.88.0001.dmp
+JVMDUMP032I JVM requested Java dump using '/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/javacore.20180726.202701.88.0002.txt' in response to an event
+JVMDUMP010I Java dump written to /sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/javacore.20180726.202701.88.0002.txt
+JVMDUMP032I JVM requested Snap dump using '/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/Snap.20180726.202701.88.0003.trc' in response to an event
+JVMDUMP010I Snap dump written to /sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/Snap.20180726.202701.88.0003.trc
+JVMDUMP007I JVM Requesting JIT dump using '/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/jitdump.20180726.202701.88.0004.dmp'
+JVMDUMP010I JIT dump written to /sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re-image/bin/jitdump.20180726.202701.88.0004.dmp
+JVMDUMP013I Processed dump event "gpf", detail "".
+_______________________________________________
+root@e49cf3745980:/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re
+-image/bin# ./java -Xnosigcatch -Xint -version
+openjdk version "1.8.0_172-internal-debug"
+OpenJDK Runtime Environment (build 1.8.0_172-internal-debug-_2018_07_25_18_48-b00)
+Eclipse OpenJ9 VM (build Virtualizing-CodeGenerator-Testing-1b15415, JRE 1.8.0 Linux amd64-64-Bit Compressed References 20180725_000000 (JIT disabled, AOT disabled)
+OpenJ9   - 1b15415
+OMR      - a424309
+JCL      - 5bbcbdb based on jdk8u172-b11)
+_______________________________________________
+root@e49cf3745980:/sandbox/jdk8-V-V-NewConfig/build/linux-x86_64-normal-server-slowdebug/images/j2re
+-image/bin# ./java -Xnosigcatch -Xrs -version
+Segmentation fault (core dumped)
