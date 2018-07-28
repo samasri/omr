@@ -45,7 +45,6 @@ def editFile(function, headers):
 def applyHPPEdits(headers):
 	for (filename, lines) in headers.iteritems():
 		write = open(filename, 'w')
-		# print "Adding virtual to: " + filename + ".ch"
 		toWrite = ""
 		for line in lines: 
 			toWrite += line
@@ -83,22 +82,19 @@ def processResultsToMap(file):
 				if file not in fileChanges: fileChanges[file] = []
 				fileChanges[file].append(line)
 				count += 1
-		return fileChanges
+	return fileChanges
 
 def applyCPPEdits(fileChanges):
 	for fileName in fileChanges:
-		#print fileName
 		changes = fileChanges[fileName]
 		read = open(fileName)
 		fileStr = "";
-		for line in read: fileStr += line + "\n"
-		fileStr = fileStr[:-1]
+		for line in read: fileStr += line
 		for change in changes:
 			changeWithoutSelf = change.replace("self()->","")
-			if change in fileStr: fileStr.replace(change,changeWithoutSelf)
+			if change in fileStr: fileStr = fileStr.replace(change,changeWithoutSelf)
 		read.close()
 		write = open(fileName, "w")
-		# print "Removing self() in: " + fileName + ".ch"
 		write.write(fileStr)
 		write.close()
 
