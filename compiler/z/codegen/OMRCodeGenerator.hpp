@@ -167,7 +167,7 @@ namespace OMR
 {
 namespace Z
 {
-class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGenerator
+class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGenerator
    {
 
 public:
