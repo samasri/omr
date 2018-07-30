@@ -607,10 +607,10 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::Instruction *generateDebugCounter(const char *name, TR_ScratchRegisterManager &srm, int32_t delta = 1, int8_t fidelity = TR::DebugCounter::Undetermined, int32_t staticDelta = 1, TR::Instruction *cursor = NULL);
    TR::Instruction *generateDebugCounter(const char *name, TR::Register *deltaReg, TR_ScratchRegisterManager &srm, int8_t fidelity = TR::DebugCounter::Undetermined, int32_t staticDelta = 1, TR::Instruction *cursor = NULL);
 
-   TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, int32_t delta, TR::RegisterDependencyConditions *cond){ return cursor; }
-   TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, TR::Register *deltaReg, TR::RegisterDependencyConditions *cond){ return cursor; }
-   TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, int32_t delta, TR_ScratchRegisterManager &srm){ return cursor; }
-   TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, TR::Register *deltaReg, TR_ScratchRegisterManager &srm){ return cursor; }
+   virtual TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, int32_t delta, TR::RegisterDependencyConditions *cond){ return cursor; }
+   virtual TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, TR::Register *deltaReg, TR::RegisterDependencyConditions *cond){ return cursor; }
+   virtual TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, int32_t delta, TR_ScratchRegisterManager &srm){ return cursor; }
+   virtual TR::Instruction *generateDebugCounterBump(TR::Instruction *cursor, TR::DebugCounterBase *counter, TR::Register *deltaReg, TR_ScratchRegisterManager &srm){ return cursor; }
 
    // --------------------------------------------------------------------------
    // Linkage
@@ -658,8 +658,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    //
    int16_t getMinShortForLongCompareNarrower() { return SHRT_MIN; }
    int8_t getMinByteForLongCompareNarrower() { return SCHAR_MIN; }
-
-   bool branchesAreExpensive() { return true; }
+ 
+   virtual bool branchesAreExpensive() { return true; }
    bool opCodeIsNoOp(TR::ILOpCode &opCode);
    bool opCodeIsNoOpOnThisPlatform(TR::ILOpCode &opCode) {return false;}
 
@@ -668,14 +668,14 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool supportsNegativeFusedMultiplyAdd() {return false;}
 
    bool supportsComplexAddressing() {return false;}
-   bool canBeAffectedByStoreTagStalls() { return false; }
+   virtual bool canBeAffectedByStoreTagStalls() { return false; }
 
    bool isMaterialized(TR::Node *);
    bool shouldValueBeInACommonedNode(int64_t) { return false; }
    bool materializesLargeConstants() { return false; }
 
    bool canUseImmedInstruction(int64_t v) {return false;}
-   bool needsNormalizationBeforeShifts() { return false; }
+   virtual bool needsNormalizationBeforeShifts() { return false; }
 
    uint32_t getNumberBytesReadInaccessible() { return _numberBytesReadInaccessible; }
    uint32_t getNumberBytesWriteInaccessible() { return _numberBytesWriteInaccessible; }
@@ -683,7 +683,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool codegenSupportsUnsignedIntegerDivide() {return false;}
    bool mulDecompositionCostIsJustified(int numOfOperations, char bitPosition[], char operationType[], int64_t value);
 
-   bool codegenSupportsLoadlessBNDCheck() {return false;}
+   virtual bool codegenSupportsLoadlessBNDCheck() {return false;}
 
    // called to determine if multiply decomposition exists in platform codegen so that codegen sequences are used
    // instead of the IL transformed multiplies
@@ -931,8 +931,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR_GlobalRegisterNumber findCoalescenceRegisterForParameter(TR::Node *callNode, TR_RegisterCandidate *rc, uint32_t childIndex, bool *isUnpreferred);
    TR_RegisterCandidate *findUsedCandidate(TR::Node *node, TR_RegisterCandidate *rc, TR_BitVector *visitedNodes);
 
-   bool allowGlobalRegisterAcrossBranch(TR_RegisterCandidate *, TR::Node * branchNode);
-   void removeUnavailableRegisters(TR_RegisterCandidate * rc, TR::Block * * blocks, TR_BitVector & availableRegisters) {}
+   bool allowGlobalRegisterAcrossBranch(TR_RegisterCandidate *, TR::Node * branchNode); // no virt
+   virtual void removeUnavailableRegisters(TR_RegisterCandidate * rc, TR::Block * * blocks, TR_BitVector & availableRegisters) {}
    void setUnavailableRegistersUsage(TR_Array<TR_BitVector>  & liveOnEntryUsage, TR_Array<TR_BitVector>   & liveOnExitUsage) {}
 
    int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
@@ -1127,9 +1127,10 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // should override these methods if they use constant data snippets.
    //
    void emitDataSnippets() {}
-   virtual bool hasDataSnippets() {return false;} // no virt, cast
+   virtual bool hasDataSnippets() {return false;}
    int32_t setEstimatedLocationsForDataSnippetLabels(int32_t estimatedSnippetStart) {return 0;}
    
+
    // --------------------------------------------------------------------------
    // Register pressure
    //
@@ -1233,7 +1234,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool IsInMemoryType(TR::DataType type) { return false; }
 
-   bool nodeMayCauseException(TR::Node *node) { return false; }
+   virtual bool nodeMayCauseException(TR::Node *node) { return false; }
 
    // Should these be in codegen?
    bool isSupportedAdd(TR::Node *addr);

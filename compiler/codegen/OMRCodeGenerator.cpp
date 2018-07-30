@@ -2251,6 +2251,7 @@ OMR::CodeGenerator::emitSnippets()
 
    retVal = self()->getBinaryBufferCursor();
 
+
    // Emit constant data snippets last.
    //
    if (hasDataSnippets())
@@ -2810,7 +2811,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *curso
    if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
       self()->comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
 
-   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, NULL);
+   return generateDebugCounterBump(cursor, aggregatedCounters, 1, NULL);
    }
 
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *cursor, const char *name, TR::Register *deltaReg, int8_t fidelity, int32_t staticDelta)
@@ -2832,7 +2833,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *curso
    if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
       self()->comp()->mapStaticAddressToCounter(symref, counter);
 
-   return self()->generateDebugCounterBump(cursor, counter, deltaReg, NULL);
+   return generateDebugCounterBump(cursor, counter, deltaReg, NULL);
    }
 
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::RegisterDependencyConditions &cond, int32_t delta, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
@@ -2856,7 +2857,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
    if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
       self()->comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
 
-   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, &cond);
+   return generateDebugCounterBump(cursor, aggregatedCounters, 1, &cond);
    }
 
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaReg, TR::RegisterDependencyConditions &cond, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
@@ -2878,7 +2879,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
    if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
       self()->comp()->mapStaticAddressToCounter(symref, counter);
 
-   return self()->generateDebugCounterBump(cursor, counter, deltaReg, &cond);
+   return generateDebugCounterBump(cursor, counter, deltaReg, &cond);
    }
 
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR_ScratchRegisterManager &srm, int32_t delta, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
@@ -2902,7 +2903,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR_S
    if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
       self()->comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
 
-   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, srm);
+   return generateDebugCounterBump(cursor, aggregatedCounters, 1, srm);
    }
 
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaReg, TR_ScratchRegisterManager &srm, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
@@ -2924,7 +2925,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
    if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
       self()->comp()->mapStaticAddressToCounter(symref, counter);
 
-   return self()->generateDebugCounterBump(cursor, counter, deltaReg, srm);
+   return generateDebugCounterBump(cursor, counter, deltaReg, srm);
    }
 
 // Records the use of a single virtual register.
