@@ -1,19 +1,21 @@
 import sys
+import collections
 
 def getHeaders(mainPath, namespace):
-	fileList = {}
-	fileList[mainPath + 'compiler/codegen/' + namespace + 'CodeGenerator.hpp'] = []
-	fileList[mainPath + 'compiler/x/codegen/' + namespace + 'CodeGenerator.hpp'] = []
-	fileList[mainPath + 'compiler/x/amd64/codegen/' + namespace + 'CodeGenerator.hpp'] = []
-	fileList[mainPath + 'compiler/x/i386/codegen/' + namespace + 'CodeGenerator.hpp'] = []
-	fileList[mainPath + 'compiler/p/codegen/' + namespace + 'CodeGenerator.hpp'] = []
-	fileList[mainPath + 'compiler/z/codegen/' + namespace + 'CodeGenerator.hpp'] = []
-	for (name,lines) in fileList.iteritems():
+	files = collections.OrderedDict() # To iterate the paths in order later
+	files[mainPath + 'compiler/codegen/' + namespace + 'CodeGenerator.hpp'] = []
+	files[mainPath + 'compiler/x/codegen/' + namespace + 'CodeGenerator.hpp'] = []
+	files[mainPath + 'compiler/x/amd64/codegen/' + namespace + 'CodeGenerator.hpp'] = []
+	files[mainPath + 'compiler/x/i386/codegen/' + namespace + 'CodeGenerator.hpp'] = []
+	files[mainPath + 'compiler/p/codegen/' + namespace + 'CodeGenerator.hpp'] = []
+	files[mainPath + 'compiler/z/codegen/' + namespace + 'CodeGenerator.hpp'] = []
+	
+	for (name,lines) in files.iteritems():
 		file = open(name)
 		for r in file: 
-			fileList[name].append(r)
+			files[name].append(r)
 		file.close()
-	return fileList
+	return files
 
 def getFunctionsList(file):
 	list = []
@@ -33,13 +35,27 @@ def addVirtual(line):
 		if c != ' ': newLine += c
 	return newLine
 
+def numerize(filename):
+	if 'compiler/codegen/' in filename: return 0
+	if 'compiler/x/codegen/' in filename: return 1
+	if 'compiler/x/i386/codegen/' in filename: return 2
+	if 'compiler/x/amd64/codegen/' in filename: return 2
+	if 'compiler/p/codegen/' in filename: return 1
+	if 'compiler/z/codegen/' in filename: return 1
+	
+
 def editFile(function, headers):
 	isEditted = 0
+	isSkip = 3
 	for (filename,lines) in headers.iteritems(): 
 		for (index,line) in enumerate(headers[filename]):
+			if isSkip < 2: #skip 2 files when condition appears
+				isSkip += 1
+				continue
 			if function in headers[filename][index]:
 				headers[filename][index] = addVirtual(headers[filename][index])
-				return 1
+				if 'compiler/codegen/' in filename: return 1
+				if 'compiler/x/codegen/' in filename: isSkip = 0 # Skip the next 2 files from now
 	return 0
 
 def applyHPPEdits(headers):
@@ -93,6 +109,7 @@ def applyCPPEdits(fileChanges):
 		for change in changes:
 			changeWithoutSelf = change.replace("self()->","")
 			if change in fileStr: fileStr = fileStr.replace(change,changeWithoutSelf)
+			else: print 'Not found: ' + change
 		read.close()
 		write = open(fileName, "w")
 		write.write(fileStr)

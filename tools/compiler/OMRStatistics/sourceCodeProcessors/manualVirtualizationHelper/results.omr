@@ -1,52 +1,41 @@
-self()->allowGlobalRegisterAcrossBranch(:
+self()->generateDebugCounterBump(:
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, NULL);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, NULL);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, &cond);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, &cond);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, srm);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, srm);
+/home/sam/1omr-virtualization/compiler/x/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, delta, NULL);
+/home/sam/1omr-virtualization/compiler/x/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, NULL);
+/home/sam/1omr-virtualization/compiler/p/codegen/OMRCodeGenerator.cpp:      cursor = self()->generateDebugCounterBump(cursor, counter, deltaReg, cond);
+/home/sam/1omr-virtualization/compiler/p/codegen/OMRCodeGenerator.cpp:      cursor = self()->generateDebugCounterBump(cursor, counter, deltaReg, srm);
 --------------------
-self()->supportsInliningOfIsInstance(:
+self()->isTargetSnippetOrOutOfLine(:
 --------------------
-self()->supportsHighWordFacility(:
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:   bool enableHighWordGRA = self()->supportsHighWordFacility() && !self()->comp()->getOption(TR_DisableHighWordRA);
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:         if (self()->supportsHighWordFacility() && !self()->comp()->getOption(TR_DisableHighWordRA))
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:   if (self()->supportsHighWordFacility() && !self()->comp()->getOption(TR_DisableHighWordRA) && TR::Compiler->target.is64Bit())
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:      if (self()->supportsHighWordFacility() && !self()->comp()->getOption(TR_DisableHighWordRA) && !self()->comp()->getOption(TR_DisableHPRUpgrade))
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:      if (self()->supportsHighWordFacility() && self()->comp()->getOption(TR_DisableHighWordRA))
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:         if (self()->supportsHighWordFacility() && !self()->comp()->getOption(TR_DisableHighWordRA) && TR::Compiler->target.is64Bit())
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:   if (self()->supportsHighWordFacility() && !self()->comp()->getOption(TR_DisableHighWordRA))
+self()->canBeAffectedByStoreTagStalls(:
 --------------------
-self()->isRotateAndMask(:
+self()->generateDebugCounterBump(:
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, NULL);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, NULL);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, &cond);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, &cond);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, aggregatedCounters, 1, srm);
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, srm);
+/home/sam/1omr-virtualization/compiler/x/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, delta, NULL);
+/home/sam/1omr-virtualization/compiler/x/codegen/OMRCodeGenerator.cpp:   return self()->generateDebugCounterBump(cursor, counter, deltaReg, NULL);
+/home/sam/1omr-virtualization/compiler/p/codegen/OMRCodeGenerator.cpp:      cursor = self()->generateDebugCounterBump(cursor, counter, deltaReg, cond);
+/home/sam/1omr-virtualization/compiler/p/codegen/OMRCodeGenerator.cpp:      cursor = self()->generateDebugCounterBump(cursor, counter, deltaReg, srm);
 --------------------
-self()->getSupportsTenuredObjectAlignment(:
+self()->removeUnavailableRegisters(:
 --------------------
-self()->arrayInitMinimumNumberOfBytes(:
+self()->needsNormalizationBeforeShifts(:
 --------------------
-self()->isPreservedRegister(:
-/home/sam/1omr-virtualization/compiler/x/codegen/OMRCodeGenerator.cpp:      int32_t regIndex = self()->isPreservedRegister(regIt.getNextElement());
-/home/sam/1omr-virtualization/compiler/p/codegen/OMRCodeGenerator.cpp:      int32_t regIndex = self()->isPreservedRegister(regIt.getNextElement());
-/home/sam/1omr-virtualization/compiler/z/codegen/OMRCodeGenerator.cpp:      int32_t regIndex = self()->isPreservedRegister(regIt.getNextElement());
+self()->nodeMayCauseException(:
 --------------------
-self()->canFoldLargeOffsetInAddressing(:
+self()->codegenSupportsLoadlessBNDCheck(:
 --------------------
-self()->getInternalPtrMapBit(:
+self()->branchesAreExpensive(:
 --------------------
-self()->prepareForGRA(:
---------------------
-self()->isAddressScaleIndexSupported(:
---------------------
-self()->constLoadNeedsLiteralFromPool(:
---------------------
-self()->opCodeIsNoOpOnThisPlatform(:
-/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->opCodeIsNoOpOnThisPlatform(opCode);
---------------------
-self()->arithmeticNeedsLiteralFromPool(:
---------------------
-self()->shouldValueBeInACommonedNode(:
-/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:   return self()->shouldValueBeInACommonedNode(value);
---------------------
-self()->getMaximumNumberOfFPRsAllowedAcrossEdge(:
---------------------
-self()->arrayTranslateTableRequiresAlignment(:
---------------------
-self()->isObjectOfSizeWorthAligning(:
---------------------
-self()->supports32bitAiadd(:
---------------------
-self()->getMaximumNumbersOfAssignableVRs(:
+self()->emitTargetAddressSnippets(:
+/home/sam/1omr-virtualization/compiler/codegen/OMRCodeGenerator.cpp:      self()->emitTargetAddressSnippets();
 --------------------

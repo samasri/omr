@@ -1,21 +1,11 @@
 LIST += \
-'self()->allowGlobalRegisterAcrossBranch(' \
-'self()->supportsInliningOfIsInstance(' \
-'self()->supportsHighWordFacility(' \
-'self()->isRotateAndMask(' \
-'self()->getSupportsTenuredObjectAlignment(' \
-'self()->arrayInitMinimumNumberOfBytes(' \
-'self()->isPreservedRegister(' \
-'self()->canFoldLargeOffsetInAddressing(' \
-'self()->getInternalPtrMapBit(' \
-'self()->prepareForGRA(' \
-'self()->isAddressScaleIndexSupported(' \
-'self()->constLoadNeedsLiteralFromPool(' \
-'self()->opCodeIsNoOpOnThisPlatform(' \
-'self()->arithmeticNeedsLiteralFromPool(' \
-'self()->shouldValueBeInACommonedNode(' \
-'self()->getMaximumNumberOfFPRsAllowedAcrossEdge(' \
-'self()->arrayTranslateTableRequiresAlignment(' \
-'self()->isObjectOfSizeWorthAligning(' \
-'self()->supports32bitAiadd(' \
-'self()->getMaximumNumbersOfAssignableVRs('
+'self()->generateDebugCounterBump(' \
+'self()->isTargetSnippetOrOutOfLine(' \
+'self()->canBeAffectedByStoreTagStalls(' \
+'self()->generateDebugCounterBump(' \
+'self()->removeUnavailableRegisters(' \
+'self()->needsNormalizationBeforeShifts(' \
+'self()->nodeMayCauseException(' \
+'self()->codegenSupportsLoadlessBNDCheck(' \
+'self()->branchesAreExpensive(' \
+'self()->emitTargetAddressSnippets('

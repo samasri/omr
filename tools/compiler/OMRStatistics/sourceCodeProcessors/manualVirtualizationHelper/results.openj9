@@ -1,46 +1,20 @@
-self()->allowGlobalRegisterAcrossBranch(:
+self()->generateDebugCounterBump(:
 --------------------
-self()->supportsInliningOfIsInstance(:
+self()->isTargetSnippetOrOutOfLine(:
 --------------------
-self()->supportsHighWordFacility(:
+self()->canBeAffectedByStoreTagStalls(:
 --------------------
-self()->isRotateAndMask(:
+self()->generateDebugCounterBump(:
 --------------------
-self()->getSupportsTenuredObjectAlignment(:
+self()->removeUnavailableRegisters(:
 --------------------
-self()->arrayInitMinimumNumberOfBytes(:
+self()->needsNormalizationBeforeShifts(:
 --------------------
-self()->isPreservedRegister(:
+self()->nodeMayCauseException(:
 --------------------
-self()->canFoldLargeOffsetInAddressing(:
-/home/sam/2openj9-virtualization-searchForMethods/runtime/compiler/codegen/J9CodeGenerator.cpp:        (self()->canFoldLargeOffsetInAddressing() || (TR::Compiler->vm.heapBaseAddress() == 0)) &&
-/home/sam/2openj9-virtualization-searchForMethods/runtime/compiler/codegen/J9CodeGenerator.cpp:            (self()->canFoldLargeOffsetInAddressing() || parent->getSecondChild()->getOpCode().isLoadConst()))) &&
-/home/sam/2openj9-virtualization-searchForMethods/runtime/compiler/codegen/J9CodeGenerator.cpp:            if (!self()->canFoldLargeOffsetInAddressing())
-/home/sam/2openj9-virtualization-searchForMethods/runtime/compiler/codegen/J9CodeGenerator.cpp:               !self()->canFoldLargeOffsetInAddressing() &&
+self()->codegenSupportsLoadlessBNDCheck(:
 --------------------
-self()->getInternalPtrMapBit(:
+self()->branchesAreExpensive(:
 --------------------
-self()->prepareForGRA(:
-/home/sam/2openj9-virtualization-searchForMethods/runtime/compiler/codegen/J9CodeGenerator.cpp:   if (!self()->prepareForGRA())
---------------------
-self()->isAddressScaleIndexSupported(:
-/home/sam/2openj9-virtualization-searchForMethods/runtime/compiler/codegen/J9CodeGenerator.cpp:        self()->isAddressScaleIndexSupported((1 << TR::Compiler->om.compressedReferenceShiftOffset())))))
---------------------
-self()->constLoadNeedsLiteralFromPool(:
---------------------
-self()->opCodeIsNoOpOnThisPlatform(:
---------------------
-self()->arithmeticNeedsLiteralFromPool(:
---------------------
-self()->shouldValueBeInACommonedNode(:
---------------------
-self()->getMaximumNumberOfFPRsAllowedAcrossEdge(:
---------------------
-self()->arrayTranslateTableRequiresAlignment(:
---------------------
-self()->isObjectOfSizeWorthAligning(:
---------------------
-self()->supports32bitAiadd(:
---------------------
-self()->getMaximumNumbersOfAssignableVRs(:
+self()->emitTargetAddressSnippets(:
 --------------------
