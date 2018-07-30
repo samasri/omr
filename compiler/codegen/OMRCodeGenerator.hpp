@@ -551,7 +551,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // Capabilities
    //
-   bool supports32bitAiadd() {return true;}
+   virtual bool supports32bitAiadd() {return true;}
    bool supportsMergingGuards() {return false;}
 
    // --------------------------------------------------------------------------
@@ -585,7 +585,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool shouldYankCompressedRefs() { return false; }
    bool materializesHeapBase() { return true; }
-   bool canFoldLargeOffsetInAddressing() { return false; }
+   virtual bool canFoldLargeOffsetInAddressing() { return false; }
 
    void insertDebugCounters();
 
@@ -646,7 +646,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool getSupportsProfiledInlining() { return _flags4.testAny(SupportsProfiledInlining);}
    void setSupportsProfiledInlining() { _flags4.set(SupportsProfiledInlining);}
-   bool supportsInliningOfIsInstance() {return false;}
+   virtual bool supportsInliningOfIsInstance() {return false;}
    bool supportsPassThroughCopyToNewVirtualRegister() { return false; }
 
    uint8_t getSizeOfCombinedBuffer() {return 0;}
@@ -658,10 +658,10 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    //
    int16_t getMinShortForLongCompareNarrower() { return SHRT_MIN; }
    int8_t getMinByteForLongCompareNarrower() { return SCHAR_MIN; }
- 
+
    virtual bool branchesAreExpensive() { return true; }
    bool opCodeIsNoOp(TR::ILOpCode &opCode);
-   bool opCodeIsNoOpOnThisPlatform(TR::ILOpCode &opCode) {return false;}
+   virtual bool opCodeIsNoOpOnThisPlatform(TR::ILOpCode &opCode) {return false;}
 
    bool supportsSinglePrecisionSQRT() {return false;}
    bool supportsFusedMultiplyAdd() {return false;}
@@ -671,7 +671,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool canBeAffectedByStoreTagStalls() { return false; }
 
    bool isMaterialized(TR::Node *);
-   bool shouldValueBeInACommonedNode(int64_t) { return false; }
+   virtual bool shouldValueBeInACommonedNode(int64_t) { return false; }
    bool materializesLargeConstants() { return false; }
 
    bool canUseImmedInstruction(int64_t v) {return false;}
@@ -693,11 +693,11 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // FrontEnd, not code generator
    //
    bool getSupportsNewObjectAlignment() { return false; }
-   bool getSupportsTenuredObjectAlignment() { return false; }
-   bool isObjectOfSizeWorthAligning(uint32_t size) { return false; }
+   virtual bool getSupportsTenuredObjectAlignment() { return false; }
+   virtual bool isObjectOfSizeWorthAligning(uint32_t size) { return false; }
 
    // J9
-   int32_t getInternalPtrMapBit() { return 31;}
+   virtual int32_t getInternalPtrMapBit() { return 31;}
 
    uint32_t getMaxObjectSizeGuaranteedNotToOverflow() { return _maxObjectSizeGuaranteedNotToOverflow; }
 
@@ -840,7 +840,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void addSymbolAndDataTypeToMap(TR::Symbol *symbol, TR::DataType dt);
    TR::DataType getDataTypeFromSymbolMap(TR::Symbol *symbol);
 
-   bool prepareForGRA();
+   virtual bool prepareForGRA();
 
    uint32_t getGlobalRegister(TR_GlobalRegisterNumber n) {return _globalRegisterTable[n];}
    uint32_t *setGlobalRegisterTable(uint32_t *p) {return (_globalRegisterTable = p);}
@@ -931,17 +931,17 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR_GlobalRegisterNumber findCoalescenceRegisterForParameter(TR::Node *callNode, TR_RegisterCandidate *rc, uint32_t childIndex, bool *isUnpreferred);
    TR_RegisterCandidate *findUsedCandidate(TR::Node *node, TR_RegisterCandidate *rc, TR_BitVector *visitedNodes);
 
-   bool allowGlobalRegisterAcrossBranch(TR_RegisterCandidate *, TR::Node * branchNode); // no virt
+   virtual bool allowGlobalRegisterAcrossBranch(TR_RegisterCandidate *, TR::Node * branchNode);
    virtual void removeUnavailableRegisters(TR_RegisterCandidate * rc, TR::Block * * blocks, TR_BitVector & availableRegisters) {}
    void setUnavailableRegistersUsage(TR_Array<TR_BitVector>  & liveOnEntryUsage, TR_Array<TR_BitVector>   & liveOnExitUsage) {}
 
    int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
-   int32_t getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
+   virtual int32_t getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block);
    int32_t getMaximumNumbersOfAssignableGPRs() { return INT_MAX; }
    int32_t getMaximumNumbersOfAssignableFPRs() { return INT_MAX; }
-   int32_t getMaximumNumbersOfAssignableVRs()  { return INT_MAX; }
+   virtual int32_t getMaximumNumbersOfAssignableVRs()  { return INT_MAX; }
    virtual bool willBeEvaluatedAsCallByCodeGen(TR::Node *node, TR::Compilation *comp){ return true;}
    bool isGlobalRegisterAvailable(TR_GlobalRegisterNumber, TR::DataType) { return true; }
 
@@ -1208,7 +1208,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    //
 
    // P now
-   bool isRotateAndMask(TR::Node *node) { return false; }
+   virtual bool isRotateAndMask(TR::Node *node) { return false; }
 
    TR::Instruction *generateNop(TR::Node *node, TR::Instruction *instruction=0, TR_NOPKind nopKind=TR_NOPStandard);
    bool isOutOfLineHotPath() { TR_ASSERT(0, "isOutOfLineHotPath is only implemented for 390 and ppc"); return false;}
@@ -1253,7 +1253,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // to be processed for it to be worth it to execute the 'translate' built-in function
    // arrayTranslateAndTestMinimumNumberOfIterations returns the minimum number of iterations
    // that the loop must run for the transformation to be worthwhile.
-   int32_t arrayTranslateTableRequiresAlignment(bool isByteSource, bool isByteTarget)  { return 0; }
+   virtual int32_t arrayTranslateTableRequiresAlignment(bool isByteSource, bool isByteTarget)  { return 0; }
 
    // These methods used to return a default value of INT_MAX. However, in at least one place,
    // and quite possibly elsewhere, the optimizer tests for
@@ -1291,15 +1291,15 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    // the following functions evaluate whether a codegen for the node or for static
    // symbol reference requires entry in the literal pool
-   bool arithmeticNeedsLiteralFromPool(TR::Node *node) { return false; }
+   virtual bool arithmeticNeedsLiteralFromPool(TR::Node *node) { return false; }
    bool bitwiseOpNeedsLiteralFromPool(TR::Node *parent, TR::Node *child) { return false; }
    bool bndsChkNeedsLiteralFromPool(TR::Node *node) { return false; }
-   bool constLoadNeedsLiteralFromPool(TR::Node *node) { return false; }
+   virtual bool constLoadNeedsLiteralFromPool(TR::Node *node) { return false; }
    void setOnDemandLiteralPoolRun(bool answer) {}
    bool isLiteralPoolOnDemandOn () { return false; }
    bool supportsOnDemandLiteralPool() { return false; }
    bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; }
-   bool supportsHighWordFacility() { return false; }
+   virtual bool supportsHighWordFacility() { return false; }
 
    bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
 
@@ -1368,8 +1368,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    static bool treeContainsCall(TR::TreeTop * treeTop);
 
    // IA32 only?
-   int32_t arrayInitMinimumNumberOfBytes() {return 8;}
-   
+   virtual int32_t arrayInitMinimumNumberOfBytes() {return 8;}
+
    void addCountersToEdges(TR::Block *block);
 
    bool getSupportsBitOpCodes() {return false;}
@@ -1549,7 +1549,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool getSupportsScaledIndexAddressing() { return _flags1.testAny(SupportsScaledIndexAddressing); }
    void setSupportsScaledIndexAddressing() { _flags1.set(SupportsScaledIndexAddressing); }
 
-   bool isAddressScaleIndexSupported(int32_t scale) { return false; }
+   virtual bool isAddressScaleIndexSupported(int32_t scale) { return false; }
 
    bool getSupportsConstantOffsetInAddressing(int64_t value);
    bool getSupportsConstantOffsetInAddressing() { return _flags3.testAny(SupportsConstantOffsetInAddressing); }
