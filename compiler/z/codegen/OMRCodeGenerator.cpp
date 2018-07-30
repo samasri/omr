@@ -615,7 +615,7 @@ OMR::Z::CodeGenerator::CodeGenerator()
          self()->setSupportsHighWordFacility(true);
       }
 
-   self()->setOnDemandLiteralPoolRun(true);
+   setOnDemandLiteralPoolRun(true);
    self()->setGlobalStaticBaseRegisterOn(false);
 
    self()->setGlobalPrivateStaticBaseRegisterOn(false);
@@ -2776,12 +2776,12 @@ OMR::Z::CodeGenerator::doRegisterAssignment(TR_RegisterKinds kindsToAssign)
                {
                _internalControlFlowNestingDepth--;
                if (_internalControlFlowNestingDepth == 0)
-                  self()->endInternalControlFlow(instructionCursor);        // Walking backwards so start is end
+                  endInternalControlFlow(instructionCursor);        // Walking backwards so start is end
                }
             if (li->getLabelSymbol()->isEndInternalControlFlow())
                {
                _internalControlFlowNestingDepth++;
-               self()->startInternalControlFlow(instructionCursor);
+               startInternalControlFlow(instructionCursor);
                }
             }
          }
@@ -3762,7 +3762,7 @@ int32_t
 OMR::Z::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block)
    {
    TR::Node *node = block->getLastRealTreeTop()->getNode();
-   int32_t num = self()->getMaximumNumberOfGPRsAllowedAcrossEdge(node);
+   int32_t num = getMaximumNumberOfGPRsAllowedAcrossEdge(node);
 
 
    return num >= 0 ?  num : 0;
@@ -5559,7 +5559,7 @@ OMR::Z::CodeGenerator::evaluateLengthMinusOneForMemoryOps(TR::Node *node, bool c
    {
    TR::Register *reg;
 
-   if ((node->getReferenceCount() == 1) && self()->supportsLengthMinusOneForMemoryOpts() &&
+   if ((node->getReferenceCount() == 1) && supportsLengthMinusOneForMemoryOpts() &&
       ((node->getOpCodeValue()==TR::iadd &&
        node->getSecondChild()->getOpCodeValue()==TR::iconst &&
        node->getSecondChild()->getInt() == 1) ||
