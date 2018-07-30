@@ -375,8 +375,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::Instruction *getImplicitExceptionPoint() {return _implicitExceptionPoint;}
    TR::Instruction *setImplicitExceptionPoint(TR::Instruction *p) {return (_implicitExceptionPoint = p);}
 
-   void setNextAvailableBlockIndex(int32_t blockIndex) {}
-   int32_t getNextAvailableBlockIndex() { return -1; }
+   virtual void setNextAvailableBlockIndex(int32_t blockIndex) {}
+   virtual int32_t getNextAvailableBlockIndex() { return -1; }
 
    bool supportsMethodEntryPadding() { return true; }
    bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
@@ -564,9 +564,9 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool AddArtificiallyInflatedNodeToStack(TR::Node* n);
 
    // Used to model register liveness without Future Use Count.
-   bool isInternalControlFlowReg(TR::Register *reg) {return false;}
-   void startInternalControlFlow(TR::Instruction *instr) {}
-   void endInternalControlFlow(TR::Instruction *instr) {}
+   virtual bool isInternalControlFlowReg(TR::Register *reg) {return false;}
+   virtual void startInternalControlFlow(TR::Instruction *instr) {}
+   virtual void endInternalControlFlow(TR::Instruction *instr) {}
 
 
 
@@ -628,7 +628,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // Optimizer, code generator capabilities
    //
-   int32_t getPreferredLoopUnrollFactor() {return -1;}
+   virtual int32_t getPreferredLoopUnrollFactor() {return -1;}
 
    /**
     * @brief Answers whether the provided recognized method should be inlined by an
@@ -649,7 +649,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool supportsInliningOfIsInstance() {return false;}
    bool supportsPassThroughCopyToNewVirtualRegister() { return false; }
 
-   uint8_t getSizeOfCombinedBuffer() {return 0;}
+   virtual uint8_t getSizeOfCombinedBuffer() {return 0;}
 
    bool doRematerialization() {return false;}
 
@@ -657,7 +657,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Architecture, not code generator
    //
    int16_t getMinShortForLongCompareNarrower() { return SHRT_MIN; }
-   int8_t getMinByteForLongCompareNarrower() { return SCHAR_MIN; }
+   virtual int8_t getMinByteForLongCompareNarrower() { return SCHAR_MIN; }
 
    virtual bool branchesAreExpensive() { return true; }
    bool opCodeIsNoOp(TR::ILOpCode &opCode);
@@ -681,18 +681,18 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    uint32_t getNumberBytesWriteInaccessible() { return _numberBytesWriteInaccessible; }
 
    bool codegenSupportsUnsignedIntegerDivide() {return false;}
-   bool mulDecompositionCostIsJustified(int numOfOperations, char bitPosition[], char operationType[], int64_t value);
+   virtual bool mulDecompositionCostIsJustified(int numOfOperations, char bitPosition[], char operationType[], int64_t value);
 
    virtual bool codegenSupportsLoadlessBNDCheck() {return false;}
 
    // called to determine if multiply decomposition exists in platform codegen so that codegen sequences are used
    // instead of the IL transformed multiplies
-   bool codegenMulDecomposition(int64_t multiplier) {return false;}
+   virtual bool codegenMulDecomposition(int64_t multiplier) {return false;}
 
    // --------------------------------------------------------------------------
    // FrontEnd, not code generator
    //
-   bool getSupportsNewObjectAlignment() { return false; }
+   virtual bool getSupportsNewObjectAlignment() { return false; }
    virtual bool getSupportsTenuredObjectAlignment() { return false; }
    virtual bool isObjectOfSizeWorthAligning(uint32_t size) { return false; }
 
@@ -732,7 +732,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR_GCStackMap *buildGCMapForInstruction(TR::Instruction *instr);
    void buildRegisterMapForInstruction(TR_GCStackMap *map);
    // IA32 only?
-   uint32_t getRegisterMapInfoBitsMask() {return 0;}
+   virtual uint32_t getRegisterMapInfoBitsMask() {return 0;}
 
    // --------------------------------------------------------------------------
    // Method frame building
@@ -933,13 +933,13 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    virtual bool allowGlobalRegisterAcrossBranch(TR_RegisterCandidate *, TR::Node * branchNode);
    virtual void removeUnavailableRegisters(TR_RegisterCandidate * rc, TR::Block * * blocks, TR_BitVector & availableRegisters) {}
-   void setUnavailableRegistersUsage(TR_Array<TR_BitVector>  & liveOnEntryUsage, TR_Array<TR_BitVector>   & liveOnExitUsage) {}
+   virtual void setUnavailableRegistersUsage(TR_Array<TR_BitVector>  & liveOnEntryUsage, TR_Array<TR_BitVector>   & liveOnExitUsage) {}
 
-   int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
+   virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    virtual int32_t getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
-   int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block);
-   int32_t getMaximumNumbersOfAssignableGPRs() { return INT_MAX; }
+   virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block);
+   virtual int32_t getMaximumNumbersOfAssignableGPRs() { return INT_MAX; }
    int32_t getMaximumNumbersOfAssignableFPRs() { return INT_MAX; }
    virtual int32_t getMaximumNumbersOfAssignableVRs()  { return INT_MAX; }
    virtual bool willBeEvaluatedAsCallByCodeGen(TR::Node *node, TR::Compilation *comp){ return true;}
@@ -951,12 +951,12 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool needToAvoidCommoningInGRA() {return false;}
 
-   bool considerTypeForGRA(TR::Node *node) {return true;}
-   bool considerTypeForGRA(TR::DataType dt) {return true;}
-   bool considerTypeForGRA(TR::SymbolReference *symRef) {return true;}
+   virtual bool considerTypeForGRA(TR::Node *node) {return true;}
+   virtual bool considerTypeForGRA(TR::DataType dt) {return true;}
+   virtual bool considerTypeForGRA(TR::SymbolReference *symRef) {return true;}
 
    void enableLiteralPoolRegisterForGRA () {}
-   bool excludeInvariantsFromGRAEnabled() { return false; }
+   virtual bool excludeInvariantsFromGRAEnabled() { return false; }
 
    TR_BitVector *getBlocksWithCalls();
 
@@ -970,7 +970,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::RegisterIterator *setFPRegisterIterator(TR::RegisterIterator *iter) {return (_fpRegisterIterator = iter);}
 
    // X86 only
-   uint32_t estimateBinaryLength(TR::MemoryReference *) { return 0; }
+   virtual uint32_t estimateBinaryLength(TR::MemoryReference *) { return 0; }
 
 #ifdef DEBUG
    static void shutdown(TR_FrontEnd *fe, TR::FILE *logFile);
@@ -1094,15 +1094,15 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
                                           TR::Node *node) {}
 
    void apply8BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label);
-   void apply12BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label, bool isCheckDisp = true);
-   void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label);
-   void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label,int8_t d, bool isInstrOffset = false);
-   void apply24BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
+   virtual void apply12BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label, bool isCheckDisp = true);
+   virtual void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label);
+   virtual void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label,int8_t d, bool isInstrOffset = false);
+   virtual void apply24BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
    void apply16BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
    void apply32BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
    void apply64BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *);
-   void apply32BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
-   void apply32BitLabelTableRelocation(int32_t * cursor, TR::LabelSymbol *);
+   virtual void apply32BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
+   virtual void apply32BitLabelTableRelocation(int32_t * cursor, TR::LabelSymbol *);
 
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
@@ -1129,7 +1129,6 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void emitDataSnippets() {}
    virtual bool hasDataSnippets() {return false;}
    int32_t setEstimatedLocationsForDataSnippetLabels(int32_t estimatedSnippetStart) {return 0;}
-   
 
    // --------------------------------------------------------------------------
    // Register pressure
@@ -1173,7 +1172,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // Register assignment
    //
-   TR_RegisterKinds prepareRegistersForAssignment();
+   virtual TR_RegisterKinds prepareRegistersForAssignment();
    void addToUnlatchedRegisterList(TR::RealRegister *reg);
    void freeUnlatchedRegisters();
 
@@ -1210,7 +1209,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // P now
    virtual bool isRotateAndMask(TR::Node *node) { return false; }
 
-   TR::Instruction *generateNop(TR::Node *node, TR::Instruction *instruction=0, TR_NOPKind nopKind=TR_NOPStandard);
+   virtual TR::Instruction *generateNop(TR::Node *node, TR::Instruction *instruction=0, TR_NOPKind nopKind=TR_NOPStandard);
    bool isOutOfLineHotPath() { TR_ASSERT(0, "isOutOfLineHotPath is only implemented for 390 and ppc"); return false;}
 
    //Rather confusingly not used -only- in BCD related codegen.
@@ -1232,7 +1231,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool canNullChkBeImplicit(TR::Node *);
    bool canNullChkBeImplicit(TR::Node *, bool doChecks);
 
-   bool IsInMemoryType(TR::DataType type) { return false; }
+   virtual bool IsInMemoryType(TR::DataType type) { return false; }
 
    virtual bool nodeMayCauseException(TR::Node *node) { return false; }
 
@@ -1278,7 +1277,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // strictly more information to codegen, which can then generate the best sequence at its
    // discretion, fabricating a loop if necessary. But at least in the case of idiom
    // recognition's MemCpy pattern, we want Design 94472 for this.
-   int32_t arrayTranslateMinimumNumberOfElements(bool isByteSource, bool isByteTarget);
+   virtual int32_t arrayTranslateMinimumNumberOfElements(bool isByteSource, bool isByteTarget);
 
    // TO TransformUtil.  Make platform specific
    int32_t arrayTranslateAndTestMinimumNumberOfIterations();
@@ -1295,7 +1294,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool bitwiseOpNeedsLiteralFromPool(TR::Node *parent, TR::Node *child) { return false; }
    bool bndsChkNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual bool constLoadNeedsLiteralFromPool(TR::Node *node) { return false; }
-   void setOnDemandLiteralPoolRun(bool answer) {}
+   virtual void setOnDemandLiteralPoolRun(bool answer) {}
    bool isLiteralPoolOnDemandOn () { return false; }
    bool supportsOnDemandLiteralPool() { return false; }
    bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; }
@@ -1355,7 +1354,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // will a BCD left shift always leave the sign code unchanged and thus allow it to be propagated through and upwards
    bool propagateSignThroughBCDLeftShift(TR::DataType type) { return false; }
 
-   bool supportsLengthMinusOneForMemoryOpts() {return false;}
+   virtual bool supportsLengthMinusOneForMemoryOpts() {return false;}
 
    // Java, likely Z
    bool supportsTrapsInTMRegion() { return true; }
@@ -1508,7 +1507,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool getSupportsAutoSIMD() { return _flags4.testAny(SupportsAutoSIMD);}
    void setSupportsAutoSIMD() { _flags4.set(SupportsAutoSIMD);}
 
-   bool getSupportsOpCodeForAutoSIMD(TR::ILOpCode, TR::DataType) { return false; }
+   virtual bool getSupportsOpCodeForAutoSIMD(TR::ILOpCode, TR::DataType) { return false; }
 
    bool removeRegisterHogsInLowerTreesWalk() { return _flags3.testAny(RemoveRegisterHogsInLowerTreesWalk);}
    void setRemoveRegisterHogsInLowerTreesWalk() { _flags3.set(RemoveRegisterHogsInLowerTreesWalk);}

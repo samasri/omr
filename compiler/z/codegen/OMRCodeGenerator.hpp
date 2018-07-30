@@ -508,7 +508,7 @@ public:
    int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *);
    int32_t getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *);
    int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *);
-   int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *);
+   virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *);
 
    int32_t getMaximumNumbersOfAssignableGPRs();
    int32_t getMaximumNumbersOfAssignableFPRs();
