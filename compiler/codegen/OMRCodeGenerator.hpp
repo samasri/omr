@@ -484,7 +484,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void startUsingRegister(TR::Register *reg);
    void stopUsingRegister(TR::Register *reg);
 
-   void setCurrentBlockIndex(int32_t blockIndex) { }
+   virtual void setCurrentBlockIndex(int32_t blockIndex) { }
    int32_t getCurrentBlockIndex() { return -1; }
 
    TR::Instruction *lastInstructionBeforeCurrentEvaluationTreeTop()
@@ -647,7 +647,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool getSupportsProfiledInlining() { return _flags4.testAny(SupportsProfiledInlining);}
    void setSupportsProfiledInlining() { _flags4.set(SupportsProfiledInlining);}
    virtual bool supportsInliningOfIsInstance() {return false;}
-   bool supportsPassThroughCopyToNewVirtualRegister() { return false; }
+   virtual bool supportsPassThroughCopyToNewVirtualRegister() { return false; }
 
    virtual uint8_t getSizeOfCombinedBuffer() {return 0;}
 
@@ -672,7 +672,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool isMaterialized(TR::Node *);
    virtual bool shouldValueBeInACommonedNode(int64_t) { return false; }
-   bool materializesLargeConstants() { return false; }
+   virtual bool materializesLargeConstants() { return false; }
 
    bool canUseImmedInstruction(int64_t v) {return false;}
    virtual bool needsNormalizationBeforeShifts() { return false; }
@@ -717,7 +717,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // FE capability, not code generator
    //
-   bool internalPointerSupportImplemented() {return false;}
+   virtual bool internalPointerSupportImplemented() {return false;}
    bool supportsInternalPointers();
 
    // --------------------------------------------------------------------------
@@ -935,7 +935,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void removeUnavailableRegisters(TR_RegisterCandidate * rc, TR::Block * * blocks, TR_BitVector & availableRegisters) {}
    virtual void setUnavailableRegistersUsage(TR_Array<TR_BitVector>  & liveOnEntryUsage, TR_Array<TR_BitVector>   & liveOnExitUsage) {}
 
-   virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
+   virtual virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    virtual int32_t getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block);
@@ -1128,7 +1128,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    //
    void emitDataSnippets() {}
    virtual bool hasDataSnippets() {return false;}
-   int32_t setEstimatedLocationsForDataSnippetLabels(int32_t estimatedSnippetStart) {return 0;}
+   virtual int32_t setEstimatedLocationsForDataSnippetLabels(int32_t estimatedSnippetStart) {return 0;}
 
    // --------------------------------------------------------------------------
    // Register pressure
@@ -1280,7 +1280,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual int32_t arrayTranslateMinimumNumberOfElements(bool isByteSource, bool isByteTarget);
 
    // TO TransformUtil.  Make platform specific
-   int32_t arrayTranslateAndTestMinimumNumberOfIterations();
+   virtual int32_t arrayTranslateAndTestMinimumNumberOfIterations();
    static int32_t defaultArrayTranslateMinimumNumberOfIterations(const char *methodName);
    static bool useOldArrayTranslateMinimumNumberOfIterations()
       {
@@ -1291,7 +1291,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // the following functions evaluate whether a codegen for the node or for static
    // symbol reference requires entry in the literal pool
    virtual bool arithmeticNeedsLiteralFromPool(TR::Node *node) { return false; }
-   bool bitwiseOpNeedsLiteralFromPool(TR::Node *parent, TR::Node *child) { return false; }
+   virtual bool bitwiseOpNeedsLiteralFromPool(TR::Node *parent, TR::Node *child) { return false; }
    bool bndsChkNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual bool constLoadNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual void setOnDemandLiteralPoolRun(bool answer) {}
@@ -1361,7 +1361,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    // Allows a platform code generator to assert that a particular node operation will use 64 bit values
    // that are not explicitly present in the node datatype.
-   bool usesImplicit64BitGPRs(TR::Node *node) { return false; }
+   virtual bool usesImplicit64BitGPRs(TR::Node *node) { return false; }
 
    // General utility?
    static bool treeContainsCall(TR::TreeTop * treeTop);

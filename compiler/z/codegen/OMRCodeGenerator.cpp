@@ -1360,7 +1360,7 @@ OMR::Z::CodeGenerator::beginInstructionSelection()
    TR::Node * startNode = self()->comp()->getStartTree()->getNode();
    TR::Instruction * cursor = NULL;
 
-   self()->setCurrentBlockIndex(startNode->getBlock()->getNumber());
+   setCurrentBlockIndex(startNode->getBlock()->getNumber());
 
    if (self()->comp()->getJittedMethodSymbol()->getLinkageConvention() == TR_Private)
       {
@@ -2758,7 +2758,7 @@ OMR::Z::CodeGenerator::doRegisterAssignment(TR_RegisterKinds kindsToAssign)
          self()->comp()->setCurrentBlock(instructionCursor->getNode()->getBlock());
 
       // Main register assignment procedure
-      self()->setCurrentBlockIndex(instructionCursor->getBlockIndex());
+      setCurrentBlockIndex(instructionCursor->getBlockIndex());
       instructionCursor->assignRegisters(TR_GPR);
 
       handleLoadWithRegRanges(instructionCursor, self());
