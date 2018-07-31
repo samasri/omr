@@ -33,16 +33,7 @@ def addVirtual(line):
 			newLine += "virtual "
 			addedVirtual = 1
 		if c != ' ': newLine += c
-	return newLine
-
-def numerize(filename):
-	if 'compiler/codegen/' in filename: return 0
-	if 'compiler/x/codegen/' in filename: return 1
-	if 'compiler/x/i386/codegen/' in filename: return 2
-	if 'compiler/x/amd64/codegen/' in filename: return 2
-	if 'compiler/p/codegen/' in filename: return 1
-	if 'compiler/z/codegen/' in filename: return 1
-	
+	return newLine	
 
 def editFile(function, headers):
 	isEditted = 0
@@ -79,12 +70,20 @@ def changeHPPs(mainPath, functionsFile, namespace, ignoredFile):
 	applyHPPEdits(headers)
 	printIgnoredFunctions(ignoredFunctions, ignoredFile)
 
+class FileChange:
+	def __init__(self, func, line):
+		self.func = func
+		self.line = line
+
 def processResultsToMap(file):
 	fileChanges = {}
 	count = 0
+	func = ''
 	for r in file:
 		r = r.strip()
 		if count == 0: 
+			func = r.replace('self()->','')
+			func = func[:-1]
 			count += 1
 			continue
 		if count > 0:
@@ -96,7 +95,7 @@ def processResultsToMap(file):
 				file = r[0]
 				line = r[1]
 				if file not in fileChanges: fileChanges[file] = []
-				fileChanges[file].append(line)
+				fileChanges[file].append(FileChange(func,line))
 				count += 1
 	return fileChanges
 
@@ -107,9 +106,9 @@ def applyCPPEdits(fileChanges):
 		fileStr = "";
 		for line in read: fileStr += line
 		for change in changes:
-			changeWithoutSelf = change.replace("self()->","")
-			if change in fileStr: fileStr = fileStr.replace(change,changeWithoutSelf)
-			else: print 'Not found: ' + change
+			changeWithoutSelf = change.line.replace("self()->" + change.func,change.func)
+			if change.line in fileStr: fileStr = fileStr.replace(change.line,changeWithoutSelf)
+			else: print 'Not found: ' + change.line
 		read.close()
 		write = open(fileName, "w")
 		write.write(fileStr)

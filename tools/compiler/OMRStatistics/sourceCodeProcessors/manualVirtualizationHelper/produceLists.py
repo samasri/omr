@@ -56,7 +56,10 @@ def createDocPage(dbRows, docPage):
 	if isFirstUse:	
 		docPage.write('# Functions to virtualize')
 		isFirstUse = 0
-	for sig in sigSet: docPage.write("* " + sig + "\n")
+	i = 0
+	for sig in sigSet:
+		docPage.write(str(i) + ". " + sig + "\n")
+		i += 1
 	return sigSet
 
 
