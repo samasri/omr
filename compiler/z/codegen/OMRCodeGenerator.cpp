@@ -1869,7 +1869,7 @@ OMR::Z::CodeGenerator::isLitPoolFreeForAssignment()
    // If lit on demand is working, we always free up
    // If no lit-on-demand, try to avoid locking up litpool reg anyways
    //
-   if (self()->isLiteralPoolOnDemandOn() || (!self()->comp()->hasNativeCall() && self()->getFirstSnippet() == NULL))
+   if (isLiteralPoolOnDemandOn() || (!self()->comp()->hasNativeCall() && self()->getFirstSnippet() == NULL))
       {
       litPoolRegIsFree = true;
       }
@@ -3750,7 +3750,7 @@ OMR::Z::CodeGenerator::getMaximumNumberOfAssignableGPRs()
    int32_t maxGPRs = 0;
 
 
-   maxGPRs = 11 + (self()->isLiteralPoolOnDemandOn() ? 1 : 0)               // => Litpool ptr is available
+   maxGPRs = 11 + (isLiteralPoolOnDemandOn() ? 1 : 0)               // => Litpool ptr is available
                 + ((self()->getExtCodeBaseRegisterIsFree()                   &&
                     !self()->comp()->getOption(TR_DisableLongDispStackSlot)     )? 1 : 0);  // => ExtCodeBase is free
 
@@ -3895,7 +3895,7 @@ OMR::Z::CodeGenerator::getMaximumNumbersOfAssignableGPRs()
    {
    return self()->getMaximumNumberOfAssignableGPRs();
 
-   //int32_t maxNumberOfAssignableGPRS = (8 + (self()->isLiteralPoolOnDemandOn() ? 1 : 0));
+   //int32_t maxNumberOfAssignableGPRS = (8 + (isLiteralPoolOnDemandOn() ? 1 : 0));
    //return maxNumberOfAssignableGPRS;
    }
 
@@ -6026,7 +6026,7 @@ OMR::Z::CodeGenerator::genCopyFromLiteralPool(TR::Node *node, int32_t bytesToCop
    TR::Register *litPoolBaseReg = NULL;
    TR::Node *litPoolNode = NULL;
    bool stopUsing = false;
-   if (self()->isLiteralPoolOnDemandOn())
+   if (isLiteralPoolOnDemandOn())
       {
       if (litPoolNode)
          {
