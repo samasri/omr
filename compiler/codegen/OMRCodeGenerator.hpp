@@ -663,7 +663,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool opCodeIsNoOp(TR::ILOpCode &opCode);
    virtual bool opCodeIsNoOpOnThisPlatform(TR::ILOpCode &opCode) {return false;}
 
-   bool supportsSinglePrecisionSQRT() {return false;}
+   virtual bool supportsSinglePrecisionSQRT() {return false;}
    bool supportsFusedMultiplyAdd() {return false;}
    bool supportsNegativeFusedMultiplyAdd() {return false;}
 
@@ -923,7 +923,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR_GlobalRegisterNumber getLinkageGlobalRegisterNumber(int8_t linkageRegisterIndex, TR::DataType type){ return -1; }
    TR_BitVector *getGlobalGPRsPreservedAcrossCalls(){ return NULL; }
-   TR_BitVector *getGlobalFPRsPreservedAcrossCalls(){ return NULL; }
+   virtual TR_BitVector *getGlobalFPRsPreservedAcrossCalls(){ return NULL; }
 
    int32_t getFirstBit(TR_BitVector &bv);
    TR_GlobalRegisterNumber pickRegister(TR_RegisterCandidate *, TR::Block * *, TR_BitVector & availableRegisters, TR_GlobalRegisterNumber & highRegisterNumber, TR_LinkHead<TR_RegisterCandidate> *candidates);
@@ -1225,10 +1225,10 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::AheadOfTimeCompile *setAheadOfTimeCompile(TR::AheadOfTimeCompile *p) {return (_aheadOfTimeCompile = p);}
 
    // J9, X86
-   bool canTransformUnsafeCopyToArrayCopy() { return false; }
+   virtual bool canTransformUnsafeCopyToArrayCopy() { return false; }
    bool canTransformUnsafeSetMemory() { return false; }
 
-   bool canNullChkBeImplicit(TR::Node *);
+   virtual bool canNullChkBeImplicit(TR::Node *);
    bool canNullChkBeImplicit(TR::Node *, bool doChecks);
 
    virtual bool IsInMemoryType(TR::DataType type) { return false; }
@@ -1295,9 +1295,9 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool bndsChkNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual bool constLoadNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual void setOnDemandLiteralPoolRun(bool answer) {}
-   bool isLiteralPoolOnDemandOn () { return false; }
+   virtual bool isLiteralPoolOnDemandOn () { return false; }
    bool supportsOnDemandLiteralPool() { return false; }
-   bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; }
+   virtual bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; }
    virtual bool supportsHighWordFacility() { return false; }
 
    bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
@@ -1377,7 +1377,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void setMappingAutomatics() {_flags1.set(MappingAutomatics);}
 
    bool getSupportsDirectJNICalls() {return _flags1.testAny(SupportsDirectJNICalls);}
-   bool supportsDirectJNICallsForAOT() { return false;}
+   virtual bool supportsDirectJNICallsForAOT() { return false;}
 
    void setSupportsDirectJNICalls() {_flags1.set(SupportsDirectJNICalls);}
 
