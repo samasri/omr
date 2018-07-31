@@ -559,7 +559,7 @@ void OMR::Power::CodeGenerator::doRegisterAssignment(TR_RegisterKinds kindsToAss
 
       self()->tracePreRAInstruction(instructionCursor);
 
-      self()->setCurrentBlockIndex(instructionCursor->getBlockIndex());
+      setCurrentBlockIndex(instructionCursor->getBlockIndex());
 
       instructionCursor->assignRegisters(TR_GPR);
 
@@ -1528,7 +1528,7 @@ void OMR::Power::CodeGenerator::doPeephole()
 
    while (instructionCursor)
       {
-      self()->setCurrentBlockIndex(instructionCursor->getBlockIndex());
+      setCurrentBlockIndex(instructionCursor->getBlockIndex());
 
       if ((TR::Compiler->target.cpu.id() == TR_PPCp6) && instructionCursor->isTrap())
          {
