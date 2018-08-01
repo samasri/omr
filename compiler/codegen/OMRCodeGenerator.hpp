@@ -485,7 +485,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void stopUsingRegister(TR::Register *reg);
 
    virtual void setCurrentBlockIndex(int32_t blockIndex) { }
-   int32_t getCurrentBlockIndex() { return -1; }
+   virtual int32_t getCurrentBlockIndex() { return -1; }
 
    TR::Instruction *lastInstructionBeforeCurrentEvaluationTreeTop()
       {
