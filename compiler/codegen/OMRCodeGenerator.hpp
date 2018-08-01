@@ -935,9 +935,9 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void removeUnavailableRegisters(TR_RegisterCandidate * rc, TR::Block * * blocks, TR_BitVector & availableRegisters) {}
    virtual void setUnavailableRegistersUsage(TR_Array<TR_BitVector>  & liveOnEntryUsage, TR_Array<TR_BitVector>   & liveOnExitUsage) {}
 
-   virtual virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
+   virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    virtual int32_t getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
-   int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
+   int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }t
    virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block);
    virtual int32_t getMaximumNumbersOfAssignableGPRs() { return INT_MAX; }
    int32_t getMaximumNumbersOfAssignableFPRs() { return INT_MAX; }
