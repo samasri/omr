@@ -299,7 +299,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR::TreeTop *lowerTree(TR::Node *root, TR::TreeTop *tt);
    void lowerTrees();
-   void lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   virtual void lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
    void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
 
@@ -664,7 +664,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool opCodeIsNoOpOnThisPlatform(TR::ILOpCode &opCode) {return false;}
 
    virtual bool supportsSinglePrecisionSQRT() {return false;}
-   bool supportsFusedMultiplyAdd() {return false;}
+   virtual bool supportsFusedMultiplyAdd() {return false;}
    bool supportsNegativeFusedMultiplyAdd() {return false;}
 
    bool supportsComplexAddressing() {return false;}
@@ -937,7 +937,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    virtual int32_t getMaximumNumberOfFPRsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
-   int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }t
+   virtual int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block);
    virtual int32_t getMaximumNumbersOfAssignableGPRs() { return INT_MAX; }
    int32_t getMaximumNumbersOfAssignableFPRs() { return INT_MAX; }
@@ -955,7 +955,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool considerTypeForGRA(TR::DataType dt) {return true;}
    virtual bool considerTypeForGRA(TR::SymbolReference *symRef) {return true;}
 
-   void enableLiteralPoolRegisterForGRA () {}
+   virtual void enableLiteralPoolRegisterForGRA () {}
    virtual bool excludeInvariantsFromGRAEnabled() { return false; }
 
    TR_BitVector *getBlocksWithCalls();
@@ -1292,7 +1292,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // symbol reference requires entry in the literal pool
    virtual bool arithmeticNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual bool bitwiseOpNeedsLiteralFromPool(TR::Node *parent, TR::Node *child) { return false; }
-   bool bndsChkNeedsLiteralFromPool(TR::Node *node) { return false; }
+   virtual bool bndsChkNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual bool constLoadNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual void setOnDemandLiteralPoolRun(bool answer) {}
    virtual bool isLiteralPoolOnDemandOn () { return false; }
