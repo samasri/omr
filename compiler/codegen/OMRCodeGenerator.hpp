@@ -419,7 +419,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Code Generator Phases
    //
    void generateCode();
-   void doRegisterAssignment(TR_RegisterKinds kindsToAssign) = 0;
+   virtual void doRegisterAssignment(TR_RegisterKinds kindsToAssign) = 0;
    void doBinaryEncoding();
    void doPeephole() { return; }
    bool hasComplexAddressingMode() { return false; }
