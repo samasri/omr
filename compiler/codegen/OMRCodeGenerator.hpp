@@ -315,7 +315,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void doInstructionSelection();
    void createStackAtlas();
 
-   void beginInstructionSelection() {}
+   virtual void beginInstructionSelection() {}
    void endInstructionSelection() {}
 
    bool use64BitRegsOn32Bit();
@@ -680,7 +680,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    uint32_t getNumberBytesReadInaccessible() { return _numberBytesReadInaccessible; }
    uint32_t getNumberBytesWriteInaccessible() { return _numberBytesWriteInaccessible; }
 
-   bool codegenSupportsUnsignedIntegerDivide() {return false;}
+   virtual bool codegenSupportsUnsignedIntegerDivide() {return false;}
    virtual bool mulDecompositionCostIsJustified(int numOfOperations, char bitPosition[], char operationType[], int64_t value);
 
    virtual bool codegenSupportsLoadlessBNDCheck() {return false;}
@@ -922,7 +922,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool is8BitGlobalGPR(TR_GlobalRegisterNumber n) {return n <= _last8BitGlobalGPR;}
 
    TR_GlobalRegisterNumber getLinkageGlobalRegisterNumber(int8_t linkageRegisterIndex, TR::DataType type){ return -1; }
-   TR_BitVector *getGlobalGPRsPreservedAcrossCalls(){ return NULL; }
+   virtual TR_BitVector *getGlobalGPRsPreservedAcrossCalls(){ return NULL; }
    virtual TR_BitVector *getGlobalFPRsPreservedAcrossCalls(){ return NULL; }
 
    int32_t getFirstBit(TR_BitVector &bv);
@@ -1099,8 +1099,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label,int8_t d, bool isInstrOffset = false);
    virtual void apply24BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
    void apply16BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
-   void apply32BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
-   void apply64BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *);
+   virtual void apply32BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
+   virtual void apply64BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *);
    virtual void apply32BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
    virtual void apply32BitLabelTableRelocation(int32_t * cursor, TR::LabelSymbol *);
 
@@ -1121,7 +1121,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Local snippet sharing facility: most RISC platforms can make use of it. The platform
    // specific code generators should override isSnippetMatched if they choose to use it.
    TR::LabelSymbol * lookUpSnippet(int32_t snippetKind, TR::SymbolReference *symRef);
-   bool isSnippetMatched(TR::Snippet *snippet, int32_t snippetKind, TR::SymbolReference *symRef) {return false;}
+   virtual bool isSnippetMatched(TR::Snippet *snippet, int32_t snippetKind, TR::SymbolReference *symRef) {return false;}
 
    // called to emit any constant data snippets.  The platform specific code generators
    // should override these methods if they use constant data snippets.
@@ -1210,7 +1210,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool isRotateAndMask(TR::Node *node) { return false; }
 
    virtual TR::Instruction *generateNop(TR::Node *node, TR::Instruction *instruction=0, TR_NOPKind nopKind=TR_NOPStandard);
-   bool isOutOfLineHotPath() { TR_ASSERT(0, "isOutOfLineHotPath is only implemented for 390 and ppc"); return false;}
+   virtual bool isOutOfLineHotPath() { TR_ASSERT(0, "isOutOfLineHotPath is only implemented for 390 and ppc"); return false;}
 
    //Rather confusingly not used -only- in BCD related codegen.
    //... has leaked into non-BCD code.
@@ -1296,7 +1296,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool constLoadNeedsLiteralFromPool(TR::Node *node) { return false; }
    virtual void setOnDemandLiteralPoolRun(bool answer) {}
    virtual bool isLiteralPoolOnDemandOn () { return false; }
-   bool supportsOnDemandLiteralPool() { return false; }
+   virtual bool supportsOnDemandLiteralPool() { return false; }
    virtual bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; }
    virtual bool supportsHighWordFacility() { return false; }
 
