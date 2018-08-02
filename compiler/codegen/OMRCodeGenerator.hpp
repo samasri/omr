@@ -420,8 +420,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    //
    void generateCode();
    virtual void doRegisterAssignment(TR_RegisterKinds kindsToAssign) = 0;
-   void doBinaryEncoding();
-   void doPeephole() { return; }
+   virtual void doBinaryEncoding() = 0;
+   virtual void doPeephole() { return; }
    bool hasComplexAddressingMode() { return false; }
    void removeUnusedLocals();
 
@@ -667,7 +667,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool supportsFusedMultiplyAdd() {return false;}
    bool supportsNegativeFusedMultiplyAdd() {return false;}
 
-   bool supportsComplexAddressing() {return false;}
+   virtual bool supportsComplexAddressing() {return false;}
    virtual bool canBeAffectedByStoreTagStalls() { return false; }
 
    bool isMaterialized(TR::Node *);
@@ -730,7 +730,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void addToAtlas(TR::Instruction *);
    void buildGCMapsForInstructionAndSnippet(TR::Instruction *instr);
    TR_GCStackMap *buildGCMapForInstruction(TR::Instruction *instr);
-   void buildRegisterMapForInstruction(TR_GCStackMap *map);
+   virtual void buildRegisterMapForInstruction(TR_GCStackMap *map) = 0;
    // IA32 only?
    virtual uint32_t getRegisterMapInfoBitsMask() {return 0;}
 
@@ -845,7 +845,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    uint32_t getGlobalRegister(TR_GlobalRegisterNumber n) {return _globalRegisterTable[n];}
    uint32_t *setGlobalRegisterTable(uint32_t *p) {return (_globalRegisterTable = p);}
 
-   TR_GlobalRegisterNumber getGlobalRegisterNumber(uint32_t realReg) { return -1; }
+   virtual TR_GlobalRegisterNumber getGlobalRegisterNumber(uint32_t realReg) { return -1; }
 
    TR_GlobalRegisterNumber getFirstGlobalGPR() {return 0;}
    TR_GlobalRegisterNumber getLastGlobalGPR()  {return _lastGlobalGPR;}
@@ -857,7 +857,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR_GlobalRegisterNumber setLastGlobalHPR(TR_GlobalRegisterNumber n) {return (_lastGlobalHPR = n);}
 
    virtual TR_GlobalRegisterNumber getGlobalHPRFromGPR (TR_GlobalRegisterNumber n) {return 0;}
-   TR_GlobalRegisterNumber getGlobalGPRFromHPR (TR_GlobalRegisterNumber n) {return 0;}
+   virtual TR_GlobalRegisterNumber getGlobalGPRFromHPR (TR_GlobalRegisterNumber n) {return 0;}
 
    TR_GlobalRegisterNumber getFirstGlobalFPR() {return _lastGlobalGPR + 1;}
    TR_GlobalRegisterNumber setFirstGlobalFPR(TR_GlobalRegisterNumber n) {return (_firstGlobalFPR = n);}
@@ -1435,8 +1435,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool getSupportsArrayTranslateTROT() {return _flags4.testAny(SupportsArrayTranslateTROT);}
    void setSupportsArrayTranslateTROT() {_flags4.set(SupportsArrayTranslateTROT);}
 
-   bool getSupportsEncodeUtf16LittleWithSurrogateTest() { return false; }
-   bool getSupportsEncodeUtf16BigWithSurrogateTest() { return false; }
+   virtual bool getSupportsEncodeUtf16LittleWithSurrogateTest() { return false; }
+   virtual bool getSupportsEncodeUtf16BigWithSurrogateTest() { return false; }
 
    bool supportsZonedDFPConversions() {return _enabledFlags.testAny(SupportsZonedDFPConversions);}
    void setSupportsZonedDFPConversions() {_enabledFlags.set(SupportsZonedDFPConversions);}
