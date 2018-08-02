@@ -1357,7 +1357,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool supportsLengthMinusOneForMemoryOpts() {return false;}
 
    // Java, likely Z
-   bool supportsTrapsInTMRegion() { return true; }
+   virtual bool supportsTrapsInTMRegion() { return true; }
 
    // Allows a platform code generator to assert that a particular node operation will use 64 bit values
    // that are not explicitly present in the node datatype.
