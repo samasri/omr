@@ -306,14 +306,14 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
    void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
 
-   void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   virtual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
    void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
-   void lowerTreesPropagateBlockToNode(TR::Node *node);
+   virtual void lowerTreesPropagateBlockToNode(TR::Node *node);
 
    virtual void setUpForInstructionSelection();
    void doInstructionSelection();
-   void createStackAtlas();
+   virtual void createStackAtlas();
 
    virtual void beginInstructionSelection() {}
    void endInstructionSelection() {}
@@ -382,8 +382,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
    bool buildInterpreterEntryPoint() { return false; }
    void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
-   bool supportsUnneededLabelRemoval() { return true; }
-   bool allowSplitWarmAndColdBlocks() { return false; }
+   virtual bool supportsUnneededLabelRemoval() { return true; }
+   virtual bool allowSplitWarmAndColdBlocks() { return false; }
 
    TR_HasRandomGenerator randomizer;
 
@@ -1107,7 +1107,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
    bool needClassAndMethodPointerRelocations() { return false; }
-   bool needRelocationsForStatics() { return false; }
+   virtual bool needRelocationsForStatics() { return false; }
    bool needRelocationsForBodyInfoData() { return false; }
    bool needRelocationsForPersistentInfoData() { return false; }
 
@@ -1194,7 +1194,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // currently can only return a value other than vgdnop for HCR guards
    TR::Instruction* getVirtualGuardForPatching(TR::Instruction *vgdnop);
 
-   void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
+   virtual void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
