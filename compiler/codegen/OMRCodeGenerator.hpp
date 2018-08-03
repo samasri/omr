@@ -297,7 +297,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void preLowerTrees();
    void postLowerTrees() {}
 
-   TR::TreeTop *lowerTree(TR::Node *root, TR::TreeTop *tt);
+   virtual TR::TreeTop *lowerTree(TR::Node *root, TR::TreeTop *tt);
    void lowerTrees();
    virtual void lowerTreesWalk(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
@@ -311,7 +311,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void lowerTreesPropagateBlockToNode(TR::Node *node);
 
-   void setUpForInstructionSelection();
+   virtual void setUpForInstructionSelection();
    void doInstructionSelection();
    void createStackAtlas();
 
@@ -447,7 +447,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // Hardware profiling
    //
-   void createHWPRecords() {}
+   virtual void createHWPRecords() {}
 
    // --------------------------------------------------------------------------
    // Tree evaluation
@@ -479,7 +479,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    rcount_t recursivelyDecReferenceCount(TR::Node*node);
    void evaluateChildrenWithMultipleRefCount(TR::Node*node);
 
-   void incRefCountForOpaquePseudoRegister(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp) {}
+   virtual void incRefCountForOpaquePseudoRegister(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp) {}
 
    void startUsingRegister(TR::Register *reg);
    void stopUsingRegister(TR::Register *reg);
@@ -1071,21 +1071,21 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void addExternalRelocation(TR::Relocation *r, TR::RelocationDebugInfo *info, TR::ExternalRelocationPositionRequest where = TR::ExternalRelocationAtBack);
    void addStaticRelocation(const TR::StaticRelocation &relocation);
 
-   void addProjectSpecializedRelocation(uint8_t *location,
+   virtual void addProjectSpecializedRelocation(uint8_t *location,
                                           uint8_t *target,
                                           uint8_t *target2,
                                           TR_ExternalRelocationTargetKind kind,
                                           char *generatingFileName,
                                           uintptr_t generatingLineNumber,
                                           TR::Node *node) {}
-   void addProjectSpecializedPairRelocation(uint8_t *location1,
+   virtual void addProjectSpecializedPairRelocation(uint8_t *location1,
                                           uint8_t *location2,
                                           uint8_t *target,
                                           TR_ExternalRelocationTargetKind kind,
                                           char *generatingFileName,
                                           uintptr_t generatingLineNumber,
                                           TR::Node *node) {}
-   void addProjectSpecializedRelocation(TR::Instruction *instr,
+   virtual void addProjectSpecializedRelocation(TR::Instruction *instr,
                                           uint8_t *target,
                                           uint8_t *target2,
                                           TR_ExternalRelocationTargetKind kind,
@@ -1226,7 +1226,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    // J9, X86
    virtual bool canTransformUnsafeCopyToArrayCopy() { return false; }
-   bool canTransformUnsafeSetMemory() { return false; }
+   virtual bool canTransformUnsafeSetMemory() { return false; }
 
    virtual bool canNullChkBeImplicit(TR::Node *);
    bool canNullChkBeImplicit(TR::Node *, bool doChecks);
@@ -1300,7 +1300,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool supportsDirectIntegralLoadStoresFromLiteralPool() { return false; }
    virtual bool supportsHighWordFacility() { return false; }
 
-   bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
+   virtual bool inlineDirectCall(TR::Node *node, TR::Register *&resultReg) { return false; }
 
    // J9 only, move to trj9
    TR_OpaqueClassBlock* getMonClass(TR::Node* monNode);
@@ -1352,7 +1352,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::DataType IntJ() { return TR::Compiler->target.is64Bit() ? TR::Int64 : TR::Int32; }
 
    // will a BCD left shift always leave the sign code unchanged and thus allow it to be propagated through and upwards
-   bool propagateSignThroughBCDLeftShift(TR::DataType type) { return false; }
+   virtual bool propagateSignThroughBCDLeftShift(TR::DataType type) { return false; }
 
    virtual bool supportsLengthMinusOneForMemoryOpts() {return false;}
 
