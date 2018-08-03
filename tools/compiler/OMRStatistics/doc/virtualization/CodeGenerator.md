@@ -203,6 +203,7 @@
 * OMR::CodeGenerator::buildRegisterMapForInstruction(TR_GCStackMap*)
 * OMR::CodeGenerator::doBinaryEncoding()
 * OMR::CodeGenerator::doRegisterAssignment(TR_RegisterKinds)
+* generateSwitchToInterpreterPrePrologue(TR::Instruction *,uint8_t,uint8_t)
 
 # Provided default implementation for the following functions
 * generateSwitchToInterpreterPrePrologue(TR::Instruction *prev, uint8_t alignment, uint8_t alignmentMargin)
