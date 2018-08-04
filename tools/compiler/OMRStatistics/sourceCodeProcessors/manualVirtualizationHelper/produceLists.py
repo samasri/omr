@@ -1,6 +1,6 @@
 # This script takes the overridden function query (found below) output from the each database (omr and openj9) in files (whose names are passed as arguments) and processes them to produce 2 outputs (for each database):
 # 'functions-raw': a file that contains all the signatures that should be virtualized.
-# 'functions': contains the queries that should be searched for in the source code to find all calls (that uses `self()`) of the above list of functions.
+# 'functions': contains the queries that should be searched for in the source code to find all calls (that uses `self()`) and function defs in source code (`::functionName(`) of the above list of functions. In addition, the file contains the queries
 
 # SELECT DISTINCT bc.namespace, bc.classname, of.signature, oc.namespace, oc.classname
 # FROM Override as o
@@ -16,22 +16,22 @@ def convertToArray(file):
 	for r in file: rows.append(r)
 	return rows
 
-def createList(sigs, functionsOut, rawOut):
-	functionsOut.write('LIST += \\\n')
-	count = 0
+def createLists(sigs, functionsOut, rawOut):
+	callsList = ''
+	rawList = ''
+	defsList = ''
 	max = len(sigs) # Get max to identify last row
 	for sig in sigs:
-		count += 1
 		sig = sig.strip()
 		sigQuery = sig[:sig.index('(')]
 		
-		# Print list of files for make
-		end = '\\\n' if count != max else ''
-		functionsOut.write("'self()->" + sigQuery + "(' " + end)
-		
-		# Print list of files for manual checking
-		end = '\n' if count != max else ''
-		rawOut.write(sig + end)
+		callsList += "'self()->" + sigQuery + "(' \\\n"
+		rawList += sig + '\n'
+		defsList += "'::" + sigQuery + "(' \\\n"
+	
+	functionsOut.write('CALLS_LIST += \\\n' + callsList[:-3])
+	functionsOut.write('\n\nDEFS_LIST += \\\n' + defsList[:-3])
+	rawOut.write(rawList[:-1])
 
 isFirstUse = 1 # Tracks if createDocPage function has been used before
 def createDocPage(dbRows, docPage):
@@ -64,10 +64,10 @@ def createDocPage(dbRows, docPage):
 
 
 docPage = open('doc', 'w')
-list = open('functions', 'w')
-rawlist = open('functions-raw', 'w')
+listFile = open('functions', 'w')
+rawlistFile = open('functions-raw', 'w')
 dbFile = open(sys.argv[1])
 
 dbRows = convertToArray(dbFile)
 sigSet = createDocPage(dbRows, docPage)
-createList(sigSet, list, rawlist)
+createLists(sigSet, listFile, rawlistFile)
