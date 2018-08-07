@@ -583,7 +583,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void cleanupFlags(TR::Node*node);
 
-   bool shouldYankCompressedRefs() { return false; }
+   virtual bool shouldYankCompressedRefs() { return false; }
    bool materializesHeapBase() { return true; }
    virtual bool canFoldLargeOffsetInAddressing() { return false; }
 
@@ -636,7 +636,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
     * @param method : the recognized method to consider
     * @return true if inlining should be suppressed; false otherwise
     */
-   bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method);
+   virtual bool suppressInliningOfRecognizedMethod(TR::RecognizedMethod method);
 
    // --------------------------------------------------------------------------
    // Optimizer, not code generator
@@ -1198,7 +1198,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
-   void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
+   virtual void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9
 

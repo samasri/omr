@@ -1672,7 +1672,7 @@ void OMR::Power::CodeGenerator::doBinaryEncoding()
    TR_PPCBinaryEncodingData data;
    data.estimate = 0;
 
-   self()->generateBinaryEncodingPrologue(&data);
+   generateBinaryEncodingPrologue(&data);
 
    bool skipOneReturn = false;
    while (data.cursorInstruction)
