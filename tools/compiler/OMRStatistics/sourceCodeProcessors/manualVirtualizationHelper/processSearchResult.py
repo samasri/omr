@@ -149,15 +149,17 @@ def append(sigs1, sigs2):
 			if namespace in sigs1[sig]: continue# Do not change already existing results
 			sigs1[sig][namespace] = sigs2[sig][namespace]
 
-def handleEndOfDef(line, sigs, sig, namespace, isDef):
+def handleEndOfDef(line, sigs, sig, namespace, isDef, ignoredFunctions):
 	if sig not in sigs: sigs[sig] = {}
-	elif namespace in sigs: print 'Function is overloaded: ' + sig
+	elif namespace in sigs[sig]: 
+		# print 'Function is overloaded (in ' + namespace + '): ' + sig
+		ignoredFunctions.add(sig)
 	sigs[sig][namespace] = isDef
 
 
 def checkHeaders(headers, sigList):
 	sigs = {} # Dict: sigs --> namespace --> isDefined
-	ignoredFunctions = [] # Keep track of ignored functions
+	ignoredFunctions = set() # Keep track of ignored functions
 	for sig in sigList:
 		found = 0
 		for header in headers:
@@ -165,22 +167,23 @@ def checkHeaders(headers, sigList):
 			continued = 0 # keep track of function definitions that take multiple lines
 			for line in header:
 				line = line.strip()
+				if '//' in line: line = line[:line.index('//')] # Remove comments
 				if not line: continue
 				if continued or sig in line:
 					namespace = getNamespaceFromHeader(header.name)
 					if '{' in line:
 						found = 1
 						continued = 0
-						handleEndOfDef(line, sigs, sig, namespace, 1)
+						handleEndOfDef(line, sigs, sig, namespace, 1, ignoredFunctions)
 					elif ';' in line:
 						found = 1
 						continued = 0
-						handleEndOfDef(line, sigs, sig, namespace, 0)
+						handleEndOfDef(line, sigs, sig, namespace, 0, ignoredFunctions)
 					else:
 						continued = 1
 			if continued == 1: 'Error: file is finished but function definition is not: ' + sig
 			header.close()
-		if not found: ignoredFunctions.append(sig)
+		if not found: ignoredFunctions.add(sig)
 	return sigs, ignoredFunctions
 
 def processQualSig(qualSig):
@@ -238,22 +241,21 @@ def checkDefinitions(paths, functionsFile, results):
 	sourceSigsOpenJ9 = processDefResultsToMap(results[1])
 	append(sourceSigs, sourceSigsOpenJ9)
 	
-	
 	# for sig in headerSigs:
 		# print sig + ':'
 		# for namespace in headerSigs[sig]:
 			# print '\t' + namespace + ': ' + str(headerSigs[sig][namespace])
-	
+	# print '----------------------------'
 	# for sig in sourceSigs:
 		# print sig + ':'
 		# for namespace in sourceSigs[sig]:
 			# print '\t' + namespace + ': ' + str(sourceSigs[sig][namespace])
 	
-	# for sig in headerSigs:
-		# for namespace in headerSigs[sig]:
-			# if headerSigs[sig][namespace] == 0:
-				# if namespace not in sig or sourceSigs[sig][namespace] == 0: 
-					# print sig + ' has no implementation in: ' + namespace
+	for sig in headerSigs:
+		for namespace in headerSigs[sig]:
+			if headerSigs[sig][namespace] == 0:
+				if namespace not in sourceSigs[sig] or sourceSigs[sig][namespace] == 0: 
+					print sig + ' has no implementation in: ' + namespace
 		
 		
 	
