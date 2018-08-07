@@ -656,7 +656,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // --------------------------------------------------------------------------
    // Architecture, not code generator
    //
-   int16_t getMinShortForLongCompareNarrower() { return SHRT_MIN; }
+   virtual int16_t getMinShortForLongCompareNarrower() { return SHRT_MIN; }
    virtual int8_t getMinByteForLongCompareNarrower() { return SCHAR_MIN; }
 
    virtual bool branchesAreExpensive() { return true; }
@@ -926,7 +926,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual TR_BitVector *getGlobalFPRsPreservedAcrossCalls(){ return NULL; }
 
    int32_t getFirstBit(TR_BitVector &bv);
-   TR_GlobalRegisterNumber pickRegister(TR_RegisterCandidate *, TR::Block * *, TR_BitVector & availableRegisters, TR_GlobalRegisterNumber & highRegisterNumber, TR_LinkHead<TR_RegisterCandidate> *candidates);
+   virtual TR_GlobalRegisterNumber pickRegister(TR_RegisterCandidate *, TR::Block * *, TR_BitVector & availableRegisters, TR_GlobalRegisterNumber & highRegisterNumber, TR_LinkHead<TR_RegisterCandidate> *candidates);
    TR_RegisterCandidate *findCoalescenceForRegisterCopy(TR::Node *node, TR_RegisterCandidate *rc, bool *isUnpreferred);
    TR_GlobalRegisterNumber findCoalescenceRegisterForParameter(TR::Node *callNode, TR_RegisterCandidate *rc, uint32_t childIndex, bool *isUnpreferred);
    TR_RegisterCandidate *findUsedCandidate(TR::Node *node, TR_RegisterCandidate *rc, TR_BitVector *visitedNodes);
@@ -940,7 +940,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual int32_t getMaximumNumberOfVRFsAllowedAcrossEdge(TR::Node *) { return INT_MAX; }
    virtual int32_t getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *block);
    virtual int32_t getMaximumNumbersOfAssignableGPRs() { return INT_MAX; }
-   int32_t getMaximumNumbersOfAssignableFPRs() { return INT_MAX; }
+   virtual int32_t getMaximumNumbersOfAssignableFPRs() { return INT_MAX; }
    virtual int32_t getMaximumNumbersOfAssignableVRs()  { return INT_MAX; }
    virtual bool willBeEvaluatedAsCallByCodeGen(TR::Node *node, TR::Compilation *comp){ return true;}
    virtual bool isGlobalRegisterAvailable(TR_GlobalRegisterNumber, TR::DataType) { return true; }
@@ -1195,7 +1195,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    TR::Instruction* getVirtualGuardForPatching(TR::Instruction *vgdnop);
 
    virtual void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
-   void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
+   virtual void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
