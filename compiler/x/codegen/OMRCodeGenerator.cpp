@@ -1068,7 +1068,7 @@ OMR::X86::CodeGenerator::supportsMergingGuards()
    {
    return self()->getSupportsVirtualGuardNOPing() &&
           self()->comp()->performVirtualGuardNOPing() &&
-          self()->allowGuardMerging();
+          allowGuardMerging();
    }
 
 bool
