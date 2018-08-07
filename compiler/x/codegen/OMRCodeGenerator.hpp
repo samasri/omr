@@ -670,7 +670,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGenerator
 
    public:
 
-   bool allowGuardMerging() { return false; }
+   virtual bool allowGuardMerging() { return false; }
 
    bool enableBetterSpillPlacements()
       {
