@@ -18,6 +18,7 @@ To execute the program, specify the confurations in the makefile and _processSea
 	* Location of file to write dump list of ignored functions
 	* PRINT_1: Triggers MVH to print the cases described in _PRINT\_1 case_ in [Checking for unimplemented function section]()
 	* PRINT_OVERLOADS: Triggers MVH to print the cases where an overload is detected
+	* PRINT_NO_IMPLEMENTATION: Triggers MVH to print the cases where no implementation for the function is detected
 * In Makefile:
 	* Location of OMR and OpenJ9 directories to read and virtualize functions
 	* Location of file containig the output of the following query when run in the database:
@@ -71,6 +72,7 @@ WHERE bc.isExtensible = 1 and oc.isExtensible = 1 and bf.isVirtual = 0 and of.is
 	* Function implementations from source code are found by grepping for the function name prefixed by `::` (such as `::yankIndexScalingOp()`).
 	* Grep results that are splitted by spaces, the part that has `OMR::` or `J9::` is considered the function call being searched for. So for example, if a function returns a class of type other than `TR`, it is not considered.
 	* Function definition is considered to have implementation if it is of the following form: `OMR::X86::CodeGenerator::yankIndexScalingOp()` (last part is function name, before last part is class name, the rest is the namespace)
+	* Cases where a pointer is returned	will have `*` attached to the qualified function name, which will appear in the namespace. Hence, if the namespace starts with `*`, it is removed. If the `*` appears anywhere else is the namespace, it is printed as an error.
 	* Function implementation is checked to be for the right class before considering it implemented. For instance in `OMR::X86::CodeGenerator::yankIndexScalingOp()`, the className is extracted and compared to `CodeGenerator` to make sure `yankIndexScalingOp()` belongs to the target class.
 * Function is considered unimplemented if it is not implemented in neither header files nor source files.
 * If a function definition is found in `OMR`, its status is not affected by finding it again in `J9`. (_PRINT\_1_ case)

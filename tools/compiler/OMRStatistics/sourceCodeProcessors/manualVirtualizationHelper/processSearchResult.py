@@ -240,6 +240,8 @@ def processQualSig(qualSig):
 		elif i == len(qualSig) - 1: functionName = qualSig[i] # Function is the last part
 		else: namespace += qualSig[i] + '::' # Everything else is the namespace
 	namespace = namespace[:-2] # Remove last :: appended to the namespace variable
+	if namespace and '*' == namespace[0]: namespace = namespace.replace('*','')
+	if '*' in namespace: print 'Error: unexpected namespace is found: ' + namespace + '::' + TARGET_CLASS + '::' + funcionName
 	return namespace, className, functionName
 
 def processDefResultsToMap(file):
@@ -278,17 +280,20 @@ def checkDefinitions(paths, functionsFilePath, results, ignoredFile):
 	sourceSigsOpenJ9 = processDefResultsToMap(results[1])
 	append(sourceSigs, sourceSigsOpenJ9)
 	
-	for sig in headerSigs:
-		for namespace in headerSigs[sig]:
-			if headerSigs[sig][namespace] == 0:
-				if namespace not in sourceSigs[sig] or sourceSigs[sig][namespace] == 0: 
-					print sig + ' has no implementation in: ' + namespace
+	global PRINT_NO_IMPLEMENTATION
+	if PRINT_NO_IMPLEMENTATION:
+		for sig in headerSigs:
+			for namespace in headerSigs[sig]:
+				if headerSigs[sig][namespace] == 0:
+					if namespace not in sourceSigs[sig] or sourceSigs[sig][namespace] == 0: 
+						print sig + ' has no implementation in: ' + namespace
 	
 	printIgnoredFunctions(ignoredFunctions, ignoredFile)
 
 # Configuration
 PRINT_1 = 0
 PRINT_OVERLOADS = 0
+PRINT_NO_IMPLEMENTATION = 0
 TARGET_CLASS = sys.argv[3]
 
 omrResults = open('callResults.omr')
