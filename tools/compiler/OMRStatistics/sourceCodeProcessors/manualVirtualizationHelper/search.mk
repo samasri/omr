@@ -14,7 +14,7 @@ omr:
 	done
 	@for sig in $(DEFS_LIST) ; do \
 		echo $$sig: >> defResults.omr ;\
-		grep -r '$$sig' $(OMR_PATH) >> defResults.omr ;\
+		grep -r "$$sig" $(OMR_PATH) >> defResults.omr ;\
 		echo --------------------  >> defResults.omr ;\
 	done
 
@@ -28,6 +28,6 @@ openj9:
 	done
 	@ for sig in $(DEFS_LIST) ; do \
 		echo $$sig:  >> defResults.openj9 ;\
-		grep -r '$$sig' $(OPENJ9_PATH) >> defResults.openj9 ;\
+		grep -r "$$sig" $(OPENJ9_PATH) >> defResults.openj9 ;\
 		echo --------------------  >> defResults.openj9 ;\
 	done

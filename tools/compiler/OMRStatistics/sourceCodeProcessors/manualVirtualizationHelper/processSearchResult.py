@@ -77,7 +77,7 @@ class FileChange:
 		self.func = func
 		self.line = line
 
-def processResultsToMap(file):
+def processCallResultsToMap(file):
 	fileChanges = {}
 	count = 0
 	func = ''
@@ -117,7 +117,7 @@ def applyCPPEdits(fileChanges):
 		write.close()
 
 def changeCPPs(file):
-	fileChanges = processResultsToMap(file)
+	fileChanges = processCallResultsToMap(file)
 	applyCPPEdits(fileChanges)
 	
 def getListFromFile(file):
@@ -125,42 +125,35 @@ def getListFromFile(file):
 	for row in file:
 		row = row.strip()
 		if not row: continue
-		list.add(row[:row.index('(') + 1])
+		list.add(row[:row.index('(')])
 	return list
 
 def getNamespaceFromHeader(headerPath):
-	if 'compiler/codegen/' in headerPath: return 'OMR'
-	if 'compiler/x/codegen/' in headerPath: return 'OMR::X86'
-	if 'compiler/x/amd64/codegen/' in headerPath: return 'OMR::X86::AMD64'
-	if 'compiler/x/i386/codegen/' in headerPath: return 'OMR::X86::I386'
-	if 'compiler/p/codegen/' in headerPath: return 'OMR::Power'
-	if 'compiler/z/codegen/' in headerPath: return 'OMR::Z'
-
-def getNamespaceFromClassName(name):
-	#Enum(OMR, X86, Power, Z, AMD64, I386)
-	name = name.upper()
-	name = name.split('::')
-	returnNb = 0
-	className = name[len(name) - 2]
-	global TARGET_CLASS
-	if className != TARGET_CLASS: return -1
-	for p in r:
-		if p == 'OMR': returnNb = 1
-		if p == 'X86': returnNb = 2
-		if p == 'Power': returnNb = 3
-		if p == 'Z': returnNb = 4
-		if p == 'AMD64': returnNb = 5
-		if p == 'I386': returnNb = 6
-	return returnNb
+	if 'runtime/compiler/codegen/' in headerPath: return 'J9'
+	elif 'runtime/compiler/x/codegen/' in headerPath: return 'J9::X86'
+	elif 'runtime/compiler/x/amd64/codegen/' in headerPath: return 'J9::X86::AMD64'
+	elif 'runtime/compiler/x/i386/codegen/' in headerPath: return 'J9::X86::I386'
+	elif 'runtime/compiler/p/codegen/' in headerPath: return 'J9::Power'
+	elif 'runtime/compiler/z/codegen/' in headerPath: return 'J9::Z'
+	elif 'compiler/codegen/' in headerPath: return 'OMR'
+	elif 'compiler/x/codegen/' in headerPath: return 'OMR::X86'
+	elif 'compiler/x/amd64/codegen/' in headerPath: return 'OMR::X86::AMD64'
+	elif 'compiler/x/i386/codegen/' in headerPath: return 'OMR::X86::I386'
+	elif 'compiler/p/codegen/' in headerPath: return 'OMR::Power'
+	elif 'compiler/z/codegen/' in headerPath: return 'OMR::Z'
 
 def append(sigs1, sigs2):
 	for sig in sigs2:
-		if sig in sigs1: print 'Error: entry already exists'
-		sigs1[sig] = {}
+		if sig not in sigs1: sigs1[sig] = {}
 		for namespace in sigs2[sig]:
-			if namespace in sigs1[sig]: print 'Error: entry already exists'
-			#sigs1[sig1] = 
-			sigs2[sig][namespace]
+			if namespace in sigs1[sig]: continue# Do not change already existing results
+			sigs1[sig][namespace] = sigs2[sig][namespace]
+
+def handleEndOfDef(line, sigs, sig, namespace, isDef):
+	if sig not in sigs: sigs[sig] = {}
+	elif namespace in sigs: print 'Function is overloaded: ' + sig
+	sigs[sig][namespace] = isDef
+
 
 def checkHeaders(headers, sigList):
 	sigs = {} # Dict: sigs --> namespace --> isDefined
@@ -171,74 +164,112 @@ def checkHeaders(headers, sigList):
 			header = open(header)
 			continued = 0 # keep track of function definitions that take multiple lines
 			for line in header:
-				if not line: continue
-				if continued:
-					if '{' in line: 
-						sigs[sig][namespace] = 1
-						continued = 0
-					elif ';' in line: 
-						sigs[sig][namespace] = 0
-						continued = 0
 				line = line.strip()
-				if sig in line:
+				if not line: continue
+				if continued or sig in line:
 					namespace = getNamespaceFromHeader(header.name)
 					if '{' in line:
 						found = 1
-						if sig not in sigs: sigs[sig] = {}
-						elif namespace in sigs: print 'Function is overloaded: ' + sig
-						sigs[sig][namespace] = 1
+						continued = 0
+						handleEndOfDef(line, sigs, sig, namespace, 1)
 					elif ';' in line:
 						found = 1
-						if sig not in sigs: sigs[sig] = {}
-						elif namespace in sigs: print 'Function is overloaded: ' + sig
-						sigs[sig][namespace] = 0
+						continued = 0
+						handleEndOfDef(line, sigs, sig, namespace, 0)
 					else:
-						found = 1
-						conitnued = 1
-						if sig not in sigs: sigs[sig] = {}
-						elif namespace in sigs: print 'Function is overloaded: ' + sig
+						continued = 1
 			if continued == 1: 'Error: file is finished but function definition is not: ' + sig
 			header.close()
 		if not found: ignoredFunctions.append(sig)
-	
 	return sigs, ignoredFunctions
 
-# def checkSources(sigs, grepResults):
-	# for r in grepResults:
-		# r = split by ': '
-		# sig = get signature from r #r[:r.index(')') + 1]
-		# namespace = getNamespaceFromClassName(r[1])
-		# if sig in sigs and namespace in sigs[sig]:
-			# if sigs[sig][namespace] == 1: print 'signature defined twice, in header file and in cpp: ' + sig
-			# if sigs[sig][namespace] == 0: sigs[sig][namespace] = 1
-		# else: print 'error: target signature not defined in headers: ' + sig
+def processQualSig(qualSig):
+	qualO = qualSig
+	qualSig = qualSig.split(' ')
+	qualSigTarget = ''
+	for part in qualSig:
+		if 'OMR::' in part or 'J9::' in part:
+			qualSigTarget = part[:part.index('(')]
+			break
+	qualSig = qualSigTarget.split('::')
+	functionName = ''
+	className = ''
+	namespace = ''
+	for (i, value) in enumerate(qualSig):
+		if i == len(qualSig) - 2: className = qualSig[i] # ClassName is before the last part
+		elif i == len(qualSig) - 1: functionName = qualSig[i] # Function is the last part
+		else: namespace += qualSig[i] + '::' # Everything else is the namespace
+	namespace = namespace[:-2] # Remove last :: appended to the namespace variable
+	return namespace, className, functionName
+
+def processDefResultsToMap(file):
+	sourceSigs = {} # sig -> namespace -> isDefined
+	count = 0
+	func = ''
+	for r in file:
+		r = r.strip()
+		if count == 0:
+			func = r.replace('::','')
+			func = func[:-1]
+			count += 1
+			continue
+		if count > 0:
+			if r == '--------------------':
+				count = 0
+				continue
+			else:
+				count += 1
+				r = r.split(':', 1)
+				namespace, className, sig = processQualSig(r[1])
+				if className != TARGET_CLASS: continue
+				if sig not in sourceSigs: sourceSigs[sig] = {}
+				elif namespace in sourceSigs[sig]: 'Function is overloaded: ' + namespace + '::' + TARGET_CLASS + ':: ' + sig + '( is found more than once'
+				sourceSigs[sig][namespace] = 1
+	return sourceSigs
 			
 def checkDefinitions(paths, functionsFile, results):
 	omrHeaders = getHeaders(paths[0], 'OMR')
 	openj9Headers = getHeaders(paths[1], 'J9')
 	sigList = getListFromFile(functionsFile)
-	sigs, ignoredFunctions = checkHeaders(omrHeaders, sigList)
-	for f in ignoredFunctions: print f
+	headerSigs, ignoredFunctions = checkHeaders(omrHeaders, sigList)
 	openJ9Sigs, ignoredFunctions = checkHeaders(openj9Headers, ignoredFunctions)
-	append(sigs, openJ9Sigs)
-	for sig in sigs:
-		print sig + ':'
-		for namespace in sigs[sig]:
-			print '\t' + namespace + ': ' + str(sigs[sig][namespace])
-	# checkSources(sigs, results[0])
-	# checkSources(sigs, results[1])
+	append(headerSigs, openJ9Sigs)
+	sourceSigs = processDefResultsToMap(results[0])
+	sourceSigsOpenJ9 = processDefResultsToMap(results[1])
+	append(sourceSigs, sourceSigsOpenJ9)
+	
+	
+	# for sig in headerSigs:
+		# print sig + ':'
+		# for namespace in headerSigs[sig]:
+			# print '\t' + namespace + ': ' + str(headerSigs[sig][namespace])
+	
+	# for sig in sourceSigs:
+		# print sig + ':'
+		# for namespace in sourceSigs[sig]:
+			# print '\t' + namespace + ': ' + str(sourceSigs[sig][namespace])
+	
+	# for sig in headerSigs:
+		# for namespace in headerSigs[sig]:
+			# if headerSigs[sig][namespace] == 0:
+				# if namespace not in sig or sourceSigs[sig][namespace] == 0: 
+					# print sig + ' has no implementation in: ' + namespace
+		
+		
+	
+	#print warning
 	return ignoredFunctions
 
 omrResults = open('callResults.omr')
 openj9Results = open('callResults.openj9')
 functionsFile = open('list-raw')
 ignoredFile = open('ignored','w')
-omrGrepResults = open('defResults.omr','w')
-openj9GrepResults = open('defResults.openj9','w')
+omrGrepResults = open('defResults.omr','r')
+openj9GrepResults = open('defResults.openj9','r')
 TARGET_CLASS = sys.argv[3]
 
 # changeCPPs(omrResults)
 # changeCPPs(openj9Results)
 # changeHPPs(sys.argv[1],functionsFile, 'omr', ignoredFile)
 # changeHPPs(sys.argv[2],functionsFile, 'j9', ignoredFile)
-ignoredFunctions = checkDefinitions([sys.argv[1], sys.argv[2]], functionsFile, [omrGrepResults, openj9Results])
+checkDefinitions([sys.argv[1], sys.argv[2]], functionsFile, [omrGrepResults, openj9GrepResults])
