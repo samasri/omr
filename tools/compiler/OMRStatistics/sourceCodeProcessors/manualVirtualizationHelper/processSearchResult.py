@@ -19,11 +19,14 @@ def getHeaders(mainPath, namespace):
 		file.close()
 	return files
 
-def getFunctionsList(file):
-	list = []
-	for r in file:
-		if not r: continue
-		list.append(r.strip())
+def getFunctionsList(filePath):
+	file = open(filePath)
+	list = set()
+	for row in file:
+		row = row.strip()
+		if not row: continue
+		list.add(row[:row.index('(')])
+	file.close()
 	return list
 
 def addVirtual(line):
@@ -37,19 +40,53 @@ def addVirtual(line):
 		if c != ' ': newLine += c
 	return newLine	
 
-def editFile(function, headers):
-	isEditted = 0
+def getNamespaceFromHeader(headerPath):
+	if 'runtime/compiler/codegen/' in headerPath: return 'J9'
+	elif 'runtime/compiler/x/codegen/' in headerPath: return 'J9::X86'
+	elif 'runtime/compiler/x/amd64/codegen/' in headerPath: return 'J9::X86::AMD64'
+	elif 'runtime/compiler/x/i386/codegen/' in headerPath: return 'J9::X86::I386'
+	elif 'runtime/compiler/p/codegen/' in headerPath: return 'J9::Power'
+	elif 'runtime/compiler/z/codegen/' in headerPath: return 'J9::Z'
+	elif 'compiler/codegen/' in headerPath: return 'OMR'
+	elif 'compiler/x/codegen/' in headerPath: return 'OMR::X86'
+	elif 'compiler/x/amd64/codegen/' in headerPath: return 'OMR::X86::AMD64'
+	elif 'compiler/x/i386/codegen/' in headerPath: return 'OMR::X86::I386'
+	elif 'compiler/p/codegen/' in headerPath: return 'OMR::Power'
+	elif 'compiler/z/codegen/' in headerPath: return 'OMR::Z'
+
+def editFile(function, headers, overloaded):
+	global PRINT_OVERLOADS
+	exitAfterFileEnds = 0
+	virtualized = 0
 	isSkip = 3
 	for (filename,lines) in headers.iteritems(): 
+		editTimes = 0
+		if isSkip < 2: # Skip 2 files when condition appears
+			isSkip += 1
+			continue
 		for (index,line) in enumerate(headers[filename]):
-			if isSkip < 2: #skip 2 files when condition appears
-				isSkip += 1
-				continue
 			if function in headers[filename][index]:
+				# If function is editted more than once in a file, then its overloaded
+				editTimes += 1
+				namespace = getNamespaceFromHeader(filename)
+				if editTimes > 1:
+					overloaded.add(function)
+					if PRINT_OVERLOADS: 
+						print 'Function is overloaded: ' + namespace + '::' + TARGET_CLASS + '::' + function
+					return 0 # Function is overloaded, manual check is required
+				
+				# Virtualize function
+				virtualized = 1
 				headers[filename][index] = addVirtual(headers[filename][index])
-				if 'compiler/codegen/' in filename: return 1
-				if 'compiler/x/codegen/' in filename: isSkip = 0 # Skip the next 2 files from now
-	return 0
+				
+				# If function is found in OMR or J9, exit directly after
+				if 'compiler/codegen/' in filename or 'runtime/compiler/codegen/' in filename:
+					exitAfterFileEnds = 1 
+				# If function is found in an X86 namespace, skip the next 2 files (AMD64 and I386)
+				if 'compiler/x/codegen/' in filename: isSkip = 0
+		if exitAfterFileEnds: return 1
+	if virtualized: return 1
+	else: return 0
 
 def applyHPPEdits(headers):
 	for (filename, lines) in headers.iteritems():
@@ -63,13 +100,27 @@ def applyHPPEdits(headers):
 def printIgnoredFunctions(ignoredFunctions, ignoredFile):
 	for f in ignoredFunctions: ignoredFile.write(f + "\n")
 
-def changeHPPs(mainPath, functionsFile, namespace, ignoredFile):
-	headers = getHeaders(mainPath, namespace.upper()) # Returns a mapping between each filename and list with its lines
-	functions = getFunctionsList(functionsFile)
-	ignoredFunctions = [] # Keep track of ignored functions
-	for function in functions:
-		if not editFile(function, headers): ignoredFunctions.append(function)
-	applyHPPEdits(headers)
+def changeHPPs(mainPath, functionsFilePath, ignoredFile):
+	# Get mapping between each filename with a list of its lines
+	headersOMR = getHeaders(mainPath[0], 'OMR')
+	headersJ9 = getHeaders(mainPath[1], 'J9')
+	
+	functions = getFunctionsList(functionsFilePath)
+	
+	# Stage virtualization changes in the headers maps 
+	ignored1 = set() # Keep track of ignored functions in OMR
+	ignored2 = set() # Keep track of ignored functions in OpenJ9
+	overloaded = set()
+	for f in functions:
+		if not editFile(f, headersOMR, overloaded): ignored1.add(f)
+	for f in ignored1:
+		if not editFile(f, headersJ9, overloaded): ignored2.add(f)
+	ignoredFunctions = ignored2.union(overloaded)
+	
+	# Apply changes to files
+	applyHPPEdits(headersOMR)
+	applyHPPEdits(headersJ9)
+	
 	printIgnoredFunctions(ignoredFunctions, ignoredFile)
 
 class FileChange:
@@ -119,40 +170,26 @@ def applyCPPEdits(fileChanges):
 def changeCPPs(file):
 	fileChanges = processCallResultsToMap(file)
 	applyCPPEdits(fileChanges)
-	
-def getListFromFile(file):
-	list = set()
-	for row in file:
-		row = row.strip()
-		if not row: continue
-		list.add(row[:row.index('(')])
-	return list
-
-def getNamespaceFromHeader(headerPath):
-	if 'runtime/compiler/codegen/' in headerPath: return 'J9'
-	elif 'runtime/compiler/x/codegen/' in headerPath: return 'J9::X86'
-	elif 'runtime/compiler/x/amd64/codegen/' in headerPath: return 'J9::X86::AMD64'
-	elif 'runtime/compiler/x/i386/codegen/' in headerPath: return 'J9::X86::I386'
-	elif 'runtime/compiler/p/codegen/' in headerPath: return 'J9::Power'
-	elif 'runtime/compiler/z/codegen/' in headerPath: return 'J9::Z'
-	elif 'compiler/codegen/' in headerPath: return 'OMR'
-	elif 'compiler/x/codegen/' in headerPath: return 'OMR::X86'
-	elif 'compiler/x/amd64/codegen/' in headerPath: return 'OMR::X86::AMD64'
-	elif 'compiler/x/i386/codegen/' in headerPath: return 'OMR::X86::I386'
-	elif 'compiler/p/codegen/' in headerPath: return 'OMR::Power'
-	elif 'compiler/z/codegen/' in headerPath: return 'OMR::Z'
 
 def append(sigs1, sigs2):
+	global PRINT_1
 	for sig in sigs2:
 		if sig not in sigs1: sigs1[sig] = {}
 		for namespace in sigs2[sig]:
-			if namespace in sigs1[sig]: continue# Do not change already existing results
+			if namespace in sigs1[sig]:
+				if PRINT_1:
+					print 'Found case: ' + namespace + '::' + TARGET_CLASS + '::' + sig
+					print sigs1[sig][namespace]
+					print sigs2[sig][namespace]
+				continue # Do not change already existing results
 			sigs1[sig][namespace] = sigs2[sig][namespace]
 
 def handleEndOfDef(line, sigs, sig, namespace, isDef, ignoredFunctions):
+	global PRINT_OVERLOADS
 	if sig not in sigs: sigs[sig] = {}
 	elif namespace in sigs[sig]: 
-		# print 'Function is overloaded (in ' + namespace + '): ' + sig
+		if PRINT_OVERLOADS: 
+			print 'Function is overloaded: ' + namespace + '::' + TARGET_CLASS + '::' + sig
 		ignoredFunctions.add(sig)
 	sigs[sig][namespace] = isDef
 
@@ -167,7 +204,7 @@ def checkHeaders(headers, sigList):
 			continued = 0 # keep track of function definitions that take multiple lines
 			for line in header:
 				line = line.strip()
-				if '//' in line: line = line[:line.index('//')] # Remove comments
+				if '//' in line: line = line[:line.index('//')] # Remove inline comments
 				if not line: continue
 				if continued or sig in line:
 					namespace = getNamespaceFromHeader(header.name)
@@ -226,14 +263,14 @@ def processDefResultsToMap(file):
 				namespace, className, sig = processQualSig(r[1])
 				if className != TARGET_CLASS: continue
 				if sig not in sourceSigs: sourceSigs[sig] = {}
-				elif namespace in sourceSigs[sig]: 'Function is overloaded: ' + namespace + '::' + TARGET_CLASS + ':: ' + sig + '( is found more than once'
+				elif namespace in sourceSigs[sig]: 'Error: function is overloaded and overload is not detected in header files: ' + namespace + '::' + TARGET_CLASS + ':: ' + sig + '( is found more than once'
 				sourceSigs[sig][namespace] = 1
 	return sourceSigs
 			
-def checkDefinitions(paths, functionsFile, results):
+def checkDefinitions(paths, functionsFilePath, results, ignoredFile):
 	omrHeaders = getHeaders(paths[0], 'OMR')
 	openj9Headers = getHeaders(paths[1], 'J9')
-	sigList = getListFromFile(functionsFile)
+	sigList = getFunctionsList(functionsFilePath)
 	headerSigs, ignoredFunctions = checkHeaders(omrHeaders, sigList)
 	openJ9Sigs, ignoredFunctions = checkHeaders(openj9Headers, ignoredFunctions)
 	append(headerSigs, openJ9Sigs)
@@ -241,37 +278,27 @@ def checkDefinitions(paths, functionsFile, results):
 	sourceSigsOpenJ9 = processDefResultsToMap(results[1])
 	append(sourceSigs, sourceSigsOpenJ9)
 	
-	# for sig in headerSigs:
-		# print sig + ':'
-		# for namespace in headerSigs[sig]:
-			# print '\t' + namespace + ': ' + str(headerSigs[sig][namespace])
-	# print '----------------------------'
-	# for sig in sourceSigs:
-		# print sig + ':'
-		# for namespace in sourceSigs[sig]:
-			# print '\t' + namespace + ': ' + str(sourceSigs[sig][namespace])
-	
 	for sig in headerSigs:
 		for namespace in headerSigs[sig]:
 			if headerSigs[sig][namespace] == 0:
 				if namespace not in sourceSigs[sig] or sourceSigs[sig][namespace] == 0: 
 					print sig + ' has no implementation in: ' + namespace
-		
-		
 	
-	#print warning
-	return ignoredFunctions
+	printIgnoredFunctions(ignoredFunctions, ignoredFile)
+
+# Configuration
+PRINT_1 = 0
+PRINT_OVERLOADS = 0
+TARGET_CLASS = sys.argv[3]
 
 omrResults = open('callResults.omr')
 openj9Results = open('callResults.openj9')
-functionsFile = open('list-raw')
+functionsFilePath = 'list-raw'
 ignoredFile = open('ignored','w')
 omrGrepResults = open('defResults.omr','r')
 openj9GrepResults = open('defResults.openj9','r')
-TARGET_CLASS = sys.argv[3]
 
-# changeCPPs(omrResults)
-# changeCPPs(openj9Results)
-# changeHPPs(sys.argv[1],functionsFile, 'omr', ignoredFile)
-# changeHPPs(sys.argv[2],functionsFile, 'j9', ignoredFile)
-checkDefinitions([sys.argv[1], sys.argv[2]], functionsFile, [omrGrepResults, openj9GrepResults])
+changeCPPs(omrResults)
+changeCPPs(openj9Results)
+changeHPPs([sys.argv[1], sys.argv[2]],functionsFilePath, ignoredFile)
+checkDefinitions([sys.argv[1], sys.argv[2]], functionsFilePath, [omrGrepResults, openj9GrepResults], ignoredFile)
