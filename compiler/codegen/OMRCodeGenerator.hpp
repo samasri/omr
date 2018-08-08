@@ -422,7 +422,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void doRegisterAssignment(TR_RegisterKinds kindsToAssign) = 0;
    virtual void doBinaryEncoding() = 0;
    virtual void doPeephole() { return; }
-   bool hasComplexAddressingMode() { return false; }
+   virtual bool hasComplexAddressingMode() { return false; }
    void removeUnusedLocals();
 
    void identifyUnneededByteConvNodes(TR::Node*, TR::TreeTop *, vcount_t, TR::DataType);
@@ -537,7 +537,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    static inline bool isIntrinsicMethodSupported(TR::RecognizedMethod method);
 
 
-   TR::Recompilation *allocateRecompilationInfo() { return NULL; }
+   virtual TR::Recompilation *allocateRecompilationInfo() { return NULL; }
 
    /**
     * @brief This determines if it is necessary to emit a prefetch instruction.
