@@ -433,7 +433,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void prepareNodeForInstructionSelection(TR::Node*node);
    void remapGCIndicesInInternalPtrFormat();
-   void processRelocations();
+   virtual void processRelocations();
 
    void findAndFixCommonedReferences();
    void findCommonedReferences(TR::Node*node, TR::TreeTop *treeTop);
@@ -584,7 +584,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void cleanupFlags(TR::Node*node);
 
    virtual bool shouldYankCompressedRefs() { return false; }
-   bool materializesHeapBase() { return true; }
+   virtual bool materializesHeapBase() { return true; }
    virtual bool canFoldLargeOffsetInAddressing() { return false; }
 
    void insertDebugCounters();
@@ -651,7 +651,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    virtual uint8_t getSizeOfCombinedBuffer() {return 0;}
 
-   bool doRematerialization() {return false;}
+   virtual bool doRematerialization() {return false;}
 
    // --------------------------------------------------------------------------
    // Architecture, not code generator
@@ -665,7 +665,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    virtual bool supportsSinglePrecisionSQRT() {return false;}
    virtual bool supportsFusedMultiplyAdd() {return false;}
-   bool supportsNegativeFusedMultiplyAdd() {return false;}
+   virtual bool supportsNegativeFusedMultiplyAdd() {return false;}
 
    virtual bool supportsComplexAddressing() {return false;}
    virtual bool canBeAffectedByStoreTagStalls() { return false; }
@@ -1196,7 +1196,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    virtual void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    virtual void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
-   void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
+   virtual void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    virtual void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
