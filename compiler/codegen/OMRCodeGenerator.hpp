@@ -380,7 +380,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool supportsMethodEntryPadding() { return true; }
    virtual bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
-   bool buildInterpreterEntryPoint() { return false; }
+   virtual bool buildInterpreterEntryPoint() { return false; }
    virtual void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
    virtual bool supportsUnneededLabelRemoval() { return true; }
    virtual bool allowSplitWarmAndColdBlocks() { return false; }
@@ -949,7 +949,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR_Array<TR::Register *>& getRegisterArray() {return _registerArray;}
 
-   bool needToAvoidCommoningInGRA() {return false;}
+   virtual bool needToAvoidCommoningInGRA() {return false;}
 
    virtual bool considerTypeForGRA(TR::Node *node) {return true;}
    virtual bool considerTypeForGRA(TR::DataType dt) {return true;}
@@ -1550,7 +1550,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    virtual bool isAddressScaleIndexSupported(int32_t scale) { return false; }
 
-   bool getSupportsConstantOffsetInAddressing(int64_t value);
+   virtual bool getSupportsConstantOffsetInAddressing(int64_t value);
    bool getSupportsConstantOffsetInAddressing() { return _flags3.testAny(SupportsConstantOffsetInAddressing); }
    void setSupportsConstantOffsetInAddressing() { _flags3.set(SupportsConstantOffsetInAddressing); }
 
