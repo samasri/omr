@@ -294,7 +294,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void uncommonCallConstNodes();
 
-   void preLowerTrees();
+   virtual void preLowerTrees();
    void postLowerTrees() {}
 
    virtual TR::TreeTop *lowerTree(TR::Node *root, TR::TreeTop *tt);
@@ -304,19 +304,19 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
 
    virtual void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
-   void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
+   virtual void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
 
    virtual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
-   void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
+   virtual void lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
 
    virtual void lowerTreesPropagateBlockToNode(TR::Node *node);
 
    virtual void setUpForInstructionSelection();
-   void doInstructionSelection();
+   virtual void doInstructionSelection();
    virtual void createStackAtlas();
 
    virtual void beginInstructionSelection() {}
-   void endInstructionSelection() {}
+   virtual void endInstructionSelection() {}
 
    bool use64BitRegsOn32Bit();
 
@@ -378,7 +378,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void setNextAvailableBlockIndex(int32_t blockIndex) {}
    virtual int32_t getNextAvailableBlockIndex() { return -1; }
 
-   bool supportsMethodEntryPadding() { return true; }
+   virtual bool supportsMethodEntryPadding() { return true; }
    virtual bool mustGenerateSwitchToInterpreterPrePrologue() { return false; }
    virtual bool buildInterpreterEntryPoint() { return false; }
    virtual void generateCatchBlockBBStartPrologue(TR::Node *node, TR::Instruction *fenceInstruction) { return; }
@@ -401,7 +401,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
       return false;
       }
 
-   bool hasTMEvaluator()    {return false;}
+   virtual bool hasTMEvaluator()    {return false;}
 
    // --------------------------------------------------------------------------
    // Infrastructure
@@ -674,7 +674,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual bool shouldValueBeInACommonedNode(int64_t) { return false; }
    virtual bool materializesLargeConstants() { return false; }
 
-   bool canUseImmedInstruction(int64_t v) {return false;}
+   virtual bool canUseImmedInstruction(int64_t v) {return false;}
    virtual bool needsNormalizationBeforeShifts() { return false; }
 
    uint32_t getNumberBytesReadInaccessible() { return _numberBytesReadInaccessible; }
@@ -798,7 +798,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    uint8_t * allocateCodeMemory(uint32_t size, bool isCold, bool isMethodHeaderNeeded=true);
    uint8_t * allocateCodeMemory(uint32_t warmSize, uint32_t coldSize, uint8_t **coldCode, bool isMethodHeaderNeeded=true);
    void  resizeCodeMemory();
-   void  registerAssumptions() {}
+   virtual void  registerAssumptions() {}
 
    static void syncCode(uint8_t *codeStart, uint32_t codeSize);
 
@@ -1098,7 +1098,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label);
    virtual void apply16BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol * label,int8_t d, bool isInstrOffset = false);
    virtual void apply24BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
-   void apply16BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
+   virtual void apply16BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
    virtual void apply32BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *, TR::LabelSymbol *, int32_t);
    virtual void apply64BitLoadLabelRelativeRelocation(TR::Instruction *, TR::LabelSymbol *);
    virtual void apply32BitLabelRelativeRelocation(int32_t * cursor, TR::LabelSymbol *);
@@ -1106,7 +1106,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    TR::list<TR_Pair<TR_ResolvedMethod,TR::Instruction> *> &getJNICallSites() { return _jniCallSites; }  // registerAssumptions()
 
-   bool needClassAndMethodPointerRelocations() { return false; }
+   virtual bool needClassAndMethodPointerRelocations() { return false; }
    virtual bool needRelocationsForStatics() { return false; }
    bool needRelocationsForBodyInfoData() { return false; }
    bool needRelocationsForPersistentInfoData() { return false; }
@@ -1126,7 +1126,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // called to emit any constant data snippets.  The platform specific code generators
    // should override these methods if they use constant data snippets.
    //
-   void emitDataSnippets() {}
+   virtual void emitDataSnippets() {}
    virtual bool hasDataSnippets() {return false;}
    virtual int32_t setEstimatedLocationsForDataSnippetLabels(int32_t estimatedSnippetStart) {return 0;}
 
@@ -1197,9 +1197,9 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    virtual void jitAddPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    virtual void jitAdd32BitPicToPatchOnClassUnload(void *classPointer, void *addressToBePatched) {}
    virtual void jitAddPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
-   void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
+   virtual void jitAdd32BitPicToPatchOnClassRedefinition(void *classPointer, void *addressToBePatched, bool unresolved = false) {}
    virtual void jitAddUnresolvedAddressMaterializationToPatchOnClassRedefinition(void *firstInstruction) {} //J9
-   bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
+   virtual bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const TR::Node *forNode) { return false; } //J9
    bool wantToPatchClassPointer(const TR_OpaqueClassBlock *allegedClassPointer, const uint8_t *inCodeAt) { return false; } //J9
 
    // --------------------------------------------------------------------------
@@ -1371,7 +1371,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    void addCountersToEdges(TR::Block *block);
 
-   bool getSupportsBitOpCodes() {return false;}
+   virtual bool getSupportsBitOpCodes() {return false;}
 
    bool getMappingAutomatics() {return _flags1.testAny(MappingAutomatics);}
    void setMappingAutomatics() {_flags1.set(MappingAutomatics);}
