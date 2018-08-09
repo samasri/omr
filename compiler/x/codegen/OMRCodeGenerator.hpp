@@ -353,7 +353,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGenerator
     *
     * \return : none
     */
-   void reserveNTrampolines(int32_t numTrampolines) { return; }
+   virtual void reserveNTrampolines(int32_t numTrampolines) { return; }
 
    // Note: This leaves the code aligned in the specified manner.
    virtual TR::Instruction *generateSwitchToInterpreterPrePrologue(TR::Instruction *prev, uint8_t alignment, uint8_t alignmentMargin) = 0;
