@@ -303,7 +303,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    virtual void lowerTreeIfNeeded(TR::Node *node, int32_t childNumber, TR::Node *parent, TR::TreeTop *tt);
 
-   void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
+   virtual void lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
    void lowerTreesPostTreeTopVisit(TR::TreeTop *tt, vcount_t visitCount);
 
    virtual void lowerTreesPreChildrenVisit(TR::Node * parent, TR::TreeTop * treeTop, vcount_t visitCount);
@@ -552,7 +552,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Capabilities
    //
    virtual bool supports32bitAiadd() {return true;}
-   bool supportsMergingGuards() {return false;}
+   virtual bool supportsMergingGuards() {return false;}
 
    // --------------------------------------------------------------------------
    // Z only
@@ -579,7 +579,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Lower trees
    //
    void rematerializeCmpUnderTernary(TR::Node*node);
-   bool yankIndexScalingOp() {return false;}
+   virtual bool yankIndexScalingOp() {return false;}
 
    void cleanupFlags(TR::Node*node);
 
@@ -921,7 +921,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
 
    bool is8BitGlobalGPR(TR_GlobalRegisterNumber n) {return n <= _last8BitGlobalGPR;}
 
-   TR_GlobalRegisterNumber getLinkageGlobalRegisterNumber(int8_t linkageRegisterIndex, TR::DataType type){ return -1; }
+   virtual TR_GlobalRegisterNumber getLinkageGlobalRegisterNumber(int8_t linkageRegisterIndex, TR::DataType type){ return -1; }
    virtual TR_BitVector *getGlobalGPRsPreservedAcrossCalls(){ return NULL; }
    virtual TR_BitVector *getGlobalFPRsPreservedAcrossCalls(){ return NULL; }
 
