@@ -5,9 +5,9 @@ Output: none (edits the `Hierarchy` list with the appropriate additions)
 
 Search for child and parent in the address map
 1. If child is found:
-			Create new node
-			Link the new node to the found child (child->newNode)
-			Add newNode to the address map
+* Create new node
+* Link the new node to the found child (child->newNode)
+* Add newNode to the address map
 2. If parent is found:
 * Create new node
 * Link the new node to the found parent (newNode->parent)
