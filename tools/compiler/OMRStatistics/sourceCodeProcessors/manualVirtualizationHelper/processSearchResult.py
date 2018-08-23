@@ -13,7 +13,11 @@ def getHeaders(mainPath, namespace):
 	files[mainPath + 'compiler/z/codegen/' + genericHeaderName] = []
 	
 	for (name,lines) in files.iteritems():
-		file = open(name)
+		try:
+			file = open(name)
+		except IOError: 
+			files.pop(name, None)
+			continue
 		for r in file: 
 			files[name].append(r)
 		file.close()
@@ -65,7 +69,7 @@ def editFile(function, headers, overloaded):
 			isSkip += 1
 			continue
 		for (index,line) in enumerate(headers[filename]):
-			if function in headers[filename][index]:
+			if function + '(' in headers[filename][index]:
 				# If function is editted more than once in a file, then its overloaded
 				editTimes += 1
 				namespace = getNamespaceFromHeader(filename)
@@ -144,7 +148,7 @@ def processCallResultsToMap(file):
 				count = 0
 				continue
 			else: 
-				r = r.split(':')
+				r = r.split(':', 1)
 				file = r[0]
 				line = r[1]
 				if file not in fileChanges: fileChanges[file] = []
@@ -206,7 +210,7 @@ def checkHeaders(headers, sigList):
 				line = line.strip()
 				if '//' in line: line = line[:line.index('//')] # Remove inline comments
 				if not line: continue
-				if continued or sig in line:
+				if continued or sig + '(' in line:
 					namespace = getNamespaceFromHeader(header.name)
 					if '{' in line:
 						found = 1
@@ -298,7 +302,7 @@ TARGET_CLASS = sys.argv[3]
 
 omrResults = open('callResults.omr')
 openj9Results = open('callResults.openj9')
-functionsFilePath = 'list-raw'
+functionsFilePath = 'functions-raw'
 ignoredFile = open('ignored','w')
 omrGrepResults = open('defResults.omr','r')
 openj9GrepResults = open('defResults.openj9','r')

@@ -13,15 +13,13 @@ To execute the program, specify the confurations in the makefile and _processSea
 
 # Configuration:
 * In processSearchResults.py
-	* Target class: Class to be virtualized
-	* Location of file cotaining raw list of functions
-	* Location of file to write dump list of ignored functions
 	* PRINT_1: Triggers MVH to print the cases described in _PRINT\_1 case_ in [Checking for unimplemented function section]()
 	* PRINT_OVERLOADS: Triggers MVH to print the cases where an overload is detected
 	* PRINT_NO_IMPLEMENTATION: Triggers MVH to print the cases where no implementation for the function is detected
 * In Makefile:
 	* Location of OMR and OpenJ9 directories to read and virtualize functions
-	* Location of file containig the output of the following query when run in the database:
+	* Location of file containig the output of the following query when run in the database
+	* Target class: Class to be virtualized
 
 ```
 SELECT DISTINCT bc.namespace, bc.classname, of.signature, oc.namespace, oc.classname
@@ -34,7 +32,9 @@ WHERE bc.isExtensible = 1 and oc.isExtensible = 1 and bf.isVirtual = 0 and of.is
 ```
 
 # Assumptions and known unsupported cases
-* Ignored functions are: overloaded functions + functions where definition is not found in source code
+* Ignores overloaded functions and functions where definition is not found in source code
+	* For example if a function is defined after the prerpocessor parses a macro, such a function will not be virtualized with MVH
+* Ignores all operator overrides (does not virtualize them)
 * OMR and J9 namespaces are hard coded in the code, changing the namespace targets means changing the code
 * OMR and J9 header file paths are hard coded in the code, changing the namespace targets means changing the code. Paths like the following (including but not limited to):
 	* When `runtime/compiler/codegen/` is found in the file path, it is considered the header for `J9` namesapce
@@ -58,7 +58,7 @@ WHERE bc.isExtensible = 1 and oc.isExtensible = 1 and bf.isVirtual = 0 and of.is
 	* All `self()->yankIndexScalingOp()` are grepped in OMR and OpenJ9 directories.
 	* The python script searches each line of each file in the OMR and OpenJ9 source codes for each result from grep.
 	* When the result is found in a line, the result (`self()->yankIndexScalingOp()`) is replaced by `yankIndexScalingOp()` in the line.
-	* After the file is done, it is rewritted with all the edited lines.
+	* After the file is done, it is rewritten with all the edited lines.
 * In the above case, the python script makes sure that not all `self()->` occurrences are replaced, only `self()->` occurrences followed by the target functions. Because some cases can be as follows:
 	* When trying to replace `self()->yankIndexScalingOp()`, the line might look like this: `if(self()->cond() && self()->yankIndexScalingOp()) {`. In that case, we only need to remove the right `self()` occurrence (this case is handled).
 

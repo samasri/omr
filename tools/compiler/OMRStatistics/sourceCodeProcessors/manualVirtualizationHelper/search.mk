@@ -1,5 +1,4 @@
-include list
-# 'list' above should become functions-searchForCalls
+include functions
 
 default:
 	@echo "No default target for this make, please specify the right target"
@@ -7,9 +6,9 @@ default:
 omr:
 	@rm -f callResults.omr defResults.omr
 	@echo "Searching the OMR source code for self() calls..."
-	@for sig in $(CALLS_LIST) ; do \
+	for sig in $(CALLS_LIST) ; do \
 		echo $$sig: >> callResults.omr ;\
-		grep -r $$sig $(OMR_PATH) >> callResults.omr ;\
+		grep -r "$$sig" $(OMR_PATH) >> callResults.omr ;\
 		echo --------------------  >> callResults.omr ;\
 	done
 	@for sig in $(DEFS_LIST) ; do \
@@ -23,7 +22,7 @@ openj9:
 	@echo "Searching the OpenJ9 source code for self() calls..."
 	@ for sig in $(CALLS_LIST) ; do \
 		echo $$sig:  >> callResults.openj9 ;\
-		grep -r $$sig $(OPENJ9_PATH) >> callResults.openj9 ;\
+		grep -r "$$sig" $(OPENJ9_PATH) >> callResults.openj9 ;\
 		echo --------------------  >> callResults.openj9 ;\
 	done
 	@ for sig in $(DEFS_LIST) ; do \
