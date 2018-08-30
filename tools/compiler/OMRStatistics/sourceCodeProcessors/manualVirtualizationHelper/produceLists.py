@@ -13,7 +13,6 @@ def createLists(sigs, functionsOut, rawOut):
 	callsList = ''
 	rawList = ''
 	defsList = ''
-	max = len(sigs) # Get max to identify last row
 	for sig in sigs:
 		sig = sig.strip()
 		sigQuery = sig[:sig.index('(')]
@@ -44,6 +43,7 @@ def createDocPage(dbRows, docPage):
 		if bc != TARGET_CLASS or oc != TARGET_CLASS:
 			print 'Warning: some rows in the db are not related to ' + TARGET_CLASS + ': ' + row
 			continue
+		if TARGET_CLASS + '(' == sig[:len(TARGET_CLASS) + 1]: continue # Ignore constructors
 		if 'operator ' in sig: continue
 		if sig in sigSet: continue
 		sigSet[sig] = bn + '::' + on
@@ -52,11 +52,11 @@ def createDocPage(dbRows, docPage):
 		else: warnings.warn('Class found that is neither in OMR nor J9: ' + bn + ' --> ' + on, Warning)
 
 	if isFirstUse:	
-		docPage.write('# Functions to virtualize')
+		docPage.write('# Functions to virtualize\n')
 		isFirstUse = 0
 	i = 0
 	for sig in sigSet:
-		docPage.write(str(i) + ". " + sig + "\n")
+		docPage.write(str(i+1) + ". " + sig + "\n")
 		i += 1
 	return sigSet
 

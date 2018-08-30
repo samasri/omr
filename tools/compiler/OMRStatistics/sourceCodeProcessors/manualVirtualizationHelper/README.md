@@ -46,6 +46,7 @@ WHERE bc.isExtensible = 1 and oc.isExtensible = 1 and bf.isVirtual = 0 and of.is
 # Cases supported by MVH
 
 ## General
+* Constructors are ignored
 * Function overloads are checked in header files, if a function is defined more than once in the same file (that is, in the same class of the same namespace) it considered overloaded
 * Ignored functions are printed to a file whose path is specified in the configuration
 
