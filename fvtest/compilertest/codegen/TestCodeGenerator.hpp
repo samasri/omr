@@ -37,7 +37,7 @@ namespace TestCompiler { typedef CodeGenerator CodeGeneratorConnector; }
 namespace TestCompiler
 {
 
-class OMR_EXTENSIBLE CodeGenerator : public OMR::CodeGeneratorConnector
+class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGeneratorConnector
    {
    public:
 

@@ -26,7 +26,7 @@
 
 namespace TR
 {
-class OMR_EXTENSIBLE CodeGenerator : public ::TestCompiler::CodeGeneratorConnector
+class /*OMR_EXTENSIBLE*/ CodeGenerator : public ::TestCompiler::CodeGeneratorConnector
    {
    public:
 
