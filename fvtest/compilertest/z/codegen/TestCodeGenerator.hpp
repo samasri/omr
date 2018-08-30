@@ -45,7 +45,7 @@ namespace TestCompiler
 namespace Z
 {
 
-class OMR_EXTENSIBLE CodeGenerator : public TestCompiler::CodeGenerator
+class /*OMR_EXTENSIBLE*/ CodeGenerator : public TestCompiler::CodeGenerator
    {
    public:
 
