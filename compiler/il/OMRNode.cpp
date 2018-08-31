@@ -1810,7 +1810,7 @@ OMR::Node::duplicateTree_DEPRECATED(bool duplicateChildren)
          }
       else
          {
-         newRoot->setGlobalRegisterNumber(getGlobalRegisterNumber());
+         newRoot->setGlobalRegisterNumber(self()->getGlobalRegisterNumber());
          }
       }
 
