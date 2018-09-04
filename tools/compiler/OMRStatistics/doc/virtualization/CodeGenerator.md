@@ -206,3 +206,7 @@
 
 # Functions provided with empty implementation
 * OMR::X86::CodeGenerator::generateSwitchToInterpreterPrePrologue(TR::Instruction *prev, uint8_t alignment, uint8_t alignmentMargin)
+
+# Problematic functions
+* createLinkage(enum TR_LinkageConventions)
+* createLinkageForCompilation()
