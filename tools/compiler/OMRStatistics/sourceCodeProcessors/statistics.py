@@ -22,7 +22,7 @@ for row in f:
 	hierarchies.append(classes)
 
 # Takes a CSV file (delimiter = '\t') that has |namespace|ClassName|Signature|
-# Returs a map between each class and all the signatures in its hierarchies
+# Returns a map between each class and all the signatures in its hierarchies
 # ignoredClasses is an out parameter
 # Assumes that hierarchies is a global variable representing all the known hierarchies 
 def getClassSigs(file, ignoredClasses):
