@@ -1,0 +1,15 @@
+# Functions to virtualize
+1. createUnresolvedDataSnippetForiaload(TR::Node *,TR::CodeGenerator *,TR::SymbolReference *,TR::Register *,_Bool &)
+2. typeNeedsAlignment(TR::Node *)
+3. createUnresolvedDataSnippet(TR::Node *,TR::CodeGenerator *,TR::SymbolReference *,TR::Register *,_Bool)
+4. addInstrSpecificRelocation(TR::CodeGenerator *,TR::Instruction *,int32_t,uint8_t *)
+5. createPatchableDataInLitpool(TR::Node *,TR::CodeGenerator *,TR::Register *,TR::UnresolvedDataSnippet *)
+6. createUnresolvedDataSnippetForBaseNode(TR::CodeGenerator *,TR::Register *)
+7. createUnresolvedSnippetWithNodeRegister(TR::Node *,TR::CodeGenerator *,TR::SymbolReference *,TR::Register *&)
+8. setMemRefAndGetUnresolvedData(TR::Snippet *&)
+9. getAddressRegister()
+10. symRefHasTemporaryNegativeOffset()
+
+# Ignored Functions (because they are static)
+1. jitPersistentFree(void *)
+2. jitPersistentAlloc(size_t)
