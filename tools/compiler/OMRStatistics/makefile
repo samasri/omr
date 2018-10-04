@@ -49,7 +49,7 @@ include tests.mk
 
 #Running on all architectures
 ARCHS = amd64 i386 p z
-OUTPUTS = hierarchy weirdHierarchy allClasses allFunctions overrides functionLocation avg functionCalls
+OUTPUTS = hierarchy interNamespaceHierarchy allClasses allFunctions overrides functionLocation avg functionCalls
 
 # These variables have to be changed/overridden based on the parent project that OMRStatistics is analyzing.
 JIT_OMR_DIRTY_DIR ?= $(OMR)/compiler
@@ -132,7 +132,7 @@ trimOutput:
 
 createTotalOutput:
 	@echo "Producing output from all archs..."
-	@rm -f hierarchy weirdHierarchy overloads allFunctions overrides
+	@rm -f hierarchy interNamespaceHierarchy overloads allFunctions overrides
 	@for file in $(ARCHS) ; do \
 		for output in $(OUTPUTS); do \
 			cat output/"$$file".$$output >> output/$$output ; \

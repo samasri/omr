@@ -835,7 +835,7 @@ void OMRStatistics::HMConsumer::printHierarchy(std::string history, LinkedNode* 
 	if(parents->size() == 0) *out << history.substr(0, history.size() - 5) << "\n";
 }
 
-void OMRStatistics::HMConsumer::printWeirdHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printInterNamespaceHierarchies(HMRecorder& recorder, llvm::raw_ostream* out) {
 	*out << "childClassName(isExtensible) --> parentClassName(isExtensible)\n";
 	std::map<std::string, bool> isExtensible = recorder.getIsExtensible();
 	for(auto clas : recorder.getClassHierarchy()) {
@@ -872,7 +872,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
 	
-	std::vector<std::string> outputFiles = {"hierarchy", "weirdHierarchy", "allClasses", "overloads", "allFunctions", "functionLocation", "overrides", "avg", "functionCalls"};
+	std::vector<std::string> outputFiles = {"hierarchy", "interNamespaceHierarchy", "allClasses", "overloads", "allFunctions", "functionLocation", "overrides", "avg", "functionCalls"};
 	std::vector<llvm::raw_ostream*>* outputs = new std::vector<llvm::raw_ostream*>();
 	
 	bool useLLVMOuts = true;
@@ -890,7 +890,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	
 	if(conf.hierarchy)  {
 		printHierarchies(recorder, outputs->at(0)/*hierarchyOutput*/);
-		printWeirdHierarchies(recorder, outputs->at(1)/*weirdHierarchyOutput*/);
+		printInterNamespaceHierarchies(recorder, outputs->at(1)/*InterNamespaceHierarchyOutput*/);
 		printAllClasses(recorder, outputs->at(2)/*allClassesOutput*/);
 	}
 	if(conf.overloading) {
