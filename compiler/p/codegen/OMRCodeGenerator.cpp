@@ -122,6 +122,12 @@ OMR::Power::CodeGenerator::CodeGenerator() :
      conversionBuffer(NULL),
      _outOfLineCodeSectionList(getTypedAllocator<TR_PPCOutOfLineCodeSection*>(self()->comp()->allocator()))
    {
+   
+   }
+
+void
+OMR::Power::CodeGenerator::continueConstruction()
+   {
    // Initialize Linkage for Code Generator
    self()->initializeLinkage();
 

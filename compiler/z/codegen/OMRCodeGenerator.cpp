@@ -549,6 +549,12 @@ OMR::Z::CodeGenerator::CodeGenerator()
    TR::Compilation *comp = self()->comp();
    _cgFlags = 0;
 
+   
+   }
+
+void
+OMR::Z::CodeGenerator::continueConstruction()
+   {
    // Initialize Linkage for Code Generator
    self()->initializeLinkage();
 

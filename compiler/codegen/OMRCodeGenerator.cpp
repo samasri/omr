@@ -294,6 +294,12 @@ OMR::CodeGenerator::CodeGenerator() :
    self()->setIsLeafMethod();
    }
 
+void
+OMR::CodeGenerator::continueConstruction()
+   {
+   return;
+   }
+
 TR_StackMemory
 OMR::CodeGenerator::trStackMemory()
    {
