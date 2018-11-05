@@ -60,7 +60,13 @@
 OMR::X86::I386::CodeGenerator::CodeGenerator() :
    OMR::X86::CodeGenerator()
    {
-   // Common X86 initialization
+
+   }
+
+void
+OMR::X86::I386::CodeGenerator::continueConstruction()
+   {
+	// Common X86 initialization
    //
    self()->initialize( self()->comp() );
 
@@ -119,8 +125,7 @@ OMR::X86::I386::CodeGenerator::CodeGenerator() :
    static char *dontConsiderAllAutosForGRA = feGetEnv("TR_dontConsiderAllAutosForGRA");
    if (!dontConsiderAllAutosForGRA)
       self()->setConsiderAllAutosAsTacticalGlobalRegisterCandidates();
-
-   }
+}
 
 
 TR::Register *

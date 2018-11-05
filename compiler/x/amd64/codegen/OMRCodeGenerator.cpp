@@ -86,7 +86,13 @@ OMR::X86::AMD64::CodeGenerator::CodeGenerator() :
    if (self()->comp()->getOption(TR_MimicInterpreterFrameShape))
       self()->setMapAutosTo8ByteSlots();
 
-   // Common X86 initialization
+   
+   }
+
+void
+OMR::X86::AMD64::CodeGenerator::continueConstruction()
+   {
+	// Common X86 initialization
    //
    self()->initialize(self()->comp());
 

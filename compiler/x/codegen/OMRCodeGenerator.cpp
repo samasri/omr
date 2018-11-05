@@ -500,6 +500,12 @@ OMR::X86::CodeGenerator::CodeGenerator() :
    {
    _clobIterator = _clobberingInstructions.begin();
    }
+   
+void
+OMR::X86::CodeGenerator::continueConstruction()
+   {
+   return;
+   }
 
 TR::Linkage *
 OMR::X86::CodeGenerator::createLinkage(TR_LinkageConventions lc)
