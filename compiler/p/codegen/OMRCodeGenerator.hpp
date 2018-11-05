@@ -162,6 +162,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGenerator
    TR_BackingStore * allocateStackSlot();
 
    CodeGenerator();
+   void continueConstruction();
 
    TR::Linkage *createLinkage(TR_LinkageConventions lc);
 
