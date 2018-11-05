@@ -55,6 +55,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::X86::CodeGenerator
    public:
 
    CodeGenerator();
+   void continueConstruction();
 
    virtual TR::Register *longClobberEvaluate(TR::Node *node);
 

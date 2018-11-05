@@ -585,6 +585,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGenerator
    protected:
 
    CodeGenerator();
+   void continueConstruction();
 
    // Note: the following should be called by subclasses near the end of their
    // constructors.  This breaks a rather nasty cyclic initialization dependency,
