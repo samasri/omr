@@ -186,7 +186,9 @@ OMR::Compilation::getHotnessName(TR_Hotness h)
 
 static TR::CodeGenerator * allocateCodeGenerator(TR::Compilation * comp)
    {
-   return new (comp->trHeapMemory()) TR::CodeGenerator();
+   TR::CodeGenerator* result = new (comp->trHeapMemory()) TR::CodeGenerator();
+   result->continueConstruction();
+   return result;
    }
 
 
