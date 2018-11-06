@@ -546,8 +546,6 @@ OMR::Z::CodeGenerator::CodeGenerator()
      _ccInstruction(NULL),
      _previouslyAssignedTo(self()->comp()->allocator("LocalRA"))
    {
-   TR::Compilation *comp = self()->comp();
-   _cgFlags = 0;
 
    
    }
@@ -555,6 +553,8 @@ OMR::Z::CodeGenerator::CodeGenerator()
 void
 OMR::Z::CodeGenerator::continueConstruction()
    {
+   TR::Compilation *comp = self()->comp();
+   _cgFlags = 0;
    // Initialize Linkage for Code Generator
    self()->initializeLinkage();
 
