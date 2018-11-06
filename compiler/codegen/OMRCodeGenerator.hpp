@@ -616,8 +616,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    // Linkage
    //
    void initializeLinkage();
-   TR::Linkage *createLinkage(TR_LinkageConventions lc);
-   TR::Linkage *createLinkageForCompilation();
+   virtual TR::Linkage *createLinkage(TR_LinkageConventions lc);
+   virtual TR::Linkage *createLinkageForCompilation();
 
    TR::Linkage *getLinkage() {return _bodyLinkage;}
    TR::Linkage *setLinkage(TR::Linkage * l) {return (_bodyLinkage = l);}

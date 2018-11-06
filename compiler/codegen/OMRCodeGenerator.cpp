@@ -1049,7 +1049,7 @@ OMR::CodeGenerator::getLinkage(TR_LinkageConventions lc)
    if (lc == TR_None)
       return NULL;
    else
-      return _linkages[lc] ? _linkages[lc] : self()->createLinkage(lc);
+      return _linkages[lc] ? _linkages[lc] : createLinkage(lc);
    }
 
 void OMR::CodeGenerator::initializeLinkage()
@@ -1058,8 +1058,8 @@ void OMR::CodeGenerator::initializeLinkage()
    // Allow the project/GlobalCompilationInfo to set the body linkage
    // Expect to call once during initialization
    //
-   linkage = self()->createLinkageForCompilation();
-   linkage = linkage ? linkage : self()->createLinkage(self()->comp()->getJittedMethodSymbol()->getLinkageConvention());
+   linkage = createLinkageForCompilation();
+   linkage = linkage ? linkage : createLinkage(self()->comp()->getJittedMethodSymbol()->getLinkageConvention());
    self()->setLinkage(linkage);
    }
 
