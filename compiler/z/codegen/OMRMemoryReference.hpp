@@ -156,7 +156,7 @@ MemoryReference(MemoryReference& mr, int32_t n, TR::CodeGenerator *cg);
 /** @return true if instr needs to be adjusted for long displacement */
 static bool needsAdjustDisp(TR::Instruction * instr, MemoryReference * mRef, TR::CodeGenerator * cg);
 static bool canUseTargetRegAsScratchReg (TR::Instruction * instr);
-static bool typeNeedsAlignment(TR::Node *node);
+virtual static bool typeNeedsAlignment(TR::Node *node);
 static bool shouldLabelForRAS(TR::SymbolReference * symRef,  TR::CodeGenerator * cg);
 int32_t calcDisplacement(uint8_t * cursor, TR::Instruction * instr, TR::CodeGenerator * cg);
 int32_t getRightAlignmentBump(TR::Instruction * instr, TR::CodeGenerator * cg);
@@ -164,7 +164,7 @@ int32_t getLeftAlignmentBump(TR::Instruction * instr, TR::CodeGenerator * cg);
 int32_t getSizeIncreaseBump(TR::Instruction * instr, TR::CodeGenerator * cg);
 
 /** Project specific relocations for specific instructions */
-void addInstrSpecificRelocation(TR::CodeGenerator* cg, TR::Instruction* instr, int32_t disp, uint8_t * cursor) {} //J9 AOT only for now
+virtual void addInstrSpecificRelocation(TR::CodeGenerator* cg, TR::Instruction* instr, int32_t disp, uint8_t * cursor) {} //J9 AOT only for now
 
 bool setForceFoldingIfAdvantageous(TR::CodeGenerator * cg, TR::Node * addressChild);
 bool tryBaseIndexDispl(TR::CodeGenerator* cg, TR::Node* loadStore, TR::Node* addressChild);
@@ -417,15 +417,15 @@ const char *getName()              {return _name; }
 void tryForceFolding(TR::Node * rootLoadOrStore, TR::CodeGenerator * cg, TR_StorageReference *storageReference, TR::SymbolReference *& symRef, TR::Symbol *& symbol,
                      List<TR::Node>& nodesAlreadyEvaluatedBeforeFoldingList) {}
 
-TR::UnresolvedDataSnippet * createUnresolvedDataSnippet(TR::Node * node, TR::CodeGenerator * cg, TR::SymbolReference * symRef, TR::Register * tempReg, bool isStore) {return NULL;}
-TR::UnresolvedDataSnippet * createUnresolvedDataSnippetForiaload(TR::Node * node, TR::CodeGenerator * cg, TR::SymbolReference * symRef, TR::Register * tempReg, bool & isStore) {return NULL;}
-void createUnresolvedSnippetWithNodeRegister(TR::Node * node, TR::CodeGenerator * cg, TR::SymbolReference * symRef, TR::Register *& writableLiteralPoolRegister) {}
-void createUnresolvedDataSnippetForBaseNode(TR::CodeGenerator * cg, TR::Register * writableLiteralPoolRegister) {}
+virtual TR::UnresolvedDataSnippet * createUnresolvedDataSnippet(TR::Node * node, TR::CodeGenerator * cg, TR::SymbolReference * symRef, TR::Register * tempReg, bool isStore) {return NULL;}
+virtual TR::UnresolvedDataSnippet * createUnresolvedDataSnippetForiaload(TR::Node * node, TR::CodeGenerator * cg, TR::SymbolReference * symRef, TR::Register * tempReg, bool & isStore) {return NULL;}
+virtual void createUnresolvedSnippetWithNodeRegister(TR::Node * node, TR::CodeGenerator * cg, TR::SymbolReference * symRef, TR::Register *& writableLiteralPoolRegister) {}
+virtual void createUnresolvedDataSnippetForBaseNode(TR::CodeGenerator * cg, TR::Register * writableLiteralPoolRegister) {}
 
-void createPatchableDataInLitpool(TR::Node * node, TR::CodeGenerator * cg, TR::Register * tempReg, TR::UnresolvedDataSnippet * uds) {}
+virtual void createPatchableDataInLitpool(TR::Node * node, TR::CodeGenerator * cg, TR::Register * tempReg, TR::UnresolvedDataSnippet * uds) {}
 
-bool symRefHasTemporaryNegativeOffset() {return false;}
-void setMemRefAndGetUnresolvedData(TR::Snippet *& snippet) {}
+virtual bool symRefHasTemporaryNegativeOffset() {return false;}
+virtual void setMemRefAndGetUnresolvedData(TR::Snippet *& snippet) {}
 };
 }
 }

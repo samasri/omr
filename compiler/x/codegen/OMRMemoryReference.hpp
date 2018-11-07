@@ -225,7 +225,7 @@ class /*OMR_EXTENSIBLE*/ MemoryReference : public OMR::MemoryReference
 
    TR::Node *getIndexNode()            {return _indexNode;}
    TR::Node *setIndexNode(TR::Node *in) {return (_indexNode = in);}
-   TR::Register *getAddressRegister(){ return NULL; }
+   virtual TR::Register *getAddressRegister(){ return NULL; }
    intptrj_t getDisplacement();
 
    // An unresolved data snippet, unresolved virtual call snippet, and constant data snippet are mutually exclusive for

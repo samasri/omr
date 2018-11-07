@@ -612,7 +612,7 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
 
       if (self()->getBaseRegister() && self()->getIndexRegister())
          {
-         TR::Instruction  *addressAddInstruction = generateRegRegInstruction(addressLoadInstruction, ADD8RegReg, self()->getAddressRegister(), self()->getBaseRegister(), cg);
+         TR::Instruction  *addressAddInstruction = generateRegRegInstruction(addressLoadInstruction, ADD8RegReg, getAddressRegister(), self()->getBaseRegister(), cg);
          cursor = addressAddInstruction->generateBinaryEncoding();
          cg->setBinaryBufferCursor(cursor);
          }

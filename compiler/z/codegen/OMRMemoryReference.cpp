@@ -550,7 +550,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
 
          if (symRef->isUnresolved())
             {
-            self()->createUnresolvedDataSnippetForiaload(rootLoadOrStore, cg, symRef, tempReg, isStore);
+            createUnresolvedDataSnippetForiaload(rootLoadOrStore, cg, symRef, tempReg, isStore);
             }
          else
             {
@@ -575,7 +575,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
          }
       if (symRef && symRef->isUnresolved())
          {
-         self()->createUnresolvedDataSnippet(rootLoadOrStore, cg, symRef, tempReg, isStore);
+         createUnresolvedDataSnippet(rootLoadOrStore, cg, symRef, tempReg, isStore);
          }
 
       // indexRegister may setup in populateMemoryReference to hold the address for the load/store
@@ -600,8 +600,8 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
          // symbol is unresolved
          if (symRef && symRef->isUnresolved())
             {
-            TR::UnresolvedDataSnippet * uds = self()->createUnresolvedDataSnippet(rootLoadOrStore, cg, symRef, tempReg, isStore);
-            self()->createPatchableDataInLitpool(rootLoadOrStore, cg, tempReg, uds);
+            TR::UnresolvedDataSnippet * uds = createUnresolvedDataSnippet(rootLoadOrStore, cg, symRef, tempReg, isStore);
+            createPatchableDataInLitpool(rootLoadOrStore, cg, tempReg, uds);
             }
          else
             {
@@ -787,12 +787,12 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * node, TR::SymbolReference * 
 
    if (symRef->isUnresolved())
       {
-      self()->createUnresolvedSnippetWithNodeRegister(node, cg, symRef, writableLiteralPoolRegister);
+      createUnresolvedSnippetWithNodeRegister(node, cg, symRef, writableLiteralPoolRegister);
       }
 
    if (_baseNode != NULL && _baseNode->getOpCodeValue() == TR::loadaddr && self()->getUnresolvedSnippet() != NULL)
       {
-      self()->createUnresolvedDataSnippetForBaseNode(cg, writableLiteralPoolRegister);
+      createUnresolvedDataSnippetForBaseNode(cg, writableLiteralPoolRegister);
       }
 
    _indexRegister = NULL;
@@ -1953,7 +1953,7 @@ OMR::Z::MemoryReference::consolidateRegisters(TR::Node * node, TR::CodeGenerator
 bool OMR::Z::MemoryReference::ignoreNegativeOffset()
    {
    if (_offset < 0 &&
-       (self()->hasTemporaryNegativeOffset() || self()->symRefHasTemporaryNegativeOffset()))
+       (self()->hasTemporaryNegativeOffset() || symRefHasTemporaryNegativeOffset()))
       {
       return true;
       }
@@ -2466,7 +2466,7 @@ OMR::Z::MemoryReference::getSnippet()
 
    if (self()->getUnresolvedSnippet() != NULL)
       {
-      self()->setMemRefAndGetUnresolvedData(snippet);
+      setMemRefAndGetUnresolvedData(snippet);
       }
    else if (self()->getConstantDataSnippet() != NULL)
       {
@@ -2939,7 +2939,7 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
    int32_t displacement = self()->calcDisplacement(cursor, instr, cg);
 
    //add project specific relocations for specific instructions
-   self()->addInstrSpecificRelocation(cg, instr, displacement, cursor);
+   addInstrSpecificRelocation(cg, instr, displacement, cursor);
 
    // We may end up "upgrading" the instruction in case of long displacement, so this variable may change
    auto instructionFormat = instr->getKind();
