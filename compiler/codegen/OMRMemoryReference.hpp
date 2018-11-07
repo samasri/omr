@@ -39,7 +39,7 @@ namespace TR { class MemoryReference; }
 namespace OMR
 {
 
-class OMR_EXTENSIBLE MemoryReference
+class /*OMR_EXTENSIBLE*/ MemoryReference
    {
    public:
 

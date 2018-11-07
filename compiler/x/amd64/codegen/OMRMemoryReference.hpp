@@ -51,7 +51,7 @@ namespace X86
 namespace AMD64
 {
 
-class OMR_EXTENSIBLE MemoryReference : public OMR::X86::MemoryReference
+class /*OMR_EXTENSIBLE*/ MemoryReference : public OMR::X86::MemoryReference
    {
 
    TR::Register *_addressRegister;   // Used when extra loads are required to compute the address

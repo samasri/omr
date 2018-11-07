@@ -59,7 +59,7 @@ namespace OMR
 namespace Power
 {
 
-class OMR_EXTENSIBLE MemoryReference : public OMR::MemoryReference
+class /*OMR_EXTENSIBLE*/ MemoryReference : public OMR::MemoryReference
    {
    TR::Register *_baseRegister;
    TR::Node *_baseNode;

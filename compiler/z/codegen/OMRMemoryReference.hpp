@@ -90,7 +90,7 @@ namespace OMR
 namespace Z
 {
 
-class OMR_EXTENSIBLE MemoryReference : public OMR::MemoryReference
+class /*OMR_EXTENSIBLE*/ MemoryReference : public OMR::MemoryReference
 {
 TR::Register              *_baseRegister;
 

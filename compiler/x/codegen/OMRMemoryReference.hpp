@@ -82,7 +82,7 @@ namespace OMR
 namespace X86
 {
 
-class OMR_EXTENSIBLE MemoryReference : public OMR::MemoryReference
+class /*OMR_EXTENSIBLE*/ MemoryReference : public OMR::MemoryReference
    {
 
    protected:

@@ -26,7 +26,7 @@
 
 namespace TR
 {
-class OMR_EXTENSIBLE MemoryReference : public OMR::MemoryReferenceConnector
+class /*OMR_EXTENSIBLE*/ MemoryReference : public OMR::MemoryReferenceConnector
    {
    public:
 
