@@ -512,8 +512,6 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::CodeGenerator
       DummyLastFlag
       };
 
-   void initialize();
-
    TR_BitVector *computeCallInfoBitVector();
 
 
