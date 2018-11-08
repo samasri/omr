@@ -156,7 +156,7 @@ MemoryReference(MemoryReference& mr, int32_t n, TR::CodeGenerator *cg);
 /** @return true if instr needs to be adjusted for long displacement */
 static bool needsAdjustDisp(TR::Instruction * instr, MemoryReference * mRef, TR::CodeGenerator * cg);
 static bool canUseTargetRegAsScratchReg (TR::Instruction * instr);
-virtual static bool typeNeedsAlignment(TR::Node *node);
+static bool typeNeedsAlignment(TR::Node *node);
 static bool shouldLabelForRAS(TR::SymbolReference * symRef,  TR::CodeGenerator * cg);
 int32_t calcDisplacement(uint8_t * cursor, TR::Instruction * instr, TR::CodeGenerator * cg);
 int32_t getRightAlignmentBump(TR::Instruction * instr, TR::CodeGenerator * cg);
