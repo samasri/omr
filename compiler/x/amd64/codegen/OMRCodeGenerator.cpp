@@ -90,7 +90,7 @@ OMR::X86::AMD64::CodeGenerator::CodeGenerator() :
    }
 
 void
-OMR::X86::AMD64::CodeGenerator::continueConstruction()
+OMR::X86::AMD64::CodeGenerator::initialize()
    {
 	// Common X86 initialization
    //

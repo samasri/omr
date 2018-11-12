@@ -64,7 +64,7 @@ OMR::X86::I386::CodeGenerator::CodeGenerator() :
    }
 
 void
-OMR::X86::I386::CodeGenerator::continueConstruction()
+OMR::X86::I386::CodeGenerator::initialize()
    {
 	// Common X86 initialization
    //

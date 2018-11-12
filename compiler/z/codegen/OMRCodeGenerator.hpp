@@ -240,7 +240,7 @@ public:
    void lowerTreesPropagateBlockToNode(TR::Node *node);
 
    CodeGenerator();
-   void continueConstruction();
+   void initialize();
    TR::Linkage *createLinkage(TR_LinkageConventions lc);
 
    bool anyNonConstantSnippets();

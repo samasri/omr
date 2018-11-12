@@ -126,7 +126,7 @@ OMR::Power::CodeGenerator::CodeGenerator() :
    }
 
 void
-OMR::Power::CodeGenerator::continueConstruction()
+OMR::Power::CodeGenerator::initialize()
    {
    // Initialize Linkage for Code Generator
    self()->initializeLinkage();
