@@ -58,6 +58,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator : public OMR::X86::CodeGenerator
 
    CodeGenerator();
    void initialize();
+	 using OMR::X86::CodeGenerator::initialize; // undo name hiding of initialize(TR::Compilation *)
 
    virtual TR::Register *longClobberEvaluate(TR::Node *node);
 
