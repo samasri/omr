@@ -1645,7 +1645,7 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    protected:
 
    CodeGenerator();
-   void continueConstruction();
+   void initializeConstruction();
 
    enum // _flags1
       {

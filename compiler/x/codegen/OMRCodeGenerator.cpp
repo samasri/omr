@@ -502,7 +502,7 @@ OMR::X86::CodeGenerator::CodeGenerator() :
    }
    
 void
-OMR::X86::CodeGenerator::continueConstruction()
+OMR::X86::CodeGenerator::initializeConstruction()
    {
    return;
    }

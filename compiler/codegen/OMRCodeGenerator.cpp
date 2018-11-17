@@ -295,7 +295,7 @@ OMR::CodeGenerator::CodeGenerator() :
    }
 
 void
-OMR::CodeGenerator::continueConstruction()
+OMR::CodeGenerator::initializeConstruction()
    {
    return;
    }

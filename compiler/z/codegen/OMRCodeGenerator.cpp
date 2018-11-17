@@ -551,7 +551,7 @@ OMR::Z::CodeGenerator::CodeGenerator()
    }
 
 void
-OMR::Z::CodeGenerator::continueConstruction()
+OMR::Z::CodeGenerator::initializeConstruction()
    {
    TR::Compilation *comp = self()->comp();
    _cgFlags = 0;
