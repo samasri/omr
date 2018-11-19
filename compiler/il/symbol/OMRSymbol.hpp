@@ -73,7 +73,7 @@ namespace OMR {
  * A Symbol object contains data type, size and attribute
  * information for a symbol.
  */
-class OMR_EXTENSIBLE Symbol
+class /*OMR_EXTENSIBLE*/ Symbol
    {
 
 public:

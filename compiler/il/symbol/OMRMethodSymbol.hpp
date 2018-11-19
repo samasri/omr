@@ -48,7 +48,7 @@ namespace OMR
 /**
  * Symbol for methods, along with information about the method
  */
-class OMR_EXTENSIBLE MethodSymbol : public TR::Symbol
+class /*OMR_EXTENSIBLE*/ MethodSymbol : public TR::Symbol
    {
 
 protected:

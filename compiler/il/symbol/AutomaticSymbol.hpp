@@ -32,7 +32,7 @@ namespace TR { class Compilation; }
 namespace TR
 {
 
-class OMR_EXTENSIBLE AutomaticSymbol : public OMR::AutomaticSymbolConnector
+class /*OMR_EXTENSIBLE*/ AutomaticSymbol : public OMR::AutomaticSymbolConnector
    {
 
 protected:

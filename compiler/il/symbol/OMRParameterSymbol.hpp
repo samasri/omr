@@ -43,7 +43,7 @@ namespace TR { class ParameterSymbol; }
 namespace OMR
 {
 
-class OMR_EXTENSIBLE ParameterSymbol : public TR::RegisterMappedSymbol
+class /*OMR_EXTENSIBLE*/ ParameterSymbol : public TR::RegisterMappedSymbol
    {
 
 protected:

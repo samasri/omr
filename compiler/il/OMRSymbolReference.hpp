@@ -80,7 +80,7 @@ namespace OMR
  *
  * \see Symbol
  */
-class OMR_EXTENSIBLE SymbolReference
+class /*OMR_EXTENSIBLE*/ SymbolReference
    {
 
 public:

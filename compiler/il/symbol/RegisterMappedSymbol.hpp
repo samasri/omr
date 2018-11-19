@@ -30,7 +30,7 @@
 namespace TR
 {
 
-class OMR_EXTENSIBLE RegisterMappedSymbol : public OMR::RegisterMappedSymbolConnector
+class /*OMR_EXTENSIBLE*/ RegisterMappedSymbol : public OMR::RegisterMappedSymbolConnector
    {
 
 protected:

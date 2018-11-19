@@ -71,7 +71,7 @@ namespace OMR
 /**
  * Class for resolved method symbols
  */
-class OMR_EXTENSIBLE ResolvedMethodSymbol : public TR::MethodSymbol
+class /*OMR_EXTENSIBLE*/ ResolvedMethodSymbol : public TR::MethodSymbol
    {
 
 protected:

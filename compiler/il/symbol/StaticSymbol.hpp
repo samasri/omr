@@ -33,7 +33,7 @@
 namespace TR
 {
 
-class OMR_EXTENSIBLE StaticSymbol : public OMR::StaticSymbolConnector
+class /*OMR_EXTENSIBLE*/ StaticSymbol : public OMR::StaticSymbolConnector
    {
 
 protected:

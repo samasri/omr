@@ -32,7 +32,7 @@ class TR_Method;
 namespace TR
 {
 
-class OMR_EXTENSIBLE MethodSymbol : public OMR::MethodSymbolConnector
+class /*OMR_EXTENSIBLE*/ MethodSymbol : public OMR::MethodSymbolConnector
    {
 
 protected:

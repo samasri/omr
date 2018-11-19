@@ -49,7 +49,7 @@ namespace TR { class SymbolReference; }
 namespace OMR
 {
 
-class OMR_EXTENSIBLE AutomaticSymbol : public TR::RegisterMappedSymbol
+class /*OMR_EXTENSIBLE*/ AutomaticSymbol : public TR::RegisterMappedSymbol
    {
 
 public:

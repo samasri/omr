@@ -62,7 +62,7 @@ namespace OMR
  *
  * \todo Concept doesn't have the best name, and should likely be renamed
  */
-class OMR_EXTENSIBLE RegisterMappedSymbol : public TR::Symbol
+class /*OMR_EXTENSIBLE*/ RegisterMappedSymbol : public TR::Symbol
    {
 
 protected:

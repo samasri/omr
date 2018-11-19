@@ -55,7 +55,7 @@
 namespace TR
 {
 
-class OMR_EXTENSIBLE Symbol : public OMR::SymbolConnector
+class /*OMR_EXTENSIBLE*/ Symbol : public OMR::SymbolConnector
    {
 
 public:

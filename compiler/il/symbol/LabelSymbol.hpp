@@ -29,7 +29,7 @@ namespace TR { class CodeGenerator; }
 
 namespace TR {
 
-class OMR_EXTENSIBLE LabelSymbol : public OMR::LabelSymbolConnector
+class /*OMR_EXTENSIBLE*/ LabelSymbol : public OMR::LabelSymbolConnector
    {
 
 protected:
