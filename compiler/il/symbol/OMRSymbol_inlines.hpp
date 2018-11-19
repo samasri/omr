@@ -74,13 +74,13 @@ TR::AutomaticSymbol * OMR::Symbol::castToLocalObjectSymbol()
 
 TR::StaticSymbol * OMR::Symbol::castToStaticSymbol()
    {
-   TR_ASSERT(self()->isStatic(), "OMR::Symbol::castToStaticSymbol, symbol is not a static symbol");
+   TR_ASSERT(isStatic(), "OMR::Symbol::castToStaticSymbol, symbol is not a static symbol");
    return (TR::StaticSymbol *)this;
    }
 
 TR::StaticSymbol * OMR::Symbol::castToNamedStaticSymbol()
    {
-   TR_ASSERT(self()->isNamed() && self()->isStatic(), "OMR::Symbol::castToNamedStaticSymbol, symbol is not a named static symbol");
+   TR_ASSERT(self()->isNamed() && isStatic(), "OMR::Symbol::castToNamedStaticSymbol, symbol is not a named static symbol");
    return (TR::StaticSymbol *)this;
    }
 
@@ -158,7 +158,7 @@ OMR::Symbol::isInternalPointerAuto()
 bool
 OMR::Symbol::isNamed()
    {
-   return self()->isStatic() && _flags.testAny(IsNamed);
+   return isStatic() && _flags.testAny(IsNamed);
    }
 
 void
@@ -314,111 +314,111 @@ OMR::Symbol::isReinstatedReceiver()
 void
 OMR::Symbol::setConstString()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags.set(ConstString);
    }
 
 bool
 OMR::Symbol::isConstString()
    {
-   return self()->isStatic() && _flags.testAny(ConstString);
+   return isStatic() && _flags.testAny(ConstString);
    }
 
 void
 OMR::Symbol::setConstantDynamic()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags2.set(ConstantDynamic);
    }
 
 bool
 OMR::Symbol::isConstantDynamic()
    {
-   return self()->isStatic() && _flags2.testAny(ConstantDynamic);
+   return isStatic() && _flags2.testAny(ConstantDynamic);
    }
 
 void
 OMR::Symbol::setAddressIsCPIndexOfStatic(bool b)
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags.set(AddressIsCPIndexOfStatic, b);
    }
 
 bool
 OMR::Symbol::addressIsCPIndexOfStatic()
    {
-   return self()->isStatic() && _flags.testAny(AddressIsCPIndexOfStatic);
+   return isStatic() && _flags.testAny(AddressIsCPIndexOfStatic);
    }
 
 bool
 OMR::Symbol::isRecognizedStatic()
    {
-   return self()->isStatic() && _flags.testAny(RecognizedStatic);
+   return isStatic() && _flags.testAny(RecognizedStatic);
    }
 
 void
 OMR::Symbol::setCompiledMethod()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags.set(CompiledMethod);
    }
 
 bool
 OMR::Symbol::isCompiledMethod()
    {
-   return self()->isStatic() && _flags.testAny(CompiledMethod);
+   return isStatic() && _flags.testAny(CompiledMethod);
    }
 
 void
 OMR::Symbol::setStartPC()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags.set(StartPC);
    }
 
 bool
 OMR::Symbol::isStartPC()
    {
-   return self()->isStatic() && _flags.testAny(StartPC);
+   return isStatic() && _flags.testAny(StartPC);
    }
 
 void
 OMR::Symbol::setCountForRecompile()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags.set(CountForRecompile);
    }
 
 bool
 OMR::Symbol::isCountForRecompile()
    {
-   return self()->isStatic() && _flags.testAny(CountForRecompile);
+   return isStatic() && _flags.testAny(CountForRecompile);
    }
 
 void
 OMR::Symbol::setRecompilationCounter()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags.set(RecompilationCounter);
    }
 
 bool
 OMR::Symbol::isRecompilationCounter()
    {
-   return self()->isStatic() && _flags.testAny(RecompilationCounter);
+   return isStatic() && _flags.testAny(RecompilationCounter);
    }
 
 void
 OMR::Symbol::setGCRPatchPoint()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags.set(GCRPatchPoint);
    }
 
 bool
 OMR::Symbol::isGCRPatchPoint()
    {
-   return self()->isStatic() && _flags.testAny(GCRPatchPoint);
+   return isStatic() && _flags.testAny(GCRPatchPoint);
    }
 
 bool
@@ -623,39 +623,39 @@ OMR::Symbol::isRelativeLabel()
 void
 OMR::Symbol::setConstMethodType()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags2.set(ConstMethodType);
    }
 
 bool
 OMR::Symbol::isConstMethodType()
    {
-   return self()->isStatic() && _flags2.testAny(ConstMethodType);
+   return isStatic() && _flags2.testAny(ConstMethodType);
    }
 
 void
 OMR::Symbol::setConstMethodHandle()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags2.set(ConstMethodHandle);
    }
 
 bool
 OMR::Symbol::isConstMethodHandle()
    {
-   return self()->isStatic() && _flags2.testAny(ConstMethodHandle);
+   return isStatic() && _flags2.testAny(ConstMethodHandle);
    }
 
 bool
 OMR::Symbol::isConstObjectRef()
    {
-   return self()->isStatic() && (_flags.testAny(ConstString) || _flags2.testAny(ConstMethodType|ConstMethodHandle|ConstantDynamic));
+   return isStatic() && (_flags.testAny(ConstString) || _flags2.testAny(ConstMethodType|ConstMethodHandle|ConstantDynamic));
    }
 
 bool
 OMR::Symbol::isStaticField()
    {
-   return self()->isStatic() && !(self()->isConstObjectRef() || self()->isClassObject() || self()->isAddressOfClassObject() || self()->isConst());
+   return isStatic() && !(self()->isConstObjectRef() || self()->isClassObject() || self()->isAddressOfClassObject() || self()->isConst());
    }
 
 bool
@@ -667,40 +667,40 @@ OMR::Symbol::isFixedObjectRef()
 void
 OMR::Symbol::setCallSiteTableEntry()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags2.set(CallSiteTableEntry);
    }
 
 bool
 OMR::Symbol::isCallSiteTableEntry()
    {
-   return self()->isStatic() && _flags2.testAny(CallSiteTableEntry);
+   return isStatic() && _flags2.testAny(CallSiteTableEntry);
    }
 
 void
 OMR::Symbol::setMethodTypeTableEntry()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags2.set(MethodTypeTableEntry);
    }
 
 bool
 OMR::Symbol::isMethodTypeTableEntry()
    {
-   return self()->isStatic() && _flags2.testAny(MethodTypeTableEntry);
+   return isStatic() && _flags2.testAny(MethodTypeTableEntry);
    }
 
 void
 OMR::Symbol::setNotDataAddress()
    {
-   TR_ASSERT(self()->isStatic(), "assertion failure");
+   TR_ASSERT(isStatic(), "assertion failure");
    _flags2.set(NotDataAddress);
    }
 
 bool
 OMR::Symbol::isNotDataAddress()
    {
-   return self()->isStatic() && _flags2.testAny(NotDataAddress);
+   return isStatic() && _flags2.testAny(NotDataAddress);
    }
 
 void
@@ -796,7 +796,7 @@ OMR::Symbol::getLocalObjectSymbol()
 TR::StaticSymbol *
 OMR::Symbol::getStaticSymbol()
    {
-   return self()->isStatic() ? (TR::StaticSymbol *)this : 0;
+   return isStatic() ? (TR::StaticSymbol *)this : 0;
    }
 
 TR::MethodSymbol *

@@ -215,7 +215,7 @@ public:
    bool isMethodMetaData()       { return _flags.testValue(KindMask, IsMethodMetaData); }
    bool isResolvedMethod()       { return _flags.testValue(KindMask, IsResolvedMethod); }
    inline bool isMethod();
-   bool isStatic()               { return _flags.testValue(KindMask, IsStatic); }
+   virtual bool isStatic()               { return _flags.testValue(KindMask, IsStatic); }
    bool isShadow()               { return _flags.testValue(KindMask, IsShadow); }
    bool isLabel()                { return _flags.testValue(KindMask, IsLabel); }
    void setIsLabel()             { _flags.setValue(KindMask, IsLabel);}
