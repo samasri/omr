@@ -34,6 +34,7 @@ def createDocPage(dbRows, docPage):
 	sigSet = {} # Store sigs that need to be virtualized
 	for row in dbRows:
 		if not row: continue
+		rowStr = row
 		row = row.split('\t')
 		bn = row[0].strip()
 		bc = row[1].strip()
@@ -41,7 +42,7 @@ def createDocPage(dbRows, docPage):
 		on = row[3].strip()
 		oc = row[4].strip()
 		if bc != TARGET_CLASS or oc != TARGET_CLASS:
-			print 'Warning: some rows in the db are not related to ' + TARGET_CLASS + ': ' + row
+			print 'Warning: some rows in the db are not related to ' + TARGET_CLASS + ': ' + rowStr
 			continue
 		if TARGET_CLASS + '(' == sig[:len(TARGET_CLASS) + 1]: continue # Ignore constructors
 		if 'operator ' in sig: continue
