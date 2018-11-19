@@ -168,7 +168,7 @@ public:
    inline TR::StaticSymbol                    *castToCallSiteTableEntrySymbol();
    inline TR::StaticSymbol                    *castToMethodTypeTableEntrySymbol();
 
-   int32_t getOffset();
+   virtual int32_t getOffset();
 
    uint32_t getNumberOfSlots();
 
