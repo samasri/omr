@@ -66,7 +66,7 @@ OMR::Symbol::Symbol(TR::DataType d) :
    _flags2(0),
    _localIndex(0)
    {
-   self()->setDataType(d);
+   setDataType(d);
    }
 
 OMR::Symbol::Symbol(TR::DataType d, uint32_t size) :
@@ -75,7 +75,7 @@ OMR::Symbol::Symbol(TR::DataType d, uint32_t size) :
    _flags2(0),
    _localIndex(0)
    {
-   self()->setDataType(d);
+   setDataType(d);
    _size = size;
    }
 

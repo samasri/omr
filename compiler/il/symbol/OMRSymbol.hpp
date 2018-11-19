@@ -204,7 +204,7 @@ public:
     * Flag functions
     */
 
-   void          setDataType(TR::DataType dt);
+   virtual void          setDataType(TR::DataType dt);
    TR::DataType  getDataType() { return (TR::DataTypes)_flags.getValue(DataTypeMask);}
    inline TR::DataType  getType();
 
