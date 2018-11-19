@@ -190,7 +190,7 @@ public:
    void     setSize(size_t s)               { _size = s; }
    uint32_t getRoundedSize();
 
-   const char * getName()                   { return _name; }
+   virtual const char * getName()                   { return _name; }
    void         setName(const char * name)  { _name = name; }
 
    uint32_t getFlags()                      { return _flags.getValue(); }
