@@ -304,7 +304,7 @@ public:
 
    TR::SymbolReference * getSymbolReferenceByReferenceNumber(int32_t referenceNumber);
 
-   ~Compilation() throw();
+   virtual ~Compilation() throw();
 
    inline TR::Compilation *self();
 
@@ -332,23 +332,23 @@ public:
    // Table of heap objects whose identity is known at compile-time
    //
    TR::KnownObjectTable *getKnownObjectTable() { return _knownObjectTable; }
-   TR::KnownObjectTable *getOrCreateKnownObjectTable();
-   void freeKnownObjectTable();
+   virtual TR::KnownObjectTable *getOrCreateKnownObjectTable();
+   virtual void freeKnownObjectTable();
 
    // Is this compilation producing relocatable code?  This should generally
    // return true, for example, for ahead-of-time compilations.
    //
-   bool compileRelocatableCode() { return false; }
+   virtual bool compileRelocatableCode() { return false; }
 
    // Maximum number of internal pointers that can be managed.
    //
-   int32_t maxInternalPointers();
+   virtual int32_t maxInternalPointers();
 
    // The OMR thread on which this compilation is occurring.
    //
    OMR_VMThread *omrVMThread() { return _omrVMThread; }
 
-   bool compilationShouldBeInterrupted(TR_CallingContext) { return false; }
+   virtual bool compilationShouldBeInterrupted(TR_CallingContext) { return false; }
 
    /* Can be used to ensure that a implementer chosen for inlining is valid;
     * for example, to ensure that the implementer can be used for inlining
@@ -759,7 +759,7 @@ public:
    bool isOptServer() const { return _isOptServer;}
    bool isServerInlining() const { return _isServerInlining; }
 
-   bool isRecompilationEnabled() { return false; }
+   virtual bool isRecompilationEnabled() { return false; }
 
    int32_t getOptLevel();
 
@@ -781,7 +781,7 @@ public:
 
    bool isProfilingCompilation();
    ProfilingMode getProfilingMode();
-   bool isJProfilingCompilation();
+   virtual bool isJProfilingCompilation();
 
    TR::Recompilation *getRecompilationInfo() { return _recompilationInfo; }
    void setRecompilationInfo(TR::Recompilation * i) { _recompilationInfo = i;    }
@@ -804,7 +804,7 @@ public:
    bool shouldBeRecompiled();
    bool couldBeRecompiled();
 
-   bool hasBlockFrequencyInfo();
+   virtual bool hasBlockFrequencyInfo();
    bool usesPreexistence() { return _usesPreexistence; }
    void setUsesPreexistence(bool v);
 
@@ -819,8 +819,8 @@ public:
 
    // check if using compressed pointers
    //
-   bool useCompressedPointers();
-   bool useAnchors();
+   virtual bool useCompressedPointers();
+   virtual bool useAnchors();
 
    void addGenILSym(TR::ResolvedMethodSymbol *s) { _genILSyms.push_front(s); }
 
@@ -848,7 +848,7 @@ public:
     * Return true if the supplied method in the inlining table is known to not run
     * for very long and so not require asyncchecks or other yields
     */
-   bool isShortRunningMethod(int32_t callerIndex);
+   virtual bool isShortRunningMethod(int32_t callerIndex);
 
    /*
     * isPotentialOSRPoint - used to check if a given treetop could be a point
@@ -874,7 +874,7 @@ public:
    int32_t getOSRInductionOffset(TR::Node *node);
    bool requiresAnalysisOSRPoint(TR::Node *node);
 
-   bool pendingPushLivenessDuringIlgen();
+   virtual bool pendingPushLivenessDuringIlgen();
 
    // for OSR
    TR_OSRCompilationData* getOSRCompilationData() {return _osrCompilationData;}
@@ -952,14 +952,14 @@ public:
    // typically, this should be used to represent the state of the
    // compilation
    //
-   void reportILGeneratorPhase() {}
-   void reportAnalysisPhase(uint8_t id) {}
-   void reportOptimizationPhase(OMR::Optimizations) {}
-   void reportOptimizationPhaseForSnap(OMR::Optimizations) {}
+   virtual void reportILGeneratorPhase() {}
+   virtual void reportAnalysisPhase(uint8_t id) {}
+   virtual void reportOptimizationPhase(OMR::Optimizations) {}
+   virtual void reportOptimizationPhaseForSnap(OMR::Optimizations) {}
 
    typedef int32_t CompilationPhase;
-   CompilationPhase saveCompilationPhase();
-   void restoreCompilationPhase(CompilationPhase phase);
+   virtual CompilationPhase saveCompilationPhase();
+   virtual void restoreCompilationPhase(CompilationPhase phase);
    class CompilationPhaseScope
       {
       TR::Compilation *_comp;
@@ -1003,7 +1003,7 @@ public:
     *    true if the fact that a method has not been executed implies it is cold;
     *    false otherwise
     */
-   bool notYetRunMeansCold();
+   virtual bool notYetRunMeansCold();
 
    TR::Region &aliasRegion();
    void invalidateAliasRegion();

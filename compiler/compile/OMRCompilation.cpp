@@ -425,7 +425,7 @@ OMR::Compilation::Compilation(
       self()->setOption(TR_EnableOSR); // OSR must be enabled for NextGenHCR
       }
 
-   if (self()->isDLT() || (((self()->getMethodHotness() < warm) || self()->compileRelocatableCode() || self()->isProfilingCompilation()) && !enableOSRAtAllOptLevels && !_options->getOption(TR_FullSpeedDebug)))
+   if (self()->isDLT() || (((self()->getMethodHotness() < warm) || compileRelocatableCode() || self()->isProfilingCompilation()) && !enableOSRAtAllOptLevels && !_options->getOption(TR_FullSpeedDebug)))
       {
       self()->setOption(TR_DisableOSR);
       _options->setOption(TR_EnableOSR, false);
@@ -440,7 +440,7 @@ OMR::Compilation::Compilation(
       //TODO: investigate the memory footprint of this allocation
       _osrCompilationData = new (self()->trHeapMemory()) TR_OSRCompilationData(self());
 
-      if (((self()->getMethodHotness() < warm) || self()->compileRelocatableCode() || self()->isProfilingCompilation()) && !enableOSRAtAllOptLevels && !options.getOption(TR_FullSpeedDebug)) // Off for two reasons : 1) not sure if we can afford the increase in compile time due to the extra OSR control flow at cold and 2) not sure at this stage in 727 whether OSR can work with AOT (will try to find out soon) but disabling till I do find out
+      if (((self()->getMethodHotness() < warm) || compileRelocatableCode() || self()->isProfilingCompilation()) && !enableOSRAtAllOptLevels && !options.getOption(TR_FullSpeedDebug)) // Off for two reasons : 1) not sure if we can afford the increase in compile time due to the extra OSR control flow at cold and 2) not sure at this stage in 727 whether OSR can work with AOT (will try to find out soon) but disabling till I do find out
          _canAffordOSRControlFlow = false;
       }
    else
@@ -643,7 +643,7 @@ bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNo
       else if (node->getOpCodeValue() == TR::asynccheck)
          {
          if (disableAsyncCheckOSR == NULL)
-            potentialOSRPoint = !self()->isShortRunningMethod(node->getByteCodeInfo().getCallerIndex());
+            potentialOSRPoint = !isShortRunningMethod(node->getByteCodeInfo().getCallerIndex());
          }
       else if (node->getOpCode().isCall())
          {
@@ -1072,7 +1072,7 @@ int32_t OMR::Compilation::compile()
       if (printCodegenTime) optTime.stopTiming(self());
 
 #ifdef J9_PROJECT_SPECIFIC
-      if (self()->useCompressedPointers())
+      if (useCompressedPointers())
          {
          if (self()->verifyCompressedRefsAnchors(true))
             dumpOptDetails(self(), "successfully verified compressedRefs anchors\n");
@@ -1285,7 +1285,7 @@ void OMR::Compilation::performOptimizations()
 
 bool OMR::Compilation::incInlineDepth(TR::ResolvedMethodSymbol * method, TR_ByteCodeInfo & bcInfo, int32_t cpIndex, TR::SymbolReference *callSymRef, bool directCall, TR_PrexArgInfo *argInfo)
    {
-   if (self()->compileRelocatableCode())
+   if (compileRelocatableCode())
       {
       TR_AOTMethodInfo *aotMethodInfo = (TR_AOTMethodInfo *)self()->trMemory()->allocateHeapMemory(sizeof(TR_AOTMethodInfo));
       aotMethodInfo->resolvedMethod = method->getResolvedMethod();
@@ -1771,7 +1771,7 @@ TR_OpaqueMethodBlock *OMR::Compilation::getMethodFromNode(TR::Node * node)
    TR_ByteCodeInfo bcInfo = node->getByteCodeInfo();
    TR_OpaqueMethodBlock *method = NULL;
    if (bcInfo.getCallerIndex() >= 0 && self()->getNumInlinedCallSites() > 0)
-      method = self()->compileRelocatableCode() ? ((TR_ResolvedMethod *)node->getAOTMethod())->getPersistentIdentifier() : self()->getInlinedCallSite(bcInfo.getCallerIndex())._methodInfo;
+      method = compileRelocatableCode() ? ((TR_ResolvedMethod *)node->getAOTMethod())->getPersistentIdentifier() : self()->getInlinedCallSite(bcInfo.getCallerIndex())._methodInfo;
    else
       method = self()->getCurrentMethod()->getPersistentIdentifier();
    return method;
