@@ -6,7 +6,7 @@
 5. isStatic()
 6. getRecognizedField()
 
-# Ignored functions for being static
+# Ignored Functions (because they are static)
 1. jitPersistentFree(void *)
 2. jitPersistentAlloc(size_t)
 3. convertTypeToSize(TR::DataType)
