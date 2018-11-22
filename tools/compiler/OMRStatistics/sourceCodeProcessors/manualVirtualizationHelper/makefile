@@ -1,7 +1,8 @@
 export OMR_PATH = /home/sam/1omr-virtualization/
 export OPENJ9_PATH = /home/sam/2openj9-virtualization/runtime/ 
 PATH_TO_DB_QUERY = /home/sam/test/manualVirtualizationHelper/db
-TARGET_CLASS = 'MemoryReference'
+TARGET_CLASS = 'Compilation'
+COMPILER_SUBCOMPONENT = 'compile'
 
 # Make silent by default (no log of entering other makefiles)
 ifndef VERBOSE
@@ -22,4 +23,4 @@ openj9: generateList
 
 processSearchResults:
 	@echo "Editing source code (Removing self()) of OMR"
-	@python processSearchResult.py $(OMR_PATH) $(OPENJ9_PATH) $(TARGET_CLASS)
+	@python processSearchResult.py $(OMR_PATH) $(OPENJ9_PATH) $(COMPILER_SUBCOMPONENT) $(TARGET_CLASS)

@@ -4,13 +4,14 @@ import collections
 def getHeaders(mainPath, namespace):
 	files = collections.OrderedDict() # To iterate the paths in order later
 	global TARGET_CLASS
+	global COMPILER_COMPONENT
 	genericHeaderName = namespace + TARGET_CLASS + '.hpp'
-	files[mainPath + 'compiler/codegen/' + genericHeaderName] = []
-	files[mainPath + 'compiler/x/codegen/' + genericHeaderName] = []
-	files[mainPath + 'compiler/x/amd64/codegen/' + genericHeaderName] = []
-	files[mainPath + 'compiler/x/i386/codegen/' + genericHeaderName] = []
-	files[mainPath + 'compiler/p/codegen/' + genericHeaderName] = []
-	files[mainPath + 'compiler/z/codegen/' + genericHeaderName] = []
+	files[mainPath + 'compiler/' + COMPILER_COMPONENT + '/' + genericHeaderName] = []
+	files[mainPath + 'compiler/x/' + COMPILER_COMPONENT + '/' + genericHeaderName] = []
+	files[mainPath + 'compiler/x/amd64/' + COMPILER_COMPONENT + '/' + genericHeaderName] = []
+	files[mainPath + 'compiler/x/i386/' + COMPILER_COMPONENT + '/' + genericHeaderName] = []
+	files[mainPath + 'compiler/p/' + COMPILER_COMPONENT + '/' + genericHeaderName] = []
+	files[mainPath + 'compiler/z/' + COMPILER_COMPONENT + '/' + genericHeaderName] = []
 	
 	for (name,lines) in files.iteritems():
 		try:
@@ -45,18 +46,20 @@ def addVirtual(line):
 	return newLine	
 
 def getNamespaceFromHeader(headerPath):
-	if 'runtime/compiler/codegen/' in headerPath: return 'J9'
-	elif 'runtime/compiler/x/codegen/' in headerPath: return 'J9::X86'
-	elif 'runtime/compiler/x/amd64/codegen/' in headerPath: return 'J9::X86::AMD64'
-	elif 'runtime/compiler/x/i386/codegen/' in headerPath: return 'J9::X86::I386'
-	elif 'runtime/compiler/p/codegen/' in headerPath: return 'J9::Power'
-	elif 'runtime/compiler/z/codegen/' in headerPath: return 'J9::Z'
-	elif 'compiler/codegen/' in headerPath: return 'OMR'
-	elif 'compiler/x/codegen/' in headerPath: return 'OMR::X86'
-	elif 'compiler/x/amd64/codegen/' in headerPath: return 'OMR::X86::AMD64'
-	elif 'compiler/x/i386/codegen/' in headerPath: return 'OMR::X86::I386'
-	elif 'compiler/p/codegen/' in headerPath: return 'OMR::Power'
-	elif 'compiler/z/codegen/' in headerPath: return 'OMR::Z'
+	global TARGET_CLASS
+	global COMPILER_COMPONENT
+	if 'runtime/compiler/' + COMPILER_COMPONENT + '/' in headerPath: return 'J9'
+	elif 'runtime/compiler/x/' + COMPILER_COMPONENT + '/' in headerPath: return 'J9::X86'
+	elif 'runtime/compiler/x/amd64/' + COMPILER_COMPONENT + '/' in headerPath: return 'J9::X86::AMD64'
+	elif 'runtime/compiler/x/i386/' + COMPILER_COMPONENT + '/' in headerPath: return 'J9::X86::I386'
+	elif 'runtime/compiler/p/' + COMPILER_COMPONENT + '/' in headerPath: return 'J9::Power'
+	elif 'runtime/compiler/z/' + COMPILER_COMPONENT + '/' in headerPath: return 'J9::Z'
+	elif 'compiler/' + COMPILER_COMPONENT + '/' in headerPath: return 'OMR'
+	elif 'compiler/x/' + COMPILER_COMPONENT + '/' in headerPath: return 'OMR::X86'
+	elif 'compiler/x/amd64/' + COMPILER_COMPONENT + '/' in headerPath: return 'OMR::X86::AMD64'
+	elif 'compiler/x/i386/' + COMPILER_COMPONENT + '/' in headerPath: return 'OMR::X86::I386'
+	elif 'compiler/p/' + COMPILER_COMPONENT + '/' in headerPath: return 'OMR::Power'
+	elif 'compiler/z/' + COMPILER_COMPONENT + '/' in headerPath: return 'OMR::Z'
 
 def editFile(function, headers, overloaded):
 	global PRINT_OVERLOADS
@@ -81,13 +84,16 @@ def editFile(function, headers, overloaded):
 				
 				# Virtualize function
 				virtualized = 1
-				headers[filename][index] = addVirtual(headers[filename][index])
+				if 'static ' in headers[filename][index] or 'virtual ' in headers[filename][index]: 
+					virtualized = 0
+				else: headers[filename][index] = addVirtual(headers[filename][index])
 				
 				# If function is found in OMR or J9, exit directly after
-				if 'compiler/codegen/' in filename or 'runtime/compiler/codegen/' in filename:
+				global COMPILER_COMPONENT
+				if 'compiler/' + COMPILER_COMPONENT + '/' in filename or 'runtime/compiler/' + COMPILER_COMPONENT + '/' in filename:
 					exitAfterFileEnds = 1 
 				# If function is found in an X86 namespace, skip the next 2 files (AMD64 and I386)
-				if 'compiler/x/codegen/' in filename: isSkip = 0
+				if 'compiler/x/' + COMPILER_COMPONENT + '/' in filename: isSkip = 0
 		if exitAfterFileEnds: return 1
 	if virtualized: return 1
 	else: return 0
@@ -224,7 +230,9 @@ def checkHeaders(headers, sigList):
 						continued = 1
 			if continued == 1: 'Error: file is finished but function definition is not: ' + sig
 			header.close()
-		if not found: ignoredFunctions.add(sig)
+		if not found:
+			ignoredFunctions.add(sig)
+			if PRINT_NOT_FOUND: print 'Function not found: ' + sig
 	return sigs, ignoredFunctions
 
 def processQualSig(qualSig):
@@ -297,8 +305,10 @@ def checkDefinitions(paths, functionsFilePath, results, ignoredFile):
 # Configuration
 PRINT_1 = 0
 PRINT_OVERLOADS = 0
+PRINT_NOT_FOUND = 0
 PRINT_NO_IMPLEMENTATION = 0
-TARGET_CLASS = sys.argv[3]
+COMPILER_COMPONENT = sys.argv[3]
+TARGET_CLASS = sys.argv[4]
 
 omrResults = open('callResults.omr')
 openj9Results = open('callResults.openj9')

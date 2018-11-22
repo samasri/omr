@@ -1,25 +1,28 @@
 # Overview
-The system aims to automate the virtualization of classes in OMR. It does the following:
+The system aims to automate the virtualization of classes in OMR compiler component. It does the following:
 1. Extracts the list of functions that need to be virtualized from the database query pointed to in the configuration
 2. Greps for the function calls and definitions in the source code
 3. Use the grep results, in addition to seaching the header files to virtualize functions
 
-To execute the program, specify the confurations in the makefile and _processSearchResults.py_, then run `make`
+To execute the program, specify the confurations in the makefile, then run `make`
 
 # Features
 * Virtualizes function definitions
 * Removes `self()->` from all calls for the target functions
 * Detects unimplemented functions
+* Outputs all ignored functions in a file called _ignored_
 
 # Configuration:
 * In processSearchResults.py
 	* PRINT_1: Triggers MVH to print the cases described in _PRINT\_1 case_ in [Checking for unimplemented function section]()
+	* PRINT_NOT_FOUND: Triggers MVH to print functions that has no definition in any of the header files
 	* PRINT_OVERLOADS: Triggers MVH to print the cases where an overload is detected
 	* PRINT_NO_IMPLEMENTATION: Triggers MVH to print the cases where no implementation for the function is detected
 * In Makefile:
 	* Location of OMR and OpenJ9 directories to read and virtualize functions
 	* Location of file containig the output of the following query when run in the database
 	* Target class: Class to be virtualized
+	* Compiler Subcomponent: Subcomponent of the compiler that the class headers belong to. It is assumed that the source code of a class of a specific subcomponent is located in a subdirectory of _omr/compiler/_ that is named after the subcomponent's name.
 
 ```
 SELECT DISTINCT bc.namespace, bc.classname, of.signature, oc.namespace, oc.classname
@@ -32,13 +35,13 @@ WHERE bc.isExtensible = 1 and oc.isExtensible = 1 and bf.isVirtual = 0 and of.is
 ```
 
 # Assumptions and known unsupported cases
-* Ignores overloaded functions and functions where definition is not found in source code
+* Ignores overloaded functions and functions where definition is not directly found in the class source files
 	* For example if a function is defined after the prerpocessor parses a macro, such a function will not be virtualized with MVH
 * Ignores all operator overrides (does not virtualize them)
 * OMR and J9 namespaces are hard coded in the code, changing the namespace targets means changing the code
 * OMR and J9 header file paths are hard coded in the code, changing the namespace targets means changing the code. Paths like the following (including but not limited to):
-	* When `runtime/compiler/codegen/` is found in the file path, it is considered the header for `J9` namesapce
-	* When only `compiler/codegen/` is found in the file path, it is considered the header for `OMR` namesapce
+	* When `runtime/compiler/[component-name]` is found in the file path, it is considered the header for `J9` namesapce
+	* When only `compiler/[component-name]` is found in the file path, it is considered the header for `OMR` namesapce
 * In OpenJ9's source code (_runtime/codegen/J9CodeGenerator.cpp_), the following statement is found `OMR::CodeGenerator::processRelocations();`. Although this does not indicate an implementation for a function, MVH considers that as an implementation.
 * Cases where a function is defined in `OMR` but implemented in `J9` are not supported
 * Functions are not expected to return instances of classes in the `OMR` or `J9` namespaces. For example, a function of the signature `OMR::CodeGenerator OMR::ElfRelocationResolver::resolveRelocationType()` would not be supported.
