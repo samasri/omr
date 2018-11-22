@@ -283,7 +283,7 @@ enum ProfilingMode
 namespace OMR
 {
 
-class OMR_EXTENSIBLE Compilation
+class /*OMR_EXTENSIBLE*/ Compilation
    {
    friend class ::TR_DebugExt;
 public:
