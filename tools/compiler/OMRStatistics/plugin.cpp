@@ -34,15 +34,12 @@
 #include "clang/Analysis/CallGraph.h"
 #include "llvm/Support/raw_ostream.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Tooling/Tooling.h"
 
 #include "plugin.hpp"
 #include <sstream>
-
-OMRStatistics::FunctionDeclInfo::FunctionDeclInfo(bool isImplicit, bool isVirtual, std::string location) {
-	this->isImplicit = isImplicit;
-	this->isVirtual = isVirtual;
-	this->location = location;
-}
 
 std::map<std::string, std::unordered_set<std::string*>> OMRStatistics::HMRecorder::getClass2Methods() {
 	return class2Methods;
@@ -95,7 +92,7 @@ bool OMRStatistics::HMRecorder::checkExtensibility(const CXXRecordDecl* declIn) 
   return false;
 }
 
-std::string OMRStatistics::HMRecorder::getFuncSig(CXXMethodDecl* currentDecl) {
+std::string OMRStatistics::HMRecorder::getFuncSig(const CXXMethodDecl* currentDecl) {
 	std::string funcSig = currentDecl->getNameAsString();
 	ArrayRef<clang::ParmVarDecl*> functions = currentDecl->parameters();
 	if(functions.size() == 0) funcSig += "()";
@@ -139,30 +136,6 @@ void OMRStatistics::HMRecorder::assertFuncDeclNb(std::string className, std::str
 	}
 }
 
-void OMRStatistics::HMRecorder::processCallExpressions(CXXMethodDecl* currentDecl) {
-	if(currentDecl->hasBody()) {
-		std::string caller = currentDecl->getQualifiedNameAsString();
-		CompoundStmt* stmt = (CompoundStmt*) (currentDecl->getBody());
-		Stmt** bodyItr = stmt->body_begin();
-		for(unsigned i = 0; i < stmt->size(); i++) { //iterate all statements in the function body
-			Stmt* currentStmt = bodyItr[i];
-			std::string stmtType = currentStmt->getStmtClassName();
-			if(stmtType.compare("CXXMemberCallExpr") == 0) {
-				SourceRange rng = currentStmt->getSourceRange();
-				
-				CXXMemberCallExpr* callExpr = (CXXMemberCallExpr*) currentStmt;
-				CXXRecordDecl* receiverClassDecl = callExpr->getMethodDecl()->getParent();
-				
-				//Ignore non-target structures
-				if(HMConsumer::shouldIgnoreClassName(receiverClassDecl->getQualifiedNameAsString()) || !receiverClassDecl->hasDefinition() || !receiverClassDecl->isClass()) continue;
-				
-				FunctionCall* call = new FunctionCall(currentDecl, callExpr->getMethodDecl(), rng);
-				functionCalls.emplace_back(call);
-			}
-		}
-	}
-}
-
 void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass) {
 	std::string className = inputClass->getQualifiedNameAsString();
 	if(HMConsumer::shouldIgnoreClassName(className)) return;
@@ -188,9 +161,6 @@ void OMRStatistics::HMRecorder::recordFunctions(const CXXRecordDecl* inputClass)
 			methods.insert(funcSig);
 			class2Methods.emplace(className, methods);
 		}
-		
-		//Check for function calls
-		processCallExpressions(currentDecl);
 	}
 }
 
@@ -299,6 +269,22 @@ bool OMRStatistics::HMRecorder::VisitCXXRecordDecl(const CXXRecordDecl *decl) {
 	return true;
 }
 
+bool OMRStatistics::HMRecorder::VisitCallExpr(CallExpr *currentCallExpr) {
+	// llvm::outs() << "Getting calls\n";
+	FunctionDecl* callee = currentCallExpr->getDirectCallee();
+	if(callee) {
+		if(CXXMethodDecl* calleeFunc = dyn_cast<CXXMethodDecl>(callee)) {
+			CXXRecordDecl* parent = calleeFunc->getParent();
+			// llvm::outs() << parent->getName() << "\n";
+			
+			// if(currentMethodDecl = )
+			// FunctionCall* call = new FunctionCall(receiver, calleeFunc, calleeFunc->getSourceRange());
+			// functionCalls.emplace_back(call);
+		}
+	}
+	return true;
+}
+
 OMRStatistics::LinkedNode::LinkedNode(std::string name) {
 	this->parents = new std::vector<LinkedNode*>();
 	this->name = name;
@@ -346,50 +332,28 @@ bool OMRStatistics::MethodTracker::operator==(const std::string other) {
 	return (methodSignature.compare(other) == 0);
 }
 
-OMRStatistics::FunctionCall::FunctionCall(CXXMethodDecl* caller, CXXMethodDecl* receiver, SourceRange rng) {
-	this->receiverDecl = receiver;
-	this->callerDecl = caller;
-	range = rng;
-}
-
-void OMRStatistics::FunctionCall::setCallee(CXXMethodDecl* cd) {
-	this->receiverDecl = cd;
-}
-
-CXXMethodDecl* OMRStatistics::FunctionCall::getCallee() {
-	return this->receiverDecl;
-}
-
-void OMRStatistics::FunctionCall::setCaller(CXXMethodDecl* cd) {
-	this->callerDecl = cd;
-}
-
-CXXMethodDecl* OMRStatistics::FunctionCall::getCaller() {
-	return this->callerDecl;
-}
-
 std::string OMRStatistics::FunctionCall::receiverClass() {
 	return receiverDecl->getParent()->getQualifiedNameAsString();
 }
 
-std::string OMRStatistics::FunctionCall::callerClass() {
-	return callerDecl->getParent()->getQualifiedNameAsString();
+std::string OMRStatistics::FunctionCall::calleeClass() {
+	return calleeDecl->getParent()->getQualifiedNameAsString();
 }
 
 std::string OMRStatistics::FunctionCall::receiverFuncQualSig() {
 	return receiverClass() + "::" + receiverFuncSig();
 }
 
-std::string OMRStatistics::FunctionCall::callerFuncQualSig() {
-	return callerClass() + "::" + callerFuncSig();
+std::string OMRStatistics::FunctionCall::calleeFuncQualSig() {
+	return calleeClass() + "::" + calleeFuncSig();
 }
 
 std::string OMRStatistics::FunctionCall::receiverFuncSig() {
 	return HMRecorder::getFuncSig(receiverDecl);
 }
 
-std::string OMRStatistics::FunctionCall::callerFuncSig() {
-	return HMRecorder::getFuncSig(callerDecl);
+std::string OMRStatistics::FunctionCall::calleeFuncSig() {
+	return HMRecorder::getFuncSig(calleeDecl);
 }
 
 std::string OMRStatistics::FunctionCall::receiverLoc(ASTContext& Context) {
@@ -397,14 +361,14 @@ std::string OMRStatistics::FunctionCall::receiverLoc(ASTContext& Context) {
 	return receiverDecl->getSourceRange().getBegin().printToString(manager);
 }
 
-std::string OMRStatistics::FunctionCall::callerLoc(ASTContext& Context) {
+std::string OMRStatistics::FunctionCall::calleeLoc(ASTContext& Context) {
 	SourceManager &manager = Context.getSourceManager();
-	return callerDecl->getSourceRange().getBegin().printToString(manager);
+	return calleeDecl->getSourceRange().getBegin().printToString(manager);
 }
 
 std::string OMRStatistics::FunctionCall::getLocation(SourceManager& mng) {
+	SourceRange range = calleeDecl->getSourceRange();
 	SourceLocation b = range.getBegin();
-	//SourceLocation e = range.getEnd();
 	return b.printToString(mng);
 }
 
@@ -667,38 +631,6 @@ size_t OMRStatistics::HMConsumer::findLastStringIn(std::string input, std::strin
 	return pos;
 }
 
-std::vector<OMRStatistics::FunctionCall*>* OMRStatistics::HMConsumer::getFunctionCalls(ASTContext& Context) {
-	//This function is inspired from the the following github project: https://github.com/maximesong/program-analysis
-	//More specifically the following code block: https://github.com/maximesong/program-analysis/blob/b1d228e0fd0abb196939a0503c6326dc4ebbf692/src/consumers.cpp#L74-L108
-	CallGraph cg;
-	cg.addToCallGraph(Context.getTranslationUnitDecl());
-	std::vector<FunctionCall*>* callerCalleeMap = new std::vector<FunctionCall*>();
-	
-	/*for (auto itr : cg) {
-		//itr type:
-		//	llvm::detail::DenseMapPair<const clang::Decl *, clang::CallGraphNode *>
-		if(itr.first == NULL) {
-			//clang::CallGraphNode* callerNode = itr.second;
-			//callerNode->dump();
-			continue;
-		}
-		clang::CallGraphNode* callerNode = itr.second;
-		FunctionDecl* callerDecl = cast<FunctionDecl> (callerNode->getDecl());
-		std::string callerClass = callerDecl->getQualifiedNameAsString();
-		llvm::outs() << "Caller: " << callerClass << "\n";
-		for(CallGraphNode* calleeNode : *callerNode) {
-			FunctionDecl* receiverDecl = cast<FunctionDecl> (calleeNode->getDecl());
-			std::string receiverClass = receiverDecl->getQualifiedNameAsString();
-			llvm::outs() << "\tCallee: " << receiverClass << "\n";
-			FunctionCall* fi = new FunctionCall(receiverDecl, callerDecl);
-			callerCalleeMap->push_back(fi);
-		}
-		
-	}*/
-	llvm::outs() << "--------------------\n";
-	return callerCalleeMap;
-}
-
 void OMRStatistics::HMConsumer::printTracker(llvm::raw_ostream* out, std::string methodName, std::string methodSig, std::string nameSpace, std::string className, bool isImplicit, bool isVirtual) {
 	*out << methodName << ";";
 	*out << methodSig << ";";
@@ -854,14 +786,31 @@ void OMRStatistics::HMConsumer::printAllClasses(HMRecorder& recorder, llvm::raw_
 	}
 }
 
-void OMRStatistics::HMConsumer::printFunctionCalls(ASTContext& ctx, HMRecorder& recorder, llvm::raw_ostream* out) {
+void OMRStatistics::HMConsumer::printFunctionCalls(ASTContext& ctx, CallBackFunc& finder, llvm::raw_ostream* out) {
 	*out << "CallerNamespace;CallerClassName;CallerFuncSig;CalledFuncSignature;ReceiverNamespace;ReceiverClassName;CallSite\n";
-	//std::vector<FunctionCall*>* functionCalls = getFunctionCalls(ctx);
-	for(FunctionCall* fc : recorder.getFunctionCalls()) {
-		std::vector<std::string>* caller = seperateClassNameSpace(fc->callerClass());
+	
+	for(FunctionCall* fc : finder.getFunctionCalls()) {
+		std::vector<std::string>* callee = seperateClassNameSpace(fc->calleeClass());
 		std::vector<std::string>* receiver = seperateClassNameSpace(fc->receiverClass());
-		*out << caller->at(0) << ";" << caller->at(1) << ";" << fc->callerFuncSig() << ";" << fc->receiverFuncSig() << ";" << receiver->at(0) << ";" << receiver->at(1) << ";" << fc->getLocation(ctx.getSourceManager()) << "\n";
+		*out << callee->at(0) << ";" << callee->at(1) << ";" << fc->calleeFuncSig() << ";" << fc->receiverFuncSig() << ";" << receiver->at(0) << ";" << receiver->at(1) << ";" << fc->getLocation(ctx.getSourceManager()) << "\n";
+		
 	}
+}
+
+void OMRStatistics::CallBackFunc::run(const clang::ast_matchers::MatchFinder::MatchResult &Results) {
+		// llvm::outs() << "I am inside the run func\n";
+		const CallExpr* expr = Results.Nodes.getNodeAs<CallExpr>("callee");
+		const CXXMethodDecl* receiver = Results.Nodes.getNodeAs<CXXMethodDecl>("receiver");
+		
+		// Get callee information
+		const FunctionDecl* calleeDecl = expr->getDirectCallee();
+		if(calleeDecl) { // Continue only if this call is for a function
+			if(const CXXMethodDecl* callee = dyn_cast<CXXMethodDecl>(calleeDecl)) {
+				
+				FunctionCall* call = new FunctionCall(receiver, callee);
+				functionCalls.emplace_back(call);
+			}
+		}
 }
 
 void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
@@ -871,6 +820,19 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	std::map<std::string, std::vector<std::string>*> classHierarchy = recorder.getClassHierarchy();
 	fillHierarchies(classHierarchy);
 	collectMethodInfo(recorder);
+	
+	// Getting function calls
+	CallBackFunc callBackFunc;
+	ast_matchers::MatchFinder finder;
+	finder.addMatcher(
+		ast_matchers::callExpr(
+			ast_matchers::hasAncestor(
+				ast_matchers::cxxMethodDecl().bind("receiver")
+			)
+		).bind("callee")
+	, &callBackFunc);
+	// llvm::outs() << "I am getting function calls\n";
+	finder.matchAST(Context);
 	
 	std::vector<std::string> outputFiles = {"hierarchy", "interNamespaceHierarchy", "allClasses", "overloads", "allFunctions", "functionLocation", "overrides", "avg", "functionCalls"};
 	std::vector<llvm::raw_ostream*>* outputs = new std::vector<llvm::raw_ostream*>();
@@ -899,7 +861,7 @@ void OMRStatistics::HMConsumer::HandleTranslationUnit(ASTContext &Context) {
 	printFunctionLocations(recorder, outputs->at(5));
 	printOverrides(outputs->at(6));
 	printAverageOverrides(recorder, outputs->at(7));
-	printFunctionCalls(Context, recorder, outputs->at(8)/*functionCallsOutput*/);
+	printFunctionCalls(Context, callBackFunc, outputs->at(8)/*functionCallsOutput*/);
 	
 	//Flush all outputs to their respective files
 	for(llvm::raw_ostream* output : *outputs) output->flush();

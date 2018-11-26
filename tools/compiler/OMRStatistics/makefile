@@ -111,6 +111,12 @@ output/lastCreated: $(SO)
 	
 	@echo "------------Visualizations and Database are ready------------"
 
+executePlugin: $(SO)
+	@python sources/execute.py amd64
+	@python sources/execute.py i386
+	@python sources/execute.py p
+	@python sources/execute.py z
+
 copyOriginal:
 	@echo "Copying original files..."
 	@mkdir -p "output/original (untrimmed) results/"

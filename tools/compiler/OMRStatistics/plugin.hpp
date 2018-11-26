@@ -18,32 +18,31 @@ namespace OMRStatistics {
 		bool isImplicit;
 		bool isVirtual;
 		std::string location;
-		FunctionDeclInfo(bool isImplicit, bool isVirtual, std::string location);
+		FunctionDeclInfo(bool isImplicit, bool isVirtual, std::string location) : isImplicit{isImplicit}, isVirtual{isVirtual}, location{location} {};
 	};
 	
 	class FunctionCall {
 	private:
-		CXXMethodDecl* receiverDecl;
-		CXXMethodDecl* callerDecl;
-		SourceRange range;
+		const CXXMethodDecl* receiverDecl;
+		const CXXMethodDecl* calleeDecl;
 	public:
-		FunctionCall(CXXMethodDecl*, CXXMethodDecl*, SourceRange);
+		FunctionCall(const CXXMethodDecl* receiver, const CXXMethodDecl* callee) : receiverDecl{receiver}, calleeDecl{callee} {};
 		
 		//Getters and setters
-		void setCallee(CXXMethodDecl*);
-		CXXMethodDecl* getCallee();
-		void setCaller(CXXMethodDecl*);
-		CXXMethodDecl* getCaller();
+		// void setReceiver(CXXMethodDecl* receiverDecl) {this->receiverDecl = receiverDecl;};
+		const CXXMethodDecl* getReceiver() {return receiverDecl;};
+		// void setCallee(CXXMethodDecl* calleeDecl) {this->calleeDecl = calleeDecl;};
+		const CXXMethodDecl* getCallee() {return calleeDecl;};
 		
 		//Generated info
 		std::string receiverClass();
-		std::string callerClass();
+		std::string calleeClass();
 		std::string receiverFuncQualSig();
-		std::string callerFuncQualSig();
+		std::string calleeFuncQualSig();
 		std::string receiverFuncSig();
-		std::string callerFuncSig();
+		std::string calleeFuncSig();
 		std::string receiverLoc(ASTContext&);
-		std::string callerLoc(ASTContext&);
+		std::string calleeLoc(ASTContext&);
 		std::string getLocation(SourceManager&);
 	};
 	
@@ -84,9 +83,7 @@ namespace OMRStatistics {
 		//Checks if a specific declaration contains "OMR_EXTENSIBLE" or not
 		bool checkExtensibility(const CXXRecordDecl*);
 		//Get function name with parameter types (AKA: recreate function signature)
-		static std::string getFuncSig(CXXMethodDecl*);
-		//Takes a method declaration and records all the function calls inside its body
-		void processCallExpressions(CXXMethodDecl*);
+		static std::string getFuncSig(const CXXMethodDecl*);
 		//Add classes with no parents or children to map
 		void addNeglectedClasses();
 		//Loop through the methods of the given class and input them in Class2Methods
@@ -97,6 +94,7 @@ namespace OMRStatistics {
 		void recordParents(const CXXRecordDecl *decl);
 		//Called by clang for every class declaration
 		bool VisitCXXRecordDecl(const CXXRecordDecl*);
+		bool VisitCallExpr(CallExpr*);
 		//Prints the location of a specific declaration
 		static std::string printLoc(const clang::CXXRecordDecl*);
 		static std::string printLoc(const CXXMethodDecl*);
@@ -169,6 +167,14 @@ namespace OMRStatistics {
 		bool overloading = false;
 		std::string outputDir = "-1";
 	};
+
+	class CallBackFunc : public ast_matchers::MatchFinder::MatchCallback {
+		public:
+			std::vector<FunctionCall*> getFunctionCalls() {return functionCalls;}
+			virtual void run(const ast_matchers::MatchFinder::MatchResult &Results);
+		private:
+			std::vector<FunctionCall*> functionCalls;
+	};
 	
 	class HMConsumer : public ASTConsumer {
 	private:
@@ -193,7 +199,6 @@ namespace OMRStatistics {
 		std::vector<std::vector<LinkedNode*>*>* getTopToBaseAsArray(OMRStatistics::Hierarchy* hierarchy);
 		void getTopToBaseAsArray(LinkedNode* node, std::vector<LinkedNode*>* array, std::vector<std::vector<LinkedNode*>*>* subHierarchies);
 		void addSingleClass(std::string className, std::vector<Hierarchy*>& hierarchies);
-		std::vector<FunctionCall*>* getFunctionCalls(ASTContext&);
 		
 	public:
 		
@@ -206,13 +211,13 @@ namespace OMRStatistics {
 		
 		//Printing output files
 		void printHierarchies(HMRecorder&, llvm::raw_ostream*);
-		void printWeirdHierarchies(HMRecorder&, llvm::raw_ostream*);
+		void printInterNamespaceHierarchies(HMRecorder&, llvm::raw_ostream*);
 		void printAllClasses(HMRecorder&, llvm::raw_ostream*);
 		void printAllFunctions(llvm::raw_ostream*);
 		void printOverrides(llvm::raw_ostream*);
 		void printAverageOverrides(HMRecorder&, llvm::raw_ostream*);
 		void printFunctionLocations(HMRecorder&, llvm::raw_ostream*);
-		void printFunctionCalls(ASTContext&, HMRecorder&, llvm::raw_ostream*);
+		void printFunctionCalls(ASTContext&, CallBackFunc&, llvm::raw_ostream*);
 		
 		//Static helpers
 		static bool shouldIgnoreClassName(std::string);
