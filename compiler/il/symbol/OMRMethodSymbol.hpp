@@ -186,15 +186,15 @@ public:
    void setTreatAsAlwaysExpandBIF(bool b=true) { _methodFlags.set(TreatAsAlwaysExpandBIF, b);}
    bool treatAsAlwaysExpandBIF()               { return _methodFlags.testAny(TreatAsAlwaysExpandBIF);}
 
-   bool safeToSkipNullChecks() { return false; }
-   bool safeToSkipBoundChecks() { return false; }
-   bool safeToSkipDivChecks() { return false; }
-   bool safeToSkipCheckCasts() { return false; }
-   bool safeToSkipArrayStoreChecks() { return false; }
-   bool safeToSkipZeroInitializationOnNewarrays() { return false; }
-   bool safeToSkipChecksOnArrayCopies() { return false; }
+   virtual bool safeToSkipNullChecks() { return false; }
+   virtual bool safeToSkipBoundChecks() { return false; }
+   virtual bool safeToSkipDivChecks() { return false; }
+   virtual bool safeToSkipCheckCasts() { return false; }
+   virtual bool safeToSkipArrayStoreChecks() { return false; }
+   virtual bool safeToSkipZeroInitializationOnNewarrays() { return false; }
+   virtual bool safeToSkipChecksOnArrayCopies() { return false; }
 
-   bool isPureFunction() { return false; }
+   virtual bool isPureFunction() { return false; }
 
 protected:
 
