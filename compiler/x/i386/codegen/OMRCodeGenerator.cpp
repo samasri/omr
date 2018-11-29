@@ -68,21 +68,21 @@ OMR::X86::I386::CodeGenerator::initializeConstruction()
    {
 	// Common X86 initialization
    //
-   self()->initialize( self()->comp() );
+   initialize( comp() );
 
-   self()->setUsesRegisterPairsForLongs();
+   setUsesRegisterPairsForLongs();
 
    if (debug("supportsArrayTranslateAndTest"))
-      self()->setSupportsArrayTranslateAndTest();
+      setSupportsArrayTranslateAndTest();
    if (debug("supportsArrayCmp"))
-      self()->setSupportsArrayCmp();
+      setSupportsArrayCmp();
 
-   self()->setSupportsDoubleWordCAS();
-   self()->setSupportsDoubleWordSet();
+   setSupportsDoubleWordCAS();
+   setSupportsDoubleWordSet();
 
    if (TR::Compiler->target.isWindows())
       {
-      if (self()->comp()->getOption(TR_DisableTraps))
+      if (comp()->getOption(TR_DisableTraps))
          {
          _numberBytesReadInaccessible = 0;
          _numberBytesWriteInaccessible = 0;
@@ -91,16 +91,16 @@ OMR::X86::I386::CodeGenerator::initializeConstruction()
          {
          _numberBytesReadInaccessible = 4096;
          _numberBytesWriteInaccessible = 4096;
-         self()->setHasResumableTrapHandler();
-         self()->setEnableImplicitDivideCheck();
+         setHasResumableTrapHandler();
+         setEnableImplicitDivideCheck();
          }
-      self()->setSupportsDivCheck();
-      self()->setJNILinkageCalleeCleanup();
-      self()->setRealVMThreadRegister(self()->machine()->getX86RealRegister(TR::RealRegister::ebp));
+      setSupportsDivCheck();
+      setJNILinkageCalleeCleanup();
+      setRealVMThreadRegister(machine()->getX86RealRegister(TR::RealRegister::ebp));
       }
    else if (TR::Compiler->target.isLinux())
       {
-      if (self()->comp()->getOption(TR_DisableTraps))
+      if (comp()->getOption(TR_DisableTraps))
          {
          _numberBytesReadInaccessible = 0;
          _numberBytesWriteInaccessible = 0;
@@ -109,22 +109,22 @@ OMR::X86::I386::CodeGenerator::initializeConstruction()
          {
          _numberBytesReadInaccessible = 4096;
          _numberBytesWriteInaccessible = 4096;
-         self()->setHasResumableTrapHandler();
-         self()->setEnableImplicitDivideCheck();
+         setHasResumableTrapHandler();
+         setEnableImplicitDivideCheck();
          }
-      self()->setRealVMThreadRegister(self()->machine()->getX86RealRegister(TR::RealRegister::ebp));
-      self()->setSupportsDivCheck();
+      setRealVMThreadRegister(machine()->getX86RealRegister(TR::RealRegister::ebp));
+      setSupportsDivCheck();
       }
    else
       {
       TR_ASSERT(0, "unknown target");
       }
 
-   self()->setSupportsInlinedAtomicLongVolatiles();
+   setSupportsInlinedAtomicLongVolatiles();
 
    static char *dontConsiderAllAutosForGRA = feGetEnv("TR_dontConsiderAllAutosForGRA");
    if (!dontConsiderAllAutosForGRA)
-      self()->setConsiderAllAutosAsTacticalGlobalRegisterCandidates();
+      setConsiderAllAutosAsTacticalGlobalRegisterCandidates();
 }
 
 
@@ -134,10 +134,10 @@ OMR::X86::I386::CodeGenerator::longClobberEvaluate(TR::Node *node)
    TR_ASSERT(node->getOpCode().is8Byte(), "assertion failure");
    if (node->getReferenceCount() > 1)
       {
-      TR::Register     *temp    = self()->evaluate(node);
-      TR::Register     *lowReg  = self()->allocateRegister();
-      TR::Register     *highReg = self()->allocateRegister();
-      TR::RegisterPair *longReg = self()->allocateRegisterPair(lowReg, highReg);
+      TR::Register     *temp    = evaluate(node);
+      TR::Register     *lowReg  = allocateRegister();
+      TR::Register     *highReg = allocateRegister();
+      TR::RegisterPair *longReg = allocateRegisterPair(lowReg, highReg);
 
       generateRegRegInstruction(MOV4RegReg, node, lowReg, temp->getLowOrder(), self());
       generateRegRegInstruction(MOV4RegReg, node, highReg, temp->getHighOrder(), self());
@@ -145,7 +145,7 @@ OMR::X86::I386::CodeGenerator::longClobberEvaluate(TR::Node *node)
       }
    else
       {
-      return self()->evaluate(node);
+      return evaluate(node);
       }
    }
 
@@ -158,9 +158,9 @@ OMR::X86::I386::CodeGenerator::pickRegister(
       TR_GlobalRegisterNumber &highRegisterNumber,
       TR_LinkHead<TR_RegisterCandidate> *candidates)
    {
-   if (!self()->comp()->getOption(TR_DisableRegisterPressureSimulation))
+   if (!comp()->getOption(TR_DisableRegisterPressureSimulation))
       {
-      if (self()->comp()->getOption(TR_AssignEveryGlobalRegister))
+      if (comp()->getOption(TR_AssignEveryGlobalRegister))
          {
          // This is not really necessary except for testing purposes.
          // Conceptually, the common pickRegister code should be free to make
@@ -174,7 +174,7 @@ OMR::X86::I386::CodeGenerator::pickRegister(
          // this code is redundant.  It is only necessary when
          // TR_AssignEveryGlobalRegister is set.
          //
-         availableRegisters -= *self()->getGlobalRegisters(TR_vmThreadSpill, self()->comp()->getMethodSymbol()->getLinkageConvention());
+         availableRegisters -= *getGlobalRegisters(TR_vmThreadSpill, comp()->getMethodSymbol()->getLinkageConvention());
          }
       return OMR::CodeGenerator::pickRegister(rc, allBlocks, availableRegisters, highRegisterNumber, candidates);
       }
@@ -200,7 +200,7 @@ OMR::X86::I386::CodeGenerator::pickRegister(
 
 
    if (!_assignedGlobalRegisters)
-      _assignedGlobalRegisters = new (self()->trStackMemory()) TR_BitVector(self()->comp()->getSymRefCount(), self()->trMemory(), stackAlloc, growable);
+      _assignedGlobalRegisters = new (trStackMemory()) TR_BitVector(comp()->getSymRefCount(), trMemory(), stackAlloc, growable);
 
    if (availableRegisters.get(5))
       return 5; // esi
@@ -213,7 +213,7 @@ OMR::X86::I386::CodeGenerator::pickRegister(
       return 1;
 
 #ifdef J9_PROJECT_SPECIFIC
-   TR::RecognizedMethod rm = self()->comp()->getMethodSymbol()->getRecognizedMethod();
+   TR::RecognizedMethod rm = comp()->getMethodSymbol()->getRecognizedMethod();
    if (rm == TR::java_util_HashtableHashEnumerator_hasMoreElements)
       {
       if (availableRegisters.get(4))
@@ -227,7 +227,7 @@ OMR::X86::I386::CodeGenerator::pickRegister(
       int32_t numExtraRegs = 0;
       int32_t maxRegisterPressure = 0;
 
-      vcount_t visitCount = self()->comp()->incVisitCount();
+      vcount_t visitCount = comp()->incVisitCount();
       TR_BitVectorIterator bvi(rc->getBlocksLiveOnEntry());
       int32_t maxFrequency = 0;
       while (bvi.hasMoreElements())
@@ -289,17 +289,17 @@ OMR::X86::I386::CodeGenerator::pickRegister(
                }
             }
 
-         maxRegisterPressure = self()->estimateRegisterPressure(block, visitCount, maxStaticFrequency, maxFrequency, vmThreadUsed, numAssignedGlobalRegs, _assignedGlobalRegisters, rc->getSymbolReference(), assigningEDX);
+         maxRegisterPressure = estimateRegisterPressure(block, visitCount, maxStaticFrequency, maxFrequency, vmThreadUsed, numAssignedGlobalRegs, _assignedGlobalRegisters, rc->getSymbolReference(), assigningEDX);
 
-         if (maxRegisterPressure >= self()->getMaximumNumbersOfAssignableGPRs())
+         if (maxRegisterPressure >= getMaximumNumbersOfAssignableGPRs())
             break;
          }
 
       // Determine if we can spare any extra registers for this candidate without spilling
       // in any hot (critical) blocks
       //
-      if (maxRegisterPressure < self()->getMaximumNumbersOfAssignableGPRs())
-         numExtraRegs = self()->getMaximumNumbersOfAssignableGPRs() - maxRegisterPressure;
+      if (maxRegisterPressure < getMaximumNumbersOfAssignableGPRs())
+         numExtraRegs = getMaximumNumbersOfAssignableGPRs() - maxRegisterPressure;
 
       //dumpOptDetails("For global register candidate %d reg pressure is %d maxRegs %d numExtraRegs %d\n", rc->getSymbolReference()->getReferenceNumber(), maxRegisterPressure, comp()->cg()->getMaximumNumbersOfAssignableGPRs(), numExtraRegs);
 
@@ -331,7 +331,7 @@ OMR::X86::I386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node 
       // 1 for jump table base reg, which is not apparent in the trees
       // 1 for ebp when it is needed for the VMThread
       //
-      return self()->getNumberOfGlobalGPRs() - 2;
+      return getNumberOfGlobalGPRs() - 2;
       }
 
    if (node->getOpCode().isIf())
@@ -376,7 +376,7 @@ OMR::X86::I386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node 
          {
          if (!TR::TreeEvaluator::instanceOfOrCheckCastNeedSuperTest(node->getFirstChild(), self())  &&
              TR::TreeEvaluator::instanceOfOrCheckCastNeedEqualityTest(node->getFirstChild(), self()))
-            return self()->getNumberOfGlobalGPRs() - 4; // ebp plus three other regs if vft masking is enabled
+            return getNumberOfGlobalGPRs() - 4; // ebp plus three other regs if vft masking is enabled
          else
             return 0;
          }
@@ -384,7 +384,7 @@ OMR::X86::I386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node 
       // All other conditional branches, we usually need one reg for the compare and possibly one for the vmthread
       //return getNumberOfGlobalGPRs() - 1 - (node->isVMThreadRequired()? 1 : 0);
       // vmThread required might be set on a node after GRA has ran
-      return self()->getNumberOfGlobalGPRs() - 2;
+      return getNumberOfGlobalGPRs() - 2;
       }
 
    return INT_MAX;
@@ -394,7 +394,7 @@ OMR::X86::I386::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node 
 bool
 OMR::X86::I386::CodeGenerator::codegenMulDecomposition(int64_t multiplier)
    {
-   bool iMulDecomposeReport = self()->comp()->getOptions()->getTraceSimplifier(TR_TraceMulDecomposition);
+   bool iMulDecomposeReport = comp()->getOptions()->getTraceSimplifier(TR_TraceMulDecomposition);
    bool answer = false;
    if (iMulDecomposeReport)
       diagnostic("\nCodegen was queried for the value of %d, ", (int32_t)multiplier);

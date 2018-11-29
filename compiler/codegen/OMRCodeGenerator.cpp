@@ -181,9 +181,9 @@ OMR::CodeGenerator::CodeGenerator() :
       _implicitExceptionPoint(0),
       _localsThatAreStored(NULL),
       _numLocalsWhenStoreAnalysisWasDone(-1),
-      _uncommmonedNodes(self()->comp()->trMemory(), stackAlloc),
-      _ialoadUnneeded(self()->comp()->trMemory()),
-     _symRefTab(self()->comp()->getSymRefTab()),
+      _uncommmonedNodes(comp()->trMemory(), stackAlloc),
+      _ialoadUnneeded(comp()->trMemory()),
+     _symRefTab(comp()->getSymRefTab()),
      _vmThreadRegister(NULL),
      _stackAtlas(NULL),
      _methodStackMap(NULL),
@@ -194,7 +194,7 @@ OMR::CodeGenerator::CodeGenerator() :
      _estimatedSnippetStart(0),
      _accumulatedInstructionLengthError(0),
      _registerSaveDescription(0),
-     _extendedToInt64GlobalRegisters(self()->comp()->allocator()),
+     _extendedToInt64GlobalRegisters(comp()->allocator()),
      _liveButMaybeUnreferencedLocals(NULL),
      _assignedGlobalRegisters(NULL),
      _aheadOfTimeCompile(NULL),
@@ -217,7 +217,7 @@ OMR::CodeGenerator::CodeGenerator() :
      _lastOverlappedGlobalVRF(-1),
      _overlapOffsetBetweenFPRandVRFgrns(0),
      _supportedLiveRegisterKinds(0),
-     _monitorMapping(self()->comp()->trMemory(), 256),
+     _monitorMapping(comp()->trMemory(), 256),
      _blocksWithCalls(NULL),
      _codeCache(0),
      _committedToCodeCache(false),
@@ -229,7 +229,7 @@ OMR::CodeGenerator::CodeGenerator() :
      _compressedRefs(getTypedAllocator<TR::Node*>(TR::comp()->allocator())),
      _liveReferenceList(getTypedAllocator<TR_LiveReference*>(TR::comp()->allocator())),
      _snippetList(getTypedAllocator<TR::Snippet*>(TR::comp()->allocator())),
-     _registerArray(self()->comp()->trMemory()),
+     _registerArray(comp()->trMemory()),
      _spill4FreeList(getTypedAllocator<TR_BackingStore*>(TR::comp()->allocator())),
      _spill8FreeList(getTypedAllocator<TR_BackingStore*>(TR::comp()->allocator())),
      _spill16FreeList(getTypedAllocator<TR_BackingStore*>(TR::comp()->allocator())),
@@ -260,21 +260,21 @@ OMR::CodeGenerator::CodeGenerator() :
      _realVMThreadRegister(NULL),
      _internalControlFlowNestingDepth(0),
      _internalControlFlowSafeNestingDepth(0),
-     _stackOfArtificiallyInflatedNodes(self()->comp() ? self()->comp()->trMemory() : 0, 16),
-     _stackOfMemoryReferencesCreatedDuringEvaluation(self()->comp() ? self()->comp()->trMemory() : 0, 16),
+     _stackOfArtificiallyInflatedNodes(comp() ? comp()->trMemory() : 0, 16),
+     _stackOfMemoryReferencesCreatedDuringEvaluation(comp() ? comp()->trMemory() : 0, 16),
      _afterRA(false),
-     randomizer(self()->comp()),
+     randomizer(comp()),
      _outOfLineColdPathNestedDepth(0),
      _codeGenPhase(self()),
-     _symbolDataTypeMap(self()->comp()->allocator()),
+     _symbolDataTypeMap(comp()->allocator()),
      _lmmdFailed(false)
    {
-   _machine = new (self()->trHeapMemory()) TR::Machine(self());
-   _disableInternalPointers = self()->comp()->getOption(TR_MimicInterpreterFrameShape) ||
-                               self()->comp()->getOptions()->realTimeGC() ||
-                               self()->comp()->getOption(TR_DisableInternalPointers);
+   _machine = new (trHeapMemory()) TR::Machine(self());
+   _disableInternalPointers = comp()->getOption(TR_MimicInterpreterFrameShape) ||
+                               comp()->getOptions()->realTimeGC() ||
+                               comp()->getOption(TR_DisableInternalPointers);
 
-   uintptrj_t maxSize = TR::Compiler->vm.getOverflowSafeAllocSize(self()->comp());
+   uintptrj_t maxSize = TR::Compiler->vm.getOverflowSafeAllocSize(comp());
    int32_t i;
 
    for (i = 0; i < NumRegisterKinds; ++i)
@@ -288,10 +288,10 @@ OMR::CodeGenerator::CodeGenerator() :
 
    _maxObjectSizeGuaranteedNotToOverflow = (maxSize > UINT_MAX) ? UINT_MAX : maxSize;
 
-   if (self()->comp()->getDebug())
-      self()->comp()->getDebug()->resetDebugData();
+   if (comp()->getDebug())
+      comp()->getDebug()->resetDebugData();
 
-   self()->setIsLeafMethod();
+   setIsLeafMethod();
    }
 
 void
@@ -303,19 +303,19 @@ OMR::CodeGenerator::initializeConstruction()
 TR_StackMemory
 OMR::CodeGenerator::trStackMemory()
    {
-   return self()->trMemory();
+   return trMemory();
    }
 
 TR_FrontEnd *
 OMR::CodeGenerator::fe()
    {
-   return self()->comp()->fe();
+   return comp()->fe();
    }
 
 TR_Debug *
 OMR::CodeGenerator::getDebug()
    {
-   return self()->comp()->getDebug();
+   return comp()->getDebug();
    }
 
 
@@ -338,7 +338,7 @@ OMR::CodeGenerator::generateCodeFromIL()
 void OMR::CodeGenerator::lowerTrees()
    {
 
-   TR::Delimiter d(self()->comp(), self()->comp()->getOption(TR_TraceCG), "LowerTrees");
+   TR::Delimiter d(comp(), comp()->getOption(TR_TraceCG), "LowerTrees");
 
    // Go through the trees and lower any nodes that need to be lowered. This
    // involves a call to the VM to replace the trees with other trees.
@@ -359,9 +359,9 @@ void OMR::CodeGenerator::lowerTrees()
    TR::TreeTop * tt;
    TR::Node * node;
 
-   vcount_t visitCount = self()->comp()->incVisitCount();
+   vcount_t visitCount = comp()->incVisitCount();
 
-   for (tt = self()->comp()->getStartTree(); tt; tt = tt->getNextTreeTop())
+   for (tt = comp()->getStartTree(); tt; tt = tt->getNextTreeTop())
       {
       node = tt->getNode();
 
@@ -384,7 +384,7 @@ void OMR::CodeGenerator::lowerTrees()
 
       }
 
-   self()->postLowerTrees();
+   postLowerTrees();
    }
 
 
@@ -421,9 +421,9 @@ void
 OMR::CodeGenerator::lowerTreesPropagateBlockToNode(TR::Node *node)
    {
 
-   if (self()->comp()->getFlowGraph()->getNextNodeNumber() < SHRT_MAX)
+   if (comp()->getFlowGraph()->getNextNodeNumber() < SHRT_MAX)
       {
-      node->setLocalIndex(self()->getCurrentBlock()->getNumber());
+      node->setLocalIndex(getCurrentBlock()->getNumber());
       }
    else
       {
@@ -436,8 +436,8 @@ OMR::CodeGenerator::lowerTreesPropagateBlockToNode(TR::Node *node)
 void
 OMR::CodeGenerator::preLowerTrees()
    {
-   int32_t symRefCount = self()->comp()->getSymRefCount();
-   _localsThatAreStored = new (self()->comp()->trHeapMemory()) TR_BitVector(symRefCount, self()->comp()->trMemory(), heapAlloc);
+   int32_t symRefCount = comp()->getSymRefCount();
+   _localsThatAreStored = new (comp()->trHeapMemory()) TR_BitVector(symRefCount, comp()->trMemory(), heapAlloc);
    _numLocalsWhenStoreAnalysisWasDone = symRefCount;
    }
 
@@ -450,7 +450,7 @@ OMR::CodeGenerator::lowerTreesPreTreeTopVisit(TR::TreeTop *tt, vcount_t visitCou
    if (node->getOpCodeValue() == TR::BBStart)
       {
       TR::Block *block = node->getBlock();
-      self()->setCurrentBlock(block);
+      setCurrentBlock(block);
       }
 
    }
@@ -471,7 +471,7 @@ OMR::CodeGenerator::lowerTreesPostChildrenVisit(TR::Node * parent, TR::TreeTop *
 void
 OMR::CodeGenerator::setUpForInstructionSelection()
   {
-   self()->comp()->incVisitCount();
+   comp()->incVisitCount();
 
    // prepareNodeForInstructionSelection is called during a separate walk of the treetops because
    // the _register and _label fields are unioned members of a node.  prepareNodeForInstructionSelection
@@ -480,13 +480,13 @@ OMR::CodeGenerator::setUpForInstructionSelection()
    TR::TreeTop * tt=NULL, *prev = NULL;
 
 
-   for (tt = self()->comp()->getStartTree(); tt; tt = tt->getNextTreeTop())
+   for (tt = comp()->getStartTree(); tt; tt = tt->getNextTreeTop())
       {
-      self()->prepareNodeForInstructionSelection(tt->getNode());
+      prepareNodeForInstructionSelection(tt->getNode());
       }
 
 
-   for (tt = self()->comp()->getStartTree(); tt; prev=tt, tt = tt->getNextTreeTop())
+   for (tt = comp()->getStartTree(); tt; prev=tt, tt = tt->getNextTreeTop())
       {
       TR::Node * node = tt->getNode();
 
@@ -501,7 +501,7 @@ OMR::CodeGenerator::setUpForInstructionSelection()
 
       if (opcode.getOpCodeValue() == TR::BBStart)
          {
-         self()->setCurrentBlock(node->getBlock());
+         setCurrentBlock(node->getBlock());
          }
       else if (opcode.isLoadVarOrStore())
          {
@@ -518,7 +518,7 @@ OMR::CodeGenerator::setUpForInstructionSelection()
             {
             // need to get the label type from the target block for RAS
             TR::LabelSymbol * label =
-                TR::LabelSymbol::create(self()->trHeapMemory(),self(),node->getBranchDestination()->getNode()->getBlock());
+                TR::LabelSymbol::create(trHeapMemory(),self(),node->getBranchDestination()->getNode()->getBlock());
 
             node->getBranchDestination()->getNode()->setLabel(label);
 
@@ -538,7 +538,7 @@ OMR::CodeGenerator::setUpForInstructionSelection()
          }
       else if (opcode.isCall() || opcode.getOpCodeValue() == TR::arraycopy)
          {
-         self()->setUpStackSizeForCallNode(node);
+         setUpStackSizeForCallNode(node);
          }
 
       }
@@ -581,7 +581,7 @@ OMR::CodeGenerator::setUpForInstructionSelection()
 void
 OMR::CodeGenerator::uncommonCallConstNodes()
    {
-   TR::Compilation* comp = self()->comp();
+   TR::Compilation* comp = comp();
    if(comp->getOption(TR_TraceCG))
       {
       traceMsg(comp, "Performing uncommon call constant nodes\n");
@@ -589,7 +589,7 @@ OMR::CodeGenerator::uncommonCallConstNodes()
 
    TR::NodeChecklist checklist(comp);
 
-   for (TR::TreeTop* tt = self()->comp()->getStartTree(); tt; tt = tt->getNextTreeTop())
+   for (TR::TreeTop* tt = comp()->getStartTree(); tt; tt = tt->getNextTreeTop())
       {
        TR::Node* node = tt->getNode();
        if(node->getNumChildren() >= 1 &&
@@ -612,9 +612,9 @@ OMR::CodeGenerator::uncommonCallConstNodes()
              TR::Node* paramNode = callNode->getChild(i);
              if(paramNode->getReferenceCount() > 1 &&
                      paramNode->getOpCode().isLoadConst() &&
-                     !self()->isMaterialized(paramNode))
+                     !isMaterialized(paramNode))
                 {
-                if(self()->comp()->getOption(TR_TraceCG))
+                if(comp()->getOption(TR_TraceCG))
                    {
                    traceMsg(comp, "Uncommon const node %X [n%dn]\n",
                             paramNode, paramNode->getGlobalIndex());
@@ -633,13 +633,13 @@ OMR::CodeGenerator::uncommonCallConstNodes()
 void
 OMR::CodeGenerator::doInstructionSelection()
    {
-   TR::Compilation *comp = self()->comp();
+   TR::Compilation *comp = comp();
 
    setNextAvailableBlockIndex(comp->getFlowGraph()->getNextNodeNumber() + 1);
 
    // Set default value for pre-prologue size
    //
-   self()->setPrePrologueSize(0);
+   setPrePrologueSize(0);
 
    if (comp->getOption(TR_TraceCG))
       {
@@ -648,20 +648,20 @@ OMR::CodeGenerator::doInstructionSelection()
 
    if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
       {
-      self()->getDebug()->setupToDumpTreesAndInstructions("Performing Instruction Selection");
+      getDebug()->setupToDumpTreesAndInstructions("Performing Instruction Selection");
       }
 
    beginInstructionSelection();
 
    {
-   TR::StackMemoryRegion stackMemoryRegion(*self()->trMemory());
+   TR::StackMemoryRegion stackMemoryRegion(*trMemory());
 
-   TR_BitVector *liveLocals = self()->getLiveLocals();
-   TR_BitVector nodeChecklistBeforeDump(comp->getNodeCount(), self()->trMemory(), stackAlloc, growable);
+   TR_BitVector *liveLocals = getLiveLocals();
+   TR_BitVector nodeChecklistBeforeDump(comp->getNodeCount(), trMemory(), stackAlloc, growable);
 
-   for (TR::TreeTop *tt = comp->getStartTree(); tt; tt = self()->getCurrentEvaluationTreeTop()->getNextTreeTop())
+   for (TR::TreeTop *tt = comp->getStartTree(); tt; tt = getCurrentEvaluationTreeTop()->getNextTreeTop())
       {
-      TR::Instruction *prevInstr = self()->getAppendInstruction();
+      TR::Instruction *prevInstr = getAppendInstruction();
       TR::Node *node = tt->getNode();
       TR::ILOpCodes opCode = node->getOpCodeValue();
 
@@ -670,7 +670,7 @@ OMR::CodeGenerator::doInstructionSelection()
       if (opCode == TR::BBStart)
          {
          TR::Block *block = node->getBlock();
-         self()->setCurrentEvaluationBlock(block);
+         setCurrentEvaluationBlock(block);
          setCurrentBlockIndex(block->getNumber());
 
          if (!block->isExtensionOfPreviousBlock())
@@ -682,19 +682,19 @@ OMR::CodeGenerator::doInstructionSelection()
                {
                if (block->getLiveLocals())
                   {
-                  liveLocals = new (self()->trHeapMemory()) TR_BitVector(*block->getLiveLocals());
+                  liveLocals = new (trHeapMemory()) TR_BitVector(*block->getLiveLocals());
                   }
                else
                   {
-                  liveLocals = new (self()->trHeapMemory()) TR_BitVector(*liveLocals);
+                  liveLocals = new (trHeapMemory()) TR_BitVector(*liveLocals);
                   liveLocals->empty();
                   }
                }
             }
 
-         if (self()->getDebug())
+         if (getDebug())
             {
-            self()->getDebug()->roundAddressEnumerationCounters();
+            getDebug()->roundAddressEnumerationCounters();
             }
 
 #if DEBUG
@@ -703,7 +703,7 @@ OMR::CodeGenerator::doInstructionSelection()
          //
          else if (liveLocals && debug("checkBlockEntryLiveLocals"))
             {
-            TR_BitVector *extendedBlockLocals = new (self()->trStackMemory()) TR_BitVector(*(block->getLiveLocals()));
+            TR_BitVector *extendedBlockLocals = new (trStackMemory()) TR_BitVector(*(block->getLiveLocals()));
             *extendedBlockLocals -= *(liveLocals);
 
             TR_ASSERT(extendedBlockLocals->isEmpty(),
@@ -712,28 +712,28 @@ OMR::CodeGenerator::doInstructionSelection()
 #endif
          }
 
-      self()->setLiveLocals(liveLocals);
+      setLiveLocals(liveLocals);
 
       if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
          {
          // any evaluator that handles multiple trees will need to dump
          // the others
-         self()->getDebug()->saveNodeChecklist(nodeChecklistBeforeDump);
-         self()->getDebug()->dumpSingleTreeWithInstrs(tt, NULL, true, false, true, true);
+         getDebug()->saveNodeChecklist(nodeChecklistBeforeDump);
+         getDebug()->dumpSingleTreeWithInstrs(tt, NULL, true, false, true, true);
          traceMsg(comp, "\n------------------------------\n");
          }
 
-      self()->setCurrentEvaluationTreeTop(tt);
-      self()->setImplicitExceptionPoint(NULL);
+      setCurrentEvaluationTreeTop(tt);
+      setImplicitExceptionPoint(NULL);
 
       // -----------------------------------------------------------------------
       // Node evaluation
       //
-      self()->evaluate(node);
+      evaluate(node);
 
       if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
          {
-         TR::Instruction *lastInstr = self()->getAppendInstruction();
+         TR::Instruction *lastInstr = getAppendInstruction();
          tt->setLastInstruction(lastInstr == prevInstr ? 0 : lastInstr);
          }
 
@@ -795,31 +795,31 @@ OMR::CodeGenerator::doInstructionSelection()
 
          if (liveSym)
             {
-            liveLocals = new (self()->trHeapMemory()) TR_BitVector(*liveLocals);
+            liveLocals = new (trHeapMemory()) TR_BitVector(*liveLocals);
             liveLocals->set(liveSym->getLiveLocalIndex());
             }
          }
 
       if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
          {
-         self()->getDebug()->restoreNodeChecklist(nodeChecklistBeforeDump);
-         if (tt == self()->getCurrentEvaluationTreeTop())
+         getDebug()->restoreNodeChecklist(nodeChecklistBeforeDump);
+         if (tt == getCurrentEvaluationTreeTop())
             {
             traceMsg(comp, "------------------------------\n");
-            self()->getDebug()->dumpSingleTreeWithInstrs(tt, prevInstr->getNext(), true, true, true, false);
+            getDebug()->dumpSingleTreeWithInstrs(tt, prevInstr->getNext(), true, true, true, false);
             }
          else
             {
             // dump all the trees that the evaluator handled
             traceMsg(comp, "------------------------------");
-            for (TR::TreeTop *dumptt = tt; dumptt != self()->getCurrentEvaluationTreeTop()->getNextTreeTop(); dumptt = dumptt->getNextTreeTop())
+            for (TR::TreeTop *dumptt = tt; dumptt != getCurrentEvaluationTreeTop()->getNextTreeTop(); dumptt = dumptt->getNextTreeTop())
                {
                traceMsg(comp, "\n");
-               self()->getDebug()->dumpSingleTreeWithInstrs(dumptt, NULL, true, false, true, false);
+               getDebug()->dumpSingleTreeWithInstrs(dumptt, NULL, true, false, true, false);
                }
 
             // all instructions are on the tt tree
-            self()->getDebug()->dumpSingleTreeWithInstrs(tt, prevInstr->getNext(), false, true, false, false);
+            getDebug()->dumpSingleTreeWithInstrs(tt, prevInstr->getNext(), false, true, false, false);
             }
 
          trfflush(comp->getOutFile());
@@ -830,7 +830,7 @@ OMR::CodeGenerator::doInstructionSelection()
    // Virtual function insertInstructionPrefetches is implemented only for s390 platform,
    // for all other platforms the function is empty
    //
-   self()->insertInstructionPrefetches();
+   insertInstructionPrefetches();
 #endif
    } // scope of the stack memory region
 
@@ -839,9 +839,9 @@ OMR::CodeGenerator::doInstructionSelection()
       comp->incVisitCount();
       }
 
-   if (self()->getDebug())
+   if (getDebug())
       {
-      self()->getDebug()->roundAddressEnumerationCounters();
+      getDebug()->roundAddressEnumerationCounters();
       }
 
    endInstructionSelection();
@@ -860,7 +860,7 @@ OMR::CodeGenerator::use64BitRegsOn32Bit()
       return false;
    else
       {
-      return !self()->comp()->getOption(TR_Disable64BitRegsOn32Bit);
+      return !comp()->getOption(TR_Disable64BitRegsOn32Bit);
       }
 #endif // TR_TARGET_S390
    return false;
@@ -869,7 +869,7 @@ OMR::CodeGenerator::use64BitRegsOn32Bit()
 TR_PersistentMemory *
 OMR::CodeGenerator::trPersistentMemory()
    {
-   return self()->trMemory()->trPersistentMemory();
+   return trMemory()->trPersistentMemory();
    }
 
 void
@@ -927,7 +927,7 @@ OMR::CodeGenerator::canClobberNodesRegister(
    {
    if (!ignoreRefCount && node->getReferenceCount() > count) return false;
 
-   if (self()->useClobberEvaluate()) return true;
+   if (useClobberEvaluate()) return true;
 
    TR::Register *reg = node->getRegister();
    TR::RegisterPair *regPair = reg->getRegisterPair();
@@ -936,7 +936,7 @@ OMR::CodeGenerator::canClobberNodesRegister(
 
    if (!regPair)
       {
-      bool clobber = self()->isRegisterClobberable(reg, count);
+      bool clobber = isRegisterClobberable(reg, count);
       if (data && clobber)
          {
          data->setClobberLowWord();
@@ -948,7 +948,7 @@ OMR::CodeGenerator::canClobberNodesRegister(
       bool clobberHigh = false;
       bool clobberLow = false;
 
-      if(self()->isRegisterClobberable(regPair->getHighOrder(), count))
+      if(isRegisterClobberable(regPair->getHighOrder(), count))
          {
          clobberHigh = true;
          if (data)
@@ -956,7 +956,7 @@ OMR::CodeGenerator::canClobberNodesRegister(
             data->setClobberHighWord();
             }
          }
-      if (self()->isRegisterClobberable(regPair->getLowOrder(), count))
+      if (isRegisterClobberable(regPair->getLowOrder(), count))
          {
          clobberLow = true;
          if (data)
@@ -971,7 +971,7 @@ OMR::CodeGenerator::canClobberNodesRegister(
 bool
 OMR::CodeGenerator::getSupportsTLE()
    {
-   return self()->getSupportsTM();
+   return getSupportsTM();
    }
 
 /** \brief
@@ -1003,40 +1003,40 @@ OMR::CodeGenerator::getSupportsBitPermute()
 bool
 OMR::CodeGenerator::getSupportsConstantOffsetInAddressing(int64_t value)
    {
-   return self()->getSupportsConstantOffsetInAddressing();
+   return getSupportsConstantOffsetInAddressing();
    }
 
 void
 OMR::CodeGenerator::toggleIsInOOLSection()
    {
-   _flags4.set(IsInOOLSection, !self()->getIsInOOLSection());
+   _flags4.set(IsInOOLSection, !getIsInOOLSection());
    }
 
 bool OMR::CodeGenerator::traceBCDCodeGen()
    {
-   return self()->comp()->getOptions()->getTraceCGOption(TR_TraceCGBinaryCodedDecimal);
+   return comp()->getOptions()->getTraceCGOption(TR_TraceCGBinaryCodedDecimal);
    }
 
 void OMR::CodeGenerator::traceBCDEntry(char *str, TR::Node *node)
    {
-   if (self()->traceBCDCodeGen())
-      traceMsg(self()->comp(),"EVAL: %s 0x%p - start\n",str,node);
+   if (traceBCDCodeGen())
+      traceMsg(comp(),"EVAL: %s 0x%p - start\n",str,node);
    }
 
 void OMR::CodeGenerator::traceBCDExit(char *str, TR::Node *node)
    {
-   if (self()->traceBCDCodeGen())
-      traceMsg(self()->comp(),"EVAL: %s 0x%p - end\n",str,node);
+   if (traceBCDCodeGen())
+      traceMsg(comp(),"EVAL: %s 0x%p - end\n",str,node);
    }
 
 bool OMR::CodeGenerator::traceSimulateTreeEvaluation()
    {
-   return self()->comp()->getOptions()->trace(OMR::tacticalGlobalRegisterAllocator) && !self()->comp()->getOption(TR_TerseRegisterPressureTrace);
+   return comp()->getOptions()->trace(OMR::tacticalGlobalRegisterAllocator) && !comp()->getOption(TR_TerseRegisterPressureTrace);
    }
 
 bool OMR::CodeGenerator::terseSimulateTreeEvaluation()
    {
-   return self()->comp()->getOptions()->trace(OMR::tacticalGlobalRegisterAllocator);
+   return comp()->getOptions()->trace(OMR::tacticalGlobalRegisterAllocator);
    }
 
 
@@ -1059,8 +1059,8 @@ void OMR::CodeGenerator::initializeLinkage()
    // Expect to call once during initialization
    //
    linkage = createLinkageForCompilation();
-   linkage = linkage ? linkage : createLinkage(self()->comp()->getJittedMethodSymbol()->getLinkageConvention());
-   self()->setLinkage(linkage);
+   linkage = linkage ? linkage : createLinkage(comp()->getJittedMethodSymbol()->getLinkageConvention());
+   setLinkage(linkage);
    }
 
 TR::Linkage *OMR::CodeGenerator::createLinkage(TR_LinkageConventions lc)
@@ -1072,12 +1072,12 @@ TR::Linkage *OMR::CodeGenerator::createLinkage(TR_LinkageConventions lc)
 bool
 OMR::CodeGenerator::mulDecompositionCostIsJustified(int numOfOperations, char bitPosition[], char operationType[], int64_t value)
    {
-   if (self()->comp()->getOptions()->getTraceSimplifier(TR_TraceMulDecomposition))
+   if (comp()->getOptions()->getTraceSimplifier(TR_TraceMulDecomposition))
       {
       if (numOfOperations <= 3)
-         traceMsg(self()->comp(), "MulDecomp cost is justified\n");
+         traceMsg(comp(), "MulDecomp cost is justified\n");
       else
-         traceMsg(self()->comp(), "MulDecomp cost is too high. numCycle=%i(max:3)\n", numOfOperations);
+         traceMsg(comp(), "MulDecomp cost is too high. numCycle=%i(max:3)\n", numOfOperations);
       }
    return numOfOperations <= 3 && numOfOperations != 0;
    }
@@ -1085,44 +1085,44 @@ OMR::CodeGenerator::mulDecompositionCostIsJustified(int numOfOperations, char bi
 uint8_t *
 OMR::CodeGenerator::getCodeStart()
    {
-   return _binaryBufferStart + self()->getPrePrologueSize() + _jitMethodEntryPaddingSize;
+   return _binaryBufferStart + getPrePrologueSize() + _jitMethodEntryPaddingSize;
    }
 
 uint32_t
 OMR::CodeGenerator::getCodeLength() // cast explicitly
    {
-   return (uint32_t)(self()->getCodeEnd() - self()->getCodeStart());
+   return (uint32_t)(getCodeEnd() - getCodeStart());
    }
 
 bool
 OMR::CodeGenerator::isGlobalVRF(TR_GlobalRegisterNumber n)
    {
-   return self()->hasGlobalVRF() &&
-          n >= self()->getFirstGlobalVRF() &&
-          n <= self()->getLastGlobalVRF();
+   return hasGlobalVRF() &&
+          n >= getFirstGlobalVRF() &&
+          n <= getLastGlobalVRF();
    }
 
 bool
 OMR::CodeGenerator::isGlobalFPR(TR_GlobalRegisterNumber n)
    {
-   return !self()->isGlobalGPR(n) && !self()->isGlobalHPR(n);
+   return !isGlobalGPR(n) && !isGlobalHPR(n);
    }
 
 TR_BitVector *
 OMR::CodeGenerator::getBlocksWithCalls()
    {
    if (!_blocksWithCalls)
-      self()->computeBlocksWithCalls();
+      computeBlocksWithCalls();
    return _blocksWithCalls;
    }
 
-bool OMR::CodeGenerator::profiledPointersRequireRelocation() { return self()->comp()->compileRelocatableCode(); }
+bool OMR::CodeGenerator::profiledPointersRequireRelocation() { return comp()->compileRelocatableCode(); }
 
-bool OMR::CodeGenerator::needGuardSitesEvenWhenGuardRemoved() { return self()->comp()->compileRelocatableCode(); }
+bool OMR::CodeGenerator::needGuardSitesEvenWhenGuardRemoved() { return comp()->compileRelocatableCode(); }
 
-bool OMR::CodeGenerator::supportVMInternalNatives() { return !self()->comp()->compileRelocatableCode(); }
+bool OMR::CodeGenerator::supportVMInternalNatives() { return !comp()->compileRelocatableCode(); }
 
-bool OMR::CodeGenerator::supportsNativeLongOperations() { return (TR::Compiler->target.is64Bit() || self()->use64BitRegsOn32Bit()); }
+bool OMR::CodeGenerator::supportsNativeLongOperations() { return (TR::Compiler->target.is64Bit() || use64BitRegsOn32Bit()); }
 
 bool OMR::CodeGenerator::supportsInternalPointers()
    {
@@ -1136,7 +1136,7 @@ bool OMR::CodeGenerator::supportsInternalPointers()
 uint16_t
 OMR::CodeGenerator::getNumberOfGlobalRegisters()
    {
-   if (self()->hasGlobalVRF())
+   if (hasGlobalVRF())
       return _lastGlobalVRF + 1;
    else
       return _lastGlobalFPR + 1;
@@ -1146,7 +1146,7 @@ OMR::CodeGenerator::getNumberOfGlobalRegisters()
 #ifdef TR_HOST_S390
 uint16_t OMR::CodeGenerator::getNumberOfGlobalGPRs()
    {
-   if (self()->supportsHighWordFacility() && !self()->comp()->getOption(TR_DisableHighWordRA))
+   if (supportsHighWordFacility() && !comp()->getOption(TR_DisableHighWordRA))
       {
       return _firstGlobalHPR;
       }
@@ -1163,14 +1163,14 @@ int32_t OMR::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Block *b
 
 TR::Register *OMR::CodeGenerator::allocateCollectedReferenceRegister()
    {
-   TR::Register * temp = self()->allocateRegister();
+   TR::Register * temp = allocateRegister();
    temp->setContainsCollectedReference();
    return temp;
    }
 
 TR::Register *OMR::CodeGenerator::allocateSinglePrecisionRegister(TR_RegisterKinds rk)
    {
-   TR::Register * temp = self()->allocateRegister(rk);
+   TR::Register * temp = allocateRegister(rk);
    temp->setIsSinglePrecision();
    return temp;
    }
@@ -1180,9 +1180,9 @@ TR::Register *OMR::CodeGenerator::allocate64bitRegister()
    TR::Register * temp = NULL;
 
    if (TR::Compiler->target.is64Bit())
-      temp = self()->allocateRegister();
+      temp = allocateRegister();
    else
-      temp = self()->allocateRegister(TR_GPR64);
+      temp = allocateRegister(TR_GPR64);
 
    return temp;
    }
@@ -1216,7 +1216,7 @@ void OMR::CodeGenerator::addSnippet(TR::Snippet *s)
 void OMR::CodeGenerator::setCurrentBlock(TR::Block *b)
    {
    _currentBlock = b;
-   self()->comp()->setCurrentBlock(b);
+   comp()->setCurrentBlock(b);
    }
 
 
@@ -1224,7 +1224,7 @@ bool
 OMR::CodeGenerator::useClobberEvaluate()
    {
 #if defined(TR_HOST_S390) || defined(TR_HOST_POWER)
-   if(!self()->comp()->getOption(TR_DisableEnhancedClobberEval))
+   if(!comp()->getOption(TR_DisableEnhancedClobberEval))
       return false;
 #endif
    return true;
@@ -1241,64 +1241,64 @@ OMR::CodeGenerator::opCodeIsNoOp(TR::ILOpCode &opCode)
    }
 
 
-bool OMR::CodeGenerator::getTraceRAOption(uint32_t mask){ return self()->comp()->getOptions()->getTraceRAOption(mask); }
+bool OMR::CodeGenerator::getTraceRAOption(uint32_t mask){ return comp()->getOptions()->getTraceRAOption(mask); }
 
 void OMR::CodeGenerator::traceRAInstruction(TR::Instruction *instr)
    {
    const static char * traceEveryInstruction = feGetEnv("TR_traceEveryInstructionDuringRA");
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterAssignment(instr, true, traceEveryInstruction ? true : false);
+   if (getDebug())
+      getDebug()->traceRegisterAssignment(instr, true, traceEveryInstruction ? true : false);
    }
 
 void OMR::CodeGenerator::tracePreRAInstruction(TR::Instruction *instr)
    {
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterAssignment(instr, false);
+   if (getDebug())
+      getDebug()->traceRegisterAssignment(instr, false);
    }
 
 void OMR::CodeGenerator::tracePostRAInstruction(TR::Instruction *instr)
    {
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterAssignment(instr, false, true);
+   if (getDebug())
+      getDebug()->traceRegisterAssignment(instr, false, true);
    }
 
 void OMR::CodeGenerator::traceRegAssigned(TR::Register *virtReg, TR::Register *realReg)
    {
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterAssigned(_regAssignFlags, virtReg, realReg);
+   if (getDebug())
+      getDebug()->traceRegisterAssigned(_regAssignFlags, virtReg, realReg);
    }
 
 void OMR::CodeGenerator::traceRegAssigned(TR::Register *virtReg, TR::Register *realReg, TR_RegisterAssignmentFlags flags)
    {
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterAssigned(flags, virtReg, realReg);
+   if (getDebug())
+      getDebug()->traceRegisterAssigned(flags, virtReg, realReg);
    }
 
 void OMR::CodeGenerator::traceRegFreed(TR::Register *virtReg, TR::Register *realReg)
    {
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterFreed(virtReg, realReg);
+   if (getDebug())
+      getDebug()->traceRegisterFreed(virtReg, realReg);
    }
 
 void OMR::CodeGenerator::traceRegInterference(TR::Register *virtReg, TR::Register *interferingVirtual, int32_t distance)
    {
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterInterference(virtReg, interferingVirtual, distance);
+   if (getDebug())
+      getDebug()->traceRegisterInterference(virtReg, interferingVirtual, distance);
    }
 
 void OMR::CodeGenerator::traceRegWeight(TR::Register *realReg, uint32_t weight)
    {
-   if (self()->getDebug())
-      self()->getDebug()->traceRegisterWeight(realReg, weight);
+   if (getDebug())
+      getDebug()->traceRegisterWeight(realReg, weight);
    }
 
 void OMR::CodeGenerator::traceRegisterAssignment(const char *format, ...)
    {
-   if (self()->getDebug())
+   if (getDebug())
       {
       va_list args;
       va_start(args, format);
-      self()->getDebug()->traceRegisterAssignment(format, args);
+      getDebug()->traceRegisterAssignment(format, args);
       va_end(args);
       }
    }
@@ -1306,14 +1306,14 @@ void OMR::CodeGenerator::traceRegisterAssignment(const char *format, ...)
 bool
 OMR::CodeGenerator::enableRefinedAliasSets()
    {
-   if (self()->comp()->getOption(TR_EnableHCR))
+   if (comp()->getOption(TR_EnableHCR))
       {
       return false;  // Methods can change, so remembered alias info is unreliable
       }
 
    return
       _enabledFlags.testAny(EnableRefinedAliasSets) &&
-      !self()->comp()->getOption(TR_DisableRefinedAliases);
+      !comp()->getOption(TR_DisableRefinedAliases);
    }
 
 
@@ -1326,22 +1326,22 @@ OMR::CodeGenerator::enableRefinedAliasSets()
 void
 OMR::CodeGenerator::generateCode()
    {
-   LexicalTimer t("Code Generation", self()->comp()->phaseTimer());
-   TR::LexicalMemProfiler mp("Code Generation", self()->comp()->phaseMemProfiler());
+   LexicalTimer t("Code Generation", comp()->phaseTimer());
+   TR::LexicalMemProfiler mp("Code Generation", comp()->phaseMemProfiler());
    LexicalXmlTag cgMsg(self());
 
-   self()->getCodeGeneratorPhase().performAll();
+   getCodeGeneratorPhase().performAll();
    }
 
 
 void
 OMR::CodeGenerator::removeUnusedLocals()
    {
-   if (self()->comp()->getOption(TR_MimicInterpreterFrameShape))
+   if (comp()->getOption(TR_MimicInterpreterFrameShape))
       return;
 
 
-   self()->comp()->getMethodSymbol()->removeUnusedLocals();
+   comp()->getMethodSymbol()->removeUnusedLocals();
    }
 
 
@@ -1385,15 +1385,15 @@ OMR::CodeGenerator::storageMayOverlap(TR::Node *node1, size_t length1, TR::Node 
    if ((node2->getOpCode().isLoadVarOrStore() || node2->getType().isAddress()) && // node1 is usually an always valid store so check node2 first
        (node1->getOpCode().isLoadVarOrStore() || node1->getType().isAddress()))
       {
-      TR_StorageInfo node1Info = TR_StorageInfo(node1, length1, self()->comp());
-      TR_StorageInfo node2Info = TR_StorageInfo(node2, length2, self()->comp());
+      TR_StorageInfo node1Info = TR_StorageInfo(node1, length1, comp());
+      TR_StorageInfo node2Info = TR_StorageInfo(node2, length2, comp());
 
       return node1Info.mayOverlapWith(&node2Info);
       }
    else
       {
-      if (self()->traceBCDCodeGen())
-         traceMsg(self()->comp(),"overlap=true : node1 %s (%p) and/or node2 %s (%p) are not valid load/store/address nodes\n",
+      if (traceBCDCodeGen())
+         traceMsg(comp(),"overlap=true : node1 %s (%p) and/or node2 %s (%p) are not valid load/store/address nodes\n",
             node1->getOpCode().getName(),node1,node2->getOpCode().getName(),node2);
 
       return TR_MayOverlap;
@@ -1428,17 +1428,17 @@ OMR::CodeGenerator::defaultArrayTranslateMinimumNumberOfIterations(const char *m
 bool
 OMR::CodeGenerator::isAliasedGRN(TR_GlobalRegisterNumber n)
      {
-     TR_ASSERT(self()->isGlobalVRF(n) || self()->isGlobalFPR(n),
-               "Global register number is of incorrect type. Current type: %d (%s)", n, self()->getDebug()->getGlobalRegisterName(n));
+     TR_ASSERT(isGlobalVRF(n) || isGlobalFPR(n),
+               "Global register number is of incorrect type. Current type: %d (%s)", n, getDebug()->getGlobalRegisterName(n));
      return n >= _firstOverlappedGlobalFPR && n <= _lastOverlappedGlobalFPR; // _lastOverlappedFPR includes _lastOverlappingVector
      }
 
 TR_GlobalRegisterNumber
 OMR::CodeGenerator::getOverlappedAliasForGRN(TR_GlobalRegisterNumber n)
    {
-   TR_ASSERT(self()->isAliasedGRN(n),
-             "Can only get alias from supported types. Current grn : %d (%s)", n, self()->getDebug()->getGlobalRegisterName(n));
-   TR_ASSERT(self()->getOverlapOffsetBetweenAliasedGRNs() > 0, "Overlap offset must be set before invoking this method");
+   TR_ASSERT(isAliasedGRN(n),
+             "Can only get alias from supported types. Current grn : %d (%s)", n, getDebug()->getGlobalRegisterName(n));
+   TR_ASSERT(getOverlapOffsetBetweenAliasedGRNs() > 0, "Overlap offset must be set before invoking this method");
 
    TR_GlobalRegisterNumber aliasedGrn = -1;
 
@@ -1452,13 +1452,13 @@ OMR::CodeGenerator::getOverlappedAliasForGRN(TR_GlobalRegisterNumber n)
 
    if (n >= _firstOverlappedGlobalFPR && n < _firstOverlappedGlobalVRF)     // n is a a float grn but not a vector grn
       {
-      aliasedGrn = n + self()->getOverlapOffsetBetweenAliasedGRNs();
-      TR_ASSERT(self()->isGlobalVRF(aliasedGrn),"Aliased FPR %d did not give an a valid VRF %d", n, aliasedGrn);
+      aliasedGrn = n + getOverlapOffsetBetweenAliasedGRNs();
+      TR_ASSERT(isGlobalVRF(aliasedGrn),"Aliased FPR %d did not give an a valid VRF %d", n, aliasedGrn);
       }
    else if (n >= _firstOverlappedGlobalVRF && n <= _lastOverlappedGlobalVRF) // n is a pure overlapped vector grn
       {
-      aliasedGrn = n - self()->getOverlapOffsetBetweenAliasedGRNs();
-      TR_ASSERT(self()->isGlobalVRF(aliasedGrn),"Aliased VRF %d did not give an a valid FPR %d", n, aliasedGrn);
+      aliasedGrn = n - getOverlapOffsetBetweenAliasedGRNs();
+      TR_ASSERT(isGlobalVRF(aliasedGrn),"Aliased VRF %d did not give an a valid FPR %d", n, aliasedGrn);
       }
    else
       {
@@ -1482,7 +1482,7 @@ OMR::CodeGenerator::isSupportedAdd(TR::Node *addr)
 
 bool OMR::CodeGenerator::uniqueAddressOccurrence(TR::Node *addr1, TR::Node *addr2, bool addressesUnderSameTreeTop)
    {
-   bool duringEvaluation = self()->getCodeGeneratorPhase() > TR::CodeGenPhase::SetupForInstructionSelectionPhase;
+   bool duringEvaluation = getCodeGeneratorPhase() > TR::CodeGenPhase::SetupForInstructionSelectionPhase;
    if (!addressesUnderSameTreeTop) return false;
 
    if (duringEvaluation)
@@ -1537,7 +1537,7 @@ OMR::CodeGenerator::nodeMatches(TR::Node *addr1, TR::Node *addr2, bool addresses
       //    iload _GPR13
       foundMatch = true;
       }
-   else if (self()->uniqueAddressOccurrence(addr1, addr2, addressesUnderSameTreeTop))
+   else if (uniqueAddressOccurrence(addr1, addr2, addressesUnderSameTreeTop))
       {
       TR::ILOpCode op1 = addr1->getOpCode();
       TR::ILOpCode op2 = addr2->getOpCode();
@@ -1549,7 +1549,7 @@ OMR::CodeGenerator::nodeMatches(TR::Node *addr1, TR::Node *addr2, bool addresses
          if (op1.isLoadDirect())
             foundMatch = true;
          // aloadi, ardbari etc
-         else if (op1.isLoadIndirect() && self()->nodeMatches(addr1->getFirstChild(), addr2->getFirstChild(),addressesUnderSameTreeTop))
+         else if (op1.isLoadIndirect() && nodeMatches(addr1->getFirstChild(), addr2->getFirstChild(),addressesUnderSameTreeTop))
             foundMatch = true;
          }
       }
@@ -1565,14 +1565,14 @@ OMR::CodeGenerator::additionsMatch(TR::Node *addr1, TR::Node *addr2, bool addres
    TR::Node *addr2ChildOne = addr2->getFirstChild();
    TR::Node *addr1ChildTwo = addr1->getSecondChild();
    TR::Node *addr2ChildTwo = addr2->getSecondChild();
-   if (self()->nodeMatches(addr1ChildOne, addr2ChildOne, addressesUnderSameTreeTop))
+   if (nodeMatches(addr1ChildOne, addr2ChildOne, addressesUnderSameTreeTop))
       {
-      if (self()->nodeMatches(addr1ChildTwo, addr2ChildTwo, addressesUnderSameTreeTop))
+      if (nodeMatches(addr1ChildTwo, addr2ChildTwo, addressesUnderSameTreeTop))
          {
          foundMatch = true;
          }
-      else if (self()->isSupportedAdd(addr1ChildTwo) && self()->isSupportedAdd(addr2ChildTwo) &&
-               self()->additionsMatch(addr1ChildTwo, addr2ChildTwo, addressesUnderSameTreeTop))
+      else if (isSupportedAdd(addr1ChildTwo) && isSupportedAdd(addr2ChildTwo) &&
+               additionsMatch(addr1ChildTwo, addr2ChildTwo, addressesUnderSameTreeTop))
          {
          // aladd
          //    loadaddr
@@ -1588,9 +1588,9 @@ OMR::CodeGenerator::additionsMatch(TR::Node *addr1, TR::Node *addr2, bool addres
          foundMatch = true;
          }
       }
-   else if (self()->nodeMatches(addr1ChildTwo, addr2ChildTwo, addressesUnderSameTreeTop) &&
-            self()->isSupportedAdd(addr1ChildOne) && self()->isSupportedAdd(addr2ChildOne) &&
-            self()->additionsMatch(addr1ChildOne, addr2ChildOne, addressesUnderSameTreeTop))
+   else if (nodeMatches(addr1ChildTwo, addr2ChildTwo, addressesUnderSameTreeTop) &&
+            isSupportedAdd(addr1ChildOne) && isSupportedAdd(addr2ChildOne) &&
+            additionsMatch(addr1ChildOne, addr2ChildOne, addressesUnderSameTreeTop))
       {
       // aiadd
       //    aiadd                   // addr1ChildOne
@@ -1605,7 +1605,7 @@ OMR::CodeGenerator::additionsMatch(TR::Node *addr1, TR::Node *addr2, bool addres
       //    iconst y                // addr2ChildTwo
       foundMatch = true;
       }
-   else if (self()->isSupportedAdd(addr1ChildOne) &&
+   else if (isSupportedAdd(addr1ChildOne) &&
             addr1ChildOne->getFirstChild() == addr2ChildOne &&
             addr1ChildOne->getSecondChild()->getOpCode().isLoadConst() &&
             addr1ChildTwo->getOpCode().isLoadConst() &&
@@ -1643,29 +1643,29 @@ OMR::CodeGenerator::addressesMatch(TR::Node *addr1, TR::Node *addr2, bool addres
    {
    bool foundMatch = false;
 
-   if (self()->nodeMatches(addr1, addr2, addressesUnderSameTreeTop))
+   if (nodeMatches(addr1, addr2, addressesUnderSameTreeTop))
       {
       foundMatch = true;
       }
    else
       {
-      if (self()->isSupportedAdd(addr1) && self()->isSupportedAdd(addr2))
+      if (isSupportedAdd(addr1) && isSupportedAdd(addr2))
          {
-         if (self()->additionsMatch(addr1, addr2, addressesUnderSameTreeTop))
+         if (additionsMatch(addr1, addr2, addressesUnderSameTreeTop))
             {
             foundMatch = true;
             }
          else if (addr1->getFirstChild() && addr2->getFirstChild() &&
-                  self()->isSupportedAdd(addr1->getFirstChild()) && self()->isSupportedAdd(addr2->getFirstChild()))
+                  isSupportedAdd(addr1->getFirstChild()) && isSupportedAdd(addr2->getFirstChild()))
             {
-            bool firstChildrenMatch = self()->additionsMatch(addr1->getFirstChild(), addr2->getFirstChild(), addressesUnderSameTreeTop);
+            bool firstChildrenMatch = additionsMatch(addr1->getFirstChild(), addr2->getFirstChild(), addressesUnderSameTreeTop);
             bool secondChildrenMatch = false;
 
             if (firstChildrenMatch &&
                 addr1->getSecondChild() && addr2->getSecondChild() &&
-                self()->isSupportedAdd(addr1->getSecondChild()) && self()->isSupportedAdd(addr2->getSecondChild()))
+                isSupportedAdd(addr1->getSecondChild()) && isSupportedAdd(addr2->getSecondChild()))
                {
-               secondChildrenMatch = self()->additionsMatch(addr1->getSecondChild(), addr2->getSecondChild(), addressesUnderSameTreeTop);
+               secondChildrenMatch = additionsMatch(addr1->getSecondChild(), addr2->getSecondChild(), addressesUnderSameTreeTop);
                }
 
             foundMatch = firstChildrenMatch && secondChildrenMatch;
@@ -1675,14 +1675,14 @@ OMR::CodeGenerator::addressesMatch(TR::Node *addr1, TR::Node *addr2, bool addres
 
    if (!foundMatch && addressesUnderSameTreeTop)
       {
-      bool duringEvaluation = self()->getCodeGeneratorPhase() > TR::CodeGenPhase::SetupForInstructionSelectionPhase;
+      bool duringEvaluation = getCodeGeneratorPhase() > TR::CodeGenPhase::SetupForInstructionSelectionPhase;
       // if the caller asserts the addresses are under the same treetop (so no intervening kills are possible)
       //  and one of the mutually exclusive tests below are true then addresses will also match
       // 1) before evaluation : refCounts of both nodes are 1 (a more refined test, that requires scanning ahead in the block, is if both are first references)
       // 2) during evaluation : registers are both NULL (i.e. both first ref)
 
-      if (self()->isSupportedAdd(addr1) && self()->isSupportedAdd(addr2) &&
-          self()->nodeMatches(addr1->getSecondChild(), addr2->getSecondChild(), addressesUnderSameTreeTop))
+      if (isSupportedAdd(addr1) && isSupportedAdd(addr2) &&
+          nodeMatches(addr1->getSecondChild(), addr2->getSecondChild(), addressesUnderSameTreeTop))
          {
          // for the case where the iaload itself is below an addition, match the additions first
          // aiadd
@@ -1701,8 +1701,8 @@ OMR::CodeGenerator::addressesMatch(TR::Node *addr1, TR::Node *addr2, bool addres
       if (addr1->getOpCodeValue() == TR::aloadi &&
           addr2->getOpCodeValue() == TR::aloadi &&
           addr1->getSymbolReference() == addr2->getSymbolReference() &&
-          self()->addressesMatch(addr1->getFirstChild(), addr2->getFirstChild()) &&
-          self()->uniqueAddressOccurrence(addr1, addr2, addressesUnderSameTreeTop))
+          addressesMatch(addr1->getFirstChild(), addr2->getFirstChild()) &&
+          uniqueAddressOccurrence(addr1, addr2, addressesUnderSameTreeTop))
          {
          foundMatch = true;
          }
@@ -1715,19 +1715,19 @@ OMR::CodeGenerator::addressesMatch(TR::Node *addr1, TR::Node *addr2, bool addres
 void
 OMR::CodeGenerator::reserveCodeCache()
    {
-   _codeCache = self()->fe()->getDesignatedCodeCache(self()->comp());
+   _codeCache = fe()->getDesignatedCodeCache(comp());
    if (!_codeCache) // Cannot reserve a cache; all are used
       {
       // We may reach this point if all code caches have been used up
       // If some code caches have some space but cannot be used because they are reserved
       // we will throw an exception in the call to getDesignatedCodeCache
 
-      if (self()->comp()->compileRelocatableCode())
+      if (comp()->compileRelocatableCode())
          {
-         self()->comp()->failCompilation<TR::RecoverableCodeCacheError>("Cannot reserve code cache");
+         comp()->failCompilation<TR::RecoverableCodeCacheError>("Cannot reserve code cache");
          }
 
-      self()->comp()->failCompilation<TR::CodeCacheError>("Cannot reserve code cache");
+      comp()->failCompilation<TR::CodeCacheError>("Cannot reserve code cache");
       }
    }
 
@@ -1735,10 +1735,10 @@ uint8_t *
 OMR::CodeGenerator::allocateCodeMemory(uint32_t warmSize, uint32_t coldSize, uint8_t **coldCode, bool isMethodHeaderNeeded)
    {
    uint8_t *warmCode;
-   warmCode = self()->fe()->allocateCodeMemory(self()->comp(), warmSize, coldSize, coldCode, isMethodHeaderNeeded);
-   if (self()->getCodeGeneratorPhase() == TR::CodeGenPhase::BinaryEncodingPhase)
+   warmCode = fe()->allocateCodeMemory(comp(), warmSize, coldSize, coldCode, isMethodHeaderNeeded);
+   if (getCodeGeneratorPhase() == TR::CodeGenPhase::BinaryEncodingPhase)
       {
-      self()->commitToCodeCache();
+      commitToCodeCache();
       }
    TR_ASSERT( !((warmSize && !warmCode) || (coldSize && !coldCode)), "Allocation failed but didn't throw an exception");
    return warmCode;
@@ -1750,17 +1750,17 @@ OMR::CodeGenerator::allocateCodeMemory(uint32_t size, bool isCold, bool isMethod
    uint8_t *coldCode;
    if (isCold)
       {
-      self()->allocateCodeMemory(0, size, &coldCode, isMethodHeaderNeeded);
+      allocateCodeMemory(0, size, &coldCode, isMethodHeaderNeeded);
       return coldCode;
       }
-   return self()->allocateCodeMemory(size, 0, &coldCode, isMethodHeaderNeeded);
+   return allocateCodeMemory(size, 0, &coldCode, isMethodHeaderNeeded);
    }
 
 void
 OMR::CodeGenerator::resizeCodeMemory()
    {
-   int32_t codeLength = self()->getCodeEnd()-self()->getBinaryBufferStart();
-   self()->fe()->resizeCodeMemory(self()->comp(), self()->getBinaryBufferStart(), codeLength);
+   int32_t codeLength = getCodeEnd()-getBinaryBufferStart();
+   fe()->resizeCodeMemory(comp(), getBinaryBufferStart(), codeLength);
    }
 
 bool
@@ -1824,7 +1824,7 @@ OMR::CodeGenerator::convertMultiplyToShift(TR::Node * node)
    // Change the multiply into a shift.  We must create a new node for the new
    // constant as it might be referenced in a snippet.
    //
-   self()->decReferenceCount(secondChild);
+   decReferenceCount(secondChild);
    secondChild = TR::Node::create(secondChild, TR::iconst, 0);
    node->setAndIncChild(1, secondChild);
 
@@ -1843,7 +1843,7 @@ OMR::CodeGenerator::convertMultiplyToShift(TR::Node * node)
 bool
 OMR::CodeGenerator::isMemoryUpdate(TR::Node *node)
    {
-   if (self()->comp()->getOption(TR_DisableDirectMemoryOps))
+   if (comp()->getOption(TR_DisableDirectMemoryOps))
       return false;
 
    // See if the given store node can be represented by a direct operation on the
@@ -1902,7 +1902,7 @@ OMR::CodeGenerator::isMemoryUpdate(TR::Node *node)
          if (node->getFirstChild() == loadNode->getFirstChild())
             break;
          // make sure the address nodes matches (aladd, etc.)
-         if (self()->addressesMatch(node->getFirstChild(), loadNode->getFirstChild(), true))
+         if (addressesMatch(node->getFirstChild(), loadNode->getFirstChild(), true))
             break;
          }
       }
@@ -2195,19 +2195,19 @@ loop:
 uint8_t *
 OMR::CodeGenerator::alignBinaryBufferCursor()
    {
-   uintptr_t boundary = self()->comp()->getOptions()->getJitMethodEntryAlignmentBoundary(self());
+   uintptr_t boundary = comp()->getOptions()->getJitMethodEntryAlignmentBoundary(self());
 
    /* Align cursor to boundary */
    if (boundary && (boundary & boundary - 1) == 0)
       {
       uintptr_t round = boundary - 1;
-      uintptr_t offset = self()->getPreJitMethodEntrySize();
+      uintptr_t offset = getPreJitMethodEntrySize();
 
       _binaryBufferCursor += offset;
       _binaryBufferCursor = (uint8_t *)(((uintptr_t)_binaryBufferCursor + round) & ~round);
       _binaryBufferCursor -= offset;
-      self()->setJitMethodEntryPaddingSize(_binaryBufferCursor - _binaryBufferStart);
-      memset(_binaryBufferStart, 0, self()->getJitMethodEntryPaddingSize());
+      setJitMethodEntryPaddingSize(_binaryBufferCursor - _binaryBufferStart);
+      memset(_binaryBufferStart, 0, getJitMethodEntryPaddingSize());
       }
 
    return _binaryBufferCursor;
@@ -2219,7 +2219,7 @@ OMR::CodeGenerator::setEstimatedLocationsForSnippetLabels(int32_t estimatedSnipp
    {
    TR::Snippet *cursor;
 
-   self()->setEstimatedSnippetStart(estimatedSnippetStart);
+   setEstimatedSnippetStart(estimatedSnippetStart);
 
    for (auto iterator = _snippetList.begin(); iterator != _snippetList.end(); ++iterator)
       {
@@ -2246,16 +2246,16 @@ OMR::CodeGenerator::emitSnippets()
       codeOffset = (*iterator)->emitSnippet();
       if (codeOffset != NULL)
          {
-         TR_ASSERT((*iterator)->getLength(self()->getBinaryBufferCursor()-self()->getBinaryBufferStart()) + self()->getBinaryBufferCursor() >= codeOffset,
+         TR_ASSERT((*iterator)->getLength(getBinaryBufferCursor()-getBinaryBufferStart()) + getBinaryBufferCursor() >= codeOffset,
                  "%s length estimate must be conservatively large (snippet @ " POINTER_PRINTF_FORMAT ", estimate=%d, actual=%d)",
-                 self()->getDebug()->getName(*iterator), *iterator,
-                 (*iterator)->getLength(self()->getBinaryBufferCursor()-self()->getBinaryBufferStart()),
-                 codeOffset - self()->getBinaryBufferCursor());
-         self()->setBinaryBufferCursor(codeOffset);
+                 getDebug()->getName(*iterator), *iterator,
+                 (*iterator)->getLength(getBinaryBufferCursor()-getBinaryBufferStart()),
+                 codeOffset - getBinaryBufferCursor());
+         setBinaryBufferCursor(codeOffset);
          }
       }
 
-   retVal = self()->getBinaryBufferCursor();
+   retVal = getBinaryBufferCursor();
 
    // Emit constant data snippets last.
    //
@@ -2285,17 +2285,17 @@ OMR::CodeGenerator::allocateLocalTemp(TR::DataType dt, bool isInternalPointer)
    TR::AutomaticSymbol * temp;
    if (isInternalPointer)
       {
-      temp = TR::AutomaticSymbol::createInternalPointer(self()->trHeapMemory(),
+      temp = TR::AutomaticSymbol::createInternalPointer(trHeapMemory(),
                                                        dt,
                                                        TR::Symbol::convertTypeToSize(dt),
-                                                       self()->fe());
+                                                       fe());
       }
    else
       {
-      temp = TR::AutomaticSymbol::create(self()->trHeapMemory(),dt,TR::Symbol::convertTypeToSize(dt));
+      temp = TR::AutomaticSymbol::create(trHeapMemory(),dt,TR::Symbol::convertTypeToSize(dt));
       }
-   self()->comp()->getMethodSymbol()->addAutomatic(temp);
-   return new (self()->trHeapMemory()) TR::SymbolReference(self()->comp()->getSymRefTab(), temp);
+   comp()->getMethodSymbol()->addAutomatic(temp);
+   return new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), temp);
    }
 
 
@@ -2307,7 +2307,7 @@ OMR::CodeGenerator::getFirstBit(TR_BitVector &bv)
       {
       int32_t nextElmnt = bvi.getNextElement();
 
-      if (self()->getGlobalRegister((TR_GlobalRegisterNumber)nextElmnt)!=(uint32_t)(-1))
+      if (getGlobalRegister((TR_GlobalRegisterNumber)nextElmnt)!=(uint32_t)(-1))
          {
          return nextElmnt;
          }
@@ -2347,16 +2347,16 @@ OMR::CodeGenerator::treeContainsCall(TR::TreeTop * treeTop)
 void
 OMR::CodeGenerator::computeBlocksWithCalls()
    {
-   uint32_t         bcount = self()->comp()->getFlowGraph()->getNextNodeNumber();
+   uint32_t         bcount = comp()->getFlowGraph()->getNextNodeNumber();
    TR_BitVector     bvec;
    TR::TreeTop      *pTree, *exitTree;
    TR::Block        *block;
    uint32_t         bnum, btemp;
 
-   _blocksWithCalls = new (self()->trHeapMemory()) TR_BitVector(bcount, self()->trMemory());
-   bvec.init(bcount, self()->trMemory());
+   _blocksWithCalls = new (trHeapMemory()) TR_BitVector(bcount, trMemory());
+   bvec.init(bcount, trMemory());
 
-   for (pTree=self()->comp()->getStartTree(); pTree!=NULL; pTree=exitTree->getNextTreeTop())
+   for (pTree=comp()->getStartTree(); pTree!=NULL; pTree=exitTree->getNextTreeTop())
       {
       block = pTree->getNode()->getBlock();
       exitTree = block->getExit();
@@ -2378,7 +2378,7 @@ OMR::CodeGenerator::computeBlocksWithCalls()
          }
       }
 
-   for (pTree=self()->comp()->getStartTree(); pTree!=NULL; pTree=exitTree->getNextTreeTop())
+   for (pTree=comp()->getStartTree(); pTree!=NULL; pTree=exitTree->getNextTreeTop())
       {
       block = pTree->getNode()->getBlock();
       exitTree = block->getExit();
@@ -2442,7 +2442,7 @@ TR::Instruction *OMR::CodeGenerator::getVirtualGuardForPatching(TR::Instruction 
       {
       if (prevI->isVirtualGuardNOPInstruction())
          {
-         if (self()->areMergeableGuards(prevI, vgdnop))
+         if (areMergeableGuards(prevI, vgdnop))
             {
             toReturn = prevI;
             }
@@ -2473,9 +2473,9 @@ TR::Instruction *OMR::CodeGenerator::getVirtualGuardForPatching(TR::Instruction 
       }
    if (toReturn != vgdnop)
       {
-      TR::DebugCounter::incStaticDebugCounter(self()->comp(), TR::DebugCounter::debugCounterName(self()->comp(), "guardMerge/(%s)", self()->comp()->signature()));
-      if (self()->comp()->getOption(TR_TraceCG))
-         traceMsg(self()->comp(), "vgdnop instruction [%p] begins scanning for patch instructions for mergeable guard [%p]\n", vgdnop, toReturn);
+      TR::DebugCounter::incStaticDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "guardMerge/(%s)", comp()->signature()));
+      if (comp()->getOption(TR_TraceCG))
+         traceMsg(comp(), "vgdnop instruction [%p] begins scanning for patch instructions for mergeable guard [%p]\n", vgdnop, toReturn);
       }
    return toReturn;
    }
@@ -2486,16 +2486,16 @@ TR::Instruction
    TR::Instruction   * nextI;
    TR::Node          *firstBBEnd = NULL;
 
-   for (nextI=self()->getVirtualGuardForPatching(vgdnop)->getNext(); nextI!=NULL; nextI=nextI->getNext())
+   for (nextI=getVirtualGuardForPatching(vgdnop)->getNext(); nextI!=NULL; nextI=nextI->getNext())
       {
       if (nextI->isVirtualGuardNOPInstruction())
          {
-         if (!self()->areMergeableGuards(vgdnop, nextI))
+         if (!areMergeableGuards(vgdnop, nextI))
             return NULL;
          continue;
          }
 
-      if (nextI->isPatchBarrier() || self()->comp()->isPICSite(nextI))
+      if (nextI->isPatchBarrier() || comp()->isPICSite(nextI))
          return NULL;
 
       if (nextI->getEstimatedBinaryLength() > 0)
@@ -2525,7 +2525,7 @@ TR::Instruction
 int32_t
 OMR::CodeGenerator::sizeOfInstructionToBePatched(TR::Instruction *vgdnop)
    {
-   TR::Instruction *instToBePatched = self()->getInstructionToBePatched(vgdnop);
+   TR::Instruction *instToBePatched = getInstructionToBePatched(vgdnop);
    if (instToBePatched)
       return instToBePatched->getBinaryLengthLowerBound();
    else
@@ -2539,16 +2539,16 @@ OMR::CodeGenerator::sizeOfInstructionToBePatchedHCRGuard(TR::Instruction *vgdnop
    TR::Node          *firstBBEnd = NULL;
    int32_t             accumulatedSize = 0;
 
-   for (nextI=self()->getInstructionToBePatched(vgdnop); nextI!=NULL; nextI=nextI->getNext())
+   for (nextI=getInstructionToBePatched(vgdnop); nextI!=NULL; nextI=nextI->getNext())
       {
       if (nextI->isVirtualGuardNOPInstruction())
          {
-         if (!self()->areMergeableGuards(vgdnop, nextI))
+         if (!areMergeableGuards(vgdnop, nextI))
             break;
          continue;
          }
 
-      if (nextI->isPatchBarrier() || self()->comp()->isPICSite(nextI))
+      if (nextI->isPatchBarrier() || comp()->isPICSite(nextI))
          break;
 
       accumulatedSize += nextI->getBinaryLengthLowerBound();
@@ -2719,7 +2719,7 @@ OMR::CodeGenerator::canNullChkBeImplicit(TR::Node *node)
 bool
 OMR::CodeGenerator::canNullChkBeImplicit(TR::Node *node, bool doChecks)
    {
-   if (self()->comp()->getOption(TR_DisableTraps))
+   if (comp()->getOption(TR_DisableTraps))
       return false;
 
    if (!doChecks)
@@ -2738,24 +2738,24 @@ OMR::CodeGenerator::canNullChkBeImplicit(TR::Node *node, bool doChecks)
          symRef = firstChild->getSymbolReference();
 
       if (symRef &&
-            symRef->getSymbol()->getOffset() + symRef->getOffset() < self()->getNumberBytesReadInaccessible())
+            symRef->getSymbol()->getOffset() + symRef->getOffset() < getNumberBytesReadInaccessible())
          return true;
       }
    else if (opCode.isStore())
       {
       TR::SymbolReference *symRef = firstChild->getSymbolReference();
       if (symRef &&
-            symRef->getSymbol()->getOffset() + symRef->getOffset() < self()->getNumberBytesWriteInaccessible())
+            symRef->getSymbol()->getOffset() + symRef->getOffset() < getNumberBytesWriteInaccessible())
          return true;
       }
    else if (opCode.isCall() &&
                opCode.isIndirect() &&
-               self()->getNumberBytesReadInaccessible() > TR::Compiler->om.offsetOfObjectVftField())
+               getNumberBytesReadInaccessible() > TR::Compiler->om.offsetOfObjectVftField())
       {
       return true;
       }
    else if (opCode.getOpCodeValue() == TR::iushr &&
-            self()->getNumberBytesReadInaccessible() > self()->fe()->getOffsetOfContiguousArraySizeField())
+            getNumberBytesReadInaccessible() > fe()->getOffsetOfContiguousArraySizeField())
       {
       return true;
       }
@@ -2786,35 +2786,35 @@ void OMR::CodeGenerator::freeUnlatchedRegisters()
 TR::Instruction *
 OMR::CodeGenerator::generateDebugCounter(const char *name, int32_t delta, int8_t fidelity)
    {
-   return self()->generateDebugCounter(NULL, name, delta, fidelity);
+   return generateDebugCounter(NULL, name, delta, fidelity);
    }
 
 TR::Instruction *
 OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaReg, int8_t fidelity)
    {
-   return self()->generateDebugCounter(NULL, name, deltaReg, fidelity);
+   return generateDebugCounter(NULL, name, deltaReg, fidelity);
    }
 
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *cursor, const char *name, int32_t delta, int8_t fidelity, int32_t staticDelta)
    {
    if (!cursor)
-      cursor = self()->getAppendInstruction();
-   if (!self()->comp()->getOptions()->enableDebugCounters())
+      cursor = getAppendInstruction();
+   if (!comp()->getOptions()->enableDebugCounters())
       return cursor;
    if (delta == 0)
       return cursor;
-   TR::DebugCounterAggregation *aggregatedCounters = self()->comp()->getPersistentInfo()->getDynamicCounters()->createAggregation(self()->comp(), name);
-   aggregatedCounters->aggregateStandardCounters(self()->comp(), cursor->getNode(), name, delta, fidelity, staticDelta);
+   TR::DebugCounterAggregation *aggregatedCounters = comp()->getPersistentInfo()->getDynamicCounters()->createAggregation(comp(), name);
+   aggregatedCounters->aggregateStandardCounters(comp(), cursor->getNode(), name, delta, fidelity, staticDelta);
    if (!aggregatedCounters->hasAnyCounters())
       return cursor;
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()) && !aggregatedCounters->initializeReloData(self()->comp(), delta, fidelity, staticDelta))
+   if (TR::DebugCounter::relocatableDebugCounter(comp()) && !aggregatedCounters->initializeReloData(comp(), delta, fidelity, staticDelta))
       return cursor;
 
-   TR::SymbolReference *symref = aggregatedCounters->getBumpCountSymRef(self()->comp());
+   TR::SymbolReference *symref = aggregatedCounters->getBumpCountSymRef(comp());
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
-      self()->comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
+   if (TR::DebugCounter::relocatableDebugCounter(comp()))
+      comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
 
    return generateDebugCounterBump(cursor, aggregatedCounters, 1, NULL);
    }
@@ -2822,21 +2822,21 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *curso
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *cursor, const char *name, TR::Register *deltaReg, int8_t fidelity, int32_t staticDelta)
    {
    if (!cursor)
-      cursor = self()->getAppendInstruction();
-   if (!self()->comp()->getOptions()->enableDebugCounters())
+      cursor = getAppendInstruction();
+   if (!comp()->getOptions()->enableDebugCounters())
       return cursor;
    // We won't do any aggregation (histogram buckets, bytecode breakdown, etc.) if we're getting the delta from a register
-   TR::DebugCounter *counter = TR::DebugCounter::getDebugCounter(self()->comp(), name, fidelity, staticDelta);
+   TR::DebugCounter *counter = TR::DebugCounter::getDebugCounter(comp(), name, fidelity, staticDelta);
    if (!counter)
       return cursor;
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()) && !counter->initializeReloData(self()->comp(), 0, fidelity, staticDelta))
+   if (TR::DebugCounter::relocatableDebugCounter(comp()) && !counter->initializeReloData(comp(), 0, fidelity, staticDelta))
       return cursor;
 
-   TR::SymbolReference *symref = counter->getBumpCountSymRef(self()->comp());
+   TR::SymbolReference *symref = counter->getBumpCountSymRef(comp());
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
-      self()->comp()->mapStaticAddressToCounter(symref, counter);
+   if (TR::DebugCounter::relocatableDebugCounter(comp()))
+      comp()->mapStaticAddressToCounter(symref, counter);
 
    return generateDebugCounterBump(cursor, counter, deltaReg, NULL);
    }
@@ -2844,23 +2844,23 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(TR::Instruction *curso
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::RegisterDependencyConditions &cond, int32_t delta, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->getAppendInstruction();
-   if (!self()->comp()->getOptions()->enableDebugCounters())
+      cursor = getAppendInstruction();
+   if (!comp()->getOptions()->enableDebugCounters())
       return cursor;
    if (delta == 0)
       return cursor;
-   TR::DebugCounterAggregation *aggregatedCounters = self()->comp()->getPersistentInfo()->getDynamicCounters()->createAggregation(self()->comp(), name);
-   aggregatedCounters->aggregateStandardCounters(self()->comp(), cursor->getNode(), name, delta, fidelity, staticDelta);
+   TR::DebugCounterAggregation *aggregatedCounters = comp()->getPersistentInfo()->getDynamicCounters()->createAggregation(comp(), name);
+   aggregatedCounters->aggregateStandardCounters(comp(), cursor->getNode(), name, delta, fidelity, staticDelta);
    if (!aggregatedCounters->hasAnyCounters())
       return cursor;
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()) && !aggregatedCounters->initializeReloData(self()->comp(), delta, fidelity, staticDelta))
+   if (TR::DebugCounter::relocatableDebugCounter(comp()) && !aggregatedCounters->initializeReloData(comp(), delta, fidelity, staticDelta))
       return cursor;
 
-   TR::SymbolReference *symref = aggregatedCounters->getBumpCountSymRef(self()->comp());
+   TR::SymbolReference *symref = aggregatedCounters->getBumpCountSymRef(comp());
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
-      self()->comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
+   if (TR::DebugCounter::relocatableDebugCounter(comp()))
+      comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
 
    return generateDebugCounterBump(cursor, aggregatedCounters, 1, &cond);
    }
@@ -2868,21 +2868,21 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaReg, TR::RegisterDependencyConditions &cond, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->getAppendInstruction();
-   if (!self()->comp()->getOptions()->enableDebugCounters())
+      cursor = getAppendInstruction();
+   if (!comp()->getOptions()->enableDebugCounters())
       return cursor;
    // We won't do any aggregation (histogram buckets, bytecode breakdown, etc.) if we're getting the delta from a register
-   TR::DebugCounter *counter = TR::DebugCounter::getDebugCounter(self()->comp(), name, fidelity, staticDelta);
+   TR::DebugCounter *counter = TR::DebugCounter::getDebugCounter(comp(), name, fidelity, staticDelta);
    if (!counter)
       return cursor;
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()) && !counter->initializeReloData(self()->comp(), 0, fidelity, staticDelta))
+   if (TR::DebugCounter::relocatableDebugCounter(comp()) && !counter->initializeReloData(comp(), 0, fidelity, staticDelta))
       return cursor;
 
-   TR::SymbolReference *symref = counter->getBumpCountSymRef(self()->comp());
+   TR::SymbolReference *symref = counter->getBumpCountSymRef(comp());
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
-      self()->comp()->mapStaticAddressToCounter(symref, counter);
+   if (TR::DebugCounter::relocatableDebugCounter(comp()))
+      comp()->mapStaticAddressToCounter(symref, counter);
 
    return generateDebugCounterBump(cursor, counter, deltaReg, &cond);
    }
@@ -2890,23 +2890,23 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR_ScratchRegisterManager &srm, int32_t delta, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->getAppendInstruction();
-   if (!self()->comp()->getOptions()->enableDebugCounters())
+      cursor = getAppendInstruction();
+   if (!comp()->getOptions()->enableDebugCounters())
       return cursor;
    if (delta == 0)
       return cursor;
-   TR::DebugCounterAggregation *aggregatedCounters = self()->comp()->getPersistentInfo()->getDynamicCounters()->createAggregation(self()->comp(), name);
-   aggregatedCounters->aggregateStandardCounters(self()->comp(), cursor->getNode(), name, delta, fidelity, staticDelta);
+   TR::DebugCounterAggregation *aggregatedCounters = comp()->getPersistentInfo()->getDynamicCounters()->createAggregation(comp(), name);
+   aggregatedCounters->aggregateStandardCounters(comp(), cursor->getNode(), name, delta, fidelity, staticDelta);
    if (!aggregatedCounters->hasAnyCounters())
       return cursor;
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()) && !aggregatedCounters->initializeReloData(self()->comp(), delta, fidelity, staticDelta))
+   if (TR::DebugCounter::relocatableDebugCounter(comp()) && !aggregatedCounters->initializeReloData(comp(), delta, fidelity, staticDelta))
       return cursor;
 
-   TR::SymbolReference *symref = aggregatedCounters->getBumpCountSymRef(self()->comp());
+   TR::SymbolReference *symref = aggregatedCounters->getBumpCountSymRef(comp());
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
-      self()->comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
+   if (TR::DebugCounter::relocatableDebugCounter(comp()))
+      comp()->mapStaticAddressToCounter(symref, aggregatedCounters);
 
    return generateDebugCounterBump(cursor, aggregatedCounters, 1, srm);
    }
@@ -2914,21 +2914,21 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR_S
 TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::Register *deltaReg, TR_ScratchRegisterManager &srm, int8_t fidelity, int32_t staticDelta, TR::Instruction *cursor)
    {
    if (!cursor)
-      cursor = self()->getAppendInstruction();
-   if (!self()->comp()->getOptions()->enableDebugCounters())
+      cursor = getAppendInstruction();
+   if (!comp()->getOptions()->enableDebugCounters())
       return cursor;
    // We won't do any aggregation (histogram buckets, bytecode breakdown, etc.) if we're getting the delta from a register
-   TR::DebugCounter *counter = TR::DebugCounter::getDebugCounter(self()->comp(), name, fidelity, staticDelta);
+   TR::DebugCounter *counter = TR::DebugCounter::getDebugCounter(comp(), name, fidelity, staticDelta);
    if (!counter)
       return cursor;
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()) && !counter->initializeReloData(self()->comp(), 0, fidelity, staticDelta))
+   if (TR::DebugCounter::relocatableDebugCounter(comp()) && !counter->initializeReloData(comp(), 0, fidelity, staticDelta))
       return cursor;
 
-   TR::SymbolReference *symref = counter->getBumpCountSymRef(self()->comp());
+   TR::SymbolReference *symref = counter->getBumpCountSymRef(comp());
 
-   if (TR::DebugCounter::relocatableDebugCounter(self()->comp()))
-      self()->comp()->mapStaticAddressToCounter(symref, counter);
+   if (TR::DebugCounter::relocatableDebugCounter(comp()))
+      comp()->mapStaticAddressToCounter(symref, counter);
 
    return generateDebugCounterBump(cursor, counter, deltaReg, srm);
    }
@@ -2937,7 +2937,7 @@ TR::Instruction *OMR::CodeGenerator::generateDebugCounter(const char *name, TR::
 //
 void OMR::CodeGenerator::recordSingleRegisterUse(TR::Register *reg)
    {
-   for (auto iter = self()->getReferencedRegisterList()->begin(), end = self()->getReferencedRegisterList()->end(); iter != end; ++iter)
+   for (auto iter = getReferencedRegisterList()->begin(), end = getReferencedRegisterList()->end(); iter != end; ++iter)
       {
       if ((*iter)->virtReg == reg)
          {
@@ -2946,20 +2946,20 @@ void OMR::CodeGenerator::recordSingleRegisterUse(TR::Register *reg)
          }
       }
 
-   OMR::RegisterUsage *ru = new (self()->trHeapMemory()) OMR::RegisterUsage(reg, 1);
-   self()->getReferencedRegisterList()->push_front(ru);
+   OMR::RegisterUsage *ru = new (trHeapMemory()) OMR::RegisterUsage(reg, 1);
+   getReferencedRegisterList()->push_front(ru);
    }
 
 void OMR::CodeGenerator::startRecordingRegisterUsage()
    {
-   self()->setReferencedRegisterList(new (self()->trHeapMemory()) TR::list<OMR::RegisterUsage*>(getTypedAllocator<OMR::RegisterUsage*>(self()->comp()->allocator())));
-   self()->setEnableRegisterUsageTracking();
+   setReferencedRegisterList(new (trHeapMemory()) TR::list<OMR::RegisterUsage*>(getTypedAllocator<OMR::RegisterUsage*>(comp()->allocator())));
+   setEnableRegisterUsageTracking();
    }
 
 TR::list<OMR::RegisterUsage*> *OMR::CodeGenerator::stopRecordingRegisterUsage()
    {
-   self()->resetEnableRegisterUsageTracking();
-   return self()->getReferencedRegisterList();
+   resetEnableRegisterUsageTracking();
+   return getReferencedRegisterList();
    }
 
 
@@ -2977,30 +2977,30 @@ void OMR::CodeGenerator::addRelocation(TR::Relocation *r)
 
 void OMR::CodeGenerator::addAOTRelocation(TR::Relocation *r, const char *generatingFileName, uintptr_t generatingLineNumber, TR::Node *node, TR::AOTRelocationPositionRequest where)
    {
-   self()->addExternalRelocation(r, generatingFileName, generatingLineNumber, node, static_cast<TR::ExternalRelocationPositionRequest>(where));
+   addExternalRelocation(r, generatingFileName, generatingLineNumber, node, static_cast<TR::ExternalRelocationPositionRequest>(where));
    }
 
 void OMR::CodeGenerator::addAOTRelocation(TR::Relocation *r, TR::RelocationDebugInfo* info, TR::AOTRelocationPositionRequest where)
    {
-   self()->addExternalRelocation(r, info, static_cast<TR::ExternalRelocationPositionRequest>(where));
+   addExternalRelocation(r, info, static_cast<TR::ExternalRelocationPositionRequest>(where));
    }
 
 void OMR::CodeGenerator::addExternalRelocation(TR::Relocation *r, const char *generatingFileName, uintptr_t generatingLineNumber, TR::Node *node, TR::ExternalRelocationPositionRequest where)
    {
    TR_ASSERT(generatingFileName, "External relocation location has improper NULL filename specified");
-   if (self()->comp()->compileRelocatableCode())
+   if (comp()->compileRelocatableCode())
       {
-      TR::RelocationDebugInfo *genData = new(self()->trHeapMemory()) TR::RelocationDebugInfo;
+      TR::RelocationDebugInfo *genData = new(trHeapMemory()) TR::RelocationDebugInfo;
       genData->file = generatingFileName;
       genData->line = generatingLineNumber;
       genData->node = node;
-      self()->addExternalRelocation(r, genData, where);
+      addExternalRelocation(r, genData, where);
       }
    }
 
 void OMR::CodeGenerator::addExternalRelocation(TR::Relocation *r, TR::RelocationDebugInfo* info, TR::ExternalRelocationPositionRequest where)
    {
-   if (self()->comp()->compileRelocatableCode())
+   if (comp()->compileRelocatableCode())
       {
       TR_ASSERT(info, "External relocation location does not have associated debug information");
       r->setDebugInfo(info);
@@ -3032,7 +3032,7 @@ OMR::CodeGenerator::addStaticRelocation(const TR::StaticRelocation &relocation)
 
 intptrj_t OMR::CodeGenerator::hiValue(intptrj_t address)
    {
-   if (self()->comp()->compileRelocatableCode()) // We don't want to store values using HI_VALUE at compile time, otherwise, we do this a 2nd time when we relocate (and new value is based on old one)
+   if (comp()->compileRelocatableCode()) // We don't want to store values using HI_VALUE at compile time, otherwise, we do this a 2nd time when we relocate (and new value is based on old one)
       return ((address >> 16) & 0x0000FFFF);
    else
       return HI_VALUE(address);
@@ -3041,12 +3041,12 @@ intptrj_t OMR::CodeGenerator::hiValue(intptrj_t address)
 
 void OMR::CodeGenerator::addToOSRTable(TR::Instruction *instr)
    {
-   self()->comp()->getOSRCompilationData()->addInstruction(instr);
+   comp()->getOSRCompilationData()->addInstruction(instr);
    }
 
 void OMR::CodeGenerator::addToOSRTable(int32_t instructionPC, TR_ByteCodeInfo &bcInfo)
    {
-   self()->comp()->getOSRCompilationData()->addInstruction(instructionPC, bcInfo);
+   comp()->getOSRCompilationData()->addInstruction(instructionPC, bcInfo);
    }
 
 
@@ -3084,40 +3084,40 @@ void OMR::CodeGenerator::addAllocatedRegister(TR::Register * temp)
    {
    uint32_t idx = _registerArray.add(temp);
    temp->setIndex(idx);
-   self()->startUsingRegister(temp);
+   startUsingRegister(temp);
    }
 
 
 TR::RegisterPair * OMR::CodeGenerator::allocate64bitRegisterPair(TR::Register * lo, TR::Register * ho)
    {
-   TR::RegisterPair *temp = new (self()->trHeapMemory()) TR::RegisterPair(TR_GPR64);
+   TR::RegisterPair *temp = new (trHeapMemory()) TR::RegisterPair(TR_GPR64);
    temp->setLowOrder(lo, self());
    temp->setHighOrder(ho, self());
-   self()->addAllocatedRegisterPair(temp);
+   addAllocatedRegisterPair(temp);
    return temp;
    }
 
 TR::RegisterPair * OMR::CodeGenerator::allocateRegisterPair(TR::Register * lo, TR::Register * ho)
    {
-   TR::RegisterPair *temp =  new (self()->trHeapMemory()) TR::RegisterPair(lo, ho);
-   self()->addAllocatedRegisterPair(temp);
+   TR::RegisterPair *temp =  new (trHeapMemory()) TR::RegisterPair(lo, ho);
+   addAllocatedRegisterPair(temp);
    return temp;
    }
 
 TR::RegisterPair * OMR::CodeGenerator::allocateSinglePrecisionRegisterPair(TR::Register * lo, TR::Register * ho)
    {
-   TR::RegisterPair *temp = new (self()->trHeapMemory()) TR::RegisterPair(TR_FPR);
+   TR::RegisterPair *temp = new (trHeapMemory()) TR::RegisterPair(TR_FPR);
    temp->setLowOrder(lo, self());
    temp->setHighOrder(ho, self());
-   self()->addAllocatedRegisterPair(temp);
+   addAllocatedRegisterPair(temp);
    return temp;
    }
 
 TR::RegisterPair * OMR::CodeGenerator::allocateFloatingPointRegisterPair(TR::Register * lo, TR::Register * ho)
    {
-   TR::RegisterPair * temp = new (self()->trHeapMemory()) TR::RegisterPair(lo, ho);
+   TR::RegisterPair * temp = new (trHeapMemory()) TR::RegisterPair(lo, ho);
    temp->setKind(TR_FPR);
-   self()->addAllocatedRegisterPair(temp);
+   addAllocatedRegisterPair(temp);
    return temp;
    }
 
@@ -3140,7 +3140,7 @@ bool OMR::CodeGenerator::AddArtificiallyInflatedNodeToStack(TR::Node * n)
 bool
 OMR::CodeGenerator::constantAddressesCanChangeSize(TR::Node *node)
    {
-   if (!self()->comp()->compileRelocatableCode() || TR::Compiler->target.is32Bit() || node==NULL)
+   if (!comp()->compileRelocatableCode() || TR::Compiler->target.is32Bit() || node==NULL)
       return false;
 
    if (node->getOpCodeValue() == TR::aconst && (node->isClassPointerConstant() || node->isMethodPointerConstant()))
@@ -3202,7 +3202,7 @@ OMR::CodeGenerator::isInMemoryInstructionCandidate(TR::Node * node)
 
    if (valueChild->getFirstChild()->getOpCode().isLoadVar() &&
        valueChild->getFirstChild()->getOpCode().isIndirect() &&
-       self()->addressesMatch(node->getChild(0), valueChild->getFirstChild()->getFirstChild(), true))
+       addressesMatch(node->getChild(0), valueChild->getFirstChild()->getFirstChild(), true))
       {
       }
    else
@@ -3233,7 +3233,7 @@ OMR::CodeGenerator::isInMemoryInstructionCandidate(TR::Node * node)
 TR::Linkage *
 OMR::CodeGenerator::createLinkageForCompilation()
    {
-   return self()->getLinkage(TR_System);
+   return getLinkage(TR_System);
    }
 
 

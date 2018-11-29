@@ -48,7 +48,7 @@ OMR::X86::AMD64::CodeGenerator::CodeGenerator() :
    OMR::X86::CodeGenerator()
    {
 
-   if (self()->comp()->getOption(TR_DisableTraps))
+   if (comp()->getOption(TR_DisableTraps))
       {
       _numberBytesReadInaccessible  = 0;
       _numberBytesWriteInaccessible = 0;
@@ -57,34 +57,34 @@ OMR::X86::AMD64::CodeGenerator::CodeGenerator() :
       {
       _numberBytesReadInaccessible  = 4096;
       _numberBytesWriteInaccessible = 4096;
-      self()->setHasResumableTrapHandler();
-      self()->setEnableImplicitDivideCheck();
+      setHasResumableTrapHandler();
+      setEnableImplicitDivideCheck();
       }
 
-   self()->setSupportsDivCheck();
+   setSupportsDivCheck();
 
    static char *c = feGetEnv("TR_disableAMD64ValueProfiling");
    if (c)
-      self()->comp()->setOption(TR_DisableValueProfiling);
+      comp()->setOption(TR_DisableValueProfiling);
 
    static char *accessStaticsIndirectly = feGetEnv("TR_AccessStaticsIndirectly");
    if (accessStaticsIndirectly)
-      self()->setAccessStaticsIndirectly(true);
+      setAccessStaticsIndirectly(true);
 
    static char *alwaysUseTrampolines = feGetEnv("TR_AlwaysUseTrampolines");
    if (alwaysUseTrampolines)
-      self()->setAlwaysUseTrampolines();
+      setAlwaysUseTrampolines();
 
-   self()->setSupportsDoubleWordCAS();
-   self()->setSupportsDoubleWordSet();
+   setSupportsDoubleWordCAS();
+   setSupportsDoubleWordSet();
 
-   self()->setSupportsGlRegDepOnFirstBlock();
-   self()->setConsiderAllAutosAsTacticalGlobalRegisterCandidates();
+   setSupportsGlRegDepOnFirstBlock();
+   setConsiderAllAutosAsTacticalGlobalRegisterCandidates();
 
    // Interpreter frame shape requires all autos to occupy an 8-byte slot on 64-bit.
    //
-   if (self()->comp()->getOption(TR_MimicInterpreterFrameShape))
-      self()->setMapAutosTo8ByteSlots();
+   if (comp()->getOption(TR_MimicInterpreterFrameShape))
+      setMapAutosTo8ByteSlots();
 
    
    }
@@ -94,30 +94,30 @@ OMR::X86::AMD64::CodeGenerator::initializeConstruction()
    {
 	// Common X86 initialization
    //
-   self()->initialize(self()->comp());
+   initialize(comp());
 
-   self()->initLinkageToGlobalRegisterMap();
+   initLinkageToGlobalRegisterMap();
 
-   self()->setRealVMThreadRegister(self()->machine()->getX86RealRegister(TR::RealRegister::ebp));
+   setRealVMThreadRegister(machine()->getX86RealRegister(TR::RealRegister::ebp));
 
    // GRA-related initialization is done after calling initialize() so we can
    // use such things as getNumberOfGlobal[FG]PRs().
 
-   _globalGPRsPreservedAcrossCalls.init(self()->getNumberOfGlobalRegisters(), self()->trMemory());
-   _globalFPRsPreservedAcrossCalls.init(self()->getNumberOfGlobalRegisters(), self()->trMemory());
+   _globalGPRsPreservedAcrossCalls.init(getNumberOfGlobalRegisters(), trMemory());
+   _globalFPRsPreservedAcrossCalls.init(getNumberOfGlobalRegisters(), trMemory());
 
    int16_t i;
    TR_GlobalRegisterNumber grn;
-   for (i=0; i < self()->getNumberOfGlobalGPRs(); i++)
+   for (i=0; i < getNumberOfGlobalGPRs(); i++)
       {
-      grn = self()->getFirstGlobalGPR() + i;
-      if (self()->getProperties().isPreservedRegister((TR::RealRegister::RegNum)self()->getGlobalRegister(grn)))
+      grn = getFirstGlobalGPR() + i;
+      if (getProperties().isPreservedRegister((TR::RealRegister::RegNum)getGlobalRegister(grn)))
          _globalGPRsPreservedAcrossCalls.set(grn);
       }
-   for (i=0; i < self()->getNumberOfGlobalFPRs(); i++)
+   for (i=0; i < getNumberOfGlobalFPRs(); i++)
       {
-      grn = self()->getFirstGlobalFPR() + i;
-      if (self()->getProperties().isPreservedRegister((TR::RealRegister::RegNum)self()->getGlobalRegister(grn)))
+      grn = getFirstGlobalFPR() + i;
+      if (getProperties().isPreservedRegister((TR::RealRegister::RegNum)getGlobalRegister(grn)))
          _globalFPRsPreservedAcrossCalls.set(grn);
       }
 
@@ -136,7 +136,7 @@ OMR::X86::AMD64::CodeGenerator::longClobberEvaluate(TR::Node *node)
    {
    TR_ASSERT(TR::Compiler->target.is64Bit(), "assertion failure");
    TR_ASSERT(node->getOpCode().is8Byte() || node->getOpCode().isRef(), "assertion failure");
-   return self()->gprClobberEvaluate(node, MOV8RegReg);
+   return gprClobberEvaluate(node, MOV8RegReg);
    }
 
 TR_GlobalRegisterNumber
@@ -150,22 +150,22 @@ OMR::X86::AMD64::CodeGenerator::getLinkageGlobalRegisterNumber(
 
    if (isFloat)
       {
-      if (linkageRegisterIndex >= self()->getProperties().getNumFloatArgumentRegisters())
+      if (linkageRegisterIndex >= getProperties().getNumFloatArgumentRegisters())
          return -1;
       else
          result = _fprLinkageGlobalRegisterNumbers[linkageRegisterIndex];
       }
    else
       {
-      if (linkageRegisterIndex >= self()->getProperties().getNumIntegerArgumentRegisters())
+      if (linkageRegisterIndex >= getProperties().getNumIntegerArgumentRegisters())
          return -1;
       else
          result = _gprLinkageGlobalRegisterNumbers[linkageRegisterIndex];
       }
 
-   TR::RealRegister::RegNum realReg = self()->getProperties().getArgumentRegister(linkageRegisterIndex, isFloat);
+   TR::RealRegister::RegNum realReg = getProperties().getArgumentRegister(linkageRegisterIndex, isFloat);
 
-   TR_ASSERT(self()->getGlobalRegister(result) == realReg, "Result must be consistent with globalRegisterTable");
+   TR_ASSERT(getGlobalRegister(result) == realReg, "Result must be consistent with globalRegisterTable");
    return result;
    }
 
@@ -180,9 +180,9 @@ OMR::X86::AMD64::CodeGenerator::getMaximumNumberOfGPRsAllowedAcrossEdge(TR::Node
       return 1;
 
    if (node->getOpCode().isIf() && node->getFirstChild()->getOpCodeValue() == TR::instanceof)
-      return self()->getNumberOfGlobalGPRs() - 6;
+      return getNumberOfGlobalGPRs() - 6;
    else if(node->getOpCode().isSwitch())
-      return self()->getNumberOfGlobalGPRs() - 3; // A memref in a jump for a MemTable might need a base, index and address register.
+      return getNumberOfGlobalGPRs() - 3; // A memref in a jump for a MemTable might need a base, index and address register.
 
    return INT_MAX;
    }
@@ -194,23 +194,23 @@ OMR::X86::AMD64::CodeGenerator::initLinkageToGlobalRegisterMap()
    int i;
 
    TR_GlobalRegisterNumber globalRegNumbers[TR::RealRegister::NumRegisters];
-   for (i=0; i < self()->getNumberOfGlobalGPRs(); i++)
+   for (i=0; i < getNumberOfGlobalGPRs(); i++)
      {
-     grn = self()->getFirstGlobalGPR() + i;
-     globalRegNumbers[self()->getGlobalRegister(grn)] = grn;
+     grn = getFirstGlobalGPR() + i;
+     globalRegNumbers[getGlobalRegister(grn)] = grn;
      }
 
-   for (i=0; i < self()->getNumberOfGlobalFPRs(); i++)
+   for (i=0; i < getNumberOfGlobalFPRs(); i++)
      {
-     grn = self()->getFirstGlobalFPR() + i;
-     globalRegNumbers[self()->getGlobalRegister(grn)] = grn;
+     grn = getFirstGlobalFPR() + i;
+     globalRegNumbers[getGlobalRegister(grn)] = grn;
      }
 
-   for (i=0; i < self()->getProperties().getNumIntegerArgumentRegisters(); i++)
-     _gprLinkageGlobalRegisterNumbers[i] = globalRegNumbers[self()->getProperties().getIntegerArgumentRegister(i)];
+   for (i=0; i < getProperties().getNumIntegerArgumentRegisters(); i++)
+     _gprLinkageGlobalRegisterNumbers[i] = globalRegNumbers[getProperties().getIntegerArgumentRegister(i)];
 
-   for (i=0; i < self()->getProperties().getNumFloatArgumentRegisters(); i++)
-     _fprLinkageGlobalRegisterNumbers[i] = globalRegNumbers[self()->getProperties().getFloatArgumentRegister(i)];
+   for (i=0; i < getProperties().getNumFloatArgumentRegisters(); i++)
+     _fprLinkageGlobalRegisterNumbers[i] = globalRegNumbers[getProperties().getFloatArgumentRegister(i)];
    }
 
 bool
