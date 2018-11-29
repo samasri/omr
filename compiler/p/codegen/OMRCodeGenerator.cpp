@@ -1644,7 +1644,7 @@ OMR::Power::CodeGenerator::createLinkage(TR_LinkageConventions lc)
 void OMR::Power::CodeGenerator::generateBinaryEncodingPrologue(
       TR_PPCBinaryEncodingData *data)
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    data->recomp = NULL;
    data->cursorInstruction = getFirstInstruction();
    data->preProcInstruction = data->cursorInstruction;
@@ -1662,10 +1662,10 @@ void OMR::Power::CodeGenerator::generateBinaryEncodingPrologue(
       data->cursorInstruction = data->cursorInstruction->getNext();
       }
 
-   int32_t boundary = comp->getOptions()->getJitMethodEntryAlignmentBoundary(self());
+   int32_t boundary = compilation->getOptions()->getJitMethodEntryAlignmentBoundary(self());
    if (boundary && (boundary > 4) && ((boundary & (boundary - 1)) == 0))
       {
-      comp->getOptions()->setJitMethodEntryAlignmentBoundary(boundary);
+      compilation->getOptions()->setJitMethodEntryAlignmentBoundary(boundary);
       setPreJitMethodEntrySize(data->estimate);
       data->estimate += (boundary - 4);
       }
@@ -3172,7 +3172,7 @@ OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed(
    {
 
    bool doAOTRelocation = true;
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
 
    if (tempReg == NULL)
       {
@@ -3197,7 +3197,7 @@ OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed(
                {
                if (doAOTRelocation)
                   {
-                  TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)comp->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
+                  TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)compilation->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
                   recordInfo->data1 = (uintptr_t)node->getSymbolReference();
                   recordInfo->data2 = (uintptr_t)node->getInlinedSiteIndex();
                   recordInfo->data3 = (uintptr_t)seqKind;
@@ -3214,13 +3214,13 @@ OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed(
                {
                if (doAOTRelocation)
                   {
-                  TR::DebugCounterBase *counter = comp->getCounterFromStaticAddress(node->getSymbolReference());
+                  TR::DebugCounterBase *counter = compilation->getCounterFromStaticAddress(node->getSymbolReference());
                   if (counter == NULL)
                      {
-                     comp->failCompilation<TR::CompilationException>("Could not generate relocation for debug counter in OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed\n");
+                     compilation->failCompilation<TR::CompilationException>("Could not generate relocation for debug counter in OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed\n");
                      }
 
-                  TR::DebugCounter::generateRelocation(comp, firstInstruction, node, counter, seqKind);
+                  TR::DebugCounter::generateRelocation(compilation, firstInstruction, node, counter, seqKind);
                   }
                }
             else
@@ -3273,7 +3273,7 @@ OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed(
                {
                if (doAOTRelocation)
                   {
-                  TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)comp->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
+                  TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)compilation->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
                   recordInfo->data1 = (uintptr_t)node->getSymbolReference();
                   recordInfo->data2 = (uintptr_t)node->getInlinedSiteIndex();
                   recordInfo->data3 = (uintptr_t)seqKind;
@@ -3290,13 +3290,13 @@ OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed(
                {
                if (doAOTRelocation)
                   {
-                  TR::DebugCounterBase *counter = comp->getCounterFromStaticAddress(node->getSymbolReference());
+                  TR::DebugCounterBase *counter = compilation->getCounterFromStaticAddress(node->getSymbolReference());
                   if (counter == NULL)
                      {
-                     comp->failCompilation<TR::CompilationException>("Could not generate relocation for debug counter in OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed\n");
+                     compilation->failCompilation<TR::CompilationException>("Could not generate relocation for debug counter in OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed\n");
                      }
 
-                  TR::DebugCounter::generateRelocation(comp, firstInstruction, node, counter, seqKind);
+                  TR::DebugCounter::generateRelocation(compilation, firstInstruction, node, counter, seqKind);
                   }
                }
             else
@@ -3328,8 +3328,8 @@ OMR::Power::CodeGenerator::loadAddressConstantFixed(
       int16_t typeAddress,
       bool doAOTRelocation)
    {
-   TR::Compilation *comp = comp();
-   bool isAOT = comp->compileRelocatableCode();
+   TR::Compilation *compilation = comp();
+   bool isAOT = compilation->compileRelocatableCode();
 
    if (TR::Compiler->target.is32Bit())
       {
@@ -3393,11 +3393,11 @@ OMR::Power::CodeGenerator::addMetaDataForLoadIntConstantFixed(
       int32_t value)
    {
 
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
 
    if (typeAddress == TR_DataAddress)
       {
-      TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)comp->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
+      TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)compilation->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
       recordInfo->data1 = (uintptr_t)node->getSymbolReference();
       recordInfo->data2 = node ? (uintptr_t)node->getInlinedSiteIndex() : (uintptr_t)-1;
       recordInfo->data3 = orderedPairSequence2;
@@ -3409,17 +3409,17 @@ OMR::Power::CodeGenerator::addMetaDataForLoadIntConstantFixed(
       }
    else if (typeAddress == TR_DebugCounter)
       {
-      TR::DebugCounterBase *counter = comp->getCounterFromStaticAddress(node->getSymbolReference());
+      TR::DebugCounterBase *counter = compilation->getCounterFromStaticAddress(node->getSymbolReference());
       if (counter == NULL)
          {
-         comp->failCompilation<TR::CompilationException>("Could not generate relocation for debug counter in OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed\n");
+         compilation->failCompilation<TR::CompilationException>("Could not generate relocation for debug counter in OMR::Power::CodeGenerator::addMetaDataForLoadAddressConstantFixed\n");
          }
 
-      TR::DebugCounter::generateRelocation(comp, firstInstruction, secondInstruction, node, counter, orderedPairSequence2);
+      TR::DebugCounter::generateRelocation(compilation, firstInstruction, secondInstruction, node, counter, orderedPairSequence2);
       }
    else if (typeAddress != -1)
       {
-      TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)comp->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
+      TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)compilation->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
       recordInfo->data1 = (uintptr_t)value;
       recordInfo->data3 = orderedPairSequence2;
       addExternalRelocation(new (trHeapMemory()) TR::ExternalOrderedPair32BitRelocation((uint8_t *)firstInstruction,
@@ -3446,7 +3446,7 @@ OMR::Power::CodeGenerator::loadIntConstantFixed(
    TR::Instruction *temp = cursor;
    TR::Instruction *firstInstruction, *secondInstruction;
 
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
 
    if (cursor == NULL)
       {
@@ -3474,9 +3474,9 @@ OMR::Power::CodeGenerator::addMetaDataFor32BitFixedLoadLabelAddressIntoReg(
       TR::Instruction *firstInstruction,
       TR::Instruction *secondInstruction)
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
 
-   TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)comp->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
+   TR_RelocationRecordInformation *recordInfo = ( TR_RelocationRecordInformation *)compilation->trMemory()->allocateMemory(sizeof( TR_RelocationRecordInformation), heapAlloc);
    recordInfo->data3 = orderedPairSequence1;
 
    getAheadOfTimeCompile()->getRelocationList().push_front(new (trHeapMemory()) TR::PPCPairedRelocation
@@ -3520,7 +3520,7 @@ OMR::Power::CodeGenerator::fixedLoadLabelAddressIntoReg(
       TR::Register *tempReg,
       bool useADDISFor32Bit)
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    if (TR::Compiler->target.is64Bit())
       {
       int32_t offset = TR_PPCTableOfConstants::allocateChunk(1, self());

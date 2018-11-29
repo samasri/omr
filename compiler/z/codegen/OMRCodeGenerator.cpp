@@ -553,38 +553,38 @@ OMR::Z::CodeGenerator::CodeGenerator()
 void
 OMR::Z::CodeGenerator::initializeConstruction()
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    _cgFlags = 0;
    // Initialize Linkage for Code Generator
    initializeLinkage();
 
    // Check for -Xjit disable options and target this specific compilation for the proper target
-   if (comp->getOption(TR_DisableZ10))
+   if (compilation->getOption(TR_DisableZ10))
       {
       _processorInfo.disableArch(TR_S390ProcessorInfo::TR_z10);
       }
 
-   if (comp->getOption(TR_DisableZ196))
+   if (compilation->getOption(TR_DisableZ196))
       {
       _processorInfo.disableArch(TR_S390ProcessorInfo::TR_z196);
       }
 
-   if (comp->getOption(TR_DisableZEC12))
+   if (compilation->getOption(TR_DisableZEC12))
       {
       _processorInfo.disableArch(TR_S390ProcessorInfo::TR_zEC12);
       }
 
-   if (comp->getOption(TR_DisableZ13))
+   if (compilation->getOption(TR_DisableZ13))
       {
       _processorInfo.disableArch(TR_S390ProcessorInfo::TR_z13);
       }
 
-   if (comp->getOption(TR_DisableZ14))
+   if (compilation->getOption(TR_DisableZ14))
       {
       _processorInfo.disableArch(TR_S390ProcessorInfo::TR_z14);
       }
 
-   if (comp->getOption(TR_DisableZNext))
+   if (compilation->getOption(TR_DisableZNext))
       {
       _processorInfo.disableArch(TR_S390ProcessorInfo::TR_zNext);
       }
@@ -593,28 +593,28 @@ OMR::Z::CodeGenerator::initializeConstruction()
       (TR::RealRegister**)trMemory()->allocateHeapMemory(sizeof(TR::RealRegister*)*(TR::RealRegister::NumRegisters));
    _unlatchedRegisterList[0] = 0; // mark that list is empty
 
-   bool enableBranchPreload = comp->getOption(TR_EnableBranchPreload);
-   bool disableBranchPreload = comp->getOption(TR_DisableBranchPreload);
+   bool enableBranchPreload = compilation->getOption(TR_EnableBranchPreload);
+   bool disableBranchPreload = compilation->getOption(TR_DisableBranchPreload);
 
-   if (enableBranchPreload || (!disableBranchPreload && comp->isOptServer() && _processorInfo.supportsArch(TR_S390ProcessorInfo::TR_zEC12)))
+   if (enableBranchPreload || (!disableBranchPreload && compilation->isOptServer() && _processorInfo.supportsArch(TR_S390ProcessorInfo::TR_zEC12)))
       setEnableBranchPreload();
    else
       setDisableBranchPreload();
 
    static bool bpp = (feGetEnv("TR_BPRP")!=NULL);
 
-   if ((enableBranchPreload && bpp) || (bpp && !disableBranchPreload && comp->isOptServer() && _processorInfo.supportsArch(TR_S390ProcessorInfo::TR_zEC12)))
+   if ((enableBranchPreload && bpp) || (bpp && !disableBranchPreload && compilation->isOptServer() && _processorInfo.supportsArch(TR_S390ProcessorInfo::TR_zEC12)))
       setEnableBranchPreloadForCalls();
    else
       setDisableBranchPreloadForCalls();
 
    if (supportsBranchPreloadForCalls())
       {
-      _callsForPreloadList = new (trHeapMemory()) TR::list<TR_BranchPreloadCallData*>(getTypedAllocator<TR_BranchPreloadCallData*>(comp->allocator()));
+      _callsForPreloadList = new (trHeapMemory()) TR::list<TR_BranchPreloadCallData*>(getTypedAllocator<TR_BranchPreloadCallData*>(compilation->allocator()));
       }
 
    // Check if platform supports highword facility - both hardware and OS combination.
-   if (getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z196) && !comp->getOption(TR_MimicInterpreterFrameShape))
+   if (getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z196) && !compilation->getOption(TR_MimicInterpreterFrameShape))
       {
       // On 31-bit zlinux we need to check RAS support
       if (!TR::Compiler->target.isLinux() || TR::Compiler->target.is64Bit() || TR::Compiler->target.cpu.getS390SupportsHPRDebug())
@@ -654,13 +654,13 @@ OMR::Z::CodeGenerator::initializeConstruction()
       {
       setSupportsVirtualGuardNOPing();
       }
-   if (!comp->getOption(TR_DisableArraySetOpts))
+   if (!compilation->getOption(TR_DisableArraySetOpts))
       {
       setSupportsArraySet();
       }
    setSupportsArrayCmp();
    setSupportsArrayCmpSign();
-   if (!comp->compileRelocatableCode())
+   if (!compilation->compileRelocatableCode())
       {
       setSupportsArrayTranslateTRxx();
       }
@@ -685,19 +685,19 @@ OMR::Z::CodeGenerator::initializeConstruction()
       setSupportsBCDToDFPReduction();
       setSupportsIntDFPConversions();
 
-      if (!comp->getOption(TR_DisableTraps) && TR::Compiler->vm.hasResumableTrapHandler(comp))
+      if (!compilation->getOption(TR_DisableTraps) && TR::Compiler->vm.hasResumableTrapHandler(compilation))
          {
          setHasResumableTrapHandler();
          }
       }
    else
       {
-      comp->setOption(TR_DisableCompareAndBranchInstruction);
+      compilation->setOption(TR_DisableCompareAndBranchInstruction);
 
       // No trap instructions available for z10 and below.
       // Set disable traps so that the optimizations and codegen can avoid generating
       // trap-specific nodes or instructions.
-      comp->setOption(TR_DisableTraps);
+      compilation->setOption(TR_DisableTraps);
       }
 
    if (_processorInfo.supportsArch(TR_S390ProcessorInfo::TR_z196))
@@ -708,20 +708,20 @@ OMR::Z::CodeGenerator::initializeConstruction()
       {
       // Max min optimization uses the maxMinHelper evaluator which
       // requires conditional loads that are not supported below z196
-      comp->setOption(TR_DisableMaxMinOptimization);
+      compilation->setOption(TR_DisableMaxMinOptimization);
       }
 
    if (_processorInfo.supportsArch(TR_S390ProcessorInfo::TR_zEC12))
       {
       setSupportsZonedDFPConversions();
-      if (TR::Compiler->target.cpu.getS390SupportsTM() && !comp->getOption(TR_DisableTM))
+      if (TR::Compiler->target.cpu.getS390SupportsTM() && !compilation->getOption(TR_DisableTM))
          setSupportsTM();
       }
 
    if(getSupportsTM())
       setSupportsTMHashMapAndLinkedQueue();
 
-   if (_processorInfo.supportsArch(TR_S390ProcessorInfo::TR_z13) && !comp->getOption(TR_DisableArch11PackedToDFP))
+   if (_processorInfo.supportsArch(TR_S390ProcessorInfo::TR_z13) && !compilation->getOption(TR_DisableArch11PackedToDFP))
       setSupportsFastPackedDFPConversions();
 
    // Be pessimistic until we can prove we don't exit after doing code-generation
@@ -738,22 +738,22 @@ OMR::Z::CodeGenerator::initializeConstruction()
    // Set up vector register support for machine after zEC12.
    // This should also happen before prepareForGRA
 
-   if(!(getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z13) && !comp->getOption(TR_DisableZ13)))
+   if(!(getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z13) && !compilation->getOption(TR_DisableZ13)))
      {
-     comp->setOption(TR_DisableZ13LoadAndMask);
-     comp->setOption(TR_DisableZ13LoadImmediateOnCond);
+     compilation->setOption(TR_DisableZ13LoadAndMask);
+     compilation->setOption(TR_DisableZ13LoadImmediateOnCond);
      }
 
 
-   if (comp->getOption(TR_DisableSIMD))
+   if (compilation->getOption(TR_DisableSIMD))
       {
-      comp->setOption(TR_DisableAutoSIMD);
-      comp->setOption(TR_DisableSIMDArrayCompare);
-      comp->setOption(TR_DisableSIMDArrayTranslate);
-      comp->setOption(TR_DisableSIMDUTF16BEEncoder);
-      comp->setOption(TR_DisableSIMDUTF16LEEncoder);
-      comp->setOption(TR_DisableSIMDStringHashCode);
-      comp->setOption(TR_DisableVectorRegGRA);
+      compilation->setOption(TR_DisableAutoSIMD);
+      compilation->setOption(TR_DisableSIMDArrayCompare);
+      compilation->setOption(TR_DisableSIMDArrayTranslate);
+      compilation->setOption(TR_DisableSIMDUTF16BEEncoder);
+      compilation->setOption(TR_DisableSIMDUTF16LEEncoder);
+      compilation->setOption(TR_DisableSIMDStringHashCode);
+      compilation->setOption(TR_DisableVectorRegGRA);
       }
 
    // This enables the tactical GRA
@@ -764,10 +764,10 @@ OMR::Z::CodeGenerator::initializeConstruction()
    addSupportedLiveRegisterKind(TR_GPR64);
    addSupportedLiveRegisterKind(TR_VRF);
 
-   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(comp), TR_GPR);
-   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(comp), TR_FPR);
-   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(comp), TR_GPR64);
-   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(comp), TR_VRF);
+   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(compilation), TR_GPR);
+   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(compilation), TR_FPR);
+   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(compilation), TR_GPR64);
+   setLiveRegisters(new (trHeapMemory()) TR_LiveRegisters(compilation), TR_VRF);
 
    setSupportsPrimitiveArrayCopy();
    setSupportsReferenceArrayCopy();
@@ -792,7 +792,7 @@ OMR::Z::CodeGenerator::initializeConstruction()
    _nextAvailableBlockIndex = -1;
    _currentBlockIndex = -1;
 
-   if (comp->getOptions()->getRegisterAssignmentTraceOption(TR_TraceRARegisterStates))
+   if (compilation->getOptions()->getRegisterAssignmentTraceOption(TR_TraceRARegisterStates))
       {
       setGPRegisterIterator(new (trHeapMemory()) TR::RegisterIterator(machine(), TR_GPR));
       setFPRegisterIterator(new (trHeapMemory()) TR::RegisterIterator(machine(), TR_FPR));
@@ -800,7 +800,7 @@ OMR::Z::CodeGenerator::initializeConstruction()
       setVRFRegisterIterator(new (trHeapMemory()) TR::RegisterIterator(machine(), TR_VRF));
       }
 
-   if (!comp->getOption(TR_DisableTLHPrefetch) && !comp->compileRelocatableCode())
+   if (!compilation->getOption(TR_DisableTLHPrefetch) && !compilation->compileRelocatableCode())
       {
       setEnableTLHPrefetching();
       }
@@ -810,7 +810,7 @@ OMR::Z::CodeGenerator::initializeConstruction()
 
    setSupportsProfiledInlining();
 
-   getS390Linkage()->setParameterLinkageRegisterIndex(comp->getJittedMethodSymbol());
+   getS390Linkage()->setParameterLinkageRegisterIndex(compilation->getJittedMethodSymbol());
 
    getS390Linkage()->initS390RealRegisterLinkage();
    setAccessStaticsIndirectly(true);
@@ -4948,7 +4948,7 @@ TR::Linkage *
 OMR::Z::CodeGenerator::createLinkage(TR_LinkageConventions lc)
    {
    TR::Linkage * linkage;
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    switch (lc)
       {
       case TR_Helper:

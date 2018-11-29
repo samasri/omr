@@ -510,7 +510,7 @@ OMR::X86::CodeGenerator::initializeConstruction()
 TR::Linkage *
 OMR::X86::CodeGenerator::createLinkage(TR_LinkageConventions lc)
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    TR::Linkage *linkage = NULL;
 
    switch (lc)
@@ -553,11 +553,11 @@ OMR::X86::CodeGenerator::createLinkage(TR_LinkageConventions lc)
 void
 OMR::X86::CodeGenerator::beginInstructionSelection()
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    _returnTypeInfoInstruction = NULL;
-   TR::ResolvedMethodSymbol * methodSymbol = comp->getJittedMethodSymbol();
-   TR::Recompilation * recompilation = comp->getRecompilationInfo();
-   TR::Node * startNode = comp->getStartTree()->getNode();
+   TR::ResolvedMethodSymbol * methodSymbol = compilation->getJittedMethodSymbol();
+   TR::Recompilation * recompilation = compilation->getRecompilationInfo();
+   TR::Node * startNode = compilation->getStartTree()->getNode();
 
    if (recompilation && recompilation->generatePrePrologue() != NULL)
       {
@@ -595,7 +595,7 @@ OMR::X86::CodeGenerator::beginInstructionSelection()
 
    // Set the default FPCW to single precision mode if we are allowed to.
    //
-   if (enableSinglePrecisionMethods() && comp->getJittedMethodSymbol()->usesSinglePrecisionMode())
+   if (enableSinglePrecisionMethods() && compilation->getJittedMethodSymbol()->usesSinglePrecisionMode())
       {
       generateMemInstruction(LDCWMem, startNode, generateX86MemoryReference(findOrCreate2ByteConstant(startNode, SINGLE_PRECISION_ROUND_TO_NEAREST), self()), self());
       }
@@ -604,10 +604,10 @@ OMR::X86::CodeGenerator::beginInstructionSelection()
 void
 OMR::X86::CodeGenerator::endInstructionSelection()
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    if (_returnTypeInfoInstruction != NULL)
       {
-      TR_ReturnInfo returnInfo = comp->getReturnInfo();
+      TR_ReturnInfo returnInfo = compilation->getReturnInfo();
 
       // Note: this will get clobbered again in code generation on AMD64
       _returnTypeInfoInstruction->setSourceImmediate(returnInfo);
@@ -616,7 +616,7 @@ OMR::X86::CodeGenerator::endInstructionSelection()
    // Reset the FPCW in the dummy finally block.
    //
    if (enableSinglePrecisionMethods() &&
-       comp->getJittedMethodSymbol()->usesSinglePrecisionMode())
+       compilation->getJittedMethodSymbol()->usesSinglePrecisionMode())
       {
       TR_ASSERT(getLastCatchAppendInstruction(),
              "endInstructionSelection() ==> Could not find the dummy finally block!\n");
@@ -1443,20 +1443,20 @@ void OMR::X86::CodeGenerator::doBackwardsRegisterAssignment(
       TR::Instruction *instructionCursor,
       TR::Instruction *appendInstruction)
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
    TR::Instruction *prevInstruction;
 
 #ifdef DEBUG
    TR::Instruction *origNextInstruction;
-   bool dumpPreGP = (debug("dumpGPRA") || debug("dumpGPRA0")) && comp->getOutFile() != NULL;
-   bool dumpPostGP = (debug("dumpGPRA") || debug("dumpGPRA1")) && comp->getOutFile() != NULL;
+   bool dumpPreGP = (debug("dumpGPRA") || debug("dumpGPRA0")) && compilation->getOutFile() != NULL;
+   bool dumpPostGP = (debug("dumpGPRA") || debug("dumpGPRA1")) && compilation->getOutFile() != NULL;
 #endif
 
    if (getUseNonLinearRegisterAssigner())
       {
       if (!getSpilledRegisterList())
          {
-         setSpilledRegisterList(new (trHeapMemory()) TR::list<TR::Register*>(getTypedAllocator<TR::Register*>(comp->allocator())));
+         setSpilledRegisterList(new (trHeapMemory()) TR::list<TR::Register*>(getTypedAllocator<TR::Register*>(compilation->allocator())));
          }
       }
 

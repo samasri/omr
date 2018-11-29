@@ -581,13 +581,13 @@ OMR::CodeGenerator::setUpForInstructionSelection()
 void
 OMR::CodeGenerator::uncommonCallConstNodes()
    {
-   TR::Compilation* comp = comp();
-   if(comp->getOption(TR_TraceCG))
+   TR::Compilation* compilation = comp();
+   if(compilation->getOption(TR_TraceCG))
       {
-      traceMsg(comp, "Performing uncommon call constant nodes\n");
+      traceMsg(compilation, "Performing uncommon call constant nodes\n");
       }
 
-   TR::NodeChecklist checklist(comp);
+   TR::NodeChecklist checklist(compilation);
 
    for (TR::TreeTop* tt = comp()->getStartTree(); tt; tt = tt->getNextTreeTop())
       {
@@ -598,9 +598,9 @@ OMR::CodeGenerator::uncommonCallConstNodes()
           TR::Node* callNode = node->getFirstChild();
           if(checklist.contains(callNode))
              {
-             if(comp->getOption(TR_TraceCG))
+             if(compilation->getOption(TR_TraceCG))
                 {
-                traceMsg(comp, "Skipping previously visited call node %d\n", callNode->getGlobalIndex());
+                traceMsg(compilation, "Skipping previously visited call node %d\n", callNode->getGlobalIndex());
                 }
              continue;
              }
@@ -616,7 +616,7 @@ OMR::CodeGenerator::uncommonCallConstNodes()
                 {
                 if(comp()->getOption(TR_TraceCG))
                    {
-                   traceMsg(comp, "Uncommon const node %X [n%dn]\n",
+                   traceMsg(compilation, "Uncommon const node %X [n%dn]\n",
                             paramNode, paramNode->getGlobalIndex());
                    }
 
@@ -633,20 +633,20 @@ OMR::CodeGenerator::uncommonCallConstNodes()
 void
 OMR::CodeGenerator::doInstructionSelection()
    {
-   TR::Compilation *comp = comp();
+   TR::Compilation *compilation = comp();
 
-   setNextAvailableBlockIndex(comp->getFlowGraph()->getNextNodeNumber() + 1);
+   setNextAvailableBlockIndex(compilation->getFlowGraph()->getNextNodeNumber() + 1);
 
    // Set default value for pre-prologue size
    //
    setPrePrologueSize(0);
 
-   if (comp->getOption(TR_TraceCG))
+   if (compilation->getOption(TR_TraceCG))
       {
       diagnostic("\n<selection>");
       }
 
-   if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
+   if (compilation->getOption(TR_TraceCG) || debug("traceGRA"))
       {
       getDebug()->setupToDumpTreesAndInstructions("Performing Instruction Selection");
       }
@@ -657,9 +657,9 @@ OMR::CodeGenerator::doInstructionSelection()
    TR::StackMemoryRegion stackMemoryRegion(*trMemory());
 
    TR_BitVector *liveLocals = getLiveLocals();
-   TR_BitVector nodeChecklistBeforeDump(comp->getNodeCount(), trMemory(), stackAlloc, growable);
+   TR_BitVector nodeChecklistBeforeDump(compilation->getNodeCount(), trMemory(), stackAlloc, growable);
 
-   for (TR::TreeTop *tt = comp->getStartTree(); tt; tt = getCurrentEvaluationTreeTop()->getNextTreeTop())
+   for (TR::TreeTop *tt = compilation->getStartTree(); tt; tt = getCurrentEvaluationTreeTop()->getNextTreeTop())
       {
       TR::Instruction *prevInstr = getAppendInstruction();
       TR::Node *node = tt->getNode();
@@ -714,13 +714,13 @@ OMR::CodeGenerator::doInstructionSelection()
 
       setLiveLocals(liveLocals);
 
-      if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
+      if (compilation->getOption(TR_TraceCG) || debug("traceGRA"))
          {
          // any evaluator that handles multiple trees will need to dump
          // the others
          getDebug()->saveNodeChecklist(nodeChecklistBeforeDump);
          getDebug()->dumpSingleTreeWithInstrs(tt, NULL, true, false, true, true);
-         traceMsg(comp, "\n------------------------------\n");
+         traceMsg(compilation, "\n------------------------------\n");
          }
 
       setCurrentEvaluationTreeTop(tt);
@@ -731,7 +731,7 @@ OMR::CodeGenerator::doInstructionSelection()
       //
       evaluate(node);
 
-      if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
+      if (compilation->getOption(TR_TraceCG) || debug("traceGRA"))
          {
          TR::Instruction *lastInstr = getAppendInstruction();
          tt->setLastInstruction(lastInstr == prevInstr ? 0 : lastInstr);
@@ -800,21 +800,21 @@ OMR::CodeGenerator::doInstructionSelection()
             }
          }
 
-      if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
+      if (compilation->getOption(TR_TraceCG) || debug("traceGRA"))
          {
          getDebug()->restoreNodeChecklist(nodeChecklistBeforeDump);
          if (tt == getCurrentEvaluationTreeTop())
             {
-            traceMsg(comp, "------------------------------\n");
+            traceMsg(compilation, "------------------------------\n");
             getDebug()->dumpSingleTreeWithInstrs(tt, prevInstr->getNext(), true, true, true, false);
             }
          else
             {
             // dump all the trees that the evaluator handled
-            traceMsg(comp, "------------------------------");
+            traceMsg(compilation, "------------------------------");
             for (TR::TreeTop *dumptt = tt; dumptt != getCurrentEvaluationTreeTop()->getNextTreeTop(); dumptt = dumptt->getNextTreeTop())
                {
-               traceMsg(comp, "\n");
+               traceMsg(compilation, "\n");
                getDebug()->dumpSingleTreeWithInstrs(dumptt, NULL, true, false, true, false);
                }
 
@@ -822,7 +822,7 @@ OMR::CodeGenerator::doInstructionSelection()
             getDebug()->dumpSingleTreeWithInstrs(tt, prevInstr->getNext(), false, true, false, false);
             }
 
-         trfflush(comp->getOutFile());
+         trfflush(compilation->getOutFile());
          }
       }
 
@@ -834,9 +834,9 @@ OMR::CodeGenerator::doInstructionSelection()
 #endif
    } // scope of the stack memory region
 
-   if (comp->getOption(TR_TraceCG) || debug("traceGRA"))
+   if (compilation->getOption(TR_TraceCG) || debug("traceGRA"))
       {
-      comp->incVisitCount();
+      compilation->incVisitCount();
       }
 
    if (getDebug())
@@ -846,7 +846,7 @@ OMR::CodeGenerator::doInstructionSelection()
 
    endInstructionSelection();
 
-   if (comp->getOption(TR_TraceCG))
+   if (compilation->getOption(TR_TraceCG))
       {
       diagnostic("</selection>\n");
       }
