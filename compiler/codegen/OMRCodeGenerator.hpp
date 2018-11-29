@@ -1641,6 +1641,8 @@ class /*OMR_EXTENSIBLE*/ CodeGenerator
    void resetTrackingInMemoryKilledLoads() {_flags4.reset(TrackingInMemoryKilledLoads);}
 
    void setLmmdFailed() { _lmmdFailed = true;}
+	 
+	 virtual void insertInstructionPrefetches() {};
 
    protected:
 
