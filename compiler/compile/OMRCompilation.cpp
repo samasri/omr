@@ -145,7 +145,7 @@ tlsDefine(TR::Compilation *, compilation);
 TR::SymbolReference *
 OMR::Compilation::getSymbolReferenceByReferenceNumber(int32_t referenceNumber)
    {
-   return self()->getSymRefTab()->getSymRef(referenceNumber);
+   return getSymRefTab()->getSymRef(referenceNumber);
    }
 
 ncount_t
@@ -219,7 +219,7 @@ OMR::Compilation::Compilation(
    _omrVMThread(omrVMThread),
    _allocator(TRCS2MemoryAllocator(m)),
    _method(compilee),
-   _arenaAllocator(TR::Allocator(self()->allocator("Arena"))),
+   _arenaAllocator(TR::Allocator(allocator("Arena"))),
    _aliasRegion(heapMemoryRegion),
    _allocatorName(NULL),
    _ilGenerator(0),
@@ -235,18 +235,18 @@ OMR::Compilation::Compilation(
    _inlinedCallSites(m),
    _inlinedCallStack(m),
    _inlinedCallArgInfoStack(m),
-   _devirtualizedCalls(getTypedAllocator<TR_DevirtualizedCallInfo*>(self()->allocator())),
+   _devirtualizedCalls(getTypedAllocator<TR_DevirtualizedCallInfo*>(allocator())),
    _inlinedCalls(0),
    _inlinedFramesAdded(0),
-   _virtualGuards(getTypedAllocator<TR_VirtualGuard*>(self()->allocator())),
-   _staticPICSites(getTypedAllocator<TR::Instruction*>(self()->allocator())),
-   _staticHCRPICSites(getTypedAllocator<TR::Instruction*>(self()->allocator())),
-   _staticMethodPICSites(getTypedAllocator<TR::Instruction*>(self()->allocator())),
-   _snippetsToBePatchedOnClassUnload(getTypedAllocator<TR::Snippet*>(self()->allocator())),
-   _methodSnippetsToBePatchedOnClassUnload(getTypedAllocator<TR::Snippet*>(self()->allocator())),
-   _snippetsToBePatchedOnClassRedefinition(getTypedAllocator<TR::Snippet*>(self()->allocator())),
-   _snippetsToBePatchedOnRegisterNative(getTypedAllocator<TR_Pair<TR::Snippet,TR_ResolvedMethod> *>(self()->allocator())),
-   _genILSyms(getTypedAllocator<TR::ResolvedMethodSymbol*>(self()->allocator())),
+   _virtualGuards(getTypedAllocator<TR_VirtualGuard*>(allocator())),
+   _staticPICSites(getTypedAllocator<TR::Instruction*>(allocator())),
+   _staticHCRPICSites(getTypedAllocator<TR::Instruction*>(allocator())),
+   _staticMethodPICSites(getTypedAllocator<TR::Instruction*>(allocator())),
+   _snippetsToBePatchedOnClassUnload(getTypedAllocator<TR::Snippet*>(allocator())),
+   _methodSnippetsToBePatchedOnClassUnload(getTypedAllocator<TR::Snippet*>(allocator())),
+   _snippetsToBePatchedOnClassRedefinition(getTypedAllocator<TR::Snippet*>(allocator())),
+   _snippetsToBePatchedOnRegisterNative(getTypedAllocator<TR_Pair<TR::Snippet,TR_ResolvedMethod> *>(allocator())),
+   _genILSyms(getTypedAllocator<TR::ResolvedMethodSymbol*>(allocator())),
    _noEarlyInline(true),
    _returnInfo(TR_VoidReturn),
    _visitCount(0),
@@ -264,27 +264,27 @@ OMR::Compilation::Compilation(
    _osrStateIsReliable(true),
    _canAffordOSRControlFlow(true),
    _osrInfrastructureRemoved(false),
-   _toNumberMap(self()->allocator("toNumberMap")),
-   _toStringMap(self()->allocator("toStringMap")),
-   _toCommentMap(self()->allocator("toCommentMap")),
+   _toNumberMap(allocator("toNumberMap")),
+   _toStringMap(allocator("toStringMap")),
+   _toCommentMap(allocator("toCommentMap")),
    _nextOptLevel(unknownHotness),
    _errorCode(COMPILATION_SUCCEEDED),
    _peekingArgInfo(m),
    _peekingSymRefTab(NULL),
-   _checkcastNullChkInfo(getTypedAllocator<TR_Pair<TR_ByteCodeInfo, TR::Node> *>(self()->allocator())),
-   _nodesThatShouldPrefetchOffset(getTypedAllocator<TR_Pair<TR::Node,uint32_t> *>(self()->allocator())),
-   _extraPrefetchInfo(getTypedAllocator<TR_PrefetchInfo*>(self()->allocator())),
-   _debugCounterMap(std::less<const void *>(), getTypedAllocator<DebugCounterEntry>(self()->allocator())),
+   _checkcastNullChkInfo(getTypedAllocator<TR_Pair<TR_ByteCodeInfo, TR::Node> *>(allocator())),
+   _nodesThatShouldPrefetchOffset(getTypedAllocator<TR_Pair<TR::Node,uint32_t> *>(allocator())),
+   _extraPrefetchInfo(getTypedAllocator<TR_PrefetchInfo*>(allocator())),
+   _debugCounterMap(std::less<const void *>(), getTypedAllocator<DebugCounterEntry>(allocator())),
    _currentBlock(NULL),
    _verboseOptTransformationCount(0),
    _relocatableMethodCodeStart(NULL),
    _compThreadID(id),
    _failCHtableCommitFlag(false),
    _numReservedIPICTrampolines(0),
-   _phaseTimer("Compilation", self()->allocator("phaseTimer"), self()->getOption(TR_Timing)),
-   _phaseMemProfiler("Compilation", self()->allocator("phaseMemProfiler"), self()->getOption(TR_LexicalMemProfiler)),
+   _phaseTimer("Compilation", allocator("phaseTimer"), getOption(TR_Timing)),
+   _phaseMemProfiler("Compilation", allocator("phaseMemProfiler"), getOption(TR_LexicalMemProfiler)),
    _compilationNodes(NULL),
-   _copyPropagationRematerializationCandidates(self()->allocator("CP rematerialization")),
+   _copyPropagationRematerializationCandidates(allocator("CP rematerialization")),
    _nodeOpCodeLength(0),
    _prevSymRefTabSize(0),
    _scratchSpaceLimit(TR::Options::_scratchSpaceLimit),
@@ -318,7 +318,7 @@ OMR::Compilation::Compilation(
    _metadataAssumptionList = NULL;
 #endif
    _symRefTab = new (_trMemory->trHeapMemory()) TR::SymbolReferenceTable(_method->maxBytecodeIndex(), self());
-   _compilationNodes = new (_trMemory->trHeapMemory()) TR::NodePool(self(), self()->allocator());
+   _compilationNodes = new (_trMemory->trHeapMemory()) TR::NodePool(self(), allocator());
 
 #ifdef J9_PROJECT_SPECIFIC
    // The following must stay before the first assumption gets created which could happen
@@ -335,7 +335,7 @@ OMR::Compilation::Compilation(
    if (options.getOption(TR_RandomSeedSignatureHash))
       {
       int32_t hash = 0;
-      for (const char *c = self()->signature(); *c; c++)
+      for (const char *c = signature(); *c; c++)
          hash = 33*hash + (int32_t)(*c);
       int32_t seed = _options->getRandomSeed();
       seed ^= hash;
@@ -358,15 +358,15 @@ OMR::Compilation::Compilation(
           _flags.set(IsGPUCompileCPUCode);
 
 
-      self()->setGPUBlockDimX(optimizationPlan->getGPUBlockDimX());
-      self()->setGPUParms(optimizationPlan->getGPUParms());
+      setGPUBlockDimX(optimizationPlan->getGPUBlockDimX());
+      setGPUParms(optimizationPlan->getGPUParms());
       }
 
    // if we are not in the selective NoOptServer mode
    _isOptServer = (!options.getOption(TR_NoOptServer)) &&
          ( options.getOption(TR_Server)
 #ifdef J9_PROJECT_SPECIFIC
-           || (self()->getPersistentInfo()->getNumLoadedClasses() >= TR::Options::_bigAppThreshold)
+           || (getPersistentInfo()->getNumLoadedClasses() >= TR::Options::_bigAppThreshold)
 #endif
          );
    _isServerInlining = !options.getOption(TR_NoOptServer);
@@ -376,20 +376,20 @@ OMR::Compilation::Compilation(
    //   actually inspects TR::comp()->_methodSymbol (to compare against the new object)
    _methodSymbol = NULL;
       {
-      _methodSymbol = TR::ResolvedMethodSymbol::createJittedMethodSymbol(self()->trHeapMemory(), compilee, self());
+      _methodSymbol = TR::ResolvedMethodSymbol::createJittedMethodSymbol(trHeapMemory(), compilee, self());
       }
 
    // initPersistentCPUField and createOpCode must be done after method symbol creation
 
-   if (self()->getOption(TR_EnableNodeGC))
+   if (getOption(TR_EnableNodeGC))
       {
-      self()->getNodePool().enableNodeGC();
+      getNodePool().enableNodeGC();
       }
 
    //codegen also needs _methodSymbol
    _codeGenerator = allocateCodeGenerator(self());
    _recompilationInfo = _codeGenerator->allocateRecompilationInfo();
-   _globalRegisterCandidates = new (self()->trHeapMemory()) TR_RegisterCandidates(self());
+   _globalRegisterCandidates = new (trHeapMemory()) TR_RegisterCandidates(self());
 
 #ifdef J9_PROJECT_SPECIFIC
    if (_recompilationInfo && options.getOptLevelDowngraded())
@@ -413,21 +413,21 @@ OMR::Compilation::Compilation(
 
    // If the outermost method is native, OSR is not supported
    if (_methodSymbol->isNative())
-      self()->setOption(TR_DisableOSR);
+      setOption(TR_DisableOSR);
 
    // Do not default OSR on if:
    // NextGenHCR is disabled, as it is enabled for it
    // OSR is explicitly disabled
    // FSD is enabled, as HCR cannot be enabled with it
    // HCR has not been enabled
-   if (!self()->getOption(TR_DisableNextGenHCR) && !self()->getOption(TR_DisableOSR) && !self()->getOption(TR_FullSpeedDebug) && self()->getOption(TR_EnableHCR))
+   if (!getOption(TR_DisableNextGenHCR) && !getOption(TR_DisableOSR) && !getOption(TR_FullSpeedDebug) && getOption(TR_EnableHCR))
       {
-      self()->setOption(TR_EnableOSR); // OSR must be enabled for NextGenHCR
+      setOption(TR_EnableOSR); // OSR must be enabled for NextGenHCR
       }
 
-   if (self()->isDLT() || (((self()->getMethodHotness() < warm) || compileRelocatableCode() || self()->isProfilingCompilation()) && !enableOSRAtAllOptLevels && !_options->getOption(TR_FullSpeedDebug)))
+   if (isDLT() || (((getMethodHotness() < warm) || compileRelocatableCode() || isProfilingCompilation()) && !enableOSRAtAllOptLevels && !_options->getOption(TR_FullSpeedDebug)))
       {
-      self()->setOption(TR_DisableOSR);
+      setOption(TR_DisableOSR);
       _options->setOption(TR_EnableOSR, false);
       _options->setOption(TR_EnableOSROnGuardFailure, false);
       }
@@ -435,12 +435,12 @@ OMR::Compilation::Compilation(
    if (options.getOption(TR_EnableOSR))
       {
       // Current implementation of partial inlining will break OSR
-      self()->setOption(TR_DisablePartialInlining);
+      setOption(TR_DisablePartialInlining);
 
       //TODO: investigate the memory footprint of this allocation
-      _osrCompilationData = new (self()->trHeapMemory()) TR_OSRCompilationData(self());
+      _osrCompilationData = new (trHeapMemory()) TR_OSRCompilationData(self());
 
-      if (((self()->getMethodHotness() < warm) || compileRelocatableCode() || self()->isProfilingCompilation()) && !enableOSRAtAllOptLevels && !options.getOption(TR_FullSpeedDebug)) // Off for two reasons : 1) not sure if we can afford the increase in compile time due to the extra OSR control flow at cold and 2) not sure at this stage in 727 whether OSR can work with AOT (will try to find out soon) but disabling till I do find out
+      if (((getMethodHotness() < warm) || compileRelocatableCode() || isProfilingCompilation()) && !enableOSRAtAllOptLevels && !options.getOption(TR_FullSpeedDebug)) // Off for two reasons : 1) not sure if we can afford the increase in compile time due to the extra OSR control flow at cold and 2) not sure at this stage in 727 whether OSR can work with AOT (will try to find out soon) but disabling till I do find out
          _canAffordOSRControlFlow = false;
       }
    else
@@ -479,7 +479,7 @@ OMR::Compilation::maxInternalPointers()
 bool
 OMR::Compilation::isOutermostMethod()
    {
-   if ((self()->getInlineDepth() != 0) || self()->isPeekingMethod())
+   if ((getInlineDepth() != 0) || isPeekingMethod())
       return false;
    return true;
    }
@@ -487,7 +487,7 @@ OMR::Compilation::isOutermostMethod()
 bool
 OMR::Compilation::ilGenTrace()
    {
-   if (self()->isOutermostMethod() || self()->getOption(TR_DebugInliner) || self()->trace(OMR::inlining))
+   if (isOutermostMethod() || getOption(TR_DebugInliner) || trace(OMR::inlining))
       return true;
    return false;
    }
@@ -501,61 +501,61 @@ OMR::Compilation::getOptLevel()
 bool
 OMR::Compilation::allocateAtThisOptLevel()
    {
-   return self()->getOptLevel() > warm;
+   return getOptLevel() > warm;
    }
 
 TR::PersistentInfo *
 OMR::Compilation::getPersistentInfo()
    {
-   return self()->trPersistentMemory()->getPersistentInfo();
+   return trPersistentMemory()->getPersistentInfo();
    }
 
 int32_t
 OMR::Compilation::getMaxAliasIndex()
    {
-   return self()->getSymRefCount();
+   return getSymRefCount();
    }
 
 bool
 OMR::Compilation::isPeekingMethod()
    {
-   return self()->getCurrentSymRefTab() != 0;
+   return getCurrentSymRefTab() != 0;
    }
 
 TR_Hotness
 OMR::Compilation::getMethodHotness()
    {
-   return (TR_Hotness) self()->getOptLevel();
+   return (TR_Hotness) getOptLevel();
    }
 
 ncount_t
 OMR::Compilation::getAccurateNodeCount()
    {
-   self()->generateAccurateNodeCount();
+   generateAccurateNodeCount();
    return _accurateNodeCount;
    }
 
 const char *
 OMR::Compilation::getHotnessName()
    {
-   return TR::Compilation::getHotnessName(self()->getMethodHotness());
+   return TR::Compilation::getHotnessName(getMethodHotness());
    }
 
 
 TR::ResolvedMethodSymbol * OMR::Compilation::createJittedMethodSymbol(TR_ResolvedMethod *resolvedMethod)
    {
-   return TR::ResolvedMethodSymbol::createJittedMethodSymbol(self()->trHeapMemory(), resolvedMethod, self());
+   return TR::ResolvedMethodSymbol::createJittedMethodSymbol(trHeapMemory(), resolvedMethod, self());
    }
 
 
 bool OMR::Compilation::canAffordOSRControlFlow()
    {
-   if (self()->getOption(TR_DisableOSR) || !self()->getOption(TR_EnableOSR))
+   if (getOption(TR_DisableOSR) || !getOption(TR_EnableOSR))
       {
       return false;
       }
 
-   if (self()->osrInfrastructureRemoved())
+   if (osrInfrastructureRemoved())
       {
       return false;
       }
@@ -573,35 +573,35 @@ bool OMR::Compilation::supportsInduceOSR()
    {
    if (_osrInfrastructureRemoved)
       {
-      if (self()->getOption(TR_TraceOSR))
+      if (getOption(TR_TraceOSR))
          traceMsg(self(), "OSR induction cannot be performed after OSR infrastructure has been removed\n");
       return false;
       }
 
-   if (!self()->canAffordOSRControlFlow())
+   if (!canAffordOSRControlFlow())
       {
-      if (self()->getOption(TR_TraceOSR))
+      if (getOption(TR_TraceOSR))
          traceMsg(self(), "canAffordOSRControlFlow is false - OSR induction is not supported\n");
       return false;
       }
 
-   if (self()->getOption(TR_MimicInterpreterFrameShape) && !self()->getOption(TR_FullSpeedDebug)/* && areSlotsSharedByRefAndNonRef() */)
+   if (getOption(TR_MimicInterpreterFrameShape) && !getOption(TR_FullSpeedDebug)/* && areSlotsSharedByRefAndNonRef() */)
       {
-      if (self()->getOption(TR_TraceOSR))
+      if (getOption(TR_TraceOSR))
          traceMsg(self(), "MimicInterpreterFrameShape is set - OSR induction is not supported\n");
       return false;
       }
 
-   if (self()->isDLT() /* && getJittedMethodSymbol()->sharesStackSlots(self()) */)
+   if (isDLT() /* && getJittedMethodSymbol()->sharesStackSlots(self()) */)
       {
-      if (self()->getOption(TR_TraceOSR))
+      if (getOption(TR_TraceOSR))
          traceMsg(self(), "DLT compilation - OSR induction is not supported\n");
       return false;
       }
 
    if (_osrCompilationData && _osrCompilationData->seenClassPreventingInducedOSR())
       {
-      if (self()->getOption(TR_TraceOSR))
+      if (getOption(TR_TraceOSR))
          traceMsg(self(), "Cannot guarantee OSR transfer of control to the interpreter will work for calls preventing induced OSR (e.g. Quad) because of differences in JIT vs interpreter representations\n");
       return false;
       }
@@ -612,10 +612,10 @@ bool OMR::Compilation::supportsInduceOSR()
 
 bool OMR::Compilation::penalizePredsOfOSRCatchBlocksInGRA()
    {
-   if (!self()->getOption(TR_EnableOSR))
+   if (!getOption(TR_EnableOSR))
       return false;
 
-   if (self()->getOption(TR_FullSpeedDebug))
+   if (getOption(TR_FullSpeedDebug))
       return false;
 
    return true;
@@ -633,7 +633,7 @@ bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNo
    static char *disableMonentOSR = feGetEnv("TR_disableMonentOSR");
 
    bool potentialOSRPoint = false;
-   if (self()->isOSRTransitionTarget(TR::postExecutionOSR))
+   if (isOSRTransitionTarget(TR::postExecutionOSR))
       {
       if (node->getOpCodeValue() == TR::treetop || node->getOpCode().isCheck())
          node = node->getFirstChild();
@@ -653,7 +653,7 @@ bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNo
             potentialOSRPoint = true;
             }
          else if (callSymRef->getReferenceNumber() >=
-             self()->getSymRefTab()->getNonhelperIndex(self()->getSymRefTab()->getLastCommonNonhelperSymbol()))
+             getSymRefTab()->getNonhelperIndex(getSymRefTab()->getLastCommonNonhelperSymbol()))
             {
             potentialOSRPoint = (disableGuardedCallOSR == NULL);
             }
@@ -663,7 +663,7 @@ bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNo
       }
    else if (node->canGCandReturn())
       potentialOSRPoint = true;
-   else if (self()->getOSRMode() == TR::involuntaryOSR && node->canGCandExcept())
+   else if (getOSRMode() == TR::involuntaryOSR && node->canGCandExcept())
       potentialOSRPoint = true;
 
    if (osrPointNode && potentialOSRPoint)
@@ -675,11 +675,11 @@ bool OMR::Compilation::isPotentialOSRPoint(TR::Node *node, TR::Node **osrPointNo
 bool OMR::Compilation::isPotentialOSRPointWithSupport(TR::TreeTop *tt)
    {
    TR::Node *osrNode;
-   bool potentialOSRPoint = self()->isPotentialOSRPoint(tt->getNode(), &osrNode);
+   bool potentialOSRPoint = isPotentialOSRPoint(tt->getNode(), &osrNode);
 
-   if (potentialOSRPoint && self()->getOSRMode() == TR::voluntaryOSR)
+   if (potentialOSRPoint && getOSRMode() == TR::voluntaryOSR)
       {
-      if (self()->isOSRTransitionTarget(TR::postExecutionOSR) && tt->getNode() != osrNode)
+      if (isOSRTransitionTarget(TR::postExecutionOSR) && tt->getNode() != osrNode)
          {
          // The OSR point applies where the node is anchored, rather than where it may
          // be commoned. Therefore, it is necessary to check if the node is anchored under
@@ -707,7 +707,7 @@ bool OMR::Compilation::isPotentialOSRPointWithSupport(TR::TreeTop *tt)
          {
          TR_ByteCodeInfo &bci = osrNode->getByteCodeInfo();
          TR::ResolvedMethodSymbol *method = bci.getCallerIndex() == -1 ?
-            self()->getMethodSymbol() : self()->getInlinedResolvedMethodSymbol(bci.getCallerIndex());
+            getMethodSymbol() : getInlinedResolvedMethodSymbol(bci.getCallerIndex());
          potentialOSRPoint = method->supportsInduceOSR(bci, tt->getEnclosingBlock(), self(), false);
          }
       }
@@ -727,7 +727,7 @@ bool OMR::Compilation::isPotentialOSRPointWithSupport(TR::TreeTop *tt)
 TR::OSRMode
 OMR::Compilation::getOSRMode()
    {
-   if (self()->getOption(TR_FullSpeedDebug))
+   if (getOption(TR_FullSpeedDebug))
       return TR::involuntaryOSR;
    return TR::voluntaryOSR;
    }
@@ -745,14 +745,14 @@ OMR::Compilation::getOSRTransitionTarget()
 
    // Under NextGenHCR, transitions will occur after the OSR points
    // Otherwise, the default is before
-   if (self()->getHCRMode() == TR::osr)
+   if (getHCRMode() == TR::osr)
       {
       target = TR::postExecutionOSR;
       // If OSROnGuardFailure is enabled, transitions will also occur before
-      if (self()->getOption(TR_EnableOSROnGuardFailure))
+      if (getOption(TR_EnableOSROnGuardFailure))
          target = TR::preAndPostExecutionOSR;
       }
-   else if (self()->getOption(TR_EnableOSR))
+   else if (getOption(TR_EnableOSR))
       target = TR::preExecutionOSR;
 
    return target;
@@ -761,7 +761,7 @@ OMR::Compilation::getOSRTransitionTarget()
 bool
 OMR::Compilation::isOSRTransitionTarget(TR::OSRTransitionTarget target)
    {
-   return target & self()->getOSRTransitionTarget();
+   return target & getOSRTransitionTarget();
    }
 
 /*
@@ -773,11 +773,11 @@ int32_t
 OMR::Compilation::getOSRInductionOffset(TR::Node *node)
    {
    // If no induction after the OSR point, offset must be 0
-   if (!self()->isOSRTransitionTarget(TR::postExecutionOSR))
+   if (!isOSRTransitionTarget(TR::postExecutionOSR))
       return 0;
 
    TR::Node *osrNode;
-   if (!self()->isPotentialOSRPoint(node, &osrNode))
+   if (!isPotentialOSRPoint(node, &osrNode))
       {
       TR_ASSERT(0, "getOSRInductionOffset should only be called on OSR points");
       }
@@ -822,11 +822,11 @@ bool
 OMR::Compilation::requiresAnalysisOSRPoint(TR::Node *node)
    {
    // If no induction after the OSR point, cannot use analysis point
-   if (!self()->isOSRTransitionTarget(TR::postExecutionOSR))
+   if (!isOSRTransitionTarget(TR::postExecutionOSR))
       return false;
 
    TR::Node *osrNode;
-   if (!self()->isPotentialOSRPoint(node, &osrNode))
+   if (!isPotentialOSRPoint(node, &osrNode))
       {
       TR_ASSERT(0, "requiresAnalysisOSRPoint should only be called on OSR points\n");
       }
@@ -883,10 +883,10 @@ OMR::Compilation::isProfilingCompilation()
 ProfilingMode
 OMR::Compilation::getProfilingMode()
    {
-   if (!self()->isProfilingCompilation())
+   if (!isProfilingCompilation())
       return DisabledProfiling;
 
-   if (self()->getOption(TR_EnableJProfiling) || self()->getOption(TR_EnableJProfilingInProfilingCompilations))
+   if (getOption(TR_EnableJProfiling) || getOption(TR_EnableJProfilingInProfilingCompilations))
       return JProfiling;
 
    return JitProfiling;
@@ -923,33 +923,33 @@ static int32_t strHash(const char *str)
 int32_t OMR::Compilation::compile()
    {
 
-   if (!self()->getOption(TR_DisableSupportForCpuSpentInCompilation))
+   if (!getOption(TR_DisableSupportForCpuSpentInCompilation))
       _cpuTimeAtStartOfCompilation = TR::Compiler->vm.cpuTimeSpentInCompilationThread(self());
 
-   bool printCodegenTime = self()->getOption(TR_CummTiming);
+   bool printCodegenTime = getOption(TR_CummTiming);
 
-   if (self()->isOptServer())
+   if (isOptServer())
       {
       // Temporarily exclude PPC due to perf regression
-      if( (self()->getMethodHotness() <= warm))
+      if( (getMethodHotness() <= warm))
          {
          if (!TR::Compiler->target.cpu.isPower())
             TR::Options::getCmdLineOptions()->setOption(TR_DisableInternalPointers);
          }
-      self()->getOptions()->setOption(TR_DisablePartialInlining);
+      getOptions()->setOption(TR_DisablePartialInlining);
       }
 
 #ifdef J9_PROJECT_SPECIFIC
-   if (self()->getOptions()->getDelayCompile())
+   if (getOptions()->getDelayCompile())
       {
-      uint64_t limit = (uint64_t)self()->getOptions()->getDelayCompile();
-      uint64_t starttime = self()->getPersistentInfo()->getElapsedTime();
-      fprintf(stderr,"\nDelayCompile: Starting a delay of length %d for method %s at time %d.",limit,self()->signature(),starttime);
+      uint64_t limit = (uint64_t)getOptions()->getDelayCompile();
+      uint64_t starttime = getPersistentInfo()->getElapsedTime();
+      fprintf(stderr,"\nDelayCompile: Starting a delay of length %d for method %s at time %d.",limit,signature(),starttime);
       fflush(stderr);
       uint64_t temp=0;
       while(1)
          {
-         temp = self()->getPersistentInfo()->getElapsedTime();
+         temp = getPersistentInfo()->getElapsedTime();
          if( ( temp - starttime ) > limit)
             {
             fprintf(stderr,"\nDelayCompile: Finished delay at time  = %d, elapsed time = %d\n",temp,(temp-starttime));
@@ -958,39 +958,39 @@ int32_t OMR::Compilation::compile()
          }
       }
 
-   self()->setGetImplInlineable(self()->fej9()->isGetImplInliningSupported());
+   setGetImplInlineable(fej9()->isGetImplInliningSupported());
 #endif
 
-   if (self()->getOption(TR_BreakBeforeCompile))
+   if (getOption(TR_BreakBeforeCompile))
       {
-      fprintf(stderr, "\n=== About to compile %s ===\n", self()->signature());
+      fprintf(stderr, "\n=== About to compile %s ===\n", signature());
       TR::Compiler->debug.breakPoint();
       }
 
 #if defined(AIXPPC)
-   if (self()->getOption(TR_DebugBeforeCompile))
+   if (getOption(TR_DebugBeforeCompile))
       {
-      self()->getDebug()->setupDebugger((void *) *((long*)&(stopBeforeCompile)));
+      getDebug()->setupDebugger((void *) *((long*)&(stopBeforeCompile)));
       stopBeforeCompile();
       }
 #elif defined(LINUX) || defined(J9ZOS390) || defined(OMR_OS_WINDOWS)
-   if (self()->getOption(TR_DebugBeforeCompile))
+   if (getOption(TR_DebugBeforeCompile))
       {
 #if defined(LINUXPPC64)
-      self()->getDebug()->setupDebugger((void *) *((long*)&(stopBeforeCompile)),(void *) *((long*)&(stopBeforeCompile)), true);
+      getDebug()->setupDebugger((void *) *((long*)&(stopBeforeCompile)),(void *) *((long*)&(stopBeforeCompile)), true);
 #else
-      self()->getDebug()->setupDebugger((void *) &stopBeforeCompile,(void *) &stopBeforeCompile,true);
+      getDebug()->setupDebugger((void *) &stopBeforeCompile,(void *) &stopBeforeCompile,true);
 #endif /* defined(LINUXPPC64) */
       stopBeforeCompile();
       }
 #endif /* defined(AIXPPC) */
 
-   if (self()->getOutFile() != NULL && (self()->getOption(TR_TraceAll) || debug("traceStartCompile") || self()->getOptions()->getAnyTraceCGOption() || self()->getOption(TR_Timing)))
+   if (getOutFile() != NULL && (getOption(TR_TraceAll) || debug("traceStartCompile") || getOptions()->getAnyTraceCGOption() || getOption(TR_Timing)))
       {
-      self()->getDebug()->printHeader();
+      getDebug()->printHeader();
       static char *randomExercisePeriodStr = feGetEnv("TR_randomExercisePeriod");
-      if (self()->getOption(TR_Randomize) || randomExercisePeriodStr != NULL)
-         traceMsg(self(), "Random seed is %d%s\n", _options->getRandomSeed(), self()->getOption(TR_RandomSeedSignatureHash)? " hashed with signature":"");
+      if (getOption(TR_Randomize) || randomExercisePeriodStr != NULL)
+         traceMsg(self(), "Random seed is %d%s\n", _options->getRandomSeed(), getOption(TR_RandomSeedSignatureHash)? " hashed with signature":"");
       if (randomExercisePeriodStr != NULL)
          {
          auto period = atoi(randomExercisePeriodStr);
@@ -1007,18 +1007,18 @@ int32_t OMR::Compilation::compile()
    TR::CompileTimeProfiler perf(self(), "compileTimePerf");
 
    {
-     TR::RegionProfiler rpIlgen(self()->trMemory()->heapMemoryRegion(), *self(), "comp/ilgen");
+     TR::RegionProfiler rpIlgen(trMemory()->heapMemoryRegion(), *self(), "comp/ilgen");
      if (printCodegenTime) genILTime.startTiming(self());
-     _ilGenSuccess = _methodSymbol->genIL(self()->fe(), self(), self()->getSymRefTab(), _ilGenRequest);
+     _ilGenSuccess = _methodSymbol->genIL(fe(), self(), getSymRefTab(), _ilGenRequest);
      if (printCodegenTime) genILTime.stopTiming(self());
    }
 
    // Force a crash during compilation if the crashDuringCompile option is set
-   TR_ASSERT_FATAL(!self()->getOption(TR_CrashDuringCompilation), "crashDuringCompile option is set");
+   TR_ASSERT_FATAL(!getOption(TR_CrashDuringCompilation), "crashDuringCompile option is set");
 
    {
-   LexicalTimer t("compile", self()->signature(), self()->phaseTimer());
-   TR::LexicalMemProfiler mp("compile", self()->signature(), self()->phaseMemProfiler());
+   LexicalTimer t("compile", signature(), phaseTimer());
+   TR::LexicalMemProfiler mp("compile", signature(), phaseMemProfiler());
 
    if (_ilGenSuccess)
       {
@@ -1029,23 +1029,23 @@ int32_t OMR::Compilation::compile()
       //
       if (_methodSymbol->catchBlocksHaveRealPredecessors(_methodSymbol->getFlowGraph(), self()))
          {
-         self()->failCompilation<TR::CompilationException>("Catch blocks have real predecessors");
+         failCompilation<TR::CompilationException>("Catch blocks have real predecessors");
          }
 
-      if ((debug("dumpInitialTrees") || self()->getOption(TR_TraceTrees)) && self()->getOutFile() != NULL)
+      if ((debug("dumpInitialTrees") || getOption(TR_TraceTrees)) && getOutFile() != NULL)
          {
-         self()->dumpMethodTrees("Initial Trees");
-         self()->getDebug()->print(self()->getOutFile(), self()->getSymRefTab());
+         dumpMethodTrees("Initial Trees");
+         getDebug()->print(getOutFile(), getSymRefTab());
          }
 #if !defined(DISABLE_CFG_CHECK)
-      if (self()->getOption(TR_UseILValidator))
+      if (getOption(TR_UseILValidator))
          {
-         self()->validateIL(TR::postILgenValidation);
+         validateIL(TR::postILgenValidation);
          }
       else
          {
-         self()->verifyTrees (_methodSymbol);
-         self()->verifyBlocks(_methodSymbol);
+         verifyTrees (_methodSymbol);
+         verifyBlocks(_methodSymbol);
          }
 #endif
 
@@ -1053,20 +1053,20 @@ int32_t OMR::Compilation::compile()
          {
          _recompilationInfo->beforeOptimization();
          }
-      else if (self()->getOptLevel() == -1)
+      else if (getOptLevel() == -1)
          {
          TR_ASSERT(false, "we must know an opt level at this stage");
          }
 
-      if (self()->getOutFile() != NULL && (self()->getOption(TR_TraceAll) || debug("traceStartCompile")))
-         self()->getDebug()->printMethodHotness();
+      if (getOutFile() != NULL && (getOption(TR_TraceAll) || debug("traceStartCompile")))
+         getDebug()->printMethodHotness();
 
       TR_DebuggingCounters::initializeCompilation();
       if (printCodegenTime) optTime.startTiming(self());
 
          {
-         TR::RegionProfiler rpOpt(self()->trMemory()->heapMemoryRegion(), *self(), "comp/opt");
-         self()->performOptimizations();
+         TR::RegionProfiler rpOpt(trMemory()->heapMemoryRegion(), *self(), "comp/opt");
+         performOptimizations();
          }
 
       if (printCodegenTime) optTime.stopTiming(self());
@@ -1074,7 +1074,7 @@ int32_t OMR::Compilation::compile()
 #ifdef J9_PROJECT_SPECIFIC
       if (useCompressedPointers())
          {
-         if (self()->verifyCompressedRefsAnchors(true))
+         if (verifyCompressedRefsAnchors(true))
             dumpOptDetails(self(), "successfully verified compressedRefs anchors\n");
          else
             dumpOptDetails(self(), "failed while verifying compressedRefs anchors\n");
@@ -1082,33 +1082,33 @@ int32_t OMR::Compilation::compile()
 #endif
 
 #if !defined(DISABLE_CFG_CHECK)
-      if (self()->getOption(TR_UseILValidator))
+      if (getOption(TR_UseILValidator))
          {
-         self()->validateIL(TR::preCodegenValidation);
+         validateIL(TR::preCodegenValidation);
          }
 #endif
 
       if (_ilVerifier && _ilVerifier->verify(_methodSymbol))
          {
-         self()->failCompilation<TR::CompilationException>("Aborting after Optimization due to verifier failure");
+         failCompilation<TR::CompilationException>("Aborting after Optimization due to verifier failure");
          }
 
       static char *abortafterilgen = feGetEnv("TR_TOSS_IL");
       if(abortafterilgen)
          {
-         self()->failCompilation<TR::CompilationException>("Aborting after IL Gen due to TR_TOSS_IL");
+         failCompilation<TR::CompilationException>("Aborting after IL Gen due to TR_TOSS_IL");
          }
 
       if (_recompilationInfo)
          _recompilationInfo->beforeCodeGen();
 
         {
-        TR::RegionProfiler rpCodegen(self()->trMemory()->heapMemoryRegion(), *self(), "comp/codegen");
+        TR::RegionProfiler rpCodegen(trMemory()->heapMemoryRegion(), *self(), "comp/codegen");
 
         if (printCodegenTime)
            codegenTime.startTiming(self());
 
-        self()->cg()->generateCode();
+        cg()->generateCode();
 
         if (printCodegenTime)
            codegenTime.stopTiming(self());
@@ -1118,22 +1118,22 @@ int32_t OMR::Compilation::compile()
          _recompilationInfo->endOfCompilation();
 
 #ifdef J9_PROJECT_SPECIFIC
-      if (self()->getOptions()->getVerboseOption(TR_VerboseInlining))
+      if (getOptions()->getVerboseOption(TR_VerboseInlining))
          {
-         int32_t jittedBodyHash = strHash(self()->signature());
+         int32_t jittedBodyHash = strHash(signature());
          char callerBuf[501], calleeBuf[501];
          TR_VerboseLog::vlogAcquire();
-         TR_VerboseLog::writeLine(TR_Vlog_INL, "%d methods inlined into %x %s @ %p", self()->getNumInlinedCallSites(), jittedBodyHash, self()->signature(), self()->cg()->getCodeStart());
-         for (int32_t i = 0; i < self()->getNumInlinedCallSites(); i++)
+         TR_VerboseLog::writeLine(TR_Vlog_INL, "%d methods inlined into %x %s @ %p", getNumInlinedCallSites(), jittedBodyHash, signature(), cg()->getCodeStart());
+         for (int32_t i = 0; i < getNumInlinedCallSites(); i++)
             {
-            TR_InlinedCallSite &site = self()->getInlinedCallSite(i);
-            int32_t calleeLen = self()->fej9()->printTruncatedSignature(calleeBuf, sizeof(calleeBuf)-1, self()->fej9()->getInlinedCallSiteMethod(&site));
+            TR_InlinedCallSite &site = getInlinedCallSite(i);
+            int32_t calleeLen = fej9()->printTruncatedSignature(calleeBuf, sizeof(calleeBuf)-1, fej9()->getInlinedCallSiteMethod(&site));
             calleeBuf[calleeLen] = 0; // null terminate
-            const char *callerSig = self()->signature();
+            const char *callerSig = signature();
             int16_t callerIndex = site._byteCodeInfo.getCallerIndex();
             if (callerIndex != -1)
                {
-               int32_t callerLen = self()->fej9()->printTruncatedSignature(callerBuf, sizeof(callerBuf)-1, self()->fej9()->getInlinedCallSiteMethod(&self()->getInlinedCallSite(callerIndex)));
+               int32_t callerLen = fej9()->printTruncatedSignature(callerBuf, sizeof(callerBuf)-1, fej9()->getInlinedCallSiteMethod(&getInlinedCallSite(callerIndex)));
                callerBuf[callerLen] = 0; // null terminate
                callerSig = callerBuf;
                }
@@ -1144,7 +1144,7 @@ int32_t OMR::Compilation::compile()
             }
 
          TR::Block *curBlock = NULL;
-         for (TR::TreeTop *tt = self()->getStartTree(); tt; tt = tt->getNextTreeTop())
+         for (TR::TreeTop *tt = getStartTree(); tt; tt = tt->getNextTreeTop())
             {
             if (tt->getNode()->getOpCodeValue() == TR::BBStart)
                {
@@ -1159,15 +1159,15 @@ int32_t OMR::Compilation::compile()
                   if (method)
                      {
                      TR_ByteCodeInfo &bcInfo = node->getByteCodeInfo();
-                     const char *callerSig = self()->signature();
+                     const char *callerSig = signature();
                      int16_t callerIndex = bcInfo.getCallerIndex();
                      if (callerIndex != -1)
                         {
-                        int32_t callerLen = self()->fej9()->printTruncatedSignature(callerBuf, sizeof(callerBuf)-1, self()->fej9()->getInlinedCallSiteMethod(&self()->getInlinedCallSite(callerIndex)));
+                        int32_t callerLen = fej9()->printTruncatedSignature(callerBuf, sizeof(callerBuf)-1, fej9()->getInlinedCallSiteMethod(&getInlinedCallSite(callerIndex)));
                         callerBuf[callerLen] = 0; // null terminate
                         callerSig = callerBuf;
                         }
-                     const char *calleeSig = method->signature(self()->trMemory(), stackAlloc);
+                     const char *calleeSig = method->signature(trMemory(), stackAlloc);
                      uint32_t calleeSize = UINT_MAX;
                      if (node->getSymbol()->getResolvedMethodSymbol())
                         calleeSize = TR::Compiler->mtd.bytecodeSize(node->getSymbol()->getResolvedMethodSymbol()->getResolvedMethod()->getPersistentIdentifier());
@@ -1189,19 +1189,19 @@ int32_t OMR::Compilation::compile()
 
    // Flush the log
    //
-   if (self()->getOutFile() != NULL && self()->getOption(TR_TraceAll))
-      trfflush(self()->getOutFile());
+   if (getOutFile() != NULL && getOption(TR_TraceAll))
+      trfflush(getOutFile());
 
 
    }
-   if (self()->getOption(TR_Timing))
+   if (getOption(TR_Timing))
       {
-      self()->phaseTimer().DumpSummary(*self());
+      phaseTimer().DumpSummary(*self());
       }
 
-   if (self()->getOption(TR_LexicalMemProfiler))
+   if (getOption(TR_LexicalMemProfiler))
       {
-      self()->phaseMemProfiler().DumpSummary(*self());
+      phaseMemProfiler().DumpSummary(*self());
       }
 
    // Even though there are unimplemented opcodes, we may have allowed code
@@ -1209,35 +1209,35 @@ int32_t OMR::Compilation::compile()
    // If that happened we want to fail the compilation at this point.
    //
    if (_methodSymbol->unimplementedOpcode())
-      self()->failCompilation<TR::UnimplementedOpCode>("Unimplemented Op Code");
+      failCompilation<TR::UnimplementedOpCode>("Unimplemented Op Code");
 
    if (!_ilGenSuccess)
-      self()->failCompilation<TR::ILGenFailure>("IL Gen Failure");
+      failCompilation<TR::ILGenFailure>("IL Gen Failure");
 
 #ifdef J9_PROJECT_SPECIFIC
-   if (self()->getOption(TR_TraceCG))
+   if (getOption(TR_TraceCG))
       {
-      TR_CHTable * chTable = self()->getCHTable();
+      TR_CHTable * chTable = getCHTable();
       if (chTable)
-         self()->getDebug()->dump(self()->getOutFile(), chTable);
+         getDebug()->dump(getOutFile(), chTable);
       }
 #endif /* ifdef(J9_PROJECT_SPECIFIC) */
 
 #if defined(AIXPPC) || defined(LINUXPPC)
-   if (self()->getOption(TR_DebugOnEntry))
+   if (getOption(TR_DebugOnEntry))
       {
-      intptrj_t jitTojitStart = (intptrj_t) self()->cg()->getCodeStart();
+      intptrj_t jitTojitStart = (intptrj_t) cg()->getCodeStart();
       jitTojitStart += ((*(int32_t *)(jitTojitStart - 4)) >> 16) & 0x0000ffff;
 #if defined(AIXPPC)
-      self()->getDebug()->setupDebugger((void *)jitTojitStart);
+      getDebug()->setupDebugger((void *)jitTojitStart);
 #else
-      self()->getDebug()->setupDebugger((void *)jitTojitStart, self()->cg()->getCodeEnd(), false);
+      getDebug()->setupDebugger((void *)jitTojitStart, cg()->getCodeEnd(), false);
 #endif /* defined(AIXPPC) */
       }
 #elif defined(LINUX) || defined(J9ZOS390) || defined(OMR_OS_WINDOWS)
-   if (self()->getOption(TR_DebugOnEntry))
+   if (getOption(TR_DebugOnEntry))
       {
-      self()->getDebug()->setupDebugger(self()->cg()->getCodeStart(),self()->cg()->getCodeEnd(),false);
+      getDebug()->setupDebugger(cg()->getCodeStart(),cg()->getCodeEnd(),false);
       }
 #endif /* defined(LINUX) || defined(J9ZOS390) || defined(OMR_OS_WINDOWS) */
 
@@ -1256,14 +1256,14 @@ int64_t OMR::Compilation::getCpuTimeSpentInCompilation()
 
 TR_YesNoMaybe OMR::Compilation::isCpuExpensiveCompilation(int64_t threshold)
    {
-   int64_t t = self()->getCpuTimeSpentInCompilation();
+   int64_t t = getCpuTimeSpentInCompilation();
    return t < 0 ? TR_maybe : (t > threshold ? TR_yes : TR_no);
    }
 
 void OMR::Compilation::performOptimizations()
    {
 
-   _optimizer = TR::Optimizer::createOptimizer(self(), self()->getJittedMethodSymbol(), false);
+   _optimizer = TR::Optimizer::createOptimizer(self(), getJittedMethodSymbol(), false);
 
    // This opt is needed if certain ilgen input is seen but there is no optimizer created at this point.
    // So the block are tracked during ilgen and the opt is turned on here.
@@ -1287,21 +1287,21 @@ bool OMR::Compilation::incInlineDepth(TR::ResolvedMethodSymbol * method, TR_Byte
    {
    if (compileRelocatableCode())
       {
-      TR_AOTMethodInfo *aotMethodInfo = (TR_AOTMethodInfo *)self()->trMemory()->allocateHeapMemory(sizeof(TR_AOTMethodInfo));
+      TR_AOTMethodInfo *aotMethodInfo = (TR_AOTMethodInfo *)trMemory()->allocateHeapMemory(sizeof(TR_AOTMethodInfo));
       aotMethodInfo->resolvedMethod = method->getResolvedMethod();
       aotMethodInfo->cpIndex = cpIndex;
-      return self()->incInlineDepth((TR_OpaqueMethodBlock*)aotMethodInfo, method, bcInfo, callSymRef, directCall, argInfo);
+      return incInlineDepth((TR_OpaqueMethodBlock*)aotMethodInfo, method, bcInfo, callSymRef, directCall, argInfo);
       }
    else
       {
-      return self()->incInlineDepth(method->getResolvedMethod()->getPersistentIdentifier(), method, bcInfo, callSymRef, directCall, argInfo);
+      return incInlineDepth(method->getResolvedMethod()->getPersistentIdentifier(), method, bcInfo, callSymRef, directCall, argInfo);
       }
    }
 
 ncount_t OMR::Compilation::generateAccurateNodeCount()
    {
    if( _lastValidNodeCount != _nodeCount)
-      _accurateNodeCount = self()->getMethodSymbol()->generateAccurateNodeCount();
+      _accurateNodeCount = getMethodSymbol()->generateAccurateNodeCount();
     _lastValidNodeCount = _nodeCount;
 
     return _accurateNodeCount;
@@ -1321,8 +1321,8 @@ bool OMR::Compilation::foundOnTheStack(TR_ResolvedMethod *method, int32_t occurr
   for(int32_t i=topIndex;i >= 0; --i)
     {
     int32_t stackEl = _inlinedCallStack.element(i);
-    TR_InlinedCallSite & el = self()->getInlinedCallSite(stackEl);
-    bool matches = (methodInfo == self()->fe()->getInlinedCallSiteMethod(&el));
+    TR_InlinedCallSite & el = getInlinedCallSite(stackEl);
+    bool matches = (methodInfo == fe()->getInlinedCallSiteMethod(&el));
     if(matches && ++counter == occurrences)
       return true;
     }
@@ -1335,7 +1335,7 @@ bool OMR::Compilation::incInlineDepth(TR_OpaqueMethodBlock *methodInfo, TR::Reso
    int32_t maxCallerIndex = TR_ByteCodeInfo::maxCallerIndex;
    //This restriction is due to a limited number of bits allocated to callerIndex in TR_ByteCodeInfo
    //For example, in Java TR_ByteCodeInfo::maxCallerIndex is set to 4095 (12 bits and one used for signness)
-   if (self()->getNumInlinedCallSites() >= maxCallerIndex)
+   if (getNumInlinedCallSites() >= maxCallerIndex)
       {
       traceMsg(self(), "The maximum number of inlined methods %d is reached\n", TR_ByteCodeInfo::maxCallerIndex);
       return false;
@@ -1345,11 +1345,11 @@ bool OMR::Compilation::incInlineDepth(TR_OpaqueMethodBlock *methodInfo, TR::Reso
    //for all the callsites with the caller indices != -1 to make sure each catch block
    //can be uniquely identified by a (depthIndex, handlerIndex) pair.
    //otherwise JVM might print out an incorrect stacktrace if an exception is thrown
-   int16_t inlinedFramesAdded = self()->adjustInlineDepth(bcInfo);
+   int16_t inlinedFramesAdded = adjustInlineDepth(bcInfo);
 
    if ( inlinedFramesAdded != 0 )
       {
-      TR_ASSERT(_inlinedFramesAdded == 0 && self()->getInlineDepth() == inlinedFramesAdded, "We can only perform the above inline stack correction on an empty stack");
+      TR_ASSERT(_inlinedFramesAdded == 0 && getInlineDepth() == inlinedFramesAdded, "We can only perform the above inline stack correction on an empty stack");
       _inlinedFramesAdded = inlinedFramesAdded;
       }
 
@@ -1358,12 +1358,12 @@ bool OMR::Compilation::incInlineDepth(TR_OpaqueMethodBlock *methodInfo, TR::Reso
    _inlinedCallStack.push(callSiteIndex);
    _inlinedCallArgInfoStack.push(argInfo);
 
-   int16_t inlinedCallStackSize = self()->getInlineDepth();
+   int16_t inlinedCallStackSize = getInlineDepth();
 
    if (inlinedCallStackSize >= TR_ByteCodeInfo::maxCallerIndex)
       {
       TR_ASSERT(0, "max number of inlined calls exceeded");
-      self()->failCompilation<TR::ExcessiveComplexity>("max number of inlined calls exceeded");
+      failCompilation<TR::ExcessiveComplexity>("max number of inlined calls exceeded");
       }
 
    if (inlinedCallStackSize > _maxInlineDepth)
@@ -1378,20 +1378,20 @@ void OMR::Compilation::decInlineDepth(bool removeInlinedCallSitesEntry)
    {
    if (removeInlinedCallSitesEntry)
       {
-      while (self()->getCurrentInlinedSiteIndex() < _inlinedCallSites.size())
-         _inlinedCallSites.remove(self()->getCurrentInlinedSiteIndex());
-      if (self()->getOption(TR_EnableOSR))
+      while (getCurrentInlinedSiteIndex() < _inlinedCallSites.size())
+         _inlinedCallSites.remove(getCurrentInlinedSiteIndex());
+      if (getOption(TR_EnableOSR))
          {
          //OSR's method data array needs to reflect the changes made to inline table
-         self()->getOSRCompilationData()->setOSRMethodDataArraySize(self()->getNumInlinedCallSites()+1);
+         getOSRCompilationData()->setOSRMethodDataArraySize(getNumInlinedCallSites()+1);
          }
       }
    _inlinedCallArgInfoStack.pop();
    _inlinedCallStack.pop();
 
-   if ( self()->getInlineDepth() == _inlinedFramesAdded )
+   if ( getInlineDepth() == _inlinedFramesAdded )
       {
-      self()->resetInlineDepth();
+      resetInlineDepth();
       }
    }
 
@@ -1402,18 +1402,18 @@ int16_t OMR::Compilation::matchingCallStackPrefixLength(TR_ByteCodeInfo &bcInfo)
       return 0;
 
    int16_t          callerIndex        = bcInfo.getCallerIndex();
-   TR_ByteCodeInfo &callerBCInfo       = self()->getInlinedCallSite(callerIndex)._byteCodeInfo;
-   int16_t          callerPrefixLength = self()->matchingCallStackPrefixLength(callerBCInfo);
+   TR_ByteCodeInfo &callerBCInfo       = getInlinedCallSite(callerIndex)._byteCodeInfo;
+   int16_t          callerPrefixLength = matchingCallStackPrefixLength(callerBCInfo);
 
    int16_t result = callerPrefixLength;
-   if (callerPrefixLength < self()->getInlineDepth())
+   if (callerPrefixLength < getInlineDepth())
       {
-      int32_t nextCallOnStack = self()->getInlinedCallStack().element(callerPrefixLength);
+      int32_t nextCallOnStack = getInlinedCallStack().element(callerPrefixLength);
       if (nextCallOnStack == callerIndex)
          result++;
       }
 
-   TR_ASSERT(result <= self()->getInlineDepth(), "matchingCallStackPrefixLength can be no greater than getInlineDepth");
+   TR_ASSERT(result <= getInlineDepth(), "matchingCallStackPrefixLength can be no greater than getInlineDepth");
    return result;
    }
 
@@ -1425,7 +1425,7 @@ int16_t OMR::Compilation::restoreInlineDepthUntil(int32_t stopIndex, TR_ByteCode
       return 0;
 
    int16_t callerIndex = currentInfo.getCallerIndex();
-   int16_t framesAdded = self()->restoreInlineDepthUntil(stopIndex, self()->getInlinedCallSite(callerIndex)._byteCodeInfo);
+   int16_t framesAdded = restoreInlineDepthUntil(stopIndex, getInlinedCallSite(callerIndex)._byteCodeInfo);
    _inlinedCallStack.push(callerIndex);
    _inlinedCallArgInfoStack.push(NULL); // We have no argInfo for previously-inlined frames, though there's not much we could do with it anyway
 
@@ -1434,16 +1434,16 @@ int16_t OMR::Compilation::restoreInlineDepthUntil(int32_t stopIndex, TR_ByteCode
 
 int16_t OMR::Compilation::restoreInlineDepth(TR_ByteCodeInfo &existingInfo)
    {
-   TR_ASSERT((int32_t)existingInfo.getCallerIndex() <= (int32_t)self()->getNumInlinedCallSites(), "restoreInlineDepth requires valid caller index");
-   int16_t numStackEntriesToKeep = self()->matchingCallStackPrefixLength(existingInfo);
+   TR_ASSERT((int32_t)existingInfo.getCallerIndex() <= (int32_t)getNumInlinedCallSites(), "restoreInlineDepth requires valid caller index");
+   int16_t numStackEntriesToKeep = matchingCallStackPrefixLength(existingInfo);
 
    int16_t inlineFrameChange = 0;
-   while (self()->getInlineDepth() > numStackEntriesToKeep)
+   while (getInlineDepth() > numStackEntriesToKeep)
       {
-      self()->decInlineDepth();
+      decInlineDepth();
       inlineFrameChange--;
       }
-   inlineFrameChange += self()->restoreInlineDepthUntil(self()->getCurrentInlinedSiteIndex(), existingInfo);
+   inlineFrameChange += restoreInlineDepthUntil(getCurrentInlinedSiteIndex(), existingInfo);
    return inlineFrameChange;
    }
 
@@ -1452,13 +1452,13 @@ int16_t OMR::Compilation::adjustInlineDepth(TR_ByteCodeInfo & bcInfo)
    if (bcInfo.getCallerIndex() == -1)
       return 0;
    else
-      return self()->restoreInlineDepth(bcInfo);
+      return restoreInlineDepth(bcInfo);
    }
 
 void OMR::Compilation::resetInlineDepth()
    {
-   while (self()->getInlineDepth() > 0)
-      self()->decInlineDepth();
+   while (getInlineDepth() > 0)
+      decInlineDepth();
 
    _inlinedFramesAdded = 0;
    }
@@ -1466,14 +1466,14 @@ void OMR::Compilation::resetInlineDepth()
 int32_t OMR::Compilation::convertNonDeterministicInput(int32_t i, int32_t max, TR_RandomGenerator *randomGenerator, int32_t min, bool emitVerbose)
    {
    int32_t answer = i;
-   TR_PseudoRandomNumbersListElement *pseudoRandomList = self()->getPersistentInfo()->getPseudoRandomNumbersList();
-   if (pseudoRandomList && self()->getOption(TR_VerbosePseudoRandom))
+   TR_PseudoRandomNumbersListElement *pseudoRandomList = getPersistentInfo()->getPseudoRandomNumbersList();
+   if (pseudoRandomList && getOption(TR_VerbosePseudoRandom))
       {
-      answer = self()->getPersistentInfo()->getNextPseudoRandomNumber(i);
+      answer = getPersistentInfo()->getNextPseudoRandomNumber(i);
       }
    else
       {
-      if (self()->getOption(TR_Randomize))
+      if (getOption(TR_Randomize))
          {
          if (!randomGenerator)
             randomGenerator = _adhocRandom;
@@ -1483,9 +1483,9 @@ int32_t OMR::Compilation::convertNonDeterministicInput(int32_t i, int32_t max, T
       }
 
 #ifdef J9_PROJECT_SPECIFIC
-   if (emitVerbose && self()->getOption(TR_VerbosePseudoRandom))
+   if (emitVerbose && getOption(TR_VerbosePseudoRandom))
       {
-      self()->fej9()->emitNewPseudoRandomNumberVerboseLine(answer);
+      fej9()->emitNewPseudoRandomNumberVerboseLine(answer);
       }
 #endif
 
@@ -1503,7 +1503,7 @@ TR_DevirtualizedCallInfo * OMR::Compilation::getFirstDevirtualizedCall()
 
 TR_DevirtualizedCallInfo * OMR::Compilation::createDevirtualizedCall(TR::Node* callNode, TR_OpaqueClassBlock *thisType)
    {
-   TR_DevirtualizedCallInfo * dc = (TR_DevirtualizedCallInfo *) self()->trMemory()->allocateHeapMemory(sizeof(TR_DevirtualizedCallInfo));
+   TR_DevirtualizedCallInfo * dc = (TR_DevirtualizedCallInfo *) trMemory()->allocateHeapMemory(sizeof(TR_DevirtualizedCallInfo));
    dc->_callNode = callNode;
    dc->_thisType = thisType;
    _devirtualizedCalls.push_front(dc);
@@ -1525,14 +1525,14 @@ TR_DevirtualizedCallInfo * OMR::Compilation::findDevirtualizedCall(TR::Node* cal
 
 TR_DevirtualizedCallInfo * OMR::Compilation::findOrCreateDevirtualizedCall(TR::Node* callNode, TR_OpaqueClassBlock *thisType)
    {
-   TR_DevirtualizedCallInfo * dc = self()->findDevirtualizedCall(callNode);
-   if (!dc || self()->fe()->isInstanceOf(thisType, dc->_thisType, false) == TR_yes)
+   TR_DevirtualizedCallInfo * dc = findDevirtualizedCall(callNode);
+   if (!dc || fe()->isInstanceOf(thisType, dc->_thisType, false) == TR_yes)
       {
       if (dc)
          dc->_thisType = thisType;
       else
     {
-    TR_DevirtualizedCallInfo * newDc = self()->createDevirtualizedCall(callNode, thisType);
+    TR_DevirtualizedCallInfo * newDc = createDevirtualizedCall(callNode, thisType);
     dc = newDc;
     }
       }
@@ -1567,7 +1567,7 @@ OMR::Compilation::findVirtualGuardInfo(TR::Node*guardNode)
 
    TR_VirtualGuard *guard = NULL;
 
-   if (self()->getOption(TR_TraceRelocatableDataDetailsCG))
+   if (getOption(TR_TraceRelocatableDataDetailsCG))
       traceMsg(self(), "Looking for a guard for node %p with kind %d bcindex %d calleeindex %d\n", guardNode, guardKind, guardNode->getByteCodeInfo().getByteCodeIndex(), guardNode->getByteCodeInfo().getCallerIndex());
 
    if (guardKind != TR_NoGuard)
@@ -1580,7 +1580,7 @@ OMR::Compilation::findVirtualGuardInfo(TR::Node*guardNode)
              (*current)->getCalleeIndex() == guardNode->getByteCodeInfo().getCallerIndex())
             {
             guard = *current;
-            if (self()->getOption(TR_TraceRelocatableDataDetailsCG))
+            if (getOption(TR_TraceRelocatableDataDetailsCG))
                traceMsg(self(), "found guard %p, guardkind = %d\n", guard, guardKind);
             break;
             }
@@ -1601,7 +1601,7 @@ OMR::Compilation::findVirtualGuardInfo(TR::Node*guardNode)
              (*current)->getKind() != TR_BreakpointGuard)
             {
             guard = *current;
-            if (self()->getOption(TR_TraceRelocatableDataDetailsCG))
+            if (getOption(TR_TraceRelocatableDataDetailsCG))
                traceMsg(self(), "found guard %p, guardkind = %d\n", guard, (*current)->getKind());
             break;
             }
@@ -1622,7 +1622,7 @@ OMR::Compilation::removeVirtualGuard(TR_VirtualGuard *guard)
           ((*current)->getByteCodeIndex() == guard->getByteCodeIndex()) &&
           ((*current)->getKind() == guard->getKind()))
          {
-         if (self()->getOption(TR_TraceRelocatableDataDetailsCG))
+         if (getOption(TR_TraceRelocatableDataDetailsCG))
             traceMsg(self(), "removeVirtualGuard %p, kind %d bcindex %d calleeindex %d\n", *current, (*current)->getKind(), (*current)->getByteCodeIndex(), (*current)->getCalleeIndex());
          _virtualGuards.erase(current);
          break;
@@ -1693,7 +1693,7 @@ bool OMR::Compilation::useAnchors()
 
 int32_t OMR::Compilation::findPrefetchInfo(TR::Node * node)
    {
-   for (auto pair = self()->getNodesThatShouldPrefetchOffset().begin(); pair !=self()->getNodesThatShouldPrefetchOffset().end(); ++pair)
+   for (auto pair = getNodesThatShouldPrefetchOffset().begin(); pair !=getNodesThatShouldPrefetchOffset().end(); ++pair)
       {
       if ((*pair)->getKey() == node)
          {
@@ -1707,7 +1707,7 @@ int32_t OMR::Compilation::findPrefetchInfo(TR::Node * node)
 TR_PrefetchInfo *
 OMR::Compilation::findExtraPrefetchInfo(TR::Node * node, bool use)
    {
-   for (auto it = self()->getExtraPrefetchInfo().begin(); it != self()->getExtraPrefetchInfo().end(); ++it)
+   for (auto it = getExtraPrefetchInfo().begin(); it != getExtraPrefetchInfo().end(); ++it)
       {
       if (use)
          {
@@ -1727,9 +1727,9 @@ OMR::Compilation::findExtraPrefetchInfo(TR::Node * node, bool use)
 
 bool OMR::Compilation::canTransformUnsafeCopyToArrayCopy()
    {
-   if (!self()->getOptions()->realTimeGC() &&
+   if (!getOptions()->realTimeGC() &&
        !TR::Compiler->om.canGenerateArraylets() &&
-       self()->cg()->canTransformUnsafeCopyToArrayCopy())
+       cg()->canTransformUnsafeCopyToArrayCopy())
       return true;
 
    return false;
@@ -1737,9 +1737,9 @@ bool OMR::Compilation::canTransformUnsafeCopyToArrayCopy()
 
 bool OMR::Compilation::canTransformUnsafeSetMemory()
    {
-   if (!self()->getOptions()->realTimeGC() &&
+   if (!getOptions()->realTimeGC() &&
        !TR::Compiler->om.canGenerateArraylets() &&
-       self()->cg()->canTransformUnsafeSetMemory())
+       cg()->canTransformUnsafeSetMemory())
       return true;
 
    return false;
@@ -1749,17 +1749,17 @@ bool OMR::Compilation::canTransformUnsafeSetMemory()
 TR_PrefetchInfo *
 OMR::Compilation::removeExtraPrefetchInfo(TR::Node * node)
    {
-   auto iter = self()->getExtraPrefetchInfo().begin();
-   for (; iter != self()->getExtraPrefetchInfo().end(); ++iter)
+   auto iter = getExtraPrefetchInfo().begin();
+   for (; iter != getExtraPrefetchInfo().end(); ++iter)
       {
       if ((*iter)->_useNode == node)
          break;
       }
 
-   if (iter != self()->getExtraPrefetchInfo().end())
+   if (iter != getExtraPrefetchInfo().end())
       {
       TR_PrefetchInfo *info = *iter;
-      self()->getExtraPrefetchInfo().erase(iter);
+      getExtraPrefetchInfo().erase(iter);
       return info;
       }
    return NULL;
@@ -1770,17 +1770,17 @@ TR_OpaqueMethodBlock *OMR::Compilation::getMethodFromNode(TR::Node * node)
    {
    TR_ByteCodeInfo bcInfo = node->getByteCodeInfo();
    TR_OpaqueMethodBlock *method = NULL;
-   if (bcInfo.getCallerIndex() >= 0 && self()->getNumInlinedCallSites() > 0)
-      method = compileRelocatableCode() ? ((TR_ResolvedMethod *)node->getAOTMethod())->getPersistentIdentifier() : self()->getInlinedCallSite(bcInfo.getCallerIndex())._methodInfo;
+   if (bcInfo.getCallerIndex() >= 0 && getNumInlinedCallSites() > 0)
+      method = compileRelocatableCode() ? ((TR_ResolvedMethod *)node->getAOTMethod())->getPersistentIdentifier() : getInlinedCallSite(bcInfo.getCallerIndex())._methodInfo;
    else
-      method = self()->getCurrentMethod()->getPersistentIdentifier();
+      method = getCurrentMethod()->getPersistentIdentifier();
    return method;
    }
 
 int32_t OMR::Compilation::getLineNumber(TR::Node * node)
    {
    TR_ByteCodeInfo bcInfo = node->getByteCodeInfo();
-   return self()->fe()->getLineNumberForMethodAndByteCodeIndex(self()->getMethodFromNode(node), bcInfo.getByteCodeIndex());
+   return fe()->getLineNumberForMethodAndByteCodeIndex(getMethodFromNode(node), bcInfo.getByteCodeIndex());
    }
 
 
@@ -1790,22 +1790,22 @@ int32_t OMR::Compilation::getLineNumberInCurrentMethod(TR::Node * node)
    int16_t callerIndex = node->getInlinedSiteIndex();
 
    if (callerIndex == -1)
-      return self()->getLineNumber(node);
+      return getLineNumber(node);
 
    do
       {
-      site = self()->getInlinedCallSite(callerIndex);
+      site = getInlinedCallSite(callerIndex);
       callerIndex = site._byteCodeInfo.getCallerIndex();
       } while (callerIndex != -1);
 
-   return self()->fe()->getLineNumberForMethodAndByteCodeIndex(self()->getCurrentMethod()->getPersistentIdentifier(), site._byteCodeInfo.getByteCodeIndex());
+   return fe()->getLineNumberForMethodAndByteCodeIndex(getCurrentMethod()->getPersistentIdentifier(), site._byteCodeInfo.getByteCodeIndex());
    }
 
 
 
 bool OMR::Compilation::useRegisterMaps()
    {
-   return self()->cg()->usesRegisterMaps() ||
+   return cg()->usesRegisterMaps() ||
           _options->getOption(TR_RegisterMaps) ||
           debug("regmap");
    }
@@ -1813,22 +1813,22 @@ bool OMR::Compilation::useRegisterMaps()
 
 void OMR::Compilation::resetVisitCounts(vcount_t count)
    {
-   if (self()->getMethodSymbol() == self()->getJittedMethodSymbol())
+   if (getMethodSymbol() == getJittedMethodSymbol())
       {
-      self()->resetVisitCounts(count, self()->getMethodSymbol());
+      resetVisitCounts(count, getMethodSymbol());
       for (auto current = _genILSyms.begin(); current != _genILSyms.end(); ++current)
          {
-         if ((*current) && (*current)->getFlowGraph() && (*current) != self()->getMethodSymbol())
-            self()->resetVisitCounts(count, *current);
+         if ((*current) && (*current)->getFlowGraph() && (*current) != getMethodSymbol())
+            resetVisitCounts(count, *current);
          }
       }
    }
 
 void OMR::Compilation::resetVisitCounts(vcount_t count, TR::ResolvedMethodSymbol *method)
    {
-   self()->resetVisitCounts(count, method->getFirstTreeTop());
+   resetVisitCounts(count, method->getFirstTreeTop());
    method->getFlowGraph()->resetVisitCounts(count);
-   self()->setVisitCount(count);
+   setVisitCount(count);
    }
 
 void OMR::Compilation::resetVisitCounts(vcount_t count, TR::TreeTop *start)
@@ -1846,7 +1846,7 @@ void OMR::Compilation::resetVisitCounts(vcount_t count, TR::TreeTop *start)
 void OMR::Compilation::reportFailure(const char *reason)
    {
    traceMsg(self(), "Compilation Failed Because: %s\n", reason);
-   if (self()->getOption(TR_PrintErrorInfoOnCompFailure))
+   if (getOption(TR_PrintErrorInfoOnCompFailure))
       fprintf(stderr, "Compilation Failed Because: %s\n", reason);
    }
 
@@ -1869,14 +1869,14 @@ bool OMR::Compilation::IsCopyPropagationRematerializationCandidate(TR::SymbolRef
 //
 TR::Block *OMR::Compilation::getStartBlock()
    {
-   TR::Node *startNode = self()->getStartTree()->getNode();
+   TR::Node *startNode = getStartTree()->getNode();
    TR_ASSERT(startNode->getOpCodeValue() == TR::BBStart, "start node is not a BBStart");
    return startNode->getBlock();
    }
 
 bool OMR::Compilation::mustNotBeRecompiled()
    {
-   return !self()->couldBeRecompiled();
+   return !couldBeRecompiled();
    }
 
 bool OMR::Compilation::shouldBeRecompiled()
@@ -1891,16 +1891,16 @@ bool OMR::Compilation::couldBeRecompiled()
 
 bool OMR::Compilation::performVirtualGuardNOPing()
    {
-   if (!self()->getRecompilationInfo() ||
-       !self()->cg()->getSupportsVirtualGuardNOPing() ||
-       self()->getOption(TR_DisableVirtualGuardNOPing) ||
-       self()->getOption(TR_DisableCHOpts)
+   if (!getRecompilationInfo() ||
+       !cg()->getSupportsVirtualGuardNOPing() ||
+       getOption(TR_DisableVirtualGuardNOPing) ||
+       getOption(TR_DisableCHOpts)
       )
       return false;
 
    static char *skipCold = feGetEnv("TR_NoColdNOPing");
    TR_Hotness minLevel = skipCold ? hot : cold;
-   if (self()->getMethodHotness() < minLevel)
+   if (getMethodHotness() < minLevel)
       return false;
    return true;
    }
@@ -1908,12 +1908,12 @@ bool OMR::Compilation::performVirtualGuardNOPing()
 
 bool OMR::Compilation::isVirtualGuardNOPingRequired(TR_VirtualGuard *virtualGuard)
    {
-   if (self()->isProfilingCompilation())
+   if (isProfilingCompilation())
       {
       if (!virtualGuard)
          {
          for (auto current = _virtualGuards.begin(); current != _virtualGuards.end(); ++current)
-            if (self()->isVirtualGuardNOPingRequired(*current))
+            if (isVirtualGuardNOPingRequired(*current))
                return true;
          return false;
          }
@@ -1940,7 +1940,7 @@ bool OMR::Compilation::hasBlockFrequencyInfo()
 void OMR::Compilation::setUsesPreexistence(bool v)
    {
    if (v)
-      TR_ASSERT(self()->ilGenRequest().details().supportsInvalidation(), "Can't use preexistence on ilgen request that does not support invalidation");
+      TR_ASSERT(ilGenRequest().details().supportsInvalidation(), "Can't use preexistence on ilgen request that does not support invalidation");
    _usesPreexistence = v;
    }
 
@@ -1948,56 +1948,56 @@ void OMR::Compilation::setUsesPreexistence(bool v)
 //
 void OMR::Compilation::dumpMethodTrees(char *title, TR::ResolvedMethodSymbol * methodSymbol)
    {
-   if (self()->getOutFile() == NULL)
+   if (getOutFile() == NULL)
       return;
 
    if (methodSymbol == 0) methodSymbol = _methodSymbol;
 
-   self()->getDebug()->printIRTrees(self()->getOutFile(), title, methodSymbol);
+   getDebug()->printIRTrees(getOutFile(), title, methodSymbol);
 
-   if (!self()->getOption(TR_DisableDumpFlowGraph))
-      self()->dumpFlowGraph(methodSymbol->getFlowGraph());
+   if (!getOption(TR_DisableDumpFlowGraph))
+      dumpFlowGraph(methodSymbol->getFlowGraph());
 
-   if (self()->isOutermostMethod() && self()->getKnownObjectTable()) // This is pretty verbose.  Let's just dump it when we're dumping the whole method.
-      self()->getKnownObjectTable()->dumpTo(self()->getOutFile(), self());
+   if (isOutermostMethod() && getKnownObjectTable()) // This is pretty verbose.  Let's just dump it when we're dumping the whole method.
+      getKnownObjectTable()->dumpTo(getOutFile(), self());
 
-   trfflush(self()->getOutFile());
+   trfflush(getOutFile());
    }
 
 void OMR::Compilation::dumpMethodTrees(char *title1, const char *title2, TR::ResolvedMethodSymbol *methodSymbol)
    {
-   TR::StackMemoryRegion stackMemoryRegion(*self()->trMemory());
-   char *title = (char*)self()->trMemory()->allocateStackMemory(20 + strlen(title1) + strlen(title2));
+   TR::StackMemoryRegion stackMemoryRegion(*trMemory());
+   char *title = (char*)trMemory()->allocateStackMemory(20 + strlen(title1) + strlen(title2));
    sprintf(title, "%s%s", title1, title2);
-   self()->dumpMethodTrees(title, methodSymbol);
+   dumpMethodTrees(title, methodSymbol);
    }
 
 void OMR::Compilation::dumpFlowGraph(TR::CFG * cfg)
    {
-   if (cfg == 0) cfg = self()->getFlowGraph();
-   if (debug("dumpCFG") || self()->getOption(TR_TraceTrees) || self()->getOption(TR_TraceCG) || self()->getOption(TR_TraceUseDefs))
+   if (cfg == 0) cfg = getFlowGraph();
+   if (debug("dumpCFG") || getOption(TR_TraceTrees) || getOption(TR_TraceCG) || getOption(TR_TraceUseDefs))
       {
       if (cfg)
-         self()->getDebug()->print(self()->getOutFile(), cfg);
+         getDebug()->print(getOutFile(), cfg);
       else
-         trfprintf(self()->getOutFile(),"\nControl Flow Graph is empty\n");
+         trfprintf(getOutFile(),"\nControl Flow Graph is empty\n");
       }
-   trfflush(self()->getOutFile());
+   trfflush(getOutFile());
    }
 
 void
 OMR::Compilation::mapStaticAddressToCounter(TR::SymbolReference *symRef, TR::DebugCounterBase *counter)
    {
    const void *staticAddress = (const void *)symRef->getSymbol()->castToStaticSymbol()->getStaticAddress();
-   self()->getDebugCounterMap().insert(std::make_pair(staticAddress, counter));
+   getDebugCounterMap().insert(std::make_pair(staticAddress, counter));
    }
 
 TR::DebugCounterBase *
 OMR::Compilation::getCounterFromStaticAddress(TR::SymbolReference *symRef)
    {
    const void *staticAddress = (const void *)symRef->getSymbol()->castToStaticSymbol()->getStaticAddress();
-   TR::Compilation::DebugCounterMap::iterator entry = self()->getDebugCounterMap().find(staticAddress);
-   if (entry != self()->getDebugCounterMap().end())
+   TR::Compilation::DebugCounterMap::iterator entry = getDebugCounterMap().find(staticAddress);
+   if (entry != getDebugCounterMap().end())
       {
       return entry->second;
       }
@@ -2021,18 +2021,18 @@ OMR::Compilation::setCurrentCodeCache(TR::CodeCache * codeCache)
 
 void OMR::Compilation::switchCodeCache(TR::CodeCache *newCodeCache)
    {
-   TR_ASSERT( self()->getCurrentCodeCache() != newCodeCache, "Attempting to switch to the currently held code cache");
-   self()->setCurrentCodeCache(newCodeCache);  // Even if we signal, we need to update the reserved code cache for recompilations.
+   TR_ASSERT( getCurrentCodeCache() != newCodeCache, "Attempting to switch to the currently held code cache");
+   setCurrentCodeCache(newCodeCache);  // Even if we signal, we need to update the reserved code cache for recompilations.
    _codeCacheSwitched = true;
    _numReservedIPICTrampolines = 0;
-   if ( self()->cg()->committedToCodeCache() || !newCodeCache )
+   if ( cg()->committedToCodeCache() || !newCodeCache )
       {
       if (newCodeCache)
          {
-         self()->failCompilation<TR::RecoverableCodeCacheError>("Already committed to current code cache");
+         failCompilation<TR::RecoverableCodeCacheError>("Already committed to current code cache");
          }
 
-      self()->failCompilation<TR::CodeCacheError>("Already committed to current code cache");
+      failCompilation<TR::CodeCacheError>("Already committed to current code cache");
       }
    }
 
@@ -2044,58 +2044,58 @@ void OMR::Compilation::validateIL(TR::ILValidationContext ilValidationContext)
 
 void OMR::Compilation::verifyTrees(TR::ResolvedMethodSymbol *methodSymbol)
    {
-   if (self()->getDebug() && !self()->getOption(TR_DisableVerification) && !self()->isPeekingMethod())
+   if (getDebug() && !getOption(TR_DisableVerification) && !isPeekingMethod())
       {
       if (!methodSymbol)
          methodSymbol = _methodSymbol;
-      self()->getDebug()->verifyTrees(methodSymbol);
+      getDebug()->verifyTrees(methodSymbol);
       }
    }
 
 void OMR::Compilation::verifyBlocks(TR::ResolvedMethodSymbol *methodSymbol)
    {
-   if (self()->getDebug() && !self()->getOption(TR_DisableVerification) && !self()->isPeekingMethod())
+   if (getDebug() && !getOption(TR_DisableVerification) && !isPeekingMethod())
       {
       if (!methodSymbol)
          methodSymbol = _methodSymbol;
-      self()->getDebug()->verifyBlocks(methodSymbol);
+      getDebug()->verifyBlocks(methodSymbol);
       }
    }
 
 void OMR::Compilation::verifyCFG(TR::ResolvedMethodSymbol *methodSymbol)
    {
-   if (self()->getDebug() && !self()->getOption(TR_DisableVerification) && !self()->isPeekingMethod())
+   if (getDebug() && !getOption(TR_DisableVerification) && !isPeekingMethod())
       {
       if (!methodSymbol)
     methodSymbol = _methodSymbol;
-      self()->getDebug()->verifyCFG(methodSymbol);
+      getDebug()->verifyCFG(methodSymbol);
       }
    }
 
 #ifdef DEBUG
 void OMR::Compilation::dumpMethodGraph(int index, TR::ResolvedMethodSymbol *methodSymbol)
    {
-   if (self()->getOutFile() == NULL) return;
+   if (getOutFile() == NULL) return;
 
    if (methodSymbol == 0) methodSymbol = _methodSymbol;
 
    TR::CFG * cfg = methodSymbol->getFlowGraph();
-   if (cfg == 0) cfg = self()->getJittedMethodSymbol()->getFlowGraph();
+   if (cfg == 0) cfg = getJittedMethodSymbol()->getFlowGraph();
    if (cfg)
       {
       char fileName[20];
       sprintf(fileName, "cfg%d.vcg", index);
 
       char tmp[1025];
-      char *fn = self()->fe()->getFormattedName(tmp, 1025, fileName, NULL, false);
+      char *fn = fe()->getFormattedName(tmp, 1025, fileName, NULL, false);
       TR::FILE *pFile = trfopen(fn, "wb", false);
       TR_ASSERT(pFile != NULL, "unable to open cfg file");
-      self()->getDebug()->printVCG(pFile, cfg, self()->signature());
-      trfprintf(self()->getOutFile(), "VCG graph dumped in file %s\n", fn);
+      getDebug()->printVCG(pFile, cfg, signature());
+      trfprintf(getOutFile(), "VCG graph dumped in file %s\n", fn);
       trfclose(pFile);
       }
    else
-      trfprintf(self()->getOutFile(), "CFG is empty, VCG file not printed\n");
+      trfprintf(getOutFile(), "CFG is empty, VCG file not printed\n");
    }
 #endif
 
@@ -2227,7 +2227,7 @@ OMR::Compilation::incVisitCount()
    if (_visitCount == MAX_VCOUNT-1)
       {
       TR_ASSERT(0, "_visitCount equals MAX_VCOUNT-1");
-      self()->failCompilation<TR::CompilationException>("_visitCount equals MAX_VCOUNT-1");
+      failCompilation<TR::CompilationException>("_visitCount equals MAX_VCOUNT-1");
       }
    return ++_visitCount;
    }
@@ -2236,8 +2236,8 @@ vcount_t
 OMR::Compilation::incOrResetVisitCount()
    {
    if (_visitCount > HIGH_VISIT_COUNT)
-      self()->resetVisitCounts(0);
-   return self()->incVisitCount();
+      resetVisitCounts(0);
+   return incVisitCount();
    }
 
 
@@ -2288,9 +2288,9 @@ OMR::Compilation::getOSRCallSiteRematSize(uint32_t callSiteIndex)
    if (!_inlinedCallSites[callSiteIndex].osrCallSiteRematTable())
       return 0;
 
-   int32_t callerIndex = self()->getInlinedCallSite(callSiteIndex)._byteCodeInfo.getCallerIndex();
-   return callerIndex < 0 ? self()->getMethodSymbol()->getNumPPSlots() :
-      self()->getInlinedResolvedMethodSymbol(callerIndex)->getNumPPSlots();
+   int32_t callerIndex = getInlinedCallSite(callSiteIndex)._byteCodeInfo.getCallerIndex();
+   return callerIndex < 0 ? getMethodSymbol()->getNumPPSlots() :
+      getInlinedResolvedMethodSymbol(callerIndex)->getNumPPSlots();
    }
 
 /*
@@ -2311,11 +2311,11 @@ OMR::Compilation::getOSRCallSiteRemat(uint32_t callSiteIndex, uint32_t slot, TR:
 
 #if defined(DEBUG) || defined(PROD_WITH_ASSUMES)
    // Ensure the requested slot is valid, based on the total number of PP slots
-   uint32_t callerNumPPSlots = self()->getOSRCallSiteRematSize(callSiteIndex);
+   uint32_t callerNumPPSlots = getOSRCallSiteRematSize(callSiteIndex);
    TR_ASSERT(slot < callerNumPPSlots, "can only perform call site remat for the caller's pending pushes");
 #endif
 
-   TR::SymbolReferenceTable *symRefTab = self()->getSymRefTab();
+   TR::SymbolReferenceTable *symRefTab = getSymRefTab();
    ppSymRef = table[slot * 2] == 0 ? NULL : symRefTab->getSymRef(table[slot * 2]);
    loadSymRef = table[slot * 2 + 1] == 0 ? NULL : symRefTab->getSymRef(table[slot * 2 + 1]);
    }
@@ -2339,17 +2339,17 @@ OMR::Compilation::setOSRCallSiteRemat(uint32_t callSiteIndex, TR::SymbolReferenc
    // If no table exists, allocate it based on the number of PP slots
    if (!table)
       {
-      int32_t callerIndex = self()->getInlinedCallSite(callSiteIndex)._byteCodeInfo.getCallerIndex();
-      uint32_t callerNumPPSlots = callerIndex < 0 ? self()->getMethodSymbol()->getNumPPSlots() :
-         self()->getInlinedResolvedMethodSymbol(callerIndex)->getNumPPSlots();
-      table = (int32_t*) self()->trMemory()->allocateHeapMemory(callerNumPPSlots * 2 * sizeof(int32_t));
+      int32_t callerIndex = getInlinedCallSite(callSiteIndex)._byteCodeInfo.getCallerIndex();
+      uint32_t callerNumPPSlots = callerIndex < 0 ? getMethodSymbol()->getNumPPSlots() :
+         getInlinedResolvedMethodSymbol(callerIndex)->getNumPPSlots();
+      table = (int32_t*) trMemory()->allocateHeapMemory(callerNumPPSlots * 2 * sizeof(int32_t));
       memset(table, 0, callerNumPPSlots * 2 * sizeof(int32_t));
       _inlinedCallSites[callSiteIndex].setOSRCallSiteRematTable(table);
       }
 
 #if defined(DEBUG) || defined(PROD_WITH_ASSUMES)
    // Check the pending push is valid
-   uint32_t callerNumPPSlots = self()->getOSRCallSiteRematSize(callSiteIndex);
+   uint32_t callerNumPPSlots = getOSRCallSiteRematSize(callSiteIndex);
    TR_ASSERT(ppSymRef->getSymbol()->isPendingPush(), "can only perform call site remat on pending pushes");
    TR_ASSERT(slot >= 0 && slot < callerNumPPSlots, "can only perform call site remat for the caller's pending pushes");
 #endif
@@ -2431,10 +2431,10 @@ TR::ResolvedMethodSymbol *
 OMR::Compilation::getMethodSymbol()
    {
    static const bool disableReturnCalleeInIlgen = feGetEnv("TR_DisableReturnCalleeInIlgen") ? true: false;
-   if (self()->getCurrentIlGenerator() && !disableReturnCalleeInIlgen)
-      return self()->getCurrentIlGenerator()->methodSymbol();
-   if (self()->getOptimizer())
-      return self()->getOptimizer()->getMethodSymbol();
+   if (getCurrentIlGenerator() && !disableReturnCalleeInIlgen)
+      return getCurrentIlGenerator()->methodSymbol();
+   if (getOptimizer())
+      return getOptimizer()->getMethodSymbol();
    return _methodSymbol;
    }
 
@@ -2443,58 +2443,58 @@ TR_ResolvedMethod *
 OMR::Compilation::getCurrentMethod()
    {
    static const bool disableReturnCalleeInIlgen = feGetEnv("TR_DisableReturnCalleeInIlgen") ? true: false;
-   if (self()->getCurrentIlGenerator() && !disableReturnCalleeInIlgen)
-      return self()->getCurrentIlGenerator()->methodSymbol()->getResolvedMethod();
-   if (self()->getOptimizer())
-      return self()->getOptimizer()->getMethodSymbol()->getResolvedMethod();
+   if (getCurrentIlGenerator() && !disableReturnCalleeInIlgen)
+      return getCurrentIlGenerator()->methodSymbol()->getResolvedMethod();
+   if (getOptimizer())
+      return getOptimizer()->getMethodSymbol()->getResolvedMethod();
    return _method;
    }
 
 TR::CFG *
 OMR::Compilation::getFlowGraph()
    {
-   return self()->getMethodSymbol()->getFlowGraph();
+   return getMethodSymbol()->getFlowGraph();
    }
 
 TR::TreeTop *
 OMR::Compilation::getStartTree()
    {
-   return self()->getMethodSymbol()->getFirstTreeTop();
+   return getMethodSymbol()->getFirstTreeTop();
    }
 
 TR::TreeTop *
 OMR::Compilation::findLastTree()
    {
-   return self()->getMethodSymbol()->getLastTreeTop();
+   return getMethodSymbol()->getLastTreeTop();
    }
 
 bool
 OMR::Compilation::mayHaveLoops()
    {
-   return self()->getMethodSymbol()->mayHaveLoops();
+   return getMethodSymbol()->mayHaveLoops();
    }
 
 
 bool
 OMR::Compilation::hasNews()
    {
-   return self()->getMethodSymbol()->hasNews();
+   return getMethodSymbol()->hasNews();
    }
 
 TR::HCRMode
 OMR::Compilation::getHCRMode()
    {
-   if (!self()->getOption(TR_EnableHCR))
+   if (!getOption(TR_EnableHCR))
       return TR::none;
-   if (self()->isDLT() || self()->isProfilingCompilation() || self()->getOptLevel() <= cold)
+   if (isDLT() || isProfilingCompilation() || getOptLevel() <= cold)
       return TR::traditional;
-   return self()->getOption(TR_EnableOSR) && !self()->getOption(TR_DisableNextGenHCR) ? TR::osr : TR::traditional;
+   return getOption(TR_EnableOSR) && !getOption(TR_DisableNextGenHCR) ? TR::osr : TR::traditional;
    }
 
 uint32_t
 OMR::Compilation::getSymRefCount()
    {
-   return self()->getSymRefTab()->getNumSymRefs();
+   return getSymRefTab()->getNumSymRefs();
    }
 
 void
@@ -2506,24 +2506,24 @@ OMR::Compilation::setStartTree(TR::TreeTop * tt)
 bool
 OMR::Compilation::isPICSite(TR::Instruction *instruction)
    {
-   return (std::find(self()->getStaticPICSites()->begin(), self()->getStaticPICSites()->end(), instruction) != self()->getStaticPICSites()->end())
-      ||  (std::find(self()->getStaticMethodPICSites()->begin(), self()->getStaticMethodPICSites()->end(), instruction) != self()->getStaticMethodPICSites()->end())
-      ||  (std::find(self()->getStaticHCRPICSites()->begin(), self()->getStaticHCRPICSites()->end(), instruction) != self()->getStaticHCRPICSites()->end());
+   return (std::find(getStaticPICSites()->begin(), getStaticPICSites()->end(), instruction) != getStaticPICSites()->end())
+      ||  (std::find(getStaticMethodPICSites()->begin(), getStaticMethodPICSites()->end(), instruction) != getStaticMethodPICSites()->end())
+      ||  (std::find(getStaticHCRPICSites()->begin(), getStaticHCRPICSites()->end(), instruction) != getStaticHCRPICSites()->end());
    }
 
 bool
 OMR::Compilation::hasLargeNumberOfLoops()
    {
-   return (self()->getFlowGraph()->getStructure()->getNumberOfLoops()
+   return (getFlowGraph()->getStructure()->getNumberOfLoops()
            >=
-           self()->getOptions()->getLargeNumberOfLoops());
+           getOptions()->getLargeNumberOfLoops());
    }
 
 
 
 TR_Debug * OMR::Compilation::findOrCreateDebug()
    {
-   if (!_debug) _debug = self()->fe()->createDebug(self()); return _debug;
+   if (!_debug) _debug = fe()->createDebug(self()); return _debug;
    }
 
 void OMR::Compilation::diagnosticImpl(const char *s, ...)
@@ -2531,7 +2531,7 @@ void OMR::Compilation::diagnosticImpl(const char *s, ...)
 #if defined(DEBUG)
    va_list ap;
    va_start(ap, s);
-   self()->diagnosticImplVA(s, ap);
+   diagnosticImplVA(s, ap);
    va_end(ap);
 #endif
    }
@@ -2539,14 +2539,14 @@ void OMR::Compilation::diagnosticImpl(const char *s, ...)
 void OMR::Compilation::diagnosticImplVA(const char *s, va_list ap)
    {
 #if defined(DEBUG)
-   if (self()->getOutFile() != NULL)
+   if (getOutFile() != NULL)
       {
       va_list copy;
       va_copy(copy, ap);
       char buffer[256];
-      TR::IO::vfprintf(self()->getOutFile(), self()->getDebug()->getDiagnosticFormat(s, buffer, sizeof(buffer)/sizeof(char)),
+      TR::IO::vfprintf(getOutFile(), getDebug()->getDiagnosticFormat(s, buffer, sizeof(buffer)/sizeof(char)),
                  copy);
-      trfflush(self()->getOutFile());
+      trfflush(getOutFile());
       va_end(copy);
       }
 #endif
@@ -2719,14 +2719,14 @@ OMR::Compilation::CompilationPhaseScope::~CompilationPhaseScope()
 
 TR::Region &OMR::Compilation::aliasRegion()
    {
-   return self()->_aliasRegion;
+   return _aliasRegion;
    }
 
 void OMR::Compilation::invalidateAliasRegion()
    {
-   if (self()->_aliasRegion.bytesAllocated() > (ALIAS_REGION_LOAD_FACTOR) * TR::Region::initialSize())
+   if (_aliasRegion.bytesAllocated() > (ALIAS_REGION_LOAD_FACTOR) * TR::Region::initialSize())
       {
-      self()->_aliasRegion.~Region();
-      new (&self()->_aliasRegion) TR::Region(_heapMemoryRegion);
+      _aliasRegion.~Region();
+      new (&_aliasRegion) TR::Region(_heapMemoryRegion);
       }
    }
