@@ -113,7 +113,7 @@ OMR::ARM::MemoryReference::MemoryReference(TR::Node          *rootLoadOrStore,
    TR::Symbol           *symbol = ref->getSymbol();
    bool               isStore = rootLoadOrStore->getOpCode().isStore();
 
-   self()->setSymbol(symbol, cg);
+   setSymbol(symbol, cg);
    _symbolReference.setOwningMethodIndex(ref->getOwningMethodIndex());
    _symbolReference.setCPIndex(ref->getCPIndex());
    _symbolReference.copyFlags(ref);
@@ -123,10 +123,10 @@ OMR::ARM::MemoryReference::MemoryReference(TR::Node          *rootLoadOrStore,
       {
       if (ref->isUnresolved())
          {
-         self()->setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, rootLoadOrStore, rootLoadOrStore->getSymbolReference(),isStore, false));
-         cg->addSnippet(self()->getUnresolvedSnippet());
+         setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, rootLoadOrStore, rootLoadOrStore->getSymbolReference(),isStore, false));
+         cg->addSnippet(getUnresolvedSnippet());
          }
-      self()->populateMemoryReference(rootLoadOrStore->getFirstChild(), cg);
+      populateMemoryReference(rootLoadOrStore->getFirstChild(), cg);
       }
    else
       {
@@ -134,13 +134,13 @@ OMR::ARM::MemoryReference::MemoryReference(TR::Node          *rootLoadOrStore,
          {
          if (ref->isUnresolved())
             {
-            self()->setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, rootLoadOrStore, rootLoadOrStore->getSymbolReference(),isStore, false));
-            cg->addSnippet(self()->getUnresolvedSnippet());
+            setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, rootLoadOrStore, rootLoadOrStore->getSymbolReference(),isStore, false));
+            cg->addSnippet(getUnresolvedSnippet());
             }
          else
             {
             _baseRegister = cg->allocateRegister();
-            self()->setBaseModifiable();
+            setBaseModifiable();
             loadRelocatableConstant(rootLoadOrStore, ref, _baseRegister, self(), cg);
             }
          }
@@ -156,9 +156,9 @@ OMR::ARM::MemoryReference::MemoryReference(TR::Node          *rootLoadOrStore,
             }
          }
       }
-   self()->addToOffset(rootLoadOrStore, rootLoadOrStore->getSymbolReference()->getOffset(), cg);
-   if (self()->getUnresolvedSnippet() != NULL)
-      self()->adjustForResolution(cg);
+   addToOffset(rootLoadOrStore, rootLoadOrStore->getSymbolReference()->getOffset(), cg);
+   if (getUnresolvedSnippet() != NULL)
+      adjustForResolution(cg);
    // TODO: aliasing sets?
    }
 
@@ -181,13 +181,13 @@ OMR::ARM::MemoryReference::MemoryReference(TR::Node *node, TR::SymbolReference *
       {
       if (symRef->isUnresolved())
          {
-         self()->setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, node, symRef,false, false));
-         cg->addSnippet(self()->getUnresolvedSnippet());
+         setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, node, symRef,false, false));
+         cg->addSnippet(getUnresolvedSnippet());
          }
       else
          {
          _baseRegister = cg->allocateRegister();
-         self()->setBaseModifiable();
+         setBaseModifiable();
          loadRelocatableConstant(node, symRef, _baseRegister, self(), cg);
          }
       }
@@ -203,12 +203,12 @@ OMR::ARM::MemoryReference::MemoryReference(TR::Node *node, TR::SymbolReference *
          }
       }
 
-   self()->setSymbol(symbol, cg);
+   setSymbol(symbol, cg);
    _symbolReference.copyFlags(symRef);
    _symbolReference.copyRefNumIfPossible(symRef, cg->comp()->getSymRefTab());
-   self()->addToOffset(0, symRef->getOffset(), cg);
-   if (self()->getUnresolvedSnippet() != NULL)
-      self()->adjustForResolution(cg);
+   addToOffset(0, symRef->getOffset(), cg);
+   if (getUnresolvedSnippet() != NULL)
+      adjustForResolution(cg);
    // TODO: aliasing sets?
    }
 
@@ -240,23 +240,23 @@ OMR::ARM::MemoryReference::MemoryReference(TR::MemoryReference &mr,
       {
       _unresolvedSnippet = NULL;
       }
-   self()->addToOffset(0, displacement, cg);
+   addToOffset(0, displacement, cg);
    }
 
 void OMR::ARM::MemoryReference::setSymbol(TR::Symbol *symbol, TR::CodeGenerator *cg)
    {
    _symbolReference.setSymbol(symbol);
    if (_baseRegister!=NULL && _indexRegister!=NULL &&
-       (self()->hasDelayedOffset() || self()->getOffset()!=0))
+       (hasDelayedOffset() || getOffset()!=0))
       {
-      self()->consolidateRegisters(NULL, NULL, false, cg);
+      consolidateRegisters(NULL, NULL, false, cg);
       }
    }
 
 #if (defined(__VFP_FP__) && !defined(__SOFTFP__))
 void OMR::ARM::MemoryReference::fixupVFPOffset(TR::Node *node, TR::CodeGenerator *cg)
    {
-      if (self()->getUnresolvedSnippet() != NULL)
+      if (getUnresolvedSnippet() != NULL)
          {
          return;
          }
@@ -269,7 +269,7 @@ void OMR::ARM::MemoryReference::fixupVFPOffset(TR::Node *node, TR::CodeGenerator
 
           _symbolReference.setOffset(remainingOffset);
 
-          if (_baseRegister != NULL && self()->isBaseModifiable())
+          if (_baseRegister != NULL && isBaseModifiable())
              newBase = _baseRegister;
           else
              newBase = cg->allocateCollectedReferenceRegister();
@@ -305,17 +305,17 @@ void OMR::ARM::MemoryReference::fixupVFPOffset(TR::Node *node, TR::CodeGenerator
                    }
                 }
              }
-          self()->decNodeReferenceCounts();
+          decNodeReferenceCounts();
           _baseRegister = newBase;
           _baseNode = NULL;
-          self()->setBaseModifiable();
+          setBaseModifiable();
          }
    }
 #endif
 
 void OMR::ARM::MemoryReference::addToOffset(TR::Node *node, int32_t amount, TR::CodeGenerator *cg)
    {
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       _symbolReference.setOffset(_symbolReference.getOffset() + amount);
       return;
@@ -326,7 +326,7 @@ void OMR::ARM::MemoryReference::addToOffset(TR::Node *node, int32_t amount, TR::
 
    if (_baseRegister != NULL && _indexRegister != NULL)
       {
-      self()->consolidateRegisters(NULL, NULL, false, cg);
+      consolidateRegisters(NULL, NULL, false, cg);
       }
 
    int32_t displacement = _symbolReference.getOffset() + amount;
@@ -343,7 +343,7 @@ void OMR::ARM::MemoryReference::addToOffset(TR::Node *node, int32_t amount, TR::
 
       _symbolReference.setOffset(remainingOffset);
 
-      if (_baseRegister != NULL && self()->isBaseModifiable())
+      if (_baseRegister != NULL && isBaseModifiable())
          newBase = _baseRegister;
       else
          newBase = cg->allocateCollectedReferenceRegister();
@@ -379,10 +379,10 @@ void OMR::ARM::MemoryReference::addToOffset(TR::Node *node, int32_t amount, TR::
                }
             }
          }
-      self()->decNodeReferenceCounts();
+      decNodeReferenceCounts();
       _baseRegister = newBase;
       _baseNode = NULL;
-      self()->setBaseModifiable();
+      setBaseModifiable();
       }
    else
       _symbolReference.setOffset(displacement);
@@ -427,7 +427,7 @@ void OMR::ARM::MemoryReference::populateMemoryReference(TR::Node *subTree, TR::C
       {
       if (_baseRegister != NULL)
          {
-         self()->consolidateRegisters(cg->evaluate(subTree), subTree, false, cg);
+         consolidateRegisters(cg->evaluate(subTree), subTree, false, cg);
          }
       else
          {
@@ -445,26 +445,26 @@ void OMR::ARM::MemoryReference::populateMemoryReference(TR::Node *subTree, TR::C
 
          if (integerChild->getOpCode().isLoadConst())
             {
-            self()->populateMemoryReference(addressChild, cg);
-            self()->addToOffset(integerChild, integerChild->getInt(), cg);
+            populateMemoryReference(addressChild, cg);
+            addToOffset(integerChild, integerChild->getInt(), cg);
             integerChild->decReferenceCount();
             }
          else if (integerChild->getEvaluationPriority(cg) > addressChild->getEvaluationPriority(cg))
             {
-            self()->populateMemoryReference(integerChild, cg);
-            self()->populateMemoryReference(addressChild, cg);
+            populateMemoryReference(integerChild, cg);
+            populateMemoryReference(addressChild, cg);
             }
          else
             {
-            self()->populateMemoryReference(addressChild, cg);
-            self()->populateMemoryReference(integerChild, cg);
+            populateMemoryReference(addressChild, cg);
+            populateMemoryReference(integerChild, cg);
             }
          }
       else if (subTree->getOpCodeValue() == TR::ishl &&
                subTree->getFirstChild()->getOpCode().isLoadConst() &&
                subTree->getSecondChild()->getOpCode().isLoadConst())
          {
-         self()->addToOffset(subTree, subTree->getFirstChild()->getInt() <<
+         addToOffset(subTree, subTree->getFirstChild()->getInt() <<
                      subTree->getSecondChild()->getInt(), cg);
          subTree->getFirstChild()->decReferenceCount();
          subTree->getSecondChild()->decReferenceCount();
@@ -473,26 +473,26 @@ void OMR::ARM::MemoryReference::populateMemoryReference(TR::Node *subTree, TR::C
          {
          TR::SymbolReference *ref = subTree->getSymbolReference();
          TR::Symbol *symbol = ref->getSymbol();
-         self()->setSymbol(symbol, cg);
+         setSymbol(symbol, cg);
          _symbolReference.copyFlags(ref);
          if (symbol->isStatic())
             {
             if (ref->isUnresolved())
                {
-               self()->setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, subTree, &_symbolReference, subTree->getOpCode().isStore(), false));
-               cg->addSnippet(self()->getUnresolvedSnippet());
+               setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, subTree, &_symbolReference, subTree->getOpCode().isStore(), false));
+               cg->addSnippet(getUnresolvedSnippet());
                }
             else
                {
                if (_baseRegister != NULL)
                   {
-                  self()->addToOffset(subTree, (uintptr_t)symbol->castToStaticSymbol()->getStaticAddress(), cg);
+                  addToOffset(subTree, (uintptr_t)symbol->castToStaticSymbol()->getStaticAddress(), cg);
                   }
                else
                   {
                   _baseRegister = cg->allocateRegister();
                   _baseNode = NULL;
-                  self()->setBaseModifiable();
+                  setBaseModifiable();
                   loadRelocatableConstant(subTree, ref, _baseRegister, self(), cg);
                   }
                }
@@ -510,7 +510,7 @@ void OMR::ARM::MemoryReference::populateMemoryReference(TR::Node *subTree, TR::C
                   {
                   tempReg = cg->getMethodMetaDataRegister();
                   }
-               self()->consolidateRegisters(tempReg, NULL, false, cg);
+               consolidateRegisters(tempReg, NULL, false, cg);
                }
             else
                {
@@ -525,7 +525,7 @@ void OMR::ARM::MemoryReference::populateMemoryReference(TR::Node *subTree, TR::C
                _baseNode = NULL;
                }
             }
-         self()->addToOffset(subTree, subTree->getSymbolReference()->getOffset(), cg);
+         addToOffset(subTree, subTree->getSymbolReference()->getOffset(), cg);
          // TODO: aliasing sets?
          subTree->decReferenceCount(); // need to decrement ref count because
                                        // nodes weren't set on memoryreference
@@ -535,13 +535,13 @@ void OMR::ARM::MemoryReference::populateMemoryReference(TR::Node *subTree, TR::C
          {
          if (_baseRegister != NULL)
             {
-            self()->addToOffset(subTree, subTree->getInt(), cg);
+            addToOffset(subTree, subTree->getInt(), cg);
             }
          else
             {
             _baseRegister = cg->allocateRegister();
             _baseNode = subTree;
-            self()->setBaseModifiable();
+            setBaseModifiable();
             armLoadConstant(subTree, subTree->getInt(), _baseRegister, cg);
             }
          }
@@ -549,13 +549,13 @@ void OMR::ARM::MemoryReference::populateMemoryReference(TR::Node *subTree, TR::C
          {
          if (_baseRegister != NULL)
             {
-            self()->consolidateRegisters(cg->evaluate(subTree), subTree, true, cg);
+            consolidateRegisters(cg->evaluate(subTree), subTree, true, cg);
             }
          else
             {
             _baseRegister  = cg->evaluate(subTree);
             _baseNode      = subTree;
-            self()->setBaseModifiable();
+            setBaseModifiable();
             }
          }
       }
@@ -565,13 +565,13 @@ void OMR::ARM::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR::N
    {
    TR::Register *tempTargetRegister;
 
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       if (srcReg == NULL)
          return;
       if (_indexRegister != NULL)
          {
-         if (self()->isIndexModifiable())
+         if (isIndexModifiable())
             tempTargetRegister = _indexRegister;
          else if (srcReg->containsCollectedReference() ||
                   _indexRegister->containsCollectedReference())
@@ -592,23 +592,23 @@ void OMR::ARM::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR::N
          else
             cg->stopUsingRegister(srcReg);
          _indexRegister = tempTargetRegister;
-         self()->setIndexModifiable();
+         setIndexModifiable();
          }
       else
          {
          _indexRegister = srcReg;
          _indexNode = srcTree;
          if (srcModifiable)
-            self()->setIndexModifiable();
+            setIndexModifiable();
          else
-            self()->clearIndexModifiable();
+            clearIndexModifiable();
          }
       }
    else
       {
       if (_indexRegister != NULL)
          {
-         if (self()->isBaseModifiable())
+         if (isBaseModifiable())
             tempTargetRegister = _baseRegister;
          else if (_baseRegister->containsCollectedReference() ||
                   _indexRegister->containsCollectedReference())
@@ -618,7 +618,7 @@ void OMR::ARM::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR::N
          new (cg->trHeapMemory()) TR::ARMTrg1Src2Instruction(ARMOp_add, srcTree, tempTargetRegister, _baseRegister, _indexRegister, cg);
          if (_baseRegister != tempTargetRegister)
             {
-            self()->decNodeReferenceCounts();
+            decNodeReferenceCounts();
             _baseNode = NULL;
             }
          else
@@ -629,11 +629,11 @@ void OMR::ARM::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR::N
                cg->stopUsingRegister(_indexRegister);
             }
          _baseRegister  = tempTargetRegister;
-         self()->setBaseModifiable();
+         setBaseModifiable();
          }
-      else if (srcReg!=NULL && (self()->getOffset()!=0 || self()->hasDelayedOffset()))
+      else if (srcReg!=NULL && (getOffset()!=0 || hasDelayedOffset()))
          {
-         if (self()->isBaseModifiable())
+         if (isBaseModifiable())
             tempTargetRegister = _baseRegister;
          else if (srcModifiable)
             tempTargetRegister = srcReg;
@@ -645,12 +645,12 @@ void OMR::ARM::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR::N
          new (cg->trHeapMemory()) TR::ARMTrg1Src2Instruction(ARMOp_add, srcTree, tempTargetRegister, _baseRegister, srcReg, cg);
          if (_baseRegister != tempTargetRegister)
             {
-            self()->decNodeReferenceCounts();
+            decNodeReferenceCounts();
             _baseNode = NULL;
             }
          if (srcReg == tempTargetRegister)
             {
-            self()->decNodeReferenceCounts();
+            decNodeReferenceCounts();
             _baseNode = srcTree;
             }
          else
@@ -661,7 +661,7 @@ void OMR::ARM::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR::N
                cg->stopUsingRegister(srcReg);
             }
          _baseRegister  = tempTargetRegister;
-         self()->setBaseModifiable();
+         setBaseModifiable();
          srcReg=NULL;
          srcTree=NULL;
          srcModifiable=false;
@@ -669,9 +669,9 @@ void OMR::ARM::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR::N
       _indexRegister = srcReg;
       _indexNode = srcTree;
       if (srcModifiable)
-         self()->setIndexModifiable();
+         setIndexModifiable();
       else
-         self()->clearIndexModifiable();
+         clearIndexModifiable();
       }
    }
 
@@ -825,7 +825,7 @@ void OMR::ARM::MemoryReference::assignRegisters(TR::Instruction *currentInstruct
          }
       _indexRegister = assignedIndexRegister;
       }
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       currentInstruction->ARMNeedsGCMap(0xFFFFFFFF);
       }
@@ -843,17 +843,17 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
    {
    uint32_t           *wcursor = (uint32_t *)cursor;
    TR_ARMOpCodes       op      = currentInstruction->getOpCodeValue();
-   TR::RealRegister *base    = self()->getBaseRegister() ? toRealRegister(self()->getBaseRegister()) : NULL;
-   TR::RealRegister *index   = self()->getIndexRegister() ? toRealRegister(self()->getIndexRegister()) : NULL;
+   TR::RealRegister *base    = getBaseRegister() ? toRealRegister(getBaseRegister()) : NULL;
+   TR::RealRegister *index   = getIndexRegister() ? toRealRegister(getIndexRegister()) : NULL;
 
-   if (self()->getUnresolvedSnippet())
+   if (getUnresolvedSnippet())
       {
 #ifdef J9_PROJECT_SPECIFIC
       uint32_t preserve = *wcursor; // original instruction
-      TR::RealRegister *mBase = toRealRegister(self()->getModBase());
-      self()->getUnresolvedSnippet()->setAddressOfDataReference(cursor);
-      self()->getUnresolvedSnippet()->setMemoryReference(self());
-      cg->addRelocation(new (cg->trHeapMemory()) TR::LabelRelative24BitRelocation(cursor, self()->getUnresolvedSnippet()->getSnippetLabel()));
+      TR::RealRegister *mBase = toRealRegister(getModBase());
+      getUnresolvedSnippet()->setAddressOfDataReference(cursor);
+      getUnresolvedSnippet()->setMemoryReference(self());
+      cg->addRelocation(new (cg->trHeapMemory()) TR::LabelRelative24BitRelocation(cursor, getUnresolvedSnippet()->getSnippetLabel()));
       *wcursor = 0xEA000000; // insert a branch to the snippet
       wcursor++;
       cursor += ARM_INSTRUCTION_LENGTH;
@@ -965,15 +965,15 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
 #if (defined(__VFP_FP__) && !defined(__SOFTFP__))
             }
 #endif
-         displacement = self()->getOffset();
+         displacement = getOffset();
          if(displacement > 0)
             *wcursor |= 1 << 23;                   // set U bit for +ve
          else
             displacement = -displacement;
-         TR_ASSERT(!(self()->isImmediatePreIndexed() && self()->isPostIndexed()),"write back with post-index transfer redundant");
-         if (self()->isImmediatePreIndexed())
+         TR_ASSERT(!(isImmediatePreIndexed() && isPostIndexed()),"write back with post-index transfer redundant");
+         if (isImmediatePreIndexed())
             *wcursor |= 1 << 21;                   // set W bit for write-back
-         if (self()->isPostIndexed())
+         if (isPostIndexed())
             *wcursor &= (uint32_t)(~(1 << 24));    // unset P for post-index
          }
 
@@ -1008,7 +1008,7 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
                }
             else
                {
-               cursor = self()->encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
+               cursor = encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
                wcursor = (uint32_t *)cursor;
                }
             }
@@ -1023,14 +1023,14 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
             }
          else
             {
-            if (constantIsUnsignedImmed8(self()->getOffset()))
+            if (constantIsUnsignedImmed8(getOffset()))
                {
                *wcursor |= 1 << 22;                // set I bit for immediate index
                *wcursor |= splitOffset(displacement);
                }
             else
                {
-               cursor = self()->encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
+               cursor = encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
                wcursor = (uint32_t *)cursor;
                }
             }
@@ -1039,7 +1039,7 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
          {
          base->setRegisterFieldRN(wcursor);
          uint32_t immBase, rotate;
-         if (constantIsImmed8r(self()->getOffset(), &immBase, &rotate))
+         if (constantIsImmed8r(getOffset(), &immBase, &rotate))
             {
             *wcursor |= 1 << 25;                            // set I bit for immediate index
             *wcursor |= ((32 - rotate) << 7) & 0x00000f00;  // mask to deal with rotate == 0 case.
@@ -1047,7 +1047,7 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
             }
          else
             {
-            cursor = self()->encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
+            cursor = encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
             wcursor = (uint32_t *)cursor;
             }
          }
@@ -1065,7 +1065,7 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
             }
          else
             {
-            cursor = self()->encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
+            cursor = encodeLargeARMConstant(wcursor, cursor, currentInstruction, cg);
             wcursor = (uint32_t *)cursor;
             }
          }
@@ -1088,7 +1088,7 @@ uint8_t *OMR::ARM::MemoryReference::generateBinaryEncoding(TR::Instruction *curr
 
 uint32_t OMR::ARM::MemoryReference::estimateBinaryLength(TR_ARMOpCodes op)
    {
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       if (_indexRegister != NULL)
          {
@@ -1113,7 +1113,7 @@ uint32_t OMR::ARM::MemoryReference::estimateBinaryLength(TR_ARMOpCodes op)
       }
    else if (op == ARMOp_ldr || op == ARMOp_str || op == ARMOp_ldrb || op == ARMOp_strb || op == ARMOp_ldrex || op == ARMOp_strex)
       {
-      if (constantIsImmed12(self()->getOffset()))
+      if (constantIsImmed12(getOffset()))
          {
          return ARM_INSTRUCTION_LENGTH;
          }
@@ -1124,7 +1124,7 @@ uint32_t OMR::ARM::MemoryReference::estimateBinaryLength(TR_ARMOpCodes op)
       }
    else if ( op == ARMOp_ldrsb || op == ARMOp_ldrh || op == ARMOp_ldrsh || op == ARMOp_strh )
       {
-      if(constantIsUnsignedImmed8(self()->getOffset()))
+      if(constantIsUnsignedImmed8(getOffset()))
          {
          return ARM_INSTRUCTION_LENGTH;
          }
@@ -1136,7 +1136,7 @@ uint32_t OMR::ARM::MemoryReference::estimateBinaryLength(TR_ARMOpCodes op)
    else if( op == ARMOp_add )
       {
       uint32_t base,rotate;
-      if(constantIsImmed8r(self()->getOffset(),&base,&rotate))
+      if(constantIsImmed8r(getOffset(),&base,&rotate))
          {
          return ARM_INSTRUCTION_LENGTH;
          }
@@ -1152,7 +1152,7 @@ uint32_t OMR::ARM::MemoryReference::estimateBinaryLength(TR_ARMOpCodes op)
 #if (defined(__VFP_FP__) && !defined(__SOFTFP__))
    else if (op == ARMOp_flds || op == ARMOp_fldd || op == ARMOp_fsts || op == ARMOp_fstd)
       {
-         if (constantIsImmed10(self()->getOffset()))
+         if (constantIsImmed10(getOffset()))
          {
          return ARM_INSTRUCTION_LENGTH;
          }
@@ -1176,8 +1176,8 @@ uint8_t *OMR::ARM::MemoryReference::encodeLargeARMConstant(uint32_t *wcursor, ui
    TR::RealRegister   *rX;
    uint32_t             preserve = *wcursor; // original instruction
    TR_ARMOpCodes        op       = currentInstruction->getOpCodeValue();
-   TR::RealRegister   *base    = self()->getBaseRegister() ? toRealRegister(self()->getBaseRegister()) : NULL;
-   int32_t              offset   = self()->getOffset();
+   TR::RealRegister   *base    = getBaseRegister() ? toRealRegister(getBaseRegister()) : NULL;
+   int32_t              offset   = getOffset();
    bool vfpInstruction = false;
 
 #if (defined(__VFP_FP__) && !defined(__SOFTFP__))
@@ -1205,11 +1205,11 @@ uint8_t *OMR::ARM::MemoryReference::encodeLargeARMConstant(uint32_t *wcursor, ui
 
    if (!vfpInstruction)
       {
-      self()->setIndexRegister(rX);
+      setIndexRegister(rX);
       }
    else
       {
-      self()->setBaseRegister(rX);
+      setBaseRegister(rX);
       }
 
    if(spillNeeded)

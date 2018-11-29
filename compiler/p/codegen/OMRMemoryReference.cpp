@@ -140,7 +140,7 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *rootLoadOrStore, uint32_t
    TR::SymbolReference *ref = rootLoadOrStore->getSymbolReference();
    TR::Symbol   *symbol = ref->getSymbol();
    bool        isStore = rootLoadOrStore->getOpCode().isStore();
-   self()->checkRegisters(cg);
+   checkRegisters(cg);
 
    TR::MethodSymbol * methodSymbol = rootLoadOrStore->getSymbol()->getMethodSymbol();
    if (rootLoadOrStore->getOpCode().isIndirect())
@@ -153,7 +153,7 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *rootLoadOrStore, uint32_t
          {
          _baseRegister = cg->getStackPointerRegister();
          _symbolReference = base->getSymbolReference();
-         self()->checkRegisters(cg);
+         checkRegisters(cg);
          _baseNode = base;
          }
       else
@@ -165,8 +165,8 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *rootLoadOrStore, uint32_t
             if (isLocalObject)
                cg->evaluate(base);
 
-            self()->setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, rootLoadOrStore, ref, isStore, false));
-            cg->addSnippet(self()->getUnresolvedSnippet());
+            setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, rootLoadOrStore, ref, isStore, false));
+            cg->addSnippet(getUnresolvedSnippet());
             }
          // if an aconst feeds a iaload, we need to load the constant
          if (base->getOpCode().isLoadConst())
@@ -177,14 +177,14 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *rootLoadOrStore, uint32_t
             {
             _baseRegister = cg->getMethodMetaDataRegister();
             }
-         self()->populateMemoryReference(base, cg);
+         populateMemoryReference(base, cg);
          }
       }
    else
       {
       if (symbol->isStatic())
          {
-         self()->accessStaticItem(rootLoadOrStore, ref, isStore, cg);
+         accessStaticItem(rootLoadOrStore, ref, isStore, cg);
          }
       else
          {
@@ -200,9 +200,9 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *rootLoadOrStore, uint32_t
       }
 
    if (TR::Compiler->target.is32Bit() || !symbol->isConstObjectRef())
-      self()->addToOffset(rootLoadOrStore, ref->getOffset(), cg);
-   if (self()->getUnresolvedSnippet() != NULL)
-      self()->adjustForResolution(cg);
+      addToOffset(rootLoadOrStore, ref->getOffset(), cg);
+   if (getUnresolvedSnippet() != NULL)
+      adjustForResolution(cg);
    // TODO: aliasing sets?
    }
 
@@ -217,7 +217,7 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *node, TR::SymbolReference
 
    if (symbol->isStatic())
       {
-      self()->accessStaticItem(node, symRef, false, cg);
+      accessStaticItem(node, symRef, false, cg);
       }
 
    if (symbol->isRegisterMappedSymbol())
@@ -233,9 +233,9 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *node, TR::SymbolReference
       }
 
    if (TR::Compiler->target.is32Bit() || !symbol->isConstObjectRef())
-      self()->addToOffset(0, symRef->getOffset(), cg);
-   if (self()->getUnresolvedSnippet() != NULL)
-      self()->adjustForResolution(cg);
+      addToOffset(0, symRef->getOffset(), cg);
+   if (getUnresolvedSnippet() != NULL)
+      adjustForResolution(cg);
    // TODO: aliasing sets?
    }
 
@@ -262,30 +262,30 @@ OMR::Power::MemoryReference::MemoryReference(TR::Node *node, TR::MemoryReference
       _unresolvedSnippet = new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, node, _symbolReference, mr.getUnresolvedSnippet()->isUnresolvedStore(), false);
       cg->addSnippet(_unresolvedSnippet);
 
-      self()->adjustForResolution(cg);
+      adjustForResolution(cg);
       }
    else
       {
       _unresolvedSnippet = NULL;
       }
-   self()->addToOffset(0, displacement, cg);
+   addToOffset(0, displacement, cg);
    }
 
 bool OMR::Power::MemoryReference::useIndexedForm()
    {
-   return((_indexRegister==NULL && !self()->isUsingDelayedIndexedForm()) ? false : true );
+   return((_indexRegister==NULL && !isUsingDelayedIndexedForm()) ? false : true );
    }
 
 bool OMR::Power::MemoryReference::isTOCAccess()
    {
    // TODO: add checking for other type of TOC usages.
-   return(self()->isUsingStaticTOC());
+   return(isUsingStaticTOC());
    }
 
 int32_t OMR::Power::MemoryReference::getTOCOffset()
    {
    // TODO: add checking for other type of TOC usages.
-   if (self()->isUsingStaticTOC())
+   if (isUsingStaticTOC())
       {
       return _symbolReference->getSymbol()->getStaticSymbol()->getTOCIndex() * sizeof(intptrj_t);
       }
@@ -298,10 +298,10 @@ void OMR::Power::MemoryReference::addToOffset(TR::Node * node, intptrj_t amount,
    // most cases is quite large
    //
    TR::Compilation *comp = cg->comp();
-   if (self()->getUnresolvedSnippet() != NULL &&
+   if (getUnresolvedSnippet() != NULL &&
          (amount > LOWER_IMMED && amount < UPPER_IMMED))
       {
-      self()->setOffset(self()->getOffset() + amount);
+      setOffset(getOffset() + amount);
       return;
       }
 
@@ -310,20 +310,20 @@ void OMR::Power::MemoryReference::addToOffset(TR::Node * node, intptrj_t amount,
 
    if (_baseRegister!=NULL && _indexRegister!=NULL)
       {
-      self()->consolidateRegisters(NULL, NULL, false, cg);
+      consolidateRegisters(NULL, NULL, false, cg);
       }
-   intptrj_t displacement = self()->getOffset() + amount;
+   intptrj_t displacement = getOffset() + amount;
    if (displacement<LOWER_IMMED || displacement>UPPER_IMMED)
       {
       TR::Register  *newBase;
       intptrj_t     upper, lower;
 
-      self()->setOffset(0);
+      setOffset(0);
       lower = displacement & 0x0000ffff;
       upper = displacement >> 16;
       if (lower & (1<<15))
          upper++;
-      if (_baseRegister!=NULL && self()->isBaseModifiable())
+      if (_baseRegister!=NULL && isBaseModifiable())
          newBase = _baseRegister;
       else
          {
@@ -367,52 +367,52 @@ void OMR::Power::MemoryReference::addToOffset(TR::Node * node, intptrj_t amount,
       // for newBase by decNodeReferenceCounts(cg);
       if (_baseRegister == newBase && _baseNode == NULL) _baseRegister = NULL;
 
-      self()->decNodeReferenceCounts(cg);
+      decNodeReferenceCounts(cg);
       _baseRegister = newBase;
       _baseNode = NULL;
-      self()->setBaseModifiable();
+      setBaseModifiable();
       }
    else
-      self()->setOffset(displacement);
+      setOffset(displacement);
    }
 
 void OMR::Power::MemoryReference::forceIndexedForm(TR::Node * node, TR::CodeGenerator *cg, TR::Instruction *cursor)
    {
-   if (self()->useIndexedForm())
+   if (useIndexedForm())
       return;  // already X-form
 
-   TR_ASSERT(!self()->isTOCAccess(), "X-form TOC access not supported");
+   TR_ASSERT(!isTOCAccess(), "X-form TOC access not supported");
 
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       // nothing to do except force an X-form at binary encoding time
-      self()->setUsingDelayedIndexedForm();
+      setUsingDelayedIndexedForm();
       return;
       }
 
-   if (self()->hasDelayedOffset())
+   if (hasDelayedOffset())
       {
-      self()->setUsingDelayedIndexedForm();
-      if (!self()->isBaseModifiable())
+      setUsingDelayedIndexedForm();
+      if (!isBaseModifiable())
          {
          _indexRegister = cg->allocateRegister();  // for encoding time use
-         self()->setIndexModifiable();
+         setIndexModifiable();
          }
       return;
       }
 
    // true displacement available now
-   intptrj_t displacement = self()->getOffset();
+   intptrj_t displacement = getOffset();
 
    if (displacement == 0)
       {
       // force use of gr0 as RA in addressing
       _indexRegister = _baseRegister;
       _indexNode = _baseNode;
-      if (self()->isBaseModifiable())
+      if (isBaseModifiable())
          {
-         self()->setIndexModifiable();
-         self()->clearBaseModifiable();
+         setIndexModifiable();
+         clearBaseModifiable();
          }
       _baseRegister = NULL;
       _baseNode = NULL;
@@ -420,7 +420,7 @@ void OMR::Power::MemoryReference::forceIndexedForm(TR::Node * node, TR::CodeGene
       }
 
    // load displacement into a register, make it the index
-   self()->setOffset(0);
+   setOffset(0);
    TR::Register  *newIndex = cg->allocateRegister();
    if (!cursor)
       cursor = cg->getAppendInstruction();
@@ -429,7 +429,7 @@ void OMR::Power::MemoryReference::forceIndexedForm(TR::Node * node, TR::CodeGene
    loadActualConstant(cg, node, displacement, newIndex, cursor);
    _indexRegister = newIndex;
    _indexNode = NULL;
-   self()->setIndexModifiable();
+   setIndexModifiable();
    cg->stopUsingRegister(newIndex);
    }
 
@@ -549,7 +549,7 @@ void OMR::Power::MemoryReference::populateMemoryReference(TR::Node *subTree, TR:
       {
       if (_baseRegister != NULL)
          {
-         self()->consolidateRegisters(cg->evaluate(subTree), subTree, false, cg);
+         consolidateRegisters(cg->evaluate(subTree), subTree, false, cg);
          }
       else
          {
@@ -567,28 +567,28 @@ void OMR::Power::MemoryReference::populateMemoryReference(TR::Node *subTree, TR:
 
          if (integerChild->getOpCode().isLoadConst())
             {
-            self()->populateMemoryReference(addressChild, cg);
+            populateMemoryReference(addressChild, cg);
             if (TR::Compiler->target.is64Bit())
                {
                intptrj_t amount = (integerChild->getOpCodeValue() == TR::iconst) ?
                                    integerChild->getInt() :
                                    integerChild->getLongInt();
-               self()->addToOffset(integerChild, amount, cg);
+               addToOffset(integerChild, amount, cg);
                }
             else
-               self()->addToOffset(subTree, integerChild->getInt(), cg);
+               addToOffset(subTree, integerChild->getInt(), cg);
             cg->decReferenceCount(integerChild);
             }
          else if (integerChild->getEvaluationPriority(cg)>addressChild->getEvaluationPriority(cg) &&
                   !(subTree->getOpCode().isArrayRef() && TR::Compiler->target.cpu.id()==TR_PPCp6))
             {
-            self()->populateMemoryReference(integerChild, cg);
-            self()->populateMemoryReference(addressChild, cg);
+            populateMemoryReference(integerChild, cg);
+            populateMemoryReference(addressChild, cg);
             }
          else
             {
-            self()->populateMemoryReference(addressChild, cg);
-            self()->populateMemoryReference(integerChild, cg);
+            populateMemoryReference(addressChild, cg);
+            populateMemoryReference(integerChild, cg);
             }
          cg->decReferenceCount(subTree);
          }
@@ -603,20 +603,20 @@ void OMR::Power::MemoryReference::populateMemoryReference(TR::Node *subTree, TR:
             //    lconst
             //    iconst(lconst)
             if (subTree->getFirstChild()->getOpCode().isLoadConst())
-               self()->addToOffset(subTree, subTree->getFirstChild()->getLongInt() << amount, cg);
+               addToOffset(subTree, subTree->getFirstChild()->getLongInt() << amount, cg);
             else
             // lshl
             //    i2l
             //       iconst
             //    iconst(lconst)
                {
-               self()->addToOffset(subTree, subTree->getFirstChild()->getFirstChild()->getInt() << amount,
+               addToOffset(subTree, subTree->getFirstChild()->getFirstChild()->getInt() << amount,
                            cg);
                cg->decReferenceCount(subTree->getFirstChild()->getFirstChild());
                }
             }
          else
-            self()->addToOffset(subTree, subTree->getFirstChild()->getInt() <<
+            addToOffset(subTree, subTree->getFirstChild()->getInt() <<
                         subTree->getSecondChild()->getInt(), cg);
          cg->decReferenceCount(subTree->getFirstChild());
          cg->decReferenceCount(subTree->getSecondChild());
@@ -627,11 +627,11 @@ void OMR::Power::MemoryReference::populateMemoryReference(TR::Node *subTree, TR:
          TR::Symbol *symbol = ref->getSymbol();
          bool       isStore = subTree->getOpCode().isStore();
          _symbolReference = ref;
-         self()->checkRegisters(cg);
+         checkRegisters(cg);
 
          if (symbol->isStatic())
             {
-            self()->accessStaticItem(subTree, ref, isStore, cg);
+            accessStaticItem(subTree, ref, isStore, cg);
             }
 
          if (symbol->isRegisterMappedSymbol())
@@ -647,7 +647,7 @@ void OMR::Power::MemoryReference::populateMemoryReference(TR::Node *subTree, TR:
                   {
                   tempReg = cg->getMethodMetaDataRegister();
                   }
-               self()->consolidateRegisters(tempReg, NULL, false, cg);
+               consolidateRegisters(tempReg, NULL, false, cg);
                }
             else
                {
@@ -663,7 +663,7 @@ void OMR::Power::MemoryReference::populateMemoryReference(TR::Node *subTree, TR:
                }
             }
          if (TR::Compiler->target.is32Bit() || !symbol->isConstObjectRef())
-            self()->addToOffset(subTree, subTree->getSymbolReference()->getOffset(), cg);
+            addToOffset(subTree, subTree->getSymbolReference()->getOffset(), cg);
          // TODO: aliasing sets?
          cg->decReferenceCount(subTree); // need to decrement ref count because
                                               // nodes weren't set on memoryreference
@@ -674,19 +674,19 @@ void OMR::Power::MemoryReference::populateMemoryReference(TR::Node *subTree, TR:
          {
          intptrj_t amount = (subTree->getOpCodeValue() == TR::iconst) ?
                              subTree->getInt() : subTree->getLongInt();
-         self()->addToOffset(subTree, amount, cg);
+         addToOffset(subTree, amount, cg);
          }
       else
          {
          if (_baseRegister != NULL)
             {
-            self()->consolidateRegisters(cg->evaluate(subTree), subTree, cg->canClobberNodesRegister(subTree), cg);
+            consolidateRegisters(cg->evaluate(subTree), subTree, cg->canClobberNodesRegister(subTree), cg);
             }
          else
             {
             _baseRegister  = cg->evaluate(subTree);
             _baseNode      = subTree;
-            if (cg->canClobberNodesRegister(subTree)) self()->setBaseModifiable();
+            if (cg->canClobberNodesRegister(subTree)) setBaseModifiable();
             }
          }
       }
@@ -700,13 +700,13 @@ void OMR::Power::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR:
 
        TR::Node *tempNode = (srcTree==NULL)?cg->getAppendInstruction()->getNode():srcTree;
 
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       if (srcReg == NULL)
          return;
       if (_indexRegister != NULL)
          {
-         if (self()->isIndexModifiable())
+         if (isIndexModifiable())
             tempTargetRegister = _indexRegister;
          else if ((srcReg && (srcReg->containsCollectedReference() || srcReg->containsInternalPointer())) ||
                   (_indexRegister && (_indexRegister->containsCollectedReference() || _indexRegister->containsInternalPointer())))
@@ -740,23 +740,23 @@ void OMR::Power::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR:
          else
             cg->stopUsingRegister(srcReg);
          _indexRegister = tempTargetRegister;
-         self()->setIndexModifiable();
+         setIndexModifiable();
          }
       else
          {
          _indexRegister = srcReg;
          _indexNode = srcTree;
          if (srcModifiable)
-            self()->setIndexModifiable();
+            setIndexModifiable();
          else
-            self()->clearIndexModifiable();
+            clearIndexModifiable();
          }
       }
    else
       {
       if (_indexRegister != NULL)
          {
-         if (self()->isBaseModifiable())
+         if (isBaseModifiable())
             tempTargetRegister = _baseRegister;
          else if ((_baseRegister && (_baseRegister->containsCollectedReference() || _baseRegister->containsInternalPointer())) ||
                   (_indexRegister && (_indexRegister->containsCollectedReference() || _indexRegister->containsInternalPointer())))
@@ -779,7 +779,7 @@ void OMR::Power::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR:
          generateTrg1Src2Instruction(cg, TR::InstOpCode::add, tempNode, tempTargetRegister, _baseRegister, _indexRegister);
          if (_baseRegister != tempTargetRegister)
             {
-            self()->decNodeReferenceCounts(cg);
+            decNodeReferenceCounts(cg);
             _baseNode = NULL;
             }
          else
@@ -790,11 +790,11 @@ void OMR::Power::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR:
                cg->stopUsingRegister(_indexRegister);
             }
          _baseRegister  = tempTargetRegister;
-         self()->setBaseModifiable();
+         setBaseModifiable();
          }
-      else if (srcReg!=NULL && (self()->getOffset(*comp)!=0 || self()->hasDelayedOffset()))
+      else if (srcReg!=NULL && (getOffset(*comp)!=0 || hasDelayedOffset()))
          {
-         if (self()->isBaseModifiable())
+         if (isBaseModifiable())
             tempTargetRegister = _baseRegister;
          else if (srcModifiable)
             tempTargetRegister = srcReg;
@@ -819,12 +819,12 @@ void OMR::Power::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR:
          generateTrg1Src2Instruction(cg, TR::InstOpCode::add, tempNode, tempTargetRegister, _baseRegister, srcReg);
          if (_baseRegister != tempTargetRegister)
             {
-            self()->decNodeReferenceCounts(cg);
+            decNodeReferenceCounts(cg);
             _baseNode = NULL;
             }
          if (srcReg == tempTargetRegister)
             {
-            self()->decNodeReferenceCounts(cg);
+            decNodeReferenceCounts(cg);
             _baseNode = srcTree;
             }
          else
@@ -835,7 +835,7 @@ void OMR::Power::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR:
                cg->stopUsingRegister(srcReg);
             }
          _baseRegister  = tempTargetRegister;
-         self()->setBaseModifiable();
+         setBaseModifiable();
          srcReg=NULL;
          srcTree=NULL;
          srcModifiable=false;
@@ -843,9 +843,9 @@ void OMR::Power::MemoryReference::consolidateRegisters(TR::Register *srcReg, TR:
       _indexRegister = srcReg;
       _indexNode = srcTree;
       if (srcModifiable)
-         self()->setIndexModifiable();
+         setIndexModifiable();
       else
-         self()->clearIndexModifiable();
+         clearIndexModifiable();
       }
    }
 
@@ -972,7 +972,7 @@ void OMR::Power::MemoryReference::assignRegisters(TR::Instruction *currentInstru
       _indexRegister = assignedIndexRegister;
       }
 
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       currentInstruction->PPCNeedsGCMap(0xFFFFFFFF);
       }
@@ -981,9 +981,9 @@ void OMR::Power::MemoryReference::assignRegisters(TR::Instruction *currentInstru
 void OMR::Power::MemoryReference::mapOpCode(TR::Instruction *currentInstruction)
    {
    TR::InstOpCode::Mnemonic op = currentInstruction->getOpCodeValue();
-   TR::Register  *index = self()->getIndexRegister();
+   TR::Register  *index = getIndexRegister();
 
-   if (index == NULL && !self()->isUsingDelayedIndexedForm())
+   if (index == NULL && !isUsingDelayedIndexedForm())
       return;
 
    switch (op)
@@ -1075,21 +1075,21 @@ uint8_t *OMR::Power::MemoryReference::generateBinaryEncoding(TR::Instruction *cu
    TR::RealRegister   *base, *index;
    TR::Compilation *comp = cg->comp();
 
-   if (self()->getStaticRelocation() != NULL)
-      self()->getStaticRelocation()->setSource2Instruction(currentInstruction);
+   if (getStaticRelocation() != NULL)
+      getStaticRelocation()->setSource2Instruction(currentInstruction);
 
-   base = (self()->getBaseRegister()==NULL)?cg->machine()->getPPCRealRegister(TR::RealRegister::gr0):toRealRegister(self()->getBaseRegister());
-   index=(self()->getIndexRegister()==NULL)?NULL:toRealRegister(self()->getIndexRegister());
+   base = (getBaseRegister()==NULL)?cg->machine()->getPPCRealRegister(TR::RealRegister::gr0):toRealRegister(getBaseRegister());
+   index=(getIndexRegister()==NULL)?NULL:toRealRegister(getIndexRegister());
 
-   if (TR::Compiler->target.is64Bit() && self()->isTOCAccess())
+   if (TR::Compiler->target.is64Bit() && isTOCAccess())
       {
       uint32_t preserve = *wcursor;
       TR::RealRegister *target = toRealRegister(currentInstruction->getMemoryDataRegister());
-      int32_t  displacement = self()->getTOCOffset();
+      int32_t  displacement = getTOCOffset();
       int32_t  lower = LO_VALUE(displacement) & 0x0000ffff;
       int32_t  upper = cg->hiValue(displacement) & 0x0000ffff;
 
-      if (self()->getUnresolvedSnippet() != NULL)
+      if (getUnresolvedSnippet() != NULL)
          {
 #ifdef J9_PROJECT_SPECIFIC
          getUnresolvedSnippet()->setAddressOfDataReference(cursor);
@@ -1139,12 +1139,12 @@ uint8_t *OMR::Power::MemoryReference::generateBinaryEncoding(TR::Instruction *cu
          }
       else
          {
-         TR::Symbol *symbol = self()->getSymbolReference()->getSymbol();
+         TR::Symbol *symbol = getSymbolReference()->getSymbol();
          uint64_t addr = symbol->isStatic()?(uint64_t)symbol->getStaticSymbol()->getStaticAddress():
                                             (uint64_t)symbol->getMethodSymbol()->getMethodAddress();
          if (displacement != PTOC_FULL_INDEX)
             {
-            if (!self()->getSymbolReference()->isUnresolved() && TR_PPCTableOfConstants::getTOCSlot(displacement) == 0)
+            if (!getSymbolReference()->isUnresolved() && TR_PPCTableOfConstants::getTOCSlot(displacement) == 0)
                {
                TR_PPCTableOfConstants::setTOCSlot(displacement, addr);
                }
@@ -1175,7 +1175,7 @@ uint8_t *OMR::Power::MemoryReference::generateBinaryEncoding(TR::Instruction *cu
                   (TR_RelocationRecordInformation*)comp->trMemory()->allocateMemory(
                      sizeof(TR_RelocationRecordInformation),
                      heapAlloc);
-               recordInfo->data1 = (uintptr_t)self()->getSymbolReference();
+               recordInfo->data1 = (uintptr_t)getSymbolReference();
                recordInfo->data2 = node == NULL ? -1 : node->getInlinedSiteIndex();
                recordInfo->data3 = fixedSequence1;
                cg->addExternalRelocation(
@@ -1231,7 +1231,7 @@ uint8_t *OMR::Power::MemoryReference::generateBinaryEncoding(TR::Instruction *cu
       return(cursor);
       }
 
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
 #ifdef J9_PROJECT_SPECIFIC
       uint32_t preserve = *wcursor;
@@ -1283,9 +1283,9 @@ uint8_t *OMR::Power::MemoryReference::generateBinaryEncoding(TR::Instruction *cu
 
    if (index != NULL)
       {
-      if (self()->isUsingDelayedIndexedForm())
+      if (isUsingDelayedIndexedForm())
          {
-         int32_t  displacement = self()->getOffset(*comp);
+         int32_t  displacement = getOffset(*comp);
          if (displacement<LOWER_IMMED || displacement>UPPER_IMMED)
             {
             uint32_t preserve = *wcursor;
@@ -1333,12 +1333,12 @@ uint8_t *OMR::Power::MemoryReference::generateBinaryEncoding(TR::Instruction *cu
       }
    else
       {
-      int32_t  displacement = self()->getOffset(*comp);
+      int32_t  displacement = getOffset(*comp);
       uint32_t preserve = *wcursor;
       int32_t  lower = LO_VALUE(displacement) & 0x0000ffff;
       int32_t  upper = cg->hiValue(displacement) & 0x0000ffff;
 
-      if (self()->isUsingDelayedIndexedForm())
+      if (isUsingDelayedIndexedForm())
          {
          // must be isBaseModifiable()
          if (displacement<LOWER_IMMED || displacement>UPPER_IMMED)
@@ -1368,9 +1368,9 @@ uint8_t *OMR::Power::MemoryReference::generateBinaryEncoding(TR::Instruction *cu
          base->setRegisterFieldRB(wcursor);
          }
       else if (displacement<LOWER_IMMED || displacement>UPPER_IMMED ||
-               (self()->offsetRequireWordAlignment() && (displacement & 3 != 0)))
+               (offsetRequireWordAlignment() && (displacement & 3 != 0)))
          {
-         if (self()->isBaseModifiable())
+         if (isBaseModifiable())
             {
             *wcursor = 0x3c000000 | upper;
             base->setRegisterFieldRT(wcursor);
@@ -1443,9 +1443,9 @@ static TR::RealRegister::RegNum choose_rX(TR::Instruction *currentInstruction, T
 uint32_t OMR::Power::MemoryReference::estimateBinaryLength(TR::CodeGenerator& codeGen)
    {
    TR::Compilation *comp = codeGen.comp();
-   if (self()->isTOCAccess())
+   if (isTOCAccess())
       {
-      int32_t tocOffset = self()->getTOCOffset();
+      int32_t tocOffset = getTOCOffset();
       if (tocOffset == PTOC_FULL_INDEX)
          return(5*PPC_INSTRUCTION_LENGTH);
       if (tocOffset<LOWER_IMMED || tocOffset>UPPER_IMMED)
@@ -1453,9 +1453,9 @@ uint32_t OMR::Power::MemoryReference::estimateBinaryLength(TR::CodeGenerator& co
       return(PPC_INSTRUCTION_LENGTH);
       }
 
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
-      if (_indexRegister != NULL || self()->isUsingDelayedIndexedForm())
+      if (_indexRegister != NULL || isUsingDelayedIndexedForm())
          {
          return(3*PPC_INSTRUCTION_LENGTH);
          }
@@ -1467,13 +1467,13 @@ uint32_t OMR::Power::MemoryReference::estimateBinaryLength(TR::CodeGenerator& co
 
    if (_indexRegister != NULL)
       {
-      if (self()->isUsingDelayedIndexedForm())
+      if (isUsingDelayedIndexedForm())
          {
-         if (self()->getOffset(*comp)<LOWER_IMMED || self()->getOffset(*comp)>UPPER_IMMED)
+         if (getOffset(*comp)<LOWER_IMMED || getOffset(*comp)>UPPER_IMMED)
             {
             return(3*PPC_INSTRUCTION_LENGTH);
             }
-         else if (self()->getOffset(*comp) != 0)
+         else if (getOffset(*comp) != 0)
             {
             return(2*PPC_INSTRUCTION_LENGTH);
             }
@@ -1482,21 +1482,21 @@ uint32_t OMR::Power::MemoryReference::estimateBinaryLength(TR::CodeGenerator& co
       }
    else
       {
-      if (self()->isUsingDelayedIndexedForm())
+      if (isUsingDelayedIndexedForm())
          {
          // must be isBaseModifiable()
-         if (self()->getOffset(*comp)<LOWER_IMMED || self()->getOffset(*comp)>UPPER_IMMED)
+         if (getOffset(*comp)<LOWER_IMMED || getOffset(*comp)>UPPER_IMMED)
             {
             return(3*PPC_INSTRUCTION_LENGTH);
             }
-         else if (self()->getOffset(*comp) != 0)
+         else if (getOffset(*comp) != 0)
             {
             return(2*PPC_INSTRUCTION_LENGTH);
             }
          }
-      if (self()->getOffset(*comp)<LOWER_IMMED || self()->getOffset(*comp)>UPPER_IMMED)
+      if (getOffset(*comp)<LOWER_IMMED || getOffset(*comp)>UPPER_IMMED)
          {
-         if (self()->isBaseModifiable())
+         if (isBaseModifiable())
             {
             return(2*PPC_INSTRUCTION_LENGTH);
             }
@@ -1643,7 +1643,7 @@ void OMR::Power::MemoryReference::accessStaticItem(TR::Node *node, TR::SymbolRef
       if (snippet != NULL)
          cg->stopUsingRegister(tocRef->getModBase());
       _baseRegister = addrReg;
-      self()->setBaseModifiable();
+      setBaseModifiable();
       }
    else
       {
@@ -1693,8 +1693,8 @@ void OMR::Power::MemoryReference::accessStaticItem(TR::Node *node, TR::SymbolRef
             }
          else if (ref->isUnresolved() || useUnresSnippetToAvoidRelo)
             {
-            self()->setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, node, ref, isStore, false));
-            cg->addSnippet(self()->getUnresolvedSnippet());
+            setUnresolvedSnippet(new (cg->trHeapMemory()) TR::UnresolvedDataSnippet(cg, node, ref, isStore, false));
+            cg->addSnippet(getUnresolvedSnippet());
             return;
             }
          }
@@ -1716,9 +1716,9 @@ void OMR::Power::MemoryReference::accessStaticItem(TR::Node *node, TR::SymbolRef
          return;
          }
 
-      self()->setBaseModifiable();
+      setBaseModifiable();
       rel1 = generateTrg1ImmInstruction(cg, TR::InstOpCode::lis, node, reg, cg->hiValue(addr)&0x0000ffff);
-      self()->addToOffset(node, LO_VALUE(addr), cg);
+      addToOffset(node, LO_VALUE(addr), cg);
 
       if (comp->compileRelocatableCode())
          {
@@ -1733,7 +1733,7 @@ void OMR::Power::MemoryReference::accessStaticItem(TR::Node *node, TR::SymbolRef
          recordInfo->data3 = orderedPairSequence1;
          staticRelocation = new (cg->trHeapMemory()) TR::PPCPairedRelocation(rel1, NULL, (uint8_t *)recordInfo, TR_ClassAddress, node);
          cg->getAheadOfTimeCompile()->getRelocationList().push_front(staticRelocation);
-         self()->setStaticRelocation(staticRelocation);
+         setStaticRelocation(staticRelocation);
          }
       }
    }
@@ -1746,9 +1746,9 @@ OMR::Power::MemoryReference::setOffsetRequiresWordAlignment(
       TR::Instruction *cursor)
    {
    _flag |=  TR_PPCMemoryReferenceControl_OffsetRequiresWordAlignment;
-   if (self()->getOffset() & 0x3)
+   if (getOffset() & 0x3)
       {
-      self()->forceIndexedForm(node, cg, cursor);
+      forceIndexedForm(node, cg, cursor);
       }
    }
 
@@ -1761,9 +1761,9 @@ OMR::Power::MemoryReference::setSymbol(
    _symbolReference->setSymbol(symbol);
 
    if (_baseRegister!=NULL && _indexRegister!=NULL &&
-       (self()->hasDelayedOffset() || self()->getOffset(*cg->comp())!=0))
+       (hasDelayedOffset() || getOffset(*cg->comp())!=0))
       {
-      self()->consolidateRegisters(NULL, NULL, false, cg);
+      consolidateRegisters(NULL, NULL, false, cg);
       }
    }
 
@@ -1771,8 +1771,8 @@ void
 OMR::Power::MemoryReference::checkRegisters(TR::CodeGenerator *cg)
    {
    if (_baseRegister!=NULL && _indexRegister!=NULL &&
-       (self()->hasDelayedOffset() || self()->getOffset(*cg->comp())!=0))
+       (hasDelayedOffset() || getOffset(*cg->comp())!=0))
       {
-      self()->consolidateRegisters(NULL, NULL, false, cg);
+      consolidateRegisters(NULL, NULL, false, cg);
       }
    }

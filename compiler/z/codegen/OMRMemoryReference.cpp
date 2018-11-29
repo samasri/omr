@@ -100,7 +100,7 @@ void OMR::Z::MemoryReference::setupCausesImplicitNullPointerException(TR::CodeGe
       if (cg->getSupportsImplicitNullChecks() &&
          cg->getCurrentEvaluationTreeTop()->getNode()->getOpCode().isNullCheck())
          {
-         self()->setCausesImplicitNullPointerException();
+         setCausesImplicitNullPointerException();
          }
    }
 
@@ -117,15 +117,15 @@ void OMR::Z::MemoryReference::addToTemporaryNegativeOffset(TR::Node *node, int32
       {
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"\taddToTemporaryNegativeOffset : %s (%p) new offset %d, existing mr offset %d (existing mr hasTempNegOffset = %s)\n",
-            node?node->getOpCode().getName():"NULL",node,offset,self()->getOffset(),self()->hasTemporaryNegativeOffset()?"yes":"no");
-      if (self()->getOffset() < 0 && !self()->hasTemporaryNegativeOffset()) // if there is a 'real' negative offset then deal with this first before adding in the temporary negative offset
+            node?node->getOpCode().getName():"NULL",node,offset,getOffset(),hasTemporaryNegativeOffset()?"yes":"no");
+      if (getOffset() < 0 && !hasTemporaryNegativeOffset()) // if there is a 'real' negative offset then deal with this first before adding in the temporary negative offset
          {
          if (cg->traceBCDCodeGen())
-            traceMsg(comp,"\t\texisting mr->offset %d < 0 so call enforceSSFormatLimits to clear this up before setting HasTemporaryNegativeOffset\n",self()->getOffset());
-         self()->enforceSSFormatLimits(node, cg, NULL);  // call SSFormatLimits to also take this chance to fold in an index register if needed
+            traceMsg(comp,"\t\texisting mr->offset %d < 0 so call enforceSSFormatLimits to clear this up before setting HasTemporaryNegativeOffset\n",getOffset());
+         enforceSSFormatLimits(node, cg, NULL);  // call SSFormatLimits to also take this chance to fold in an index register if needed
          }
-      self()->addToOffset(offset);
-      self()->setHasTemporaryNegativeOffset();
+      addToOffset(offset);
+      setHasTemporaryNegativeOffset();
       }
    }
 
@@ -138,7 +138,7 @@ void OMR::Z::MemoryReference::setupCheckForLongDispFlag(TR::CodeGenerator *cg)
    // Enable a check for the long disp slot in generateBin phase
    if (cg->getCodeGeneratorPhase() == TR::CodeGenPhase::InstructionSelectionPhase)
       {
-      self()->setCheckForLongDispSlot();
+      setCheckForLongDispSlot();
       }
    }
 
@@ -259,7 +259,7 @@ bool OMR::Z::MemoryReference::setForceFoldingIfAdvantageous(TR::CodeGenerator * 
                   addressChild->getOpCode().getName(), addressChild);
          }
       cg->evaluate(addressChild->getFirstChild());
-      self()->setForceFolding();
+      setForceFolding();
       return true;
       }
 
@@ -275,7 +275,7 @@ bool OMR::Z::MemoryReference::setForceFoldingIfAdvantageous(TR::CodeGenerator * 
                   addressChild->getOpCode().getName(), addressChild);
          }
       cg->evaluate(addressChild->getFirstChild());
-      self()->setForceFolding();
+      setForceFolding();
       return true;
       }
 
@@ -317,7 +317,7 @@ bool OMR::Z::MemoryReference::setForceFoldingIfAdvantageous(TR::CodeGenerator * 
                   addressChild->getSecondChild()->get64bitIntegralValue(),
                   "setForceFirstTimeFolding");
          }
-      self()->setForceFirstTimeFolding(); // e.g. fold the top level add but not anything below the add
+      setForceFirstTimeFolding(); // e.g. fold the top level add but not anything below the add
       return true;
       }
 
@@ -358,7 +358,7 @@ bool OMR::Z::MemoryReference::setForceFoldingIfAdvantageous(TR::CodeGenerator * 
          traceMsg(comp," inside setForceFoldingIfAdvantageous, eventualNonConversion %s (%p) has no register and refCount==1 and is a aload+const so setForceFolding=true\n",
                   eventualNonConversion->getOpCode().getName(),eventualNonConversion);
          }
-      self()->setForceFolding();
+      setForceFolding();
       return true;
       }
    else // if (eventualNonConversion->getReferenceCount() == 1)
@@ -382,7 +382,7 @@ bool OMR::Z::MemoryReference::setForceFoldingIfAdvantageous(TR::CodeGenerator * 
                   eventualNonConversion->getOpCode().getName(),eventualNonConversion,
                   eventualNonConversion->getFirstChild()->getOpCode().getName(),eventualNonConversion->getFirstChild());
          }
-      self()->setForceFolding();
+      setForceFolding();
       cg->evaluate(addressChild->getFirstChild());
       return true;
       }
@@ -493,25 +493,25 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
       }
 
    // Enable a check for the long disp slot in generateBin phase
-   self()->setupCheckForLongDispFlag(cg);
+   setupCheckForLongDispFlag(cg);
 
-   self()->setupCausesImplicitNullPointerException(cg);
+   setupCausesImplicitNullPointerException(cg);
 
    _targetSnippetInstruction = NULL;
 
    TR_ASSERT(_incrementedNodesList.getHeadData() == 0,
               "_incrementedNodesList size is not zero at beginning of OMR::Z::MemoryReference constructor!");
 
-   self()->tryForceFolding(rootLoadOrStore, cg, storageReference, symRef, symbol, nodesAlreadyEvaluatedBeforeFoldingList);
+   tryForceFolding(rootLoadOrStore, cg, storageReference, symRef, symbol, nodesAlreadyEvaluatedBeforeFoldingList);
 
-   if (rootLoadOrStore->getOpCode().isIndirect() || self()->isExposedConstantAddressing())
+   if (rootLoadOrStore->getOpCode().isIndirect() || isExposedConstantAddressing())
       {
       TR::Node * subTree = rootLoadOrStore->getFirstChild();
 
       if (subTree->getOpCodeValue() == TR::aconst)
          {
-         if (!self()->ZeroBasePtr_EvaluateSubtree(subTree, cg, this))
-            self()->setBaseRegister(cg->evaluate(subTree), cg);
+         if (!ZeroBasePtr_EvaluateSubtree(subTree, cg, this))
+            setBaseRegister(cg->evaluate(subTree), cg);
          _baseNode = subTree;
          cg->decReferenceCount(subTree);
          }
@@ -521,10 +521,10 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
          bool tryBID = (addressChild->getOpCodeValue() == TR::aiadd ||
                         addressChild->getOpCodeValue() == TR::aladd) &&
                        _baseRegister == NULL && _indexRegister == NULL &&
-                       self()->tryBaseIndexDispl(cg, rootLoadOrStore, addressChild);
+                       tryBaseIndexDispl(cg, rootLoadOrStore, addressChild);
          if (!tryBID)
             {
-            self()->populateMemoryReference(subTree, cg);
+            populateMemoryReference(subTree, cg);
             recursivelyDecrementIncrementedNodesIfUnderRegister(cg, subTree, _incrementedNodesList, nodesAlreadyEvaluatedBeforeFoldingList, comp->incOrResetVisitCount(), false);
             cg->decReferenceCount(subTree);
             }
@@ -544,7 +544,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
             }
          return;
          }
-      if ((symbol && symbol->isStatic()) && symRef && symRef->isFromLiteralPool() && !self()->isExposedConstantAddressing())
+      if ((symbol && symbol->isStatic()) && symRef && symRef->isFromLiteralPool() && !isExposedConstantAddressing())
          {
          TR_ASSERT(cg->supportsOnDemandLiteralPool() == true, "May not be here with Literal Pool On Demand disabled\n");
 
@@ -565,7 +565,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
                targetsnippet = cg->findOrCreate4ByteConstant(0, staticAddressValue);
                }
 
-            self()->initSnippetPointers(targetsnippet, cg);
+            initSnippetPointers(targetsnippet, cg);
             }
          if (alloc)
             {
@@ -589,7 +589,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
           !canUseRX &&
           (storageReference == NULL))
          {
-         self()->separateIndexRegister(rootLoadOrStore, cg, false, NULL); // enforce4KDisplacementLimit=false
+         separateIndexRegister(rootLoadOrStore, cg, false, NULL); // enforce4KDisplacementLimit=false
          }
       }
    else
@@ -614,16 +614,16 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
                   tempReg = cg->allocate64bitRegister();
                else
                   tempReg = cg->allocateRegister();
-               self()->setBaseRegister(tempReg, cg);
+               setBaseRegister(tempReg, cg);
                cg->stopUsingRegister(_baseRegister);
                _baseNode = NULL;
                }
             else
                {
                if (symbol && symbol->isMethodMetaData())
-                  self()->setBaseRegister(cg->getMethodMetaDataRealRegister(), cg);
+                  setBaseRegister(cg->getMethodMetaDataRealRegister(), cg);
                else
-                  self()->setBaseRegister(tempReg, cg);
+                  setBaseRegister(tempReg, cg);
                }
             genLoadAddressConstant(cg, rootLoadOrStore, (uintptrj_t) symRef->getSymbol()->getStaticSymbol()->getStaticAddress(),
                _baseRegister);
@@ -638,7 +638,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
             //
             // for example, calling generateMemoryReference([node], cg) on an aiadd node will arrive here.
 
-            self()->populateMemoryReference(rootLoadOrStore, cg);
+            populateMemoryReference(rootLoadOrStore, cg);
             if (alloc)
                {
                cg->stopUsingRegister(tempReg);
@@ -652,7 +652,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
             //TR_ASSERT(rootLoadOrStore->getDataType() == TR::Address,
             //   "rootLoadOrStore %s %p should be an address type and not dt %d\n",rootLoadOrStore->getOpCode().getName(),rootLoadOrStore,rootLoadOrStore->getDataType());
 
-            self()->populateThroughEvaluation(rootLoadOrStore, cg);
+            populateThroughEvaluation(rootLoadOrStore, cg);
             if (alloc)
                {
                cg->stopUsingRegister(tempReg);
@@ -666,12 +666,12 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
          if (symbol && !symbol->isMethodMetaData())
             {
             // auto or parm is on stack
-            self()->setBaseRegister(cg->getStackPointerRealRegister(symbol), cg);
+            setBaseRegister(cg->getStackPointerRealRegister(symbol), cg);
             }
          else
             {
             // meta data
-            self()->setBaseRegister(cg->getMethodMetaDataRealRegister(), cg);
+            setBaseRegister(cg->getMethodMetaDataRealRegister(), cg);
             }
 
          _baseNode = NULL;
@@ -682,19 +682,19 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * rootLoadOrStore, TR::CodeGen
    if (symRef && symRef->isLiteralPoolAddress())
       {
       TR_ASSERT(cg->supportsOnDemandLiteralPool() == true, "May not be here with Literal Pool On Demand disabled\n");
-      TR::S390ConstantDataSnippet * targetsnippet = self()->createLiteralPoolSnippet(rootLoadOrStore, cg);
+      TR::S390ConstantDataSnippet * targetsnippet = createLiteralPoolSnippet(rootLoadOrStore, cg);
 
-      self()->initSnippetPointers(targetsnippet, cg);
+      initSnippetPointers(targetsnippet, cg);
       }
    else
       {
-      if (self()->getUnresolvedSnippet() == NULL)
+      if (getUnresolvedSnippet() == NULL)
          {
          if (symRef)
             _offset += symRef->getOffset();
          }
 
-      self()->enforceDisplacementLimit(rootLoadOrStore, cg, NULL);
+      enforceDisplacementLimit(rootLoadOrStore, cg, NULL);
       }
    if (alloc)
       {
@@ -747,7 +747,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node *addressChild, bool canUseInde
    _symbolReference = new (cg->trHeapMemory()) TR::SymbolReference(cg->comp()->getSymRefTab());
    _originalSymbolReference = _symbolReference;
    _listingSymbolReference = _symbolReference;
-   self()->setupCausesImplicitNullPointerException(cg);
+   setupCausesImplicitNullPointerException(cg);
    }
 
 TR::S390ConstantDataSnippet *
@@ -767,20 +767,20 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * node, TR::SymbolReference * 
    TR::Compilation *comp = cg->comp();
 
    // Enable a check for the long disp slot in generateBin phase
-   self()->setupCheckForLongDispFlag(cg);
+   setupCheckForLongDispFlag(cg);
 
-   self()->setupCausesImplicitNullPointerException(cg);
+   setupCausesImplicitNullPointerException(cg);
 
    if (symbol->isRegisterMappedSymbol())
       {
       // must be either auto, parm, meta or error.
       if (!symbol->isMethodMetaData())
          {
-         self()->setBaseRegister(cg->getStackPointerRealRegister(symbol), cg);
+         setBaseRegister(cg->getStackPointerRealRegister(symbol), cg);
          }
       else
          {
-         self()->setBaseRegister(cg->getMethodMetaDataRealRegister(), cg);
+         setBaseRegister(cg->getMethodMetaDataRealRegister(), cg);
          }
       _baseNode = NULL;
       }
@@ -790,7 +790,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * node, TR::SymbolReference * 
       createUnresolvedSnippetWithNodeRegister(node, cg, symRef, writableLiteralPoolRegister);
       }
 
-   if (_baseNode != NULL && _baseNode->getOpCodeValue() == TR::loadaddr && self()->getUnresolvedSnippet() != NULL)
+   if (_baseNode != NULL && _baseNode->getOpCodeValue() == TR::loadaddr && getUnresolvedSnippet() != NULL)
       {
       createUnresolvedDataSnippetForBaseNode(cg, writableLiteralPoolRegister);
       }
@@ -799,7 +799,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * node, TR::SymbolReference * 
    _symbolReference = symRef;
    _originalSymbolReference = symRef;
    _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(symRef, cg)? symRef : NULL;
-   if (self()->getUnresolvedSnippet() == NULL)
+   if (getUnresolvedSnippet() == NULL)
       {
       _offset = symRef->getOffset();
       }
@@ -808,7 +808,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Node * node, TR::SymbolReference * 
       _offset = 0;
       }
 
-   self()->enforceDisplacementLimit(node, cg, NULL);
+   enforceDisplacementLimit(node, cg, NULL);
    // TODO: aliasing sets?
    }
 
@@ -817,13 +817,13 @@ OMR::Z::MemoryReference::initSnippetPointers(TR::Snippet * s, TR::CodeGenerator 
    {
    if (s->getKind() == TR::Snippet::IsUnresolvedData)
       {
-      self()->setUnresolvedSnippet((TR::UnresolvedDataSnippet *) s);
+      setUnresolvedSnippet((TR::UnresolvedDataSnippet *) s);
       }
    else if (s->getKind() == TR::Snippet::IsWritableData ||
             s->getKind() == TR::Snippet::IsConstantInstruction ||
             s->getKind() == TR::Snippet::IsConstantData)
       {
-      self()->setConstantDataSnippet((TR::S390ConstantDataSnippet *) s);
+      setConstantDataSnippet((TR::S390ConstantDataSnippet *) s);
       }
    }
 
@@ -837,12 +837,12 @@ OMR::Z::MemoryReference::MemoryReference(TR::Snippet * s, TR::Register * indx, i
    _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
 
    // Enable a check for the long disp slot in generateBin phase
-   self()->setupCheckForLongDispFlag(cg);
+   setupCheckForLongDispFlag(cg);
 
-   self()->setupCausesImplicitNullPointerException(cg);
+   setupCausesImplicitNullPointerException(cg);
 
-   self()->setBaseRegister(cg->getLitPoolRealRegister(), cg);
-   self()->initSnippetPointers(s, cg);
+   setBaseRegister(cg->getLitPoolRealRegister(), cg);
+   initSnippetPointers(s, cg);
    }
 
 OMR::Z::MemoryReference::MemoryReference(TR::Snippet * s, TR::CodeGenerator * cg, TR::Register * base, TR::Node * node)
@@ -859,13 +859,13 @@ OMR::Z::MemoryReference::MemoryReference(TR::Snippet * s, TR::CodeGenerator * cg
    _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
 
    // Enable a check for the long disp slot in generateBin phase
-   self()->setupCheckForLongDispFlag(cg);
+   setupCheckForLongDispFlag(cg);
 
-   self()->setupCausesImplicitNullPointerException(cg);
+   setupCausesImplicitNullPointerException(cg);
 
    if (base)
       {
-      self()->setBaseRegister(base, cg);
+      setBaseRegister(base, cg);
       //TR_ASSERT(cg->supportsOnDemandLiteralPool()==true, "May not be here with Literal Pool On Demand disabled\n");
       }
    else
@@ -873,19 +873,19 @@ OMR::Z::MemoryReference::MemoryReference(TR::Snippet * s, TR::CodeGenerator * cg
       if (cg->isLiteralPoolOnDemandOn())
          {
          if (TR::Compiler->target.is64Bit())
-            self()->setBaseRegister(cg->allocate64bitRegister(), cg);
+            setBaseRegister(cg->allocate64bitRegister(), cg);
          else
-            self()->setBaseRegister(cg->allocateRegister(), cg);
+            setBaseRegister(cg->allocateRegister(), cg);
          generateLoadLiteralPoolAddress(cg, node, _baseRegister);
          cg->stopUsingRegister(_baseRegister);
          }
       else
          {
-         self()->setBaseRegister(cg->getLitPoolRealRegister(), cg);
+         setBaseRegister(cg->getLitPoolRealRegister(), cg);
          }
       }
 
-   self()->initSnippetPointers(s, cg);
+   initSnippetPointers(s, cg);
    }
 
 OMR::Z::MemoryReference::MemoryReference(int32_t           disp,
@@ -911,7 +911,7 @@ OMR::Z::MemoryReference::MemoryReference(int32_t           disp,
      _symbolReference = new (cg->trHeapMemory()) TR::SymbolReference(comp->getSymRefTab());
      _originalSymbolReference = _symbolReference;
      _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
-     self()->setupCausesImplicitNullPointerException(cg);
+     setupCausesImplicitNullPointerException(cg);
      }
   }
 
@@ -935,7 +935,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::CodeGenerator *cg) :
   _originalSymbolReference = _symbolReference;
   _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
   _offset = _symbolReference->getOffset();
-  self()->setupCausesImplicitNullPointerException(cg);
+  setupCausesImplicitNullPointerException(cg);
   }
 
 OMR::Z::MemoryReference::MemoryReference(TR::Register      *br,
@@ -960,7 +960,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Register      *br,
   _symbolReference = new (cg->trHeapMemory()) TR::SymbolReference(cg->comp()->getSymRefTab());
   _originalSymbolReference = _symbolReference;
   _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
-  self()->setupCausesImplicitNullPointerException(cg);
+  setupCausesImplicitNullPointerException(cg);
 
   }
 
@@ -986,7 +986,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Register      *br,
   {
   _originalSymbolReference = _symbolReference;
   _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
-  self()->setupCausesImplicitNullPointerException(cg);
+  setupCausesImplicitNullPointerException(cg);
 
   }
 
@@ -1012,7 +1012,7 @@ OMR::Z::MemoryReference::MemoryReference(TR::Register      *br,
   _symbolReference = new (cg->trHeapMemory()) TR::SymbolReference(cg->comp()->getSymRefTab());
   _originalSymbolReference = _symbolReference;
   _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
-  self()->setupCausesImplicitNullPointerException(cg);
+  setupCausesImplicitNullPointerException(cg);
 
   }
 
@@ -1033,8 +1033,8 @@ OMR::Z::MemoryReference::MemoryReference(MemoryReference& mr, int32_t n, TR::Cod
    _leftMostByte      = mr._leftMostByte;
    _flags             = mr._flags;
    _name              = mr._name;
-   self()->resetIs2ndMemRef();
-   self()->resetMemRefUsedBefore();
+   resetIs2ndMemRef();
+   resetMemRefUsedBefore();
    }
 
 /**
@@ -1044,26 +1044,26 @@ OMR::Z::MemoryReference::MemoryReference(MemoryReference& mr, int32_t n, TR::Cod
 TR::UnresolvedDataSnippet *
 OMR::Z::MemoryReference::getUnresolvedSnippet()
    {
-   return self()->isUnresolvedDataSnippet() ? (TR::UnresolvedDataSnippet *)_targetSnippet : NULL;
+   return isUnresolvedDataSnippet() ? (TR::UnresolvedDataSnippet *)_targetSnippet : NULL;
    }
 
 TR::UnresolvedDataSnippet *
 OMR::Z::MemoryReference::setUnresolvedSnippet(TR::UnresolvedDataSnippet *s)
    {
-   self()->setUnresolvedDataSnippet();
+   setUnresolvedDataSnippet();
    return (TR::UnresolvedDataSnippet *) (_targetSnippet = (TR::Snippet *) s);
    }
 
 TR::S390ConstantDataSnippet *
 OMR::Z::MemoryReference::getConstantDataSnippet()
    {
-   return self()->isConstantDataSnippet() ? (TR::S390ConstantDataSnippet *)_targetSnippet : NULL;
+   return isConstantDataSnippet() ? (TR::S390ConstantDataSnippet *)_targetSnippet : NULL;
    }
 
 TR::S390ConstantDataSnippet *
 OMR::Z::MemoryReference::setConstantDataSnippet(TR::S390ConstantDataSnippet *s)
    {
-   self()->setConstantDataSnippet();
+   setConstantDataSnippet();
    return (TR::S390ConstantDataSnippet *) (_targetSnippet = s);
    }
 
@@ -1073,13 +1073,13 @@ OMR::Z::MemoryReference::setLeftAlignMemRef(int32_t leftMostByte)
    TR_ASSERT(leftMostByte > 0,"invalid leftMostByte of %d provided in setLeftAlignMemRef()\n");
     _flags.reset(TR_S390MemRef_RightAlignMemRef);
     _flags.set(TR_S390MemRef_LeftAlignMemRef);
-   self()->setLeftMostByte(leftMostByte);
+   setLeftMostByte(leftMostByte);
    }
 
 bool
 OMR::Z::MemoryReference::isAligned()
    {
-   return self()->rightAlignMemRef() || self()->leftAlignMemRef();
+   return rightAlignMemRef() || leftAlignMemRef();
    }
 
 void
@@ -1309,7 +1309,7 @@ OMR::Z::MemoryReference::populateAddTree(TR::Node * subTree, TR::CodeGenerator *
        (integerChild->getOpCodeValue() != TR::lconst) ||
        (integerChild->getLongInt() != TR::Compiler->vm.heapBaseAddress())))
       {
-      self()->populateMemoryReference(addressChild, cg);
+      populateMemoryReference(addressChild, cg);
       if ((subTree->getOpCodeValue() != TR::iadd) && (subTree->getOpCodeValue() != TR::aiadd) &&
           (subTree->getOpCodeValue() != TR::iuadd) && (subTree->getOpCodeValue() != TR::aiuadd) &&
           (subTree->getOpCodeValue() != TR::isub))
@@ -1370,7 +1370,7 @@ OMR::Z::MemoryReference::populateAddTree(TR::Node * subTree, TR::CodeGenerator *
             // not necessary to sign extend explicitly anymore due to aladd
             // when aladd is tested, remove the explicit sign extension code below
 
-            self()->setBaseRegister(cg->evaluate(addressChild), cg);
+            setBaseRegister(cg->evaluate(addressChild), cg);
             _offset -= value;
 
             if (firstSubChild->getReferenceCount() > 1)
@@ -1395,17 +1395,17 @@ OMR::Z::MemoryReference::populateAddTree(TR::Node * subTree, TR::CodeGenerator *
 
    if (!memRefPopulated && (integerChild->getEvaluationPriority(cg) > addressChild->getEvaluationPriority(cg)))
       {
-      self()->populateMemoryReference(addressChild, cg);
-      self()->populateMemoryReference(integerChild, cg);
+      populateMemoryReference(addressChild, cg);
+      populateMemoryReference(integerChild, cg);
       }
    else if (!memRefPopulated)
       {
-      self()->populateMemoryReference(addressChild, cg);
+      populateMemoryReference(addressChild, cg);
       if (_baseRegister != NULL && _indexRegister != NULL)
          {
-         self()->consolidateRegisters(subTree, cg);
+         consolidateRegisters(subTree, cg);
          }
-      self()->populateMemoryReference(integerChild, cg);
+      populateMemoryReference(integerChild, cg);
       }
 
    if ((integerChild->getOpCodeValue() == TR::isub || integerChild->getOpCodeValue() == TR::lsub))
@@ -1444,11 +1444,11 @@ OMR::Z::MemoryReference::populateShiftLeftTree(TR::Node * subTree, TR::CodeGener
       {
       if (_baseRegister != NULL)
          {
-         self()->consolidateRegisters(subTree, cg);
+         consolidateRegisters(subTree, cg);
          }
       else
          {
-         self()->setBaseRegister(_indexRegister, cg);
+         setBaseRegister(_indexRegister, cg);
          _baseNode = _indexNode;
          }
       }
@@ -1463,7 +1463,7 @@ OMR::Z::MemoryReference::populateShiftLeftTree(TR::Node * subTree, TR::CodeGener
       if (firstRegister && !_baseRegister && !_indexRegister)
          {
          strengthReducedShift = true;
-         self()->setBaseRegister(firstRegister, cg);
+         setBaseRegister(firstRegister, cg);
          _baseNode = firstChild;
          _indexRegister = firstRegister;
          _indexNode = firstChild;
@@ -1494,16 +1494,16 @@ OMR::Z::MemoryReference::populateAloadTree(TR::Node * subTree, TR::CodeGenerator
          {
          if (_indexRegister != NULL)
             {
-            self()->consolidateRegisters(subTree, cg);
+            consolidateRegisters(subTree, cg);
             }
          // switch base and index registers
          _indexRegister = _baseRegister;
-         self()->setBaseRegister(addReg, cg);
+         setBaseRegister(addReg, cg);
          _indexNode = NULL;
          }
       else
          {
-         self()->setBaseRegister(addReg, cg);
+         setBaseRegister(addReg, cg);
          _baseNode = NULL;
          }
       }
@@ -1544,16 +1544,16 @@ OMR::Z::MemoryReference::populateLoadAddrTree(TR::Node * subTree, TR::CodeGenera
          {
          if (_indexRegister != NULL)
             {
-            self()->consolidateRegisters(subTree, cg);
+            consolidateRegisters(subTree, cg);
             }
          // switch base and index registers
          _indexRegister = _baseRegister;
-         self()->setBaseRegister(addReg, cg);
+         setBaseRegister(addReg, cg);
          _indexNode = NULL;
          }
       else
          {
-         self()->setBaseRegister(addReg, cg);
+         setBaseRegister(addReg, cg);
          _baseNode = NULL;
          }
       }
@@ -1570,7 +1570,7 @@ OMR::Z::MemoryReference::populateLoadAddrTree(TR::Node * subTree, TR::CodeGenera
    // will generate
    //       L  +12+?(GPR5)  <-- <auto> symref will resolve the ? offset.
    //                           despite the proper symref should be <o.f>
-   if (!self()->isExposedConstantAddressing() && !noNeedToPropagateSymRef)
+   if (!isExposedConstantAddressing() && !noNeedToPropagateSymRef)
       _symbolReference = subTree->getSymbolReference();
 
    _offset += subTree->getSymbolReference()->getOffset();
@@ -1680,9 +1680,9 @@ bool OMR::Z::MemoryReference::tryBaseIndexDispl(TR::CodeGenerator* cg, TR::Node*
       traceMsg(comp, "&&& TBID folded %d\n", ++folded);
       }
 
-   self()->setBaseRegister(breg, cg);
+   setBaseRegister(breg, cg);
    _indexRegister = ireg;
-   self()->setOffset(offset);
+   setOffset(offset);
    cg->AddFoldedMemRefToStack(self());
    ArtificiallyInflateReferenceCountWhenNecessary(self(), "OMR::Z::MemoryReference::tryBaseIndexDispl", nodesBefore, cg, &_incrementedNodesList);
    return true;
@@ -1701,13 +1701,13 @@ OMR::Z::MemoryReference::populateThroughEvaluation(TR::Node * rootLoadOrStore, T
    _flags = 0;
    _fixedSizeForAlignment = 0;
    _leftMostByte = 0;
-   self()->setBaseRegister(cg->evaluate(rootLoadOrStore), cg);
+   setBaseRegister(cg->evaluate(rootLoadOrStore), cg);
    _symbolReference = new (cg->trHeapMemory()) TR::SymbolReference(cg->comp()->getSymRefTab());
    _originalSymbolReference = _symbolReference;
 
    _listingSymbolReference = TR::MemoryReference::shouldLabelForRAS(_symbolReference, cg)? _symbolReference : NULL;
 
-   self()->setupCausesImplicitNullPointerException(cg);
+   setupCausesImplicitNullPointerException(cg);
    }
 
 bool OMR::Z::MemoryReference::ZeroBasePtr_EvaluateSubtree(TR::Node * subTree, TR::CodeGenerator * cg, OMR::Z::MemoryReference * mr)
@@ -1782,23 +1782,23 @@ OMR::Z::MemoryReference::populateMemoryReference(TR::Node * subTree, TR::CodeGen
       subTree = subTree->getFirstChild();
       }
 
-   if (self()->doEvaluate(subTree, cg))
+   if (doEvaluate(subTree, cg))
       {
       if (_baseRegister != NULL)
          {
          if (_indexRegister != NULL)
             {
-            self()->consolidateRegisters(subTree, cg);
+            consolidateRegisters(subTree, cg);
             }
-         self()->setIndexRegister(cg->evaluate(subTree));
+         setIndexRegister(cg->evaluate(subTree));
          _indexNode = subTree;
          }
       else
          {
-         if (!self()->ZeroBasePtr_EvaluateSubtree(subTree, cg, this))
+         if (!ZeroBasePtr_EvaluateSubtree(subTree, cg, this))
             {
             if (_baseRegister == NULL)
-               self()->setBaseRegister(cg->evaluate(subTree), cg);
+               setBaseRegister(cg->evaluate(subTree), cg);
             }
 
          _baseNode = subTree;
@@ -1816,26 +1816,26 @@ OMR::Z::MemoryReference::populateMemoryReference(TR::Node * subTree, TR::CodeGen
             subTree->getChild(1)->getOpCode().isLoadConst() &&
             subTree->getChild(1)->getConst<int64_t>() <= 0)))
          {
-         self()->populateAddTree(subTree, cg);
+         populateAddTree(subTree, cg);
          }
       else if ((subTree->getOpCodeValue() == TR::ishl || subTree->getOpCodeValue() == TR::lshl) &&
          subTree->getSecondChild()->getOpCode().isLoadConst())
          {
-         self()->populateShiftLeftTree(subTree, cg);
+         populateShiftLeftTree(subTree, cg);
          }
       else if (subTree->getOpCodeValue() == TR::loadaddr)
          {
-         self()->populateLoadAddrTree(subTree, cg);
+         populateLoadAddrTree(subTree, cg);
          }
       else if (subTree->getOpCodeValue() == TR::aload &&
                cg->isAddressOfStaticSymRefWithLockedReg(subTree->getSymbolReference()))
          {
-         self()->populateAloadTree(subTree, cg, false);
+         populateAloadTree(subTree, cg, false);
          }
       else if (subTree->getOpCodeValue() == TR::aload &&
                cg->isAddressOfPrivateStaticSymRefWithLockedReg(subTree->getSymbolReference()))
          {
-         self()->populateAloadTree(subTree, cg, true);
+         populateAloadTree(subTree, cg, true);
          }
       else if (subTree->getOpCodeValue() == TR::aconst)
          {
@@ -1848,7 +1848,7 @@ OMR::Z::MemoryReference::populateMemoryReference(TR::Node * subTree, TR::CodeGen
             _offset += subTree->getInt();
             }
          // set zero based ptr
-         self()->setBaseRegister(NULL, cg);
+         setBaseRegister(NULL, cg);
          }
       else
          {
@@ -1856,17 +1856,17 @@ OMR::Z::MemoryReference::populateMemoryReference(TR::Node * subTree, TR::CodeGen
             {
             if (_indexRegister != NULL)
                {
-               self()->consolidateRegisters(subTree, cg);
+               consolidateRegisters(subTree, cg);
                }
             _indexRegister = cg->evaluate(subTree);
             _indexNode = subTree;
             }
          else
             {
-            if (!self()->ZeroBasePtr_EvaluateSubtree(subTree, cg, this))
+            if (!ZeroBasePtr_EvaluateSubtree(subTree, cg, this))
                {
                if (_baseRegister == NULL)
-                  self()->setBaseRegister(cg->evaluate(subTree), cg);
+                  setBaseRegister(cg->evaluate(subTree), cg);
                }
             _baseNode = subTree;
             }
@@ -1882,12 +1882,12 @@ OMR::Z::MemoryReference::populateMemoryReference(TR::Node * subTree, TR::CodeGen
 
       if (_baseNode == subTree)
          {
-         self()->setBaseRegister(noopNode->getRegister(), cg);
+         setBaseRegister(noopNode->getRegister(), cg);
          _baseNode = noopNode;
          }
       else if (_indexNode == subTree)
          {
-         self()->setIndexRegister(noopNode->getRegister());
+         setIndexRegister(noopNode->getRegister());
          _indexNode = noopNode;
          }
          // pretend we evaluated the noopNode
@@ -1932,19 +1932,19 @@ OMR::Z::MemoryReference::consolidateRegisters(TR::Node * node, TR::CodeGenerator
    interimMemoryReference->setBaseRegister(_baseRegister, cg);
    interimMemoryReference->setIndexRegister(_indexRegister);
    TR::SymbolReference *interinSymRef=interimMemoryReference->getSymbolReference();
-   if (self()->isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
-   if (self()->getConstantDataSnippet())
+   if (isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
+   if (getConstantDataSnippet())
       {
-      interimMemoryReference->setConstantDataSnippet(self()->getConstantDataSnippet());
-      self()->setConstantDataSnippet(NULL);
+      interimMemoryReference->setConstantDataSnippet(getConstantDataSnippet());
+      setConstantDataSnippet(NULL);
       }
-   self()->propagateAlignmentInfo(interimMemoryReference);
+   propagateAlignmentInfo(interimMemoryReference);
    interimMemoryReference->setSymbolReference(_symbolReference);
    _symbolReference=interinSymRef;
    generateRXInstruction(cg, TR::InstOpCode::LA, node, tempTargetRegister, interimMemoryReference);
    cg->stopUsingRegister(tempTargetRegister);
 
-   self()->setBaseRegister(tempTargetRegister, cg);
+   setBaseRegister(tempTargetRegister, cg);
    _baseNode = NULL;
    _indexRegister = NULL;
    _targetSnippet = NULL;
@@ -1953,7 +1953,7 @@ OMR::Z::MemoryReference::consolidateRegisters(TR::Node * node, TR::CodeGenerator
 bool OMR::Z::MemoryReference::ignoreNegativeOffset()
    {
    if (_offset < 0 &&
-       (self()->hasTemporaryNegativeOffset() || symRefHasTemporaryNegativeOffset()))
+       (hasTemporaryNegativeOffset() || symRefHasTemporaryNegativeOffset()))
       {
       return true;
       }
@@ -1963,7 +1963,7 @@ bool OMR::Z::MemoryReference::ignoreNegativeOffset()
 TR::Register *OMR::Z::MemoryReference::swapBaseRegister(TR::Register *br, TR::CodeGenerator * cg)
    {
    br->setIsUsedInMemRef();
-   self()->setBaseRegister(br, cg);
+   setBaseRegister(br, cg);
    return br;
    }
 
@@ -2022,10 +2022,10 @@ OMR::Z::MemoryReference::alignmentBumpMayRequire4KFixup(TR::Node * node, TR::Cod
    // e.g. _offset=4088 and the node is 10 byte in size so the max possible alignment is 10-1 = 9 giving a max possible offset of 4088+9 = 4097 (>= MAXDISP of 4096)
    //
    if (_offset < MAXDISP &&               // skip if going to fixup naturally anyway
-       self()->getFixedSizeForAlignment() > 0 &&  // i.e. do not check temps -- these will have an offset of 0 anyway at instruction selection time
-       (self()->rightAlignMemRef() || self()->leftAlignMemRef() || TR::MemoryReference::typeNeedsAlignment(node)))
+       getFixedSizeForAlignment() > 0 &&  // i.e. do not check temps -- these will have an offset of 0 anyway at instruction selection time
+       (rightAlignMemRef() || leftAlignMemRef() || TR::MemoryReference::typeNeedsAlignment(node)))
       {
-      int32_t maxAlignmentBump = self()->getFixedSizeForAlignment() - 1; // alignment is getFixedSizeForAlignment() - (length or leftMostByte) and each of these must be at least 1
+      int32_t maxAlignmentBump = getFixedSizeForAlignment() - 1; // alignment is getFixedSizeForAlignment() - (length or leftMostByte) and each of these must be at least 1
       if (_offset + maxAlignmentBump >= MAXDISP)
          {
          if (cg->traceBCDCodeGen())
@@ -2041,28 +2041,28 @@ OMR::Z::MemoryReference::alignmentBumpMayRequire4KFixup(TR::Node * node, TR::Cod
 TR::Instruction *
 OMR::Z::MemoryReference::enforceSSFormatLimits(TR::Node * node, TR::CodeGenerator * cg, TR::Instruction *preced)
    {
-   bool forceDueToAlignmentBump = self()->alignmentBumpMayRequire4KFixup(node, cg);
+   bool forceDueToAlignmentBump = alignmentBumpMayRequire4KFixup(node, cg);
    // call separateIndexRegister first so any large offset is handled along with the index register folding
-   preced = self()->separateIndexRegister(node, cg, true, preced, forceDueToAlignmentBump); // enforce4KDisplacementLimit=true
-   preced = self()->enforce4KDisplacementLimit(node, cg, preced, false, forceDueToAlignmentBump);
+   preced = separateIndexRegister(node, cg, true, preced, forceDueToAlignmentBump); // enforce4KDisplacementLimit=true
+   preced = enforce4KDisplacementLimit(node, cg, preced, false, forceDueToAlignmentBump);
    return preced;
    }
 
 TR::Instruction *
 OMR::Z::MemoryReference::enforceRSLFormatLimits(TR::Node * node, TR::CodeGenerator * cg, TR::Instruction *preced)
    {
-   bool forceDueToAlignmentBump = self()->alignmentBumpMayRequire4KFixup(node, cg);
+   bool forceDueToAlignmentBump = alignmentBumpMayRequire4KFixup(node, cg);
    // call separateIndexRegister first so any large offset is handled along with the index register folding
-   preced = self()->separateIndexRegister(node, cg, true, preced, forceDueToAlignmentBump); // enforce4KDisplacementLimit=true
-   preced = self()->enforce4KDisplacementLimit(node, cg, preced, false, forceDueToAlignmentBump);
+   preced = separateIndexRegister(node, cg, true, preced, forceDueToAlignmentBump); // enforce4KDisplacementLimit=true
+   preced = enforce4KDisplacementLimit(node, cg, preced, false, forceDueToAlignmentBump);
    return preced;
    }
 
 TR::Instruction *
 OMR::Z::MemoryReference::enforceVRXFormatLimits(TR::Node * node, TR::CodeGenerator * cg, TR::Instruction *preced)
    {
-   bool forceDueToAlignmentBump = self()->alignmentBumpMayRequire4KFixup(node, cg);
-   preced = self()->enforce4KDisplacementLimit(node, cg, preced, false, forceDueToAlignmentBump);
+   bool forceDueToAlignmentBump = alignmentBumpMayRequire4KFixup(node, cg);
+   preced = enforce4KDisplacementLimit(node, cg, preced, false, forceDueToAlignmentBump);
    return preced;
    }
 
@@ -2077,13 +2077,13 @@ OMR::Z::MemoryReference::enforceVRXFormatLimits(TR::Node * node, TR::CodeGenerat
 TR::Instruction *
 OMR::Z::MemoryReference::enforce4KDisplacementLimit(TR::Node * node, TR::CodeGenerator * cg, TR::Instruction * preced, bool forcePLXFixup, bool forceFixup)
    {
-   if (self()->ignoreNegativeOffset())
+   if (ignoreNegativeOffset())
       return preced;
 
    TR_ASSERT(!forcePLXFixup, "This logic is only used for markAndAdjustForLongDisplacementIfNeeded. You probably want the other flag.");
 
    if ((_offset < 0 || _offset >= MAXDISP || forcePLXFixup || forceFixup) &&
-       !self()->isAdjustedForLongDisplacement())
+       !isAdjustedForLongDisplacement())
       {
       TR::Register * tempTargetRegister = NULL;
       if (TR::Compiler->target.is64Bit())
@@ -2099,34 +2099,34 @@ OMR::Z::MemoryReference::enforce4KDisplacementLimit(TR::Node * node, TR::CodeGen
       interimMemoryReference->setBaseRegister(_baseRegister, cg);
       interimMemoryReference->setIndexRegister(_indexRegister);
       TR::SymbolReference * interinSymRef = interimMemoryReference->getSymbolReference();
-      self()->propagateAlignmentInfo(interimMemoryReference);
+      propagateAlignmentInfo(interimMemoryReference);
       interimMemoryReference->setSymbolReference(_symbolReference);
       _symbolReference = interinSymRef;
 
-      if (self()->isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
-      if (self()->getConstantDataSnippet())
+      if (isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
+      if (getConstantDataSnippet())
          {
-         interimMemoryReference->setConstantDataSnippet(self()->getConstantDataSnippet());
-         self()->setConstantDataSnippet(NULL);
+         interimMemoryReference->setConstantDataSnippet(getConstantDataSnippet());
+         setConstantDataSnippet(NULL);
          }
-      preced = self()->handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, preced);
+      preced = handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, preced);
 
       if (forcePLXFixup)
          {
          tempTargetRegister->incTotalUseCount();
-         if (self()->getStorageReference() && interimMemoryReference->getSymbolReference()->isTempVariableSizeSymRef())
+         if (getStorageReference() && interimMemoryReference->getSymbolReference()->isTempVariableSizeSymRef())
             {
             }
          }
       cg->stopUsingRegister(tempTargetRegister);
 
       _baseNode = NULL;
-      tempTargetRegister = self()->swapBaseRegister(tempTargetRegister, cg);
+      tempTargetRegister = swapBaseRegister(tempTargetRegister, cg);
       cg->stopUsingRegister(tempTargetRegister);
       _indexRegister = NULL;
       _targetSnippet = NULL;
       _offset = 0;
-      self()->setAdjustedForLongDisplacement();
+      setAdjustedForLongDisplacement();
       }
    return preced;
    }
@@ -2146,7 +2146,7 @@ OMR::Z::MemoryReference::markAndAdjustForLongDisplacementIfNeeded(TR::Node * nod
 TR::Instruction *
 OMR::Z::MemoryReference::enforceDisplacementLimit(TR::Node * node, TR::CodeGenerator * cg, TR::Instruction * preced)
    {
-   if (self()->ignoreNegativeOffset())
+   if (ignoreNegativeOffset())
       return preced;
 
    TR::Compilation *comp = cg->comp();
@@ -2166,22 +2166,22 @@ OMR::Z::MemoryReference::enforceDisplacementLimit(TR::Node * node, TR::CodeGener
       interimMemoryReference->setBaseRegister(_baseRegister, cg);
       interimMemoryReference->setIndexRegister(_indexRegister);
       TR::SymbolReference *interinSymRef = interimMemoryReference->getSymbolReference();
-      if (self()->isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
-      if (self()->getConstantDataSnippet())
+      if (isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
+      if (getConstantDataSnippet())
          {
-         interimMemoryReference->setConstantDataSnippet(self()->getConstantDataSnippet());
-         self()->setConstantDataSnippet(NULL);
+         interimMemoryReference->setConstantDataSnippet(getConstantDataSnippet());
+         setConstantDataSnippet(NULL);
          }
-      self()->propagateAlignmentInfo(interimMemoryReference);
+      propagateAlignmentInfo(interimMemoryReference);
       interimMemoryReference->setSymbolReference(_symbolReference);
       _symbolReference = interinSymRef;
 
-      preced = self()->handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, preced);
+      preced = handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, preced);
 
       cg->stopUsingRegister(tempTargetRegister);
 
       _baseNode = NULL;
-      tempTargetRegister = self()->swapBaseRegister(tempTargetRegister, cg);
+      tempTargetRegister = swapBaseRegister(tempTargetRegister, cg);
       _indexRegister = NULL;
       _targetSnippet = NULL;
       _offset = 0;
@@ -2199,7 +2199,7 @@ OMR::Z::MemoryReference::enforceDisplacementLimit(TR::Node * node, TR::CodeGener
 void
 OMR::Z::MemoryReference::eliminateNegativeDisplacement(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (self()->ignoreNegativeOffset())
+   if (ignoreNegativeOffset())
       return;
 
    TR::Compilation *comp = cg->comp();
@@ -2218,20 +2218,20 @@ OMR::Z::MemoryReference::eliminateNegativeDisplacement(TR::Node * node, TR::Code
       interimMemoryReference->setBaseRegister(_baseRegister, cg);
       interimMemoryReference->setIndexRegister(_indexRegister);
       TR::SymbolReference *interinSymRef=interimMemoryReference->getSymbolReference();
-      if (self()->isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
-      if (self()->getConstantDataSnippet())
+      if (isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
+      if (getConstantDataSnippet())
          {
-         interimMemoryReference->setConstantDataSnippet(self()->getConstantDataSnippet());
-         self()->setConstantDataSnippet(NULL);
+         interimMemoryReference->setConstantDataSnippet(getConstantDataSnippet());
+         setConstantDataSnippet(NULL);
          }
-      self()->propagateAlignmentInfo(interimMemoryReference);
+      propagateAlignmentInfo(interimMemoryReference);
       interimMemoryReference->setSymbolReference(_symbolReference);
       _symbolReference=interinSymRef;
 
-      self()->handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, NULL);
+      handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, NULL);
 
       _baseNode = NULL;
-      tempTargetRegister = self()->swapBaseRegister(tempTargetRegister, cg);
+      tempTargetRegister = swapBaseRegister(tempTargetRegister, cg);
       _indexRegister = NULL;
       _targetSnippet = NULL;
       _offset = 0;
@@ -2267,20 +2267,20 @@ OMR::Z::MemoryReference::separateIndexRegister(TR::Node * node, TR::CodeGenerato
       interimMemoryReference->setBaseRegister(_baseRegister, cg);
       interimMemoryReference->setIndexRegister(_indexRegister);
       TR::SymbolReference *interinSymRef=interimMemoryReference->getSymbolReference();
-      self()->propagateAlignmentInfo(interimMemoryReference);
+      propagateAlignmentInfo(interimMemoryReference);
       interimMemoryReference->setSymbolReference(_symbolReference);
       _symbolReference = interinSymRef;
-      if (self()->isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
-      if (self()->getConstantDataSnippet())
+      if (isConstantDataSnippet()) interimMemoryReference->setConstantDataSnippet();
+      if (getConstantDataSnippet())
          {
-         interimMemoryReference->setConstantDataSnippet(self()->getConstantDataSnippet());
-         self()->setConstantDataSnippet(NULL);
+         interimMemoryReference->setConstantDataSnippet(getConstantDataSnippet());
+         setConstantDataSnippet(NULL);
          }
-      if (!self()->ignoreNegativeOffset() &&
+      if (!ignoreNegativeOffset() &&
                enforce4KDisplacementLimit &&
                (_offset < 0 || _offset >= MAXDISP || forceDueToAlignmentBump))
          {
-         preced = self()->handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, preced);
+         preced = handleLargeOffset(node, interimMemoryReference, tempTargetRegister, cg, preced);
          _offset = 0;
          }
       else
@@ -2292,7 +2292,7 @@ OMR::Z::MemoryReference::separateIndexRegister(TR::Node * node, TR::CodeGenerato
          }
 
       _baseNode = NULL;
-      tempTargetRegister = self()->swapBaseRegister(tempTargetRegister, cg);
+      tempTargetRegister = swapBaseRegister(tempTargetRegister, cg);
       _indexRegister = NULL;
       _targetSnippet = NULL;
 
@@ -2402,7 +2402,7 @@ OMR::Z::MemoryReference::assignRegisters(TR::Instruction * currentInstruction, T
             cg->traceRegFreed(_baseRegister, toRealRegister(assignedBaseRegister)->getHighWordRegister());
             }
          }
-      self()->setBaseRegister(assignedBaseRegister, cg);
+      setBaseRegister(assignedBaseRegister, cg);
       }
    }
 
@@ -2464,13 +2464,13 @@ OMR::Z::MemoryReference::getSnippet()
    {
    TR::Snippet * snippet = NULL;
 
-   if (self()->getUnresolvedSnippet() != NULL)
+   if (getUnresolvedSnippet() != NULL)
       {
       setMemRefAndGetUnresolvedData(snippet);
       }
-   else if (self()->getConstantDataSnippet() != NULL)
+   else if (getConstantDataSnippet() != NULL)
       {
-      snippet = self()->getConstantDataSnippet();
+      snippet = getConstantDataSnippet();
       }
 
    return snippet;
@@ -2564,16 +2564,16 @@ OMR::Z::MemoryReference::canUseTargetRegAsScratchReg (TR::Instruction * instr)
  */
 void OMR::Z::MemoryReference::setFixedSizeForAlignment(int32_t size)
    {
-   if (self()->getOriginalSymbolReference() &&
-       self()->getOriginalSymbolReference()->getSymbol() &&
-       self()->getOriginalSymbolReference()->getSymbol()->isVariableSizeSymbol())
+   if (getOriginalSymbolReference() &&
+       getOriginalSymbolReference()->getSymbol() &&
+       getOriginalSymbolReference()->getSymbol()->isVariableSizeSymbol())
       {
       TR_ASSERT(false,"variable sized symbols do not use _fixedSizeForAlignment a\n");
       _fixedSizeForAlignment = 0;
       }
-   else if (self()->getSymbolReference() &&
-            self()->getSymbolReference()->getSymbol() &&
-            self()->getSymbolReference()->getSymbol()->isVariableSizeSymbol())
+   else if (getSymbolReference() &&
+            getSymbolReference()->getSymbol() &&
+            getSymbolReference()->getSymbol()->isVariableSizeSymbol())
       {
       TR_ASSERT(false,"variable sized symbols do not use _fixedSizeForAlignment b\n");
       _fixedSizeForAlignment = 0;
@@ -2591,17 +2591,17 @@ void OMR::Z::MemoryReference::setFixedSizeForAlignment(int32_t size)
  */
 int32_t OMR::Z::MemoryReference::getTotalSizeForAlignment()
    {
-   if (self()->getOriginalSymbolReference() &&
-       self()->getOriginalSymbolReference()->getSymbol() &&
-       self()->getOriginalSymbolReference()->getSymbol()->isVariableSizeSymbol())
+   if (getOriginalSymbolReference() &&
+       getOriginalSymbolReference()->getSymbol() &&
+       getOriginalSymbolReference()->getSymbol()->isVariableSizeSymbol())
       {
-      return self()->getOriginalSymbolReference()->getSymbol()->getSize();
+      return getOriginalSymbolReference()->getSymbol()->getSize();
       }
-   else if (self()->getSymbolReference() &&
-            self()->getSymbolReference()->getSymbol() &&
-            self()->getSymbolReference()->getSymbol()->isVariableSizeSymbol())
+   else if (getSymbolReference() &&
+            getSymbolReference()->getSymbol() &&
+            getSymbolReference()->getSymbol()->isVariableSizeSymbol())
       {
-      return self()->getSymbolReference()->getSymbol()->getSize();
+      return getSymbolReference()->getSymbol()->getSize();
       }
    else
       {
@@ -2613,7 +2613,7 @@ int32_t OMR::Z::MemoryReference::getTotalSizeForAlignment()
 int32_t
 OMR::Z::MemoryReference::getRightAlignmentBump(TR::Instruction * instr, TR::CodeGenerator * cg)
    {
-   if (!self()->rightAlignMemRef()) return 0;
+   if (!rightAlignMemRef()) return 0;
 
    int32_t length = -1;
 
@@ -2654,8 +2654,8 @@ OMR::Z::MemoryReference::getRightAlignmentBump(TR::Instruction * instr, TR::Code
    if (needsBump)
       {
       TR_ASSERT( length != -1,"length should be set at this point\n");
-      TR_ASSERT(self()->getTotalSizeForAlignment() > 0,"getTotalSizeForAlignment() %d not initialized in getRightAlignmentBump()\n",self()->getTotalSizeForAlignment());
-      int32_t symSize = self()->getTotalSizeForAlignment();
+      TR_ASSERT(getTotalSizeForAlignment() > 0,"getTotalSizeForAlignment() %d not initialized in getRightAlignmentBump()\n",getTotalSizeForAlignment());
+      int32_t symSize = getTotalSizeForAlignment();
       bump = symSize - length;
       }
 
@@ -2667,12 +2667,12 @@ OMR::Z::MemoryReference::getRightAlignmentBump(TR::Instruction * instr, TR::Code
 int32_t
 OMR::Z::MemoryReference::getLeftAlignmentBump(TR::Instruction * instr, TR::CodeGenerator * cg)
    {
-   if (!self()->leftAlignMemRef()) return 0;
+   if (!leftAlignMemRef()) return 0;
 
-   TR_ASSERT(self()->getTotalSizeForAlignment() > 0,"getTotalSizeForAlignment() %d not initialized in getLeftAlignmentBump()\n",self()->getTotalSizeForAlignment());
-   TR_ASSERT( self()->getLeftMostByte() > 0,"_leftMostByte not initialized in getLeftAlignmentBump()\n");
+   TR_ASSERT(getTotalSizeForAlignment() > 0,"getTotalSizeForAlignment() %d not initialized in getLeftAlignmentBump()\n",getTotalSizeForAlignment());
+   TR_ASSERT( getLeftMostByte() > 0,"_leftMostByte not initialized in getLeftAlignmentBump()\n");
 
-   int32_t bump = self()->getTotalSizeForAlignment() - self()->getLeftMostByte();
+   int32_t bump = getTotalSizeForAlignment() - getLeftMostByte();
 
    TR_ASSERT(bump >= 0,"leftAlignmentBump %d should not be negative\n",bump);
    return bump;
@@ -2681,12 +2681,12 @@ OMR::Z::MemoryReference::getLeftAlignmentBump(TR::Instruction * instr, TR::CodeG
 int32_t
 OMR::Z::MemoryReference::getSizeIncreaseBump(TR::Instruction * instr, TR::CodeGenerator * cg)
    {
-   if ((self()->getSymbolReference() == NULL) || !self()->getSymbolReference()->isTempVariableSizeSymRef())
+   if ((getSymbolReference() == NULL) || !getSymbolReference()->isTempVariableSizeSymRef())
       return 0;
-   TR_ASSERT(self()->getTotalSizeForAlignment() > 0,"getTotalSizeForAlignment() %d not initialized in getSizeIncreaseBump()\n",self()->getTotalSizeForAlignment());
-   TR_ASSERT( self()->getSymbolReference()->getSymbol()->getSize() > 0,"symbol size not initialized in getSizeIncreaseBump()\n");
+   TR_ASSERT(getTotalSizeForAlignment() > 0,"getTotalSizeForAlignment() %d not initialized in getSizeIncreaseBump()\n",getTotalSizeForAlignment());
+   TR_ASSERT( getSymbolReference()->getSymbol()->getSize() > 0,"symbol size not initialized in getSizeIncreaseBump()\n");
 
-   int32_t bump = self()->getSymbolReference()->getSymbol()->getSize() - self()->getTotalSizeForAlignment();
+   int32_t bump = getSymbolReference()->getSymbol()->getSize() - getTotalSizeForAlignment();
 
    TR_ASSERT(bump >=0,"symbol size bump %d should not be negative\n",bump);
    return bump;
@@ -2695,58 +2695,58 @@ OMR::Z::MemoryReference::getSizeIncreaseBump(TR::Instruction * instr, TR::CodeGe
 int32_t
 OMR::Z::MemoryReference::calcDisplacement(uint8_t * cursor, TR::Instruction * instr, TR::CodeGenerator * cg)
    {
-   TR::Snippet * snippet = self()->getSnippet();
-   TR::Symbol * symbol = self()->getSymbolReference()->getSymbol();
+   TR::Snippet * snippet = getSnippet();
+   TR::Symbol * symbol = getSymbolReference()->getSymbol();
    int32_t disp = _offset;
    TR::Compilation *comp = cg->comp();
 
-   if (self()->rightAlignMemRef())
+   if (rightAlignMemRef())
       {
-      TR_ASSERT( !self()->leftAlignMemRef(),"A memory reference should not be marked as both right and left aligned\n");
+      TR_ASSERT( !leftAlignMemRef(),"A memory reference should not be marked as both right and left aligned\n");
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"instr %p : right aligning memRef with symRef #%d (%s, isTemp %s) _offset %d, totalSize %d : bump = ",
             instr,
-            self()->getSymbolReference()->getReferenceNumber(),
-            cg->getDebug()->getName(self()->getSymbolReference()->getSymbol()),
-            self()->getSymbolReference()->isTempVariableSizeSymRef() ? "yes":"no",
+            getSymbolReference()->getReferenceNumber(),
+            cg->getDebug()->getName(getSymbolReference()->getSymbol()),
+            getSymbolReference()->isTempVariableSizeSymRef() ? "yes":"no",
             _offset,
-            self()->getTotalSizeForAlignment());
+            getTotalSizeForAlignment());
       int32_t oldDisp = disp;
-      disp += self()->getRightAlignmentBump(instr, cg);
+      disp += getRightAlignmentBump(instr, cg);
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"%d (disp = %d)\n",disp-oldDisp,disp);
       }
 
-   if (self()->leftAlignMemRef())
+   if (leftAlignMemRef())
       {
-      TR_ASSERT( !self()->rightAlignMemRef(),"A memory reference should not be marked as both left and right aligned\n");
+      TR_ASSERT( !rightAlignMemRef(),"A memory reference should not be marked as both left and right aligned\n");
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"instr %p : left aligning memRef with symRef #%d (%s, isTemp %s), _offset %d : bump = totalSize - leftMostByte = %d - %d = ",
             instr,
-            self()->getSymbolReference()->getReferenceNumber(),
-            cg->getDebug()->getName(self()->getSymbolReference()->getSymbol()),
-            self()->getSymbolReference()->isTempVariableSizeSymRef() ? "yes":"no",
+            getSymbolReference()->getReferenceNumber(),
+            cg->getDebug()->getName(getSymbolReference()->getSymbol()),
+            getSymbolReference()->isTempVariableSizeSymRef() ? "yes":"no",
             _offset,
-            self()->getTotalSizeForAlignment(),
-            self()->getLeftMostByte());
+            getTotalSizeForAlignment(),
+            getLeftMostByte());
       int32_t oldDisp = disp;
-      disp += self()->getLeftAlignmentBump(instr, cg);
+      disp += getLeftAlignmentBump(instr, cg);
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"%d (disp = %d)\n",disp-oldDisp,disp);
       }
 
-   if (self()->getSymbolReference()->isTempVariableSizeSymRef())
+   if (getSymbolReference()->isTempVariableSizeSymRef())
       {
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"instr %p : bumping tempVariableSizeSymRef memRef with symRef #%d (%s), _offset %d : bump = symSize - totalSize = %d - %d = ",
             instr,
-            self()->getSymbolReference()->getReferenceNumber(),
-            cg->getDebug()->getName(self()->getSymbolReference()->getSymbol()),
+            getSymbolReference()->getReferenceNumber(),
+            cg->getDebug()->getName(getSymbolReference()->getSymbol()),
             _offset,
-            self()->getSymbolReference()->getSymbol()->getSize(),
-            self()->getTotalSizeForAlignment());
+            getSymbolReference()->getSymbol()->getSize(),
+            getTotalSizeForAlignment());
       int32_t oldDisp = disp;
-      disp += self()->getSizeIncreaseBump(instr, cg);
+      disp += getSizeIncreaseBump(instr, cg);
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"%d (disp = %d)\n",disp-oldDisp,disp);
       }
@@ -2757,7 +2757,7 @@ OMR::Z::MemoryReference::calcDisplacement(uint8_t * cursor, TR::Instruction * in
          // Displacement of literals in the lit pool are all known
          // a priori.
          //
-         disp = snippet->getCodeBaseOffset() + self()->getOffset();
+         disp = snippet->getCodeBaseOffset() + getOffset();
 
          // We use the 12bitRelloc code to double check that all disp's
          // are indeed equal pre-bin and post-bin encoding.
@@ -2773,11 +2773,11 @@ OMR::Z::MemoryReference::calcDisplacement(uint8_t * cursor, TR::Instruction * in
       if (symbol->isRegisterMappedSymbol())
          {
          disp += symbol->castToRegisterMappedSymbol()->getOffset();
-         if (TR::Compiler->target.is64Bit() && TR::MemoryReference::needsAdjustDisp(instr, this, cg) && !self()->getDispAdjusted())
+         if (TR::Compiler->target.is64Bit() && TR::MemoryReference::needsAdjustDisp(instr, this, cg) && !getDispAdjusted())
             {
             disp += 4;
             }
-         self()->setDispAdjusted();
+         setDispAdjusted();
          }
       }
 
@@ -2911,13 +2911,13 @@ generateImmToRegister(TR::CodeGenerator * cg, TR::Node * node, TR::Register * ta
 int32_t
 OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenerator * cg, TR::Instruction * instr)
    {
-   if (self()->wasCreatedDuringInstructionSelection())
+   if (wasCreatedDuringInstructionSelection())
       {
-      self()->setOffset(cg->getFrameSizeInBytes());
+      setOffset(cg->getFrameSizeInBytes());
       }
    uint8_t * instructionStart = cursor;
-   TR::RealRegister * base  = (self()->getBaseRegister() ? toRealRegister(self()->getBaseRegister()) : 0);
-   TR::RealRegister * index = (self()->getIndexRegister() ? toRealRegister(self()->getIndexRegister()) : 0);
+   TR::RealRegister * base  = (getBaseRegister() ? toRealRegister(self()->getBaseRegister()) : 0);
+   TR::RealRegister * index = (getIndexRegister() ? toRealRegister(self()->getIndexRegister()) : 0);
 
    int32_t nbytes     = 0;
    bool largeDisp     = false;
@@ -2934,9 +2934,9 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
    TR::Instruction * currInstr = prevInstr;
    TR::Node * node = instr->getNode();
 
-   bool is2ndSSMemRef=self()->is2ndMemRef();
+   bool is2ndSSMemRef=is2ndMemRef();
 
-   int32_t displacement = self()->calcDisplacement(cursor, instr, cg);
+   int32_t displacement = calcDisplacement(cursor, instr, cg);
 
    //add project specific relocations for specific instructions
    addInstrSpecificRelocation(cg, instr, displacement, cursor);
@@ -3052,7 +3052,7 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
             prevInstr = currInstr;
 
             base = scratchReg;
-            self()->setBaseRegister(base, cg);
+            setBaseRegister(base, cg);
             }
          else if (index!=NULL && base!=NULL) // Neither is NULL, pick one
             {
@@ -3068,7 +3068,7 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
             prevInstr = currInstr;
 
             index = scratchReg;
-            self()->setIndexRegister(index);
+            setIndexRegister(index);
             }
          else if (index==NULL)                                      // Since index reg is free, use it directly
             {
@@ -3085,7 +3085,7 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
             //    A GPRt, 0(Rscrtch,base)
 
             index = scratchReg;
-            self()->setIndexRegister(index);
+            setIndexRegister(index);
             }
          else // base is NULL                                       // Since base reg is free, use it directly
             {
@@ -3101,7 +3101,7 @@ OMR::Z::MemoryReference::generateBinaryEncoding(uint8_t * cursor, TR::CodeGenera
             //    A GPRt, 0(index,Rscrtch)
 
             base = scratchReg;
-            self()->setBaseRegister(base, cg);
+            setBaseRegister(base, cg);
             }
 
          if (nbytes == 0)
@@ -3186,7 +3186,7 @@ OMR::Z::MemoryReference::generateBinaryEncodingTouchUpForLongDisp(uint8_t *curso
    int32_t nbytes    = 0;
    TR::Compilation *comp = cg->comp();
    uint8_t * instructionStart = cursor;
-   bool is2ndSSMemRef = self()->is2ndMemRef();
+   bool is2ndSSMemRef = is2ndMemRef();
    bool largeDisp = (is2ndSSMemRef && instr->isExtDisp2()) ||
                     (!is2ndSSMemRef && instr->isExtDisp());
    int32_t offsetToLongDispSlot = (cg->getLinkage())->getOffsetToLongDispSlot();
@@ -3205,7 +3205,7 @@ OMR::Z::MemoryReference::generateBinaryEncodingTouchUpForLongDisp(uint8_t *curso
       }
    else
       {
-      TR_ASSERT( !self()->isMemRefMustNotSpill(),"OMR::Z::MemoryReference::generateBinaryEncodingTouchUpForLongDisp -- This memoryReference must not spill");
+      TR_ASSERT( !isMemRefMustNotSpill(),"OMR::Z::MemoryReference::generateBinaryEncodingTouchUpForLongDisp -- This memoryReference must not spill");
       if (!is2ndSSMemRef)
          {
          scratchReg = instr->getLocalLocalSpillReg1();
@@ -3248,25 +3248,25 @@ OMR::Z::MemoryReference::generateBinaryEncodingTouchUpForLongDisp(uint8_t *curso
 bool
 OMR::Z::MemoryReference::doEvaluate(TR::Node * subTree, TR::CodeGenerator * cg)
    {
-   if (self()->forceEvaluation())
+   if (forceEvaluation())
       return true;
 
    // do not recurse down if _this_ node has a register
    if (subTree->getRegister() != NULL)
       return true;
 
-   if (self()->forceFolding())
+   if (forceFolding())
       return false;
 
    TR::Compilation *comp = cg->comp();
 
-   if (self()->forceFirstTimeFolding())
+   if (forceFirstTimeFolding())
       {
       if (cg->traceBCDCodeGen())
          traceMsg(comp,"\tforceFirstTimeFolding=true for subTree %s (%p) refCount %d, reg %s (reset firstTimeFlag for next doEvaluate)\n",
             subTree->getOpCode().getName(),subTree,subTree->getReferenceCount(),subTree->getRegister()?cg->getDebug()->getName(subTree->getRegister()):"NULL");
-      self()->resetForceFirstTimeFolding();
-      self()->setForceEvaluation();
+      resetForceFirstTimeFolding();
+      setForceEvaluation();
       return false;
       }
 

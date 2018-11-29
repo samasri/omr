@@ -61,73 +61,73 @@ namespace TR { class Machine; }
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::CodeGenerator *cg):
    OMR::X86::MemoryReference(cg)
    {
-   self()->finishInitialization(cg, NULL);
+   finishInitialization(cg, NULL);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::Register *br, TR::SymbolReference *sr, TR::Register *ir, uint8_t s, TR::CodeGenerator *cg):
    OMR::X86::MemoryReference(br, sr, ir, s, cg)
    {
-   self()->finishInitialization(cg, NULL);
+   finishInitialization(cg, NULL);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::Register *br, TR::Register *ir, uint8_t s, TR::CodeGenerator *cg):
    OMR::X86::MemoryReference(br, ir, s, cg)
    {
-   self()->finishInitialization(cg, NULL);
+   finishInitialization(cg, NULL);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::Register *br, intptrj_t disp, TR::CodeGenerator *cg):
    OMR::X86::MemoryReference(br, disp, cg)
    {
-   self()->finishInitialization(cg, NULL);
+   finishInitialization(cg, NULL);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(intptrj_t disp, TR::CodeGenerator *cg, TR_ScratchRegisterManager *srm):
    OMR::X86::MemoryReference(disp, cg)
    {
-   self()->finishInitialization(cg, srm);
+   finishInitialization(cg, srm);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::Register *br, TR::Register *ir, uint8_t s, intptrj_t disp, TR::CodeGenerator *cg):
    OMR::X86::MemoryReference(br, ir, s, disp, cg)
    {
-   self()->finishInitialization(cg, NULL);
+   finishInitialization(cg, NULL);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::X86DataSnippet *cds, TR::CodeGenerator *cg):
    OMR::X86::MemoryReference(cds, cg)
    {
-   self()->finishInitialization(cg, NULL);
+   finishInitialization(cg, NULL);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::LabelSymbol *label, TR::CodeGenerator *cg):
    OMR::X86::MemoryReference(label, cg)
    {
-   self()->finishInitialization(cg, NULL);
+   finishInitialization(cg, NULL);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::Node *rootLoadOrStore, TR::CodeGenerator *cg, bool canRematerializeAddressAdds, TR_ScratchRegisterManager *srm):
    OMR::X86::MemoryReference(rootLoadOrStore, cg, canRematerializeAddressAdds)
    {
-   self()->finishInitialization(cg, srm);
+   finishInitialization(cg, srm);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::SymbolReference *symRef, TR::CodeGenerator *cg, TR_ScratchRegisterManager *srm):
    OMR::X86::MemoryReference(symRef, cg)
    {
-   self()->finishInitialization(cg, srm);
+   finishInitialization(cg, srm);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::SymbolReference *symRef, intptrj_t displacement, TR::CodeGenerator *cg, TR_ScratchRegisterManager *srm):
    OMR::X86::MemoryReference(symRef, displacement, cg)
    {
-   self()->finishInitialization(cg, srm);
+   finishInitialization(cg, srm);
    }
 
 OMR::X86::AMD64::MemoryReference::MemoryReference(TR::MemoryReference& mr, intptrj_t n, TR::CodeGenerator *cg, TR_ScratchRegisterManager *srm):
    OMR::X86::MemoryReference(mr, n, cg)
    {
-   self()->finishInitialization(cg, srm);
+   finishInitialization(cg, srm);
    }
 
 void OMR::X86::AMD64::MemoryReference::finishInitialization(
@@ -136,20 +136,20 @@ void OMR::X86::AMD64::MemoryReference::finishInitialization(
    {
    _preferRIPRelative = false;
    TR::Machine *machine = cg->machine();
-   TR::SymbolReference &sr = self()->getSymbolReference();
+   TR::SymbolReference &sr = getSymbolReference();
    TR::Compilation *comp = cg->comp();
 
    // Figure out whether we need to allocate a register for the address
    //
    bool mightNeedAddressRegister;
-   if (self()->getDataSnippet())
+   if (getDataSnippet())
       {
       // Assume snippets are in RIP range
       //
       mightNeedAddressRegister = false;
       }
-   else if (!self()->getBaseRegister()  &&
-            !self()->getIndexRegister() &&
+   else if (!getBaseRegister()  &&
+            !getIndexRegister() &&
             (cg->needRelocationsForStatics()            ||
              cg->needClassAndMethodPointerRelocations() ||
              cg->needRelocationsForBodyInfoData()       ||
@@ -157,7 +157,7 @@ void OMR::X86::AMD64::MemoryReference::finishInitialization(
       {
       mightNeedAddressRegister = true;
       }
-   else if (self()->getBaseRegister() == cg->getFrameRegister())
+   else if (getBaseRegister() == cg->getFrameRegister())
       {
       // We should never see stack frames 2GB in size, so don't waste a register.
       // (Also, for the same reason, there's no need to consider the frame
@@ -189,7 +189,7 @@ void OMR::X86::AMD64::MemoryReference::finishInitialization(
       //    lea R4, [R2 + a]
       //    xxx R1, [R4 + scale*R3 + b]
       //
-      mightNeedAddressRegister = !IS_32BIT_SIGNED(self()->getDisplacement());
+      mightNeedAddressRegister = !IS_32BIT_SIGNED(getDisplacement());
       }
 
    // If we might need it, allocate it
@@ -238,8 +238,8 @@ void OMR::X86::AMD64::MemoryReference::useRegisters(TR::Instruction  *instr, TR:
 
 bool OMR::X86::AMD64::MemoryReference::needsAddressLoadInstruction(intptrj_t rip, TR::CodeGenerator * cg)
    {
-   TR::SymbolReference &sr           = self()->getSymbolReference();
-   intptrj_t           displacement = self()->getDisplacement();
+   TR::SymbolReference &sr           = getSymbolReference();
+   intptrj_t           displacement = getDisplacement();
    TR::Compilation *comp = cg->comp();
    if (sr.getSymbol() != NULL && sr.isUnresolved())
       {
@@ -321,7 +321,7 @@ uint32_t OMR::X86::AMD64::MemoryReference::estimateBinaryLength(TR::CodeGenerato
    {
    uint32_t estimate;
 
-   if (0 && REGISTERS_CAN_CHANGE_AFTER_INITIALIZATION && self()->getBaseRegister() && self()->getIndexRegister() && _addressRegister)
+   if (0 && REGISTERS_CAN_CHANGE_AFTER_INITIALIZATION && getBaseRegister() && getIndexRegister() && _addressRegister)
       {
       // We thought we might need _addressRegister during initialization
       // because _baseRegister or _indexRegister NULL.  However, someone
@@ -370,12 +370,12 @@ OMR::X86::AMD64::MemoryReference::addMetaDataForCodeAddressWithLoad(
       TR::CodeGenerator *cg,
       TR::SymbolReference *srCopy)
    {
-   intptrj_t displacement = self()->getDisplacement();
+   intptrj_t displacement = getDisplacement();
 
    if (_symbolReference.getSymbol())
       {
       TR::SymbolReference &sr = *srCopy;
-      if (self()->getUnresolvedDataSnippet())
+      if (getUnresolvedDataSnippet())
          {
          TR::Compilation *comp = cg->comp();
          if (comp->getOption(TR_EnableHCR)
@@ -470,7 +470,7 @@ OMR::X86::AMD64::MemoryReference::addMetaDataForCodeAddressWithLoad(
       }
    else
       {
-      if (self()->needsCodeAbsoluteExternalRelocation())
+      if (needsCodeAbsoluteExternalRelocation())
          {
          cg->addExternalRelocation(new (cg->trHeapMemory()) TR::ExternalRelocation(displacementLocation,
                                                                                  (uint8_t *)0,
@@ -510,8 +510,8 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
       TR::CodeGenerator *cg)
    {
    TR::Compilation *comp = cg->comp();
-   TR::SymbolReference &sr = self()->getSymbolReference();
-   intptrj_t displacement = self()->getDisplacement();
+   TR::SymbolReference &sr = getSymbolReference();
+   intptrj_t displacement = getDisplacement();
 
    if (comp->getOption(TR_TraceCG))
       {
@@ -532,13 +532,13 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
    //
    intptrj_t rip = (intptrj_t)(modRM + 5) + containingInstruction->getOpCode().info().ImmediateSize();
 
-   if (self()->getDataSnippet() || self()->getLabel())
+   if (getDataSnippet() || getLabel())
       {
       // The inherited logic has a special case for RIP-based ConstantDataSnippet and label references.
       //
       return OMR::X86::MemoryReference::generateBinaryEncoding(modRM, containingInstruction, cg);
       }
-   else if (self()->needsAddressLoadInstruction(rip, cg))
+   else if (needsAddressLoadInstruction(rip, cg))
       {
       TR_ASSERT(_addressRegister != NULL, "OMR::X86::AMD64::MemoryReference should have allocated an address register");
 
@@ -559,7 +559,7 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
             containingInstruction->getPrev(),
             MOV8RegImm64,
             _addressRegister,
-            (!self()->getUnresolvedDataSnippet() &&
+            (!getUnresolvedDataSnippet() &&
               sr.getSymbol()->isStatic() &&
               sr.getSymbol()->isClassObject() &&
               cg->needClassAndMethodPointerRelocations())?
@@ -568,15 +568,15 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
             cg
             );
 
-         if (self()->getUnresolvedDataSnippet())
+         if (getUnresolvedDataSnippet())
             {
-            self()->getUnresolvedDataSnippet()->setDataReferenceInstruction(addressLoadInstruction);
-            self()->getUnresolvedDataSnippet()->setDataSymbolReference(symRef);
+            getUnresolvedDataSnippet()->setDataReferenceInstruction(addressLoadInstruction);
+            getUnresolvedDataSnippet()->setDataSymbolReference(symRef);
             }
          }
       else
          {
-         TR_ASSERT(!self()->getUnresolvedDataSnippet(), "Unresolved references should always have a symbol");
+         TR_ASSERT(!getUnresolvedDataSnippet(), "Unresolved references should always have a symbol");
 
          addressLoadInstruction = generateRegImm64Instruction(
             containingInstruction->getPrev(),
@@ -587,12 +587,12 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
             );
          }
 
-      self()->addMetaDataForCodeAddressWithLoad(displacementLocation, containingInstruction, cg, symRef);
+      addMetaDataForCodeAddressWithLoad(displacementLocation, containingInstruction, cg, symRef);
 
       // addressLoadInstruction's node should be that of containingInstruction
       //
       addressLoadInstruction->setNode(_baseNode ? _baseNode : containingInstruction->getNode());
-      if (TR::Compiler->target.isSMP() && self()->getUnresolvedDataSnippet())
+      if (TR::Compiler->target.isSMP() && getUnresolvedDataSnippet())
          {
          // Also adjust the node of the TR::X86PatchableCodeAlignmentInstruction
          //
@@ -610,17 +610,17 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
       cursor = addressLoadInstruction->generateBinaryEncoding();
       cg->setBinaryBufferCursor(cursor);
 
-      if (self()->getBaseRegister() && self()->getIndexRegister())
+      if (getBaseRegister() && getIndexRegister())
          {
-         TR::Instruction  *addressAddInstruction = generateRegRegInstruction(addressLoadInstruction, ADD8RegReg, getAddressRegister(), self()->getBaseRegister(), cg);
+         TR::Instruction  *addressAddInstruction = generateRegRegInstruction(addressLoadInstruction, ADD8RegReg, getAddressRegister(), getBaseRegister(), cg);
          cursor = addressAddInstruction->generateBinaryEncoding();
          cg->setBinaryBufferCursor(cursor);
          }
 
       // If it's unresolved, tell the snippet where the data reference is
       //
-      if (self()->getUnresolvedDataSnippet())
-         self()->getUnresolvedDataSnippet()->setAddressOfDataReference(cursor-8);
+      if (getUnresolvedDataSnippet())
+         getUnresolvedDataSnippet()->setAddressOfDataReference(cursor-8);
 
       // Transform this memref from [whatever + offset64] to [whatever + _addressRegister]
       // Also transforms [base + index + offset64] to [_addressRegister + index]
@@ -641,7 +641,7 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
       _flags.reset(MemRef_NeedExternalCodeAbsoluteRelocation); // TODO:AMD64: Do I need this?
       _symbolReference.setSymbol(NULL);
       _symbolReference.setOffset(0);
-      self()->setUnresolvedDataSnippet(NULL); // Otherwise it will get damaged when we re-emit containingInstruction
+      setUnresolvedDataSnippet(NULL); // Otherwise it will get damaged when we re-emit containingInstruction
 
       // Indicate to caller that it must try again to emit its binary
       //
@@ -654,8 +654,8 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
          {
          // Addresses in the low 2GB (or high 2GB) can be accessed using a SIB byte
          //
-         self()->ModRM(modRM)->setBase()->setHasSIB();
-         self()->SIB(cursor++)->setScale()->setNoIndex()->setIndexDisp32();
+         ModRM(modRM)->setBase()->setHasSIB();
+         SIB(cursor++)->setScale()->setNoIndex()->setIndexDisp32();
          *(uint32_t*)cursor = (uint32_t)displacement;
          }
       else
@@ -663,11 +663,11 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
          TR_ASSERT(IS_32BIT_RIP(displacement, rip), "assertion failure");
          TR_ASSERT(!(comp->getOption(TR_EnableHCR) && sr.getSymbol() && sr.getSymbol()->isClassObject()),
             "HCR runtime assumptions currently can't patch RIP-relative offsets");
-         self()->ModRM(modRM)->setIndexOnlyDisp32();
+         ModRM(modRM)->setIndexOnlyDisp32();
          *(uint32_t*)cursor = (uint32_t)(displacement - (intptrj_t)rip);
          }
 
-      self()->addMetaDataForCodeAddressDisplacementOnly(displacement, cursor, cg);
+      addMetaDataForCodeAddressDisplacementOnly(displacement, cursor, cg);
 
       // Unresolved shadows whose base object is explicitly NULL need to report the
       // offset of the disp32 field.
@@ -675,11 +675,11 @@ OMR::X86::AMD64::MemoryReference::generateBinaryEncoding(
       // NOTE: this may not work in the highly unlikely case of a field offset > 64k
       //       where the implicit NULLCHK will not fire.
       //
-      if (self()->getUnresolvedDataSnippet())
+      if (getUnresolvedDataSnippet())
          {
-         self()->getUnresolvedDataSnippet()->setAddressOfDataReference(cursor);
+         getUnresolvedDataSnippet()->setAddressOfDataReference(cursor);
          traceMsg(comp, "found unresolved shadow with NULL base object : data reference instruction=%p, cursor=%p\n",
-            self()->getUnresolvedDataSnippet()->getDataReferenceInstruction(), cursor);
+            getUnresolvedDataSnippet()->getDataReferenceInstruction(), cursor);
          }
 
       return cursor+4;
