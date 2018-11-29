@@ -82,19 +82,19 @@ OMR::SymbolReference::init(TR::SymbolReferenceTable * symRefTab,
    _extraInfo = NULL;
    _knownObjectIndex = TR::KnownObjectTable::UNKNOWN;
    symRefTab->aliasBuilder.updateSubSets(self());
-   self()->setHasBeenAccessedAtRuntime(TR_maybe);
+   setHasBeenAccessedAtRuntime(TR_maybe);
    }
 
 OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable * symRefTab)
    {
-   self()->init(symRefTab, symRefTab->assignSymRefNumber(self()));
+   init(symRefTab, symRefTab->assignSymRefNumber(self()));
    }
 
 OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable * symRefTab,
                    TR::Symbol * symbol,
                    intptrj_t offset)
    {
-   self()->init(symRefTab, symRefTab->assignSymRefNumber(self()), symbol, offset);
+   init(symRefTab, symRefTab->assignSymRefNumber(self()), symbol, offset);
    }
 
 OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable * symRefTab,
@@ -102,7 +102,7 @@ OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable * symRefTab,
                    TR::Symbol *ps,
                    intptrj_t offset)
    {
-   self()->init(symRefTab, refNumber, ps, offset);
+   init(symRefTab, refNumber, ps, offset);
    }
 
 OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable *symRefTab,
@@ -110,7 +110,7 @@ OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable *symRefTab,
                    TR::Symbol *ps,
                    intptrj_t offset)
    {
-   self()->init(symRefTab, symRefTab->getNonhelperIndex(number), ps, offset);
+   init(symRefTab, symRefTab->getNonhelperIndex(number), ps, offset);
    }
 
 
@@ -119,7 +119,7 @@ OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable *symRefTab,
  */
 OMR::SymbolReference::SymbolReference(TR::SymbolReferenceTable * symRefTab, TR::Symbol * symbol, intptrj_t offset, const char *name)
    {
-   self()->init(symRefTab,
+   init(symRefTab,
         symRefTab->assignSymRefNumber(self()),
         symbol,
         offset,
@@ -139,7 +139,7 @@ OMR::SymbolReference::SymbolReference(
       int32_t unresolvedIndex,
       TR::KnownObjectTable::Index knownObjectIndex)
    {
-   self()->init(symRefTab,
+   init(symRefTab,
         symRefTab->assignSymRefNumber(self()),
         sym,
         0,  // Offset 0
@@ -163,7 +163,7 @@ OMR::SymbolReference::SymbolReference(
 void *
 OMR::SymbolReference::getMethodAddress()
    {
-   return (void *)self()->getSymbol()->castToMethodSymbol()->getMethodAddress();
+   return (void *)getSymbol()->castToMethodSymbol()->getMethodAddress();
    }
 
 /**
@@ -172,7 +172,7 @@ OMR::SymbolReference::getMethodAddress()
 TR::ResolvedMethodSymbol *
 OMR::SymbolReference::getOwningMethodSymbol(TR::Compilation *c)
    {
-   return c->getOwningMethodSymbol(self()->getOwningMethodIndex());
+   return c->getOwningMethodSymbol(getOwningMethodIndex());
    }
 
 /**
@@ -181,7 +181,7 @@ OMR::SymbolReference::getOwningMethodSymbol(TR::Compilation *c)
 TR_ResolvedMethod *
 OMR::SymbolReference::getOwningMethod(TR::Compilation * c)
    {
-   return self()->getOwningMethodSymbol(c)->getResolvedMethod();
+   return getOwningMethodSymbol(c)->getResolvedMethod();
    }
 
 bool
@@ -190,7 +190,7 @@ OMR::SymbolReference::maybeVolatile()
    if (_symbol->isVolatile())
       return true;
 
-   if (self()->isUnresolved()
+   if (isUnresolved()
        && !_symbol->isConstObjectRef()
        && (_symbol->isShadow() || _symbol->isStatic()))
       return true;
@@ -203,33 +203,33 @@ OMR::SymbolReference::isUnresolvedFieldInCP(TR::Compilation *c)
    {
    TR_ASSERT(c->compileRelocatableCode(),"isUnresolvedFieldInCP only callable in AOT compiles");
 
-   if (!self()->isUnresolved())
+   if (!isUnresolved())
       return false;
 
    if (c->getOption(TR_DisablePeekAOTResolutions))
       return true;
 
-   return self()->getOwningMethod(c)->getUnresolvedFieldInCP(self()->getCPIndex());
+   return getOwningMethod(c)->getUnresolvedFieldInCP(getCPIndex());
    }
 
 bool
 OMR::SymbolReference::isUnresolvedMethodInCP(TR::Compilation *c)
    {
-   TR_ASSERT(c->compileRelocatableCode() && self()->getSymbol()->isMethod(), "isUnresolvedMethodInCP only callable in AOT compiles on method symbols");
+   TR_ASSERT(c->compileRelocatableCode() && getSymbol()->isMethod(), "isUnresolvedMethodInCP only callable in AOT compiles on method symbols");
 
-   if (!self()->isUnresolved())
+   if (!isUnresolved())
       return false;
 
    if (c->getOption(TR_DisablePeekAOTResolutions))
       return true;
 
-   TR::MethodSymbol *sym = self()->getSymbol()->getMethodSymbol();
+   TR::MethodSymbol *sym = getSymbol()->getMethodSymbol();
    if (sym->isStatic())
-      return self()->getOwningMethod(c)->getUnresolvedStaticMethodInCP(self()->getCPIndex());
+      return getOwningMethod(c)->getUnresolvedStaticMethodInCP(getCPIndex());
    else if (sym->isSpecial())
-      return self()->getOwningMethod(c)->getUnresolvedSpecialMethodInCP(self()->getCPIndex());
+      return getOwningMethod(c)->getUnresolvedSpecialMethodInCP(getCPIndex());
    else if (sym->isVirtual())
-      return self()->getOwningMethod(c)->getUnresolvedVirtualMethodInCP(self()->getCPIndex());
+      return getOwningMethod(c)->getUnresolvedVirtualMethodInCP(getCPIndex());
    else
       return true;
    }
@@ -262,15 +262,15 @@ OMR::SymbolReference::isThisPointer()
    TR::Compilation *c = TR::comp();
    TR::ParameterSymbol* p = _symbol->getParmSymbol();
    return p && p->getSlot() == 0
-      && !self()->getOwningMethod(c)->isStatic();
+      && !getOwningMethod(c)->isStatic();
    }
 
 bool
 OMR::SymbolReference::isTemporary(TR::Compilation *c)
    {
-   return self()->getSymbol()->isAuto()
-      && (self()->getCPIndex() >= self()->getOwningMethodSymbol(c)->getFirstJitTempIndex()
-          || self()->getCPIndex() < 0);
+   return getSymbol()->isAuto()
+      && (getCPIndex() >= getOwningMethodSymbol(c)->getFirstJitTempIndex()
+          || getCPIndex() < 0);
    }
 
 const char *
@@ -293,13 +293,13 @@ OMR::SymbolReference::create(TR::SymbolReferenceTable *symRefTab, TR::Symbol *sy
 TR::KnownObjectTable::Index
 OMR::SymbolReference::getKnownObjectIndex()
    {
-   if (self()->getSymbol())
+   if (getSymbol())
       {
-      TR::ParameterSymbol *parm = self()->getSymbol()->getParmSymbol();
+      TR::ParameterSymbol *parm = getSymbol()->getParmSymbol();
       if (parm && parm->hasKnownObjectIndex())
          {
          if (_knownObjectIndex != TR::KnownObjectTable::UNKNOWN)
-            TR_ASSERT(self()->getKnownObjectIndex() == parm->getKnownObjectIndex(), "Parm symbol and symref known-object indexes must match (%d != %d)", self()->getKnownObjectIndex(), parm->getKnownObjectIndex());
+            TR_ASSERT(getKnownObjectIndex() == parm->getKnownObjectIndex(), "Parm symbol and symref known-object indexes must match (%d != %d)", getKnownObjectIndex(), parm->getKnownObjectIndex());
          return parm->getKnownObjectIndex();
          }
       }
@@ -309,14 +309,14 @@ OMR::SymbolReference::getKnownObjectIndex()
 bool
 OMR::SymbolReference::hasKnownObjectIndex()
    {
-   return self()->getKnownObjectIndex() != TR::KnownObjectTable::UNKNOWN;
+   return getKnownObjectIndex() != TR::KnownObjectTable::UNKNOWN;
    }
 
 uintptrj_t*
 OMR::SymbolReference::getKnownObjectReferenceLocation(TR::Compilation *comp)
    {
-   return self()->hasKnownObjectIndex() ?
-      comp->getKnownObjectTable()->getPointerLocation(self()->getKnownObjectIndex()) :
+   return hasKnownObjectIndex() ?
+      comp->getKnownObjectTable()->getPointerLocation(getKnownObjectIndex()) :
       NULL;
    }
 
@@ -341,20 +341,20 @@ void
 OMR::SymbolReference::setUseDefAliases(TR_BitVector * bv)
    {
    _useDefAliases = bv;
-   TR_ASSERT((!_symbol || !_symbol->isArrayShadowSymbol()) && !self()->isTempVariableSizeSymRef(),
+   TR_ASSERT((!_symbol || !_symbol->isArrayShadowSymbol()) && !isTempVariableSizeSymRef(),
              "should never call with an array shadow or a tempMemSlot");
    }
 
 bool
 OMR::SymbolReference::canCauseGC()
    {
-   return self()->canGCandReturn() || self()->canGCandExcept();
+   return canGCandReturn() || canGCandExcept();
    }
 
 bool
 OMR::SymbolReference::isLitPoolReference()
    {
-   return self()->isLiteralPoolAddress() || self()->isFromLiteralPool();
+   return isLiteralPoolAddress() || isFromLiteralPool();
    }
 
 void

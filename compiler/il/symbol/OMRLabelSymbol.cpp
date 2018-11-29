@@ -74,7 +74,7 @@ OMR::LabelSymbol::LabelSymbol() :
    _snippet(NULL),
    _directlyTargeted(false)
    {
-   self()->setIsLabel();
+   setIsLabel();
 
    TR::Compilation *comp = TR::comp();
    if (comp && comp->getDebug())
@@ -88,7 +88,7 @@ OMR::LabelSymbol::LabelSymbol(TR::CodeGenerator *codeGen) :
    _estimatedCodeLocation(0),
    _snippet(NULL)
    {
-   self()->setIsLabel();
+   setIsLabel();
 
    TR::Compilation *comp = TR::comp();
    if (comp && comp->getDebug())
@@ -102,7 +102,7 @@ OMR::LabelSymbol::LabelSymbol(TR::CodeGenerator *codeGen, TR::Block *labb) :
    _estimatedCodeLocation(0),
    _snippet(NULL)
    {
-   self()->setIsLabel();
+   setIsLabel();
 
    TR::Compilation *comp = TR::comp();
    if (comp && comp->getDebug())
@@ -132,17 +132,17 @@ OMR::LabelSymbol::makeRelativeLabelSymbol(intptr_t offset)
    // Is this assert here purely to ensure that the label size doesn't blow the buffer?
    TR_ASSERT(offset*2 > -9999999 && offset*2 < +9999999, "assertion failure");
 
-   self()->setRelativeLabel();
+   setRelativeLabel();
    _offset = offset;
    char * name = (char*)calloc(10,sizeof(char));  // FIXME: Leaked.
    sprintf(name, "%d", (int)(offset*2));
-   self()->setName(name);
+   setName(name);
    }
 
 intptr_t
 OMR::LabelSymbol::getDistance()
    {
-   TR_ASSERT(self()->isRelativeLabel(), "Must be a relative label to have a valid offset!");
+   TR_ASSERT(isRelativeLabel(), "Must be a relative label to have a valid offset!");
    return _offset;
    }
 

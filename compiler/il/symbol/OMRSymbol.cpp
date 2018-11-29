@@ -82,14 +82,14 @@ OMR::Symbol::Symbol(TR::DataType d, uint32_t size) :
 bool
 OMR::Symbol::isReferenced()
    {
-   return self()->isVariableSizeSymbol() && self()->castToVariableSizeSymbol()->isReferenced();
+   return isVariableSizeSymbol() && castToVariableSizeSymbol()->isReferenced();
    }
 
 bool
 OMR::Symbol::dontEliminateStores(TR::Compilation *comp, bool isForLocalDeadStore)
    {
-   return (self()->isAuto() && _flags.testAny(PinningArrayPointer)) ||
-          (self()->isParm() && _flags.testAny(ReinstatedReceiver)) ||
+   return (isAuto() && _flags.testAny(PinningArrayPointer)) ||
+          (isParm() && _flags.testAny(ReinstatedReceiver)) ||
           _flags.testAny(HoldsMonitoredObject) ||
           (comp->getSymRefTab()->findThisRangeExtensionSymRef() && (self() == comp->getSymRefTab()->findThisRangeExtensionSymRef()->getSymbol()));
    }
@@ -97,7 +97,7 @@ OMR::Symbol::dontEliminateStores(TR::Compilation *comp, bool isForLocalDeadStore
 uint32_t
 OMR::Symbol::getNumberOfSlots()
    {
-   uint32_t numSlots = self()->getRoundedSize()/self()->convertTypeToSize(TR::Address);
+   uint32_t numSlots = getRoundedSize()/convertTypeToSize(TR::Address);
 
    // We should always give at least 1 slot.
    //  This is specifically for the case of an int type on 64bit pltfrms
@@ -142,14 +142,14 @@ OMR::Symbol::setDataType(TR::DataType dt)
 uint32_t
 OMR::Symbol::getRoundedSize()
    {
-   int32_t roundedSize = (int32_t)((self()->getSize()+3)&(~3)); // cast explicitly
+   int32_t roundedSize = (int32_t)((getSize()+3)&(~3)); // cast explicitly
    return roundedSize ? roundedSize : 4;
    }
 
 int32_t
 OMR::Symbol::getOffset()
    {
-   TR::RegisterMappedSymbol * r = self()->getRegisterMappedSymbol();
+   TR::RegisterMappedSymbol * r = getRegisterMappedSymbol();
    return r ? r->getOffset() : 0;
    }
 

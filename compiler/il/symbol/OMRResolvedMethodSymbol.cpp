@@ -100,11 +100,11 @@ void
 OMR::ResolvedMethodSymbol::initForCompilation(TR::Compilation *comp)
    {
    TR::Region &heapRegion = comp->trMemory()->heapMemoryRegion();
-   self()->getParameterList().setRegion(heapRegion);
-   self()->getAutomaticList().setRegion(heapRegion);
+   getParameterList().setRegion(heapRegion);
+   getAutomaticList().setRegion(heapRegion);
 
-   self()->getVariableSizeSymbolList().setRegion(heapRegion);
-   self()->getTrivialDeadTreeBlocksList().setRegion(heapRegion);
+   getVariableSizeSymbolList().setRegion(heapRegion);
+   getTrivialDeadTreeBlocksList().setRegion(heapRegion);
    }
 
 
@@ -141,13 +141,13 @@ OMR::ResolvedMethodSymbol::ResolvedMethodSymbol(TR_ResolvedMethod * method, TR::
 
    if (comp->isGPUCompileCPUCode())
       {
-      self()->setLinkage(TR_System);
+      setLinkage(TR_System);
       }
 
     _methodIndex = comp->addOwningMethod(self());
    if (comp->getOption(TR_TraceMethodIndex))
       traceMsg(comp, "-- New symbol for method: M%p index: %d owningMethod: M%p sig: %s\n",
-         method, (int)_methodIndex.value(), method->owningMethod(), self()->signature(comp->trMemory()));
+         method, (int)_methodIndex.value(), method->owningMethod(), signature(comp->trMemory()));
 
    if (_methodIndex >= MAX_CALLER_INDEX)
       {
@@ -155,7 +155,7 @@ OMR::ResolvedMethodSymbol::ResolvedMethodSymbol(TR_ResolvedMethod * method, TR::
       }
 
    if (_resolvedMethod->isSynchronized())
-      self()->setSynchronised();
+      setSynchronised();
 
    // Set the interpreted flag for an interpreted method unless we're calling
    // the method that's being jitted
@@ -166,11 +166,11 @@ OMR::ResolvedMethodSymbol::ResolvedMethodSymbol(TR_ResolvedMethod * method, TR::
       {
       if (_resolvedMethod->isInterpreted())
          {
-         self()->setInterpreted();
-         self()->setMethodAddress(_resolvedMethod->resolvedMethodAddress());
+         setInterpreted();
+         setMethodAddress(_resolvedMethod->resolvedMethodAddress());
          }
       else
-         self()->setMethodAddress(_resolvedMethod->startAddressForJittedMethod());
+         setMethodAddress(_resolvedMethod->startAddressForJittedMethod());
       }
 
 #ifdef J9_PROJECT_SPECIFIC
@@ -186,12 +186,12 @@ OMR::ResolvedMethodSymbol::ResolvedMethodSymbol(TR_ResolvedMethod * method, TR::
         ((_resolvedMethod->getRecognizedMethod() == TR::java_lang_Math_copySign_F) ||
          (_resolvedMethod->getRecognizedMethod() == TR::java_lang_Math_copySign_D))))
       {
-      self()->setCanReplaceWithHWInstr(true);
+      setCanReplaceWithHWInstr(true);
       }
 
    if (_resolvedMethod->isJNINative())
       {
-      self()->setJNI();
+      setJNI();
 #if defined(TR_TARGET_POWER)
       switch(_resolvedMethod->getRecognizedMethod())
          {
@@ -276,32 +276,32 @@ OMR::ResolvedMethodSymbol::ResolvedMethodSymbol(TR_ResolvedMethod * method, TR::
 #endif // J9_PROJECT_SPECIFIC
       if (_resolvedMethod->isNative())
       {
-      if (!self()->isInterpreted() && _resolvedMethod->isJITInternalNative())
+      if (!isInterpreted() && _resolvedMethod->isJITInternalNative())
          {
-         self()->setMethodAddress(_resolvedMethod->startAddressForJITInternalNativeMethod());
-         self()->setJITInternalNative();
+         setMethodAddress(_resolvedMethod->startAddressForJITInternalNativeMethod());
+         setJITInternalNative();
          }
       else
          {
-         self()->setVMInternalNative();
+         setVMInternalNative();
          }
       }
 
    if (_resolvedMethod->isFinal())
-      self()->setFinal();
+      setFinal();
 
    if (_resolvedMethod->isStatic())
-      self()->setStatic();
+      setStatic();
 
-   self()->setParameterList();
+   setParameterList();
 
-   _properties.set(CanSkipNullChecks                   , self()->safeToSkipNullChecks());
-   _properties.set(CanSkipBoundChecks                  , self()->safeToSkipBoundChecks());
-   _properties.set(CanSkipCheckCasts                   , self()->safeToSkipCheckCasts());
-   _properties.set(CanSkipDivChecks                    , self()->safeToSkipDivChecks());
-   _properties.set(CanSkipArrayStoreChecks             , self()->safeToSkipArrayStoreChecks());
-   _properties.set(CanSkipChecksOnArrayCopies          , self()->safeToSkipChecksOnArrayCopies());
-   _properties.set(CanSkipZeroInitializationOnNewarrays, self()->safeToSkipZeroInitializationOnNewarrays());
+   _properties.set(CanSkipNullChecks                   , safeToSkipNullChecks());
+   _properties.set(CanSkipBoundChecks                  , safeToSkipBoundChecks());
+   _properties.set(CanSkipCheckCasts                   , safeToSkipCheckCasts());
+   _properties.set(CanSkipDivChecks                    , safeToSkipDivChecks());
+   _properties.set(CanSkipArrayStoreChecks             , safeToSkipArrayStoreChecks());
+   _properties.set(CanSkipChecksOnArrayCopies          , safeToSkipChecksOnArrayCopies());
+   _properties.set(CanSkipZeroInitializationOnNewarrays, safeToSkipZeroInitializationOnNewarrays());
    }
 
 
@@ -309,30 +309,30 @@ int32_t
 OMR::ResolvedMethodSymbol::getSyncObjectTempIndex()
    {
    int32_t delta = 0;
-   if (self()->comp()->getOption(TR_MimicInterpreterFrameShape))
+   if (comp()->getOption(TR_MimicInterpreterFrameShape))
       {
       delta++;
       }
 
-   return self()->getFirstJitTempIndex() - delta;
+   return getFirstJitTempIndex() - delta;
    }
 
 int32_t
 OMR::ResolvedMethodSymbol::getThisTempForObjectCtorIndex()
    {
    int32_t delta = 0;
-   if (self()->comp()->getOption(TR_MimicInterpreterFrameShape))
+   if (comp()->getOption(TR_MimicInterpreterFrameShape))
       {
       delta++;
       }
 
-   return self()->getFirstJitTempIndex() - delta;
+   return getFirstJitTempIndex() - delta;
    }
 
 List<TR::ParameterSymbol>&
 OMR::ResolvedMethodSymbol::getLogicalParameterList(TR::Compilation *comp)
    {
-      return self()->getParameterList();
+      return getParameterList();
    }
 
 template <typename AllocatorType>
@@ -421,47 +421,47 @@ bcIndexForFakeInduce(TR::Compilation* comp, int16_t* callSiteInsertionPoint,
 bool
 OMR::ResolvedMethodSymbol::canInjectInduceOSR(TR::Node* node)
    {
-   bool trace = self()->comp()->getOption(TR_TraceOSR);
+   bool trace = comp()->getOption(TR_TraceOSR);
    if (node->getOpCodeValue() != TR::treetop
        && node->getOpCodeValue() != TR::NULLCHK
        && node->getOpCodeValue() != TR::ResolveAndNULLCHK)
       {
       if (trace)
-         traceMsg(self()->comp(), "node doesn't have a treetop, NULLCHK, or ResolveAndNULLCHK root\n");
+         traceMsg(comp(), "node doesn't have a treetop, NULLCHK, or ResolveAndNULLCHK root\n");
       return false;
       }
    if (node->getNumChildren() != 1
        || !node->getChild(0)->getOpCode().isCall())
       {
       if (trace)
-         traceMsg(self()->comp(), "there is no call under the treetop\n");
+         traceMsg(comp(), "there is no call under the treetop\n");
       return false;
       }
    TR::Node* callNode = node->getChild(0);
    if (callNode->getReferenceCount() != 1 && node->getOpCodeValue() == TR::treetop)
       {
       if (trace)
-         traceMsg(self()->comp(), "call node has a refcount larger than 1 and is under a treetop\n");
+         traceMsg(comp(), "call node has a refcount larger than 1 and is under a treetop\n");
       return false;
       }
-   const char* rootSignature = self()->comp()->signature();
+   const char* rootSignature = comp()->signature();
    if (!strncmp(rootSignature, "java/lang/Object.newInstancePrototype", 37))
       {
       if (trace)
-         traceMsg(self()->comp(), "root method is a java/lang/Object.newInstancePrototype method\n");
+         traceMsg(comp(), "root method is a java/lang/Object.newInstancePrototype method\n");
       return false;
       }
    if (!strncmp(rootSignature, "java/lang/Class.newInstancePrototype", 36))
       {
       if (trace)
-         traceMsg(self()->comp(), "root method is a java/lang/Class.newInstancePrototype method\n");
+         traceMsg(comp(), "root method is a java/lang/Class.newInstancePrototype method\n");
       return false;
       }
-   const char* currentSignature = self()->signature(self()->comp()->trMemory());
+   const char* currentSignature = signature(comp()->trMemory());
    if (!strncmp(currentSignature, "com/ibm/jit/JITHelpers", 22))
       {
       if (trace)
-         traceMsg(self()->comp(), "node is a com/ibm/jit/jit helper method\n");
+         traceMsg(comp(), "node is a com/ibm/jit/jit helper method\n");
       return false;
       }
 
@@ -474,18 +474,18 @@ OMR::ResolvedMethodSymbol::canInjectInduceOSR(TR::Node* node)
           methSym->getMethodKind() == TR::MethodSymbol::Special)
          {
          if (trace)
-            traceMsg(self()->comp(), "node is a helper, native, or a special call\n");
+            traceMsg(comp(), "node is a helper, native, or a special call\n");
          return false;
          }
       }
    if (sym->isResolvedMethod())
       {
       auto * methSym = sym->castToResolvedMethodSymbol();
-      const char* signature = methSym->signature(self()->comp()->trMemory());
+      const char* signature = methSym->signature(comp()->trMemory());
       if (!strncmp(signature, "com/ibm/jit/JITHelpers", 22))
          {
          if (trace)
-            traceMsg(self()->comp(), "node is a com/ibm/jit/jit helper method\n");
+            traceMsg(comp(), "node is a com/ibm/jit/jit helper method\n");
          return false;
          }
       }
@@ -510,19 +510,19 @@ OMR::ResolvedMethodSymbol::genInduceOSRCallNode(TR::TreeTop* insertionPoint,
    {
    // If not specified use the outermost CFG
    if (!cfg)
-      cfg = self()->comp()->getFlowGraph();
+      cfg = comp()->getFlowGraph();
 
    //Now we need to put the induceOSR call as the first treetop of its block.
    //Because if we don't do that and if there is a method call before induceOSR in induceOSR's block
    //and that method gets inlined
    //there is no guarantee that the future block containing the induceOSR call still will have an exception
    //edge to the OSR catch block.
-   TR::SymbolReferenceTable* symRefTab = self()->comp()->getSymRefTab();
+   TR::SymbolReferenceTable* symRefTab = comp()->getSymRefTab();
    TR::SymbolReference *induceOSRSymRef = symRefTab->findOrCreateInduceOSRSymbolRef(TR_induceOSRAtCurrentPC);
    TR::Node *refNode = insertionPoint->getNode();
 
-   if (self()->comp()->getOption(TR_TraceOSR))
-     traceMsg(self()->comp(), "O^O OSR: Inject induceOSR call for [%p] at %3d:%d\n", refNode, refNode->getInlinedSiteIndex(), refNode->getByteCodeIndex());
+   if (comp()->getOption(TR_TraceOSR))
+     traceMsg(comp(), "O^O OSR: Inject induceOSR call for [%p] at %3d:%d\n", refNode, refNode->getInlinedSiteIndex(), refNode->getByteCodeIndex());
 
    TR::Block * firstHalfBlock = insertionPoint->getEnclosingBlock();
    if (shouldSplitBlock)
@@ -531,7 +531,7 @@ OMR::ResolvedMethodSymbol::genInduceOSRCallNode(TR::TreeTop* insertionPoint,
 
    // The arguments for a transition to this bytecode index may have already been stashed.
    // If they have, use these directly rather than copying the reference node.
-   TR_OSRMethodData *osrMethodData = self()->comp()->getOSRCompilationData()->findOrCreateOSRMethodData(
+   TR_OSRMethodData *osrMethodData = comp()->getOSRCompilationData()->findOrCreateOSRMethodData(
       refNode->getByteCodeInfo().getCallerIndex(), self());
    TR_Array<int32_t> *stashedArgs = osrMethodData->getArgInfo(refNode->getByteCodeIndex());
    int32_t firstArgIndex = 0;
@@ -549,7 +549,7 @@ OMR::ResolvedMethodSymbol::genInduceOSRCallNode(TR::TreeTop* insertionPoint,
       }
 
    TR::Node *induceOSRCallNode = TR::Node::createWithSymRef(refNode, TR::call, numChildren - firstArgIndex, induceOSRSymRef);
-   TR_OSRPoint *point = self()->findOSRPoint(refNode->getByteCodeInfo());
+   TR_OSRPoint *point = findOSRPoint(refNode->getByteCodeInfo());
    TR_ASSERT(point, "Could not find osr point for bytecode %d:%d!", refNode->getByteCodeInfo().getCallerIndex(), refNode->getByteCodeInfo().getByteCodeIndex());
 
    // If arguments have been stashed against this BCI, copy them now, ignoring the copyChildren flag
@@ -557,7 +557,7 @@ OMR::ResolvedMethodSymbol::genInduceOSRCallNode(TR::TreeTop* insertionPoint,
       {
       for (int32_t i = 0; i < numChildren; ++i)
          induceOSRCallNode->setAndIncChild(i,
-            TR::Node::createLoad(induceOSRCallNode, self()->comp()->getSymRefTab()->getSymRef((*stashedArgs)[i])));
+            TR::Node::createLoad(induceOSRCallNode, comp()->getSymRefTab()->getSymRef((*stashedArgs)[i])));
       }
    else if (copyChildren)
       {
@@ -569,11 +569,11 @@ OMR::ResolvedMethodSymbol::genInduceOSRCallNode(TR::TreeTop* insertionPoint,
       induceOSRCallNode->setNumChildren(0);
       }
 
-   if (self()->comp()->getOptions()->getVerboseOption(TR_VerboseOSRDetails))
-      TR_VerboseLog::writeLineLocked(TR_Vlog_OSRD, "Injected induceOSR call at %3d:%d in %s", refNode->getInlinedSiteIndex(), refNode->getByteCodeIndex(), self()->comp()->signature());
+   if (comp()->getOptions()->getVerboseOption(TR_VerboseOSRDetails))
+      TR_VerboseLog::writeLineLocked(TR_Vlog_OSRD, "Injected induceOSR call at %3d:%d in %s", refNode->getInlinedSiteIndex(), refNode->getByteCodeIndex(), comp()->signature());
 
    TR::Node *induceOSRTreeTopNode = TR::Node::create(TR::treetop, 1, induceOSRCallNode);
-   insertionPoint->insertBefore(TR::TreeTop::create(self()->comp(), induceOSRTreeTopNode));
+   insertionPoint->insertBefore(TR::TreeTop::create(comp(), induceOSRTreeTopNode));
    return insertionPoint->getPrevTreeTop();
    }
 
@@ -625,9 +625,9 @@ OMR::ResolvedMethodSymbol::induceOSRAfterImpl(TR::TreeTop *insertionPoint, TR_By
    {
    TR::Block *block = insertionPoint->getEnclosingBlock();
 
-   if (self()->supportsInduceOSR(induceBCI, block, self()->comp()))
+   if (supportsInduceOSR(induceBCI, block, comp()))
       {
-      TR::CFG *cfg = self()->comp()->getFlowGraph();
+      TR::CFG *cfg = comp()->getFlowGraph();
       cfg->setStructure(NULL);
       TR::TreeTop *remainderTree = insertionPoint->getNextTreeTop();
       if (remainderTree->getNode()->getOpCodeValue() != TR::BBEnd)
@@ -636,21 +636,21 @@ OMR::ResolvedMethodSymbol::induceOSRAfterImpl(TR::TreeTop *insertionPoint, TR_By
             {
             TR::Block *remainderBlock = block->split(remainderTree, cfg, false, true);
             remainderBlock->setIsExtensionOfPreviousBlock(true);
-            if (self()->comp()->getOption(TR_TraceOSR))
-               traceMsg(self()->comp(), "  Split of block_%d at n%dn produced block_%d which is an extension\n", block->getNumber(), remainderTree->getNode()->getGlobalIndex(), remainderBlock->getNumber());
+            if (comp()->getOption(TR_TraceOSR))
+               traceMsg(comp(), "  Split of block_%d at n%dn produced block_%d which is an extension\n", block->getNumber(), remainderTree->getNode()->getGlobalIndex(), remainderBlock->getNumber());
             }
          else
             {
             TR::Block *remainderBlock = block->split(remainderTree, cfg, true, true);
-            if (self()->comp()->getOption(TR_TraceOSR))
-               traceMsg(self()->comp(), "  Split of block_%d at n%dn produced block_%d\n", block->getNumber(), remainderTree->getNode()->getGlobalIndex(), remainderBlock->getNumber());
+            if (comp()->getOption(TR_TraceOSR))
+               traceMsg(comp(), "  Split of block_%d at n%dn produced block_%d\n", block->getNumber(), remainderTree->getNode()->getGlobalIndex(), remainderBlock->getNumber());
             }
          }
 
       induceBCI.setByteCodeIndex(induceBCI.getByteCodeIndex() + offset);
 
       // create a block that will be the target of the branch with BCI for the induceOSR
-      TR::Block *osrBlock = TR::Block::createEmptyBlock(self()->comp(), MAX_COLD_BLOCK_COUNT);
+      TR::Block *osrBlock = TR::Block::createEmptyBlock(comp(), MAX_COLD_BLOCK_COUNT);
       osrBlock->setIsCold();
       osrBlock->getEntry()->getNode()->setByteCodeInfo(induceBCI);
       osrBlock->getExit()->getNode()->setByteCodeInfo(induceBCI);
@@ -665,15 +665,15 @@ OMR::ResolvedMethodSymbol::induceOSRAfterImpl(TR::TreeTop *insertionPoint, TR_By
       cfg->addNode(osrBlock);
       cfg->addEdge(block, osrBlock);
 
-      if (self()->comp()->getOption(TR_TraceOSR))
-         traceMsg(self()->comp(), "  Created OSR block_%d and inserting it at the end of the method\n", osrBlock->getNumber());
+      if (comp()->getOption(TR_TraceOSR))
+         traceMsg(comp(), "  Created OSR block_%d and inserting it at the end of the method\n", osrBlock->getNumber());
 
       branch->getNode()->setBranchDestination(osrBlock->getEntry());
       block->append(branch);
       cfg->copyExceptionSuccessors(block, osrBlock);
 
       // induce OSR in the new block
-      return self()->genInduceOSRCallAndCleanUpFollowingTreesImmediately(osrBlock->getExit(), induceBCI, false, self()->comp());
+      return genInduceOSRCallAndCleanUpFollowingTreesImmediately(osrBlock->getExit(), induceBCI, false, comp());
       }
    return NULL;
    }
@@ -681,17 +681,17 @@ OMR::ResolvedMethodSymbol::induceOSRAfterImpl(TR::TreeTop *insertionPoint, TR_By
 TR::TreeTop *
 OMR::ResolvedMethodSymbol::induceImmediateOSRWithoutChecksBefore(TR::TreeTop *insertionPoint)
    {
-   if (self()->supportsInduceOSR(insertionPoint->getNode()->getByteCodeInfo(), insertionPoint->getEnclosingBlock(), self()->comp()))
-      return self()->genInduceOSRCallAndCleanUpFollowingTreesImmediately(insertionPoint, insertionPoint->getNode()->getByteCodeInfo(), false, self()->comp());
-   if (self()->comp()->getOption(TR_TraceOSR))
-      traceMsg(self()->comp(), "induceImmediateOSRWithoutChecksBefore n%dn failed - supportsInduceOSR returned false\n", insertionPoint->getNode()->getGlobalIndex());
+   if (supportsInduceOSR(insertionPoint->getNode()->getByteCodeInfo(), insertionPoint->getEnclosingBlock(), comp()))
+      return genInduceOSRCallAndCleanUpFollowingTreesImmediately(insertionPoint, insertionPoint->getNode()->getByteCodeInfo(), false, comp());
+   if (comp()->getOption(TR_TraceOSR))
+      traceMsg(comp(), "induceImmediateOSRWithoutChecksBefore n%dn failed - supportsInduceOSR returned false\n", insertionPoint->getNode()->getGlobalIndex());
    return NULL;
    }
 
 TR::TreeTop *
 OMR::ResolvedMethodSymbol::genInduceOSRCallAndCleanUpFollowingTreesImmediately(TR::TreeTop *insertionPoint, TR_ByteCodeInfo induceBCI, bool shouldSplitBlock, TR::Compilation *comp)
    {
-   TR::TreeTop *induceOSRCallTree = self()->genInduceOSRCall(insertionPoint, induceBCI.getCallerIndex(), 0, false, shouldSplitBlock);
+   TR::TreeTop *induceOSRCallTree = genInduceOSRCall(insertionPoint, induceBCI.getCallerIndex(), 0, false, shouldSplitBlock);
 
    if (induceOSRCallTree)
       {
@@ -733,8 +733,8 @@ OMR::ResolvedMethodSymbol::genInduceOSRCall(TR::TreeTop* insertionPoint,
                                           bool shouldSplitBlock,
                                           TR::CFG *cfg)
    {
-   TR_OSRMethodData *osrMethodData = self()->comp()->getOSRCompilationData()->findOrCreateOSRMethodData(inlinedSiteIndex, self());
-   return self()->genInduceOSRCall(insertionPoint, inlinedSiteIndex, osrMethodData, numChildren, copyChildren, shouldSplitBlock, cfg);
+   TR_OSRMethodData *osrMethodData = comp()->getOSRCompilationData()->findOrCreateOSRMethodData(inlinedSiteIndex, self());
+   return genInduceOSRCall(insertionPoint, inlinedSiteIndex, osrMethodData, numChildren, copyChildren, shouldSplitBlock, cfg);
    }
 
 TR::TreeTop *
@@ -748,16 +748,16 @@ OMR::ResolvedMethodSymbol::genInduceOSRCall(TR::TreeTop* insertionPoint,
    {
    // If not specified use the outermost CFG
    if (!callerCFG)
-      callerCFG = self()->comp()->getFlowGraph();
+      callerCFG = comp()->getFlowGraph();
 
    TR::Node *insertionPointNode = insertionPoint->getNode();
-   if (self()->comp()->getOption(TR_TraceOSR))
-      traceMsg(self()->comp(), "Osr point added for %p, callerIndex=%d, bcindex=%d\n",
+   if (comp()->getOption(TR_TraceOSR))
+      traceMsg(comp(), "Osr point added for %p, callerIndex=%d, bcindex=%d\n",
               insertionPointNode, insertionPointNode->getByteCodeInfo().getCallerIndex(),
               insertionPointNode->getByteCodeInfo().getByteCodeIndex());
 
    TR::Block * OSRCatchBlock = osrMethodData->getOSRCatchBlock();
-   TR::TreeTop *induceOSRCallTree = self()->genInduceOSRCallNode(insertionPoint, numChildren, copyChildren, shouldSplitBlock, callerCFG);
+   TR::TreeTop *induceOSRCallTree = genInduceOSRCallNode(insertionPoint, numChildren, copyChildren, shouldSplitBlock, callerCFG);
 
    TR::Block *enclosingBlock = insertionPoint->getEnclosingBlock();
    if (!enclosingBlock->getLastRealTreeTop()->getNode()->getOpCode().isReturn())
@@ -783,7 +783,7 @@ OMR::ResolvedMethodSymbol::genInduceOSRCall(TR::TreeTop* insertionPoint,
       }
 
    TR::SymbolReference * tempSymRef = 0;
-   TR::Node * loadExcpSymbol = TR::Node::createWithSymRef(insertionPointNode, TR::aload, 0, self()->comp()->getSymRefTab()->findOrCreateExcpSymbolRef());
+   TR::Node * loadExcpSymbol = TR::Node::createWithSymRef(insertionPointNode, TR::aload, 0, comp()->getSymRefTab()->findOrCreateExcpSymbolRef());
 
    TR::TreeTop *lastTreeInEnclosingBlock = enclosingBlock->getLastRealTreeTop();
    if (lastTreeInEnclosingBlock != enclosingBlock->getLastNonControlFlowTreeTop())
@@ -794,11 +794,11 @@ OMR::ResolvedMethodSymbol::genInduceOSRCall(TR::TreeTop* insertionPoint,
       lastTreeInEnclosingBlock->getNode()->recursivelyDecReferenceCount();
       }
 
-   enclosingBlock->append(TR::TreeTop::create(self()->comp(), TR::Node::createWithSymRef(TR::athrow, 1, 1, loadExcpSymbol, self()->comp()->getSymRefTab()->findOrCreateAThrowSymbolRef(self()))));
+   enclosingBlock->append(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::athrow, 1, 1, loadExcpSymbol, comp()->getSymRefTab()->findOrCreateAThrowSymbolRef(self()))));
    enclosingBlock->getLastRealTreeTop()->getNode()->setThrowInsertedByOSR(true);
 
    bool firstOSRPoint = false;
-   if (self()->getOSRPoints().isEmpty())
+   if (getOSRPoints().isEmpty())
       firstOSRPoint = true;
 
    // TODO: The late addition of OSR infrastructure based on the lack of OSR points should not be possible, as we shouldn't have been able to induce without
@@ -808,18 +808,18 @@ OMR::ResolvedMethodSymbol::genInduceOSRCall(TR::TreeTop* insertionPoint,
       TR::Block *OSRCodeBlock = osrMethodData->getOSRCodeBlock();
       TR::Block *OSRCatchBlock = osrMethodData->getOSRCatchBlock();
 
-      if (self()->comp()->getOption(TR_TraceOSR))
-         traceMsg(self()->comp(), "code %p %d catch %p %d\n", OSRCodeBlock, OSRCodeBlock->getNumber(), OSRCatchBlock, OSRCatchBlock->getNumber());
+      if (comp()->getOption(TR_TraceOSR))
+         traceMsg(comp(), "code %p %d catch %p %d\n", OSRCodeBlock, OSRCodeBlock->getNumber(), OSRCatchBlock, OSRCatchBlock->getNumber());
 
-      self()->getLastTreeTop()->insertTreeTopsAfterMe(OSRCatchBlock->getEntry(), OSRCodeBlock->getExit());
-      self()->genOSRHelperCall(inlinedSiteIndex, self()->comp()->getSymRefTab(), callerCFG);
+      getLastTreeTop()->insertTreeTopsAfterMe(OSRCatchBlock->getEntry(), OSRCodeBlock->getExit());
+      genOSRHelperCall(inlinedSiteIndex, comp()->getSymRefTab(), callerCFG);
       }
 
-   self()->insertRematableStoresFromCallSites(self()->comp(), inlinedSiteIndex, induceOSRCallTree);
-   self()->insertStoresForDeadStackSlotsBeforeInducingOSR(self()->comp(), inlinedSiteIndex, insertionPoint->getNode()->getByteCodeInfo(), induceOSRCallTree);
+   insertRematableStoresFromCallSites(comp(), inlinedSiteIndex, induceOSRCallTree);
+   insertStoresForDeadStackSlotsBeforeInducingOSR(comp(), inlinedSiteIndex, insertionPoint->getNode()->getByteCodeInfo(), induceOSRCallTree);
 
-   if (self()->comp()->getOption(TR_TraceOSR))
-      traceMsg(self()->comp(), "last real tree n%dn\n", enclosingBlock->getLastRealTreeTop()->getNode()->getGlobalIndex());
+   if (comp()->getOption(TR_TraceOSR))
+      traceMsg(comp(), "last real tree n%dn\n", enclosingBlock->getLastRealTreeTop()->getNode()->getGlobalIndex());
    return induceOSRCallTree;
    }
 
@@ -852,7 +852,7 @@ OMR::ResolvedMethodSymbol::matchInduceOSRCall(TR::TreeTop* insertionPoint,
       if ((callerIndex != -3 && refNode->getInlinedSiteIndex() != callerIndex) ||
           (byteCodeIndex != -3 && refNode->getByteCodeIndex() != byteCodeIndex))
          return 0;
-      if (self()->canInjectInduceOSR(refNode))
+      if (canInjectInduceOSR(refNode))
          return 1;
       else
          {
@@ -865,11 +865,11 @@ OMR::ResolvedMethodSymbol::matchInduceOSRCall(TR::TreeTop* insertionPoint,
    else if (childPath[0] == 'r')
       {
       if (callerIndex == -2) return 0;
-      if (!self()->canInjectInduceOSR(refNode)) return 0;
-      int32_t random = self()->comp()->adhocRandom().getRandom();
-      if (self()->comp()->getOption(TR_TraceOSR))
-         traceMsg(self()->comp(), "Random fake induceOSR injection: caller=%d bc=%x random=%d\n", callerIndex, byteCodeIndex, random);
-      if (self()->comp()->adhocRandom().getRandom() % recipProb != 0) return 0;
+      if (!canInjectInduceOSR(refNode)) return 0;
+      int32_t random = comp()->adhocRandom().getRandom();
+      if (comp()->getOption(TR_TraceOSR))
+         traceMsg(comp(), "Random fake induceOSR injection: caller=%d bc=%x random=%d\n", callerIndex, byteCodeIndex, random);
+      if (comp()->adhocRandom().getRandom() % recipProb != 0) return 0;
       return 1;
       }
    else if (childPath[0] == 'g')
@@ -877,7 +877,7 @@ OMR::ResolvedMethodSymbol::matchInduceOSRCall(TR::TreeTop* insertionPoint,
       if ((callerIndex != -3 && refNode->getInlinedSiteIndex() != callerIndex) ||
           (byteCodeIndex != -3 && refNode->getByteCodeIndex() < byteCodeIndex))
          return 0;
-      if (self()->canInjectInduceOSR(refNode))
+      if (canInjectInduceOSR(refNode))
          return 1;
       else
          return 0;
@@ -890,16 +890,16 @@ OMR::ResolvedMethodSymbol::matchInduceOSRCall(TR::TreeTop* insertionPoint,
 void
 OMR::ResolvedMethodSymbol::genAndAttachOSRCodeBlocks(int32_t currentInlinedSiteIndex)
    {
-   bool trace = self()->comp()->getOption(TR_TraceOSR);
-   TR_ASSERT(self()->getFirstTreeTop(), "the method doesn't have any trees\n");
+   bool trace = comp()->getOption(TR_TraceOSR);
+   TR_ASSERT(getFirstTreeTop(), "the method doesn't have any trees\n");
    int16_t callSiteInsertionPoint, bcIndexInsertionPoint;
    char childPath[10];
    childPath[0] = '\0';
-   bcIndexForFakeInduce(self()->comp(), &callSiteInsertionPoint, &bcIndexInsertionPoint, childPath);
-   const char * mSignature = self()->signature(self()->comp()->trMemory());
+   bcIndexForFakeInduce(comp(), &callSiteInsertionPoint, &bcIndexInsertionPoint, childPath);
+   const char * mSignature = signature(comp()->trMemory());
 
    TR::TreeTop *lastTreeTop = NULL;
-   TR_OSRMethodData *osrMethodData = self()->comp()->getOSRCompilationData()->findOrCreateOSRMethodData(currentInlinedSiteIndex, self());
+   TR_OSRMethodData *osrMethodData = comp()->getOSRCompilationData()->findOrCreateOSRMethodData(currentInlinedSiteIndex, self());
 
    // Under NextGenHCR, the method entry for the outermost method is an implicit OSR point
    // To ensure a transition from this point is possible, it is necessary to generate and attach
@@ -907,41 +907,41 @@ OMR::ResolvedMethodSymbol::genAndAttachOSRCodeBlocks(int32_t currentInlinedSiteI
    // This exception edge should remain until OSR guards have been inserted, at which point it is no
    // longer needed
    //
-   if (self()->comp()->isOutermostMethod() && self()->comp()->getHCRMode() == TR::osr)
+   if (comp()->isOutermostMethod() && comp()->getHCRMode() == TR::osr)
       {
       // Add an exception edge to the OSR catch block from the first block
-      TR::Block *OSRCatchBlock = osrMethodData->findOrCreateOSRCatchBlock(self()->getFirstTreeTop()->getNode());
-      TR::Block *firstBlock = self()->getFirstTreeTop()->getEnclosingBlock();
+      TR::Block *OSRCatchBlock = osrMethodData->findOrCreateOSRCatchBlock(getFirstTreeTop()->getNode());
+      TR::Block *firstBlock = getFirstTreeTop()->getEnclosingBlock();
       if (!firstBlock->hasExceptionSuccessor(OSRCatchBlock))
-         self()->comp()->getFlowGraph()->addEdge(TR::CFGEdge::createExceptionEdge(firstBlock, OSRCatchBlock, self()->comp()->trMemory()));
+         comp()->getFlowGraph()->addEdge(TR::CFGEdge::createExceptionEdge(firstBlock, OSRCatchBlock, comp()->trMemory()));
 
       // Create an OSR point with bytecode index 0
-      TR_ByteCodeInfo firstBCI = self()->getFirstTreeTop()->getNode()->getByteCodeInfo();
+      TR_ByteCodeInfo firstBCI = getFirstTreeTop()->getNode()->getByteCodeInfo();
       firstBCI.setByteCodeIndex(0);
-      TR_OSRPoint *osrPoint = new (self()->comp()->trHeapMemory()) TR_OSRPoint(firstBCI, osrMethodData, self()->comp()->trMemory());
-      osrPoint->setOSRIndex(self()->addOSRPoint(osrPoint));
+      TR_OSRPoint *osrPoint = new (comp()->trHeapMemory()) TR_OSRPoint(firstBCI, osrMethodData, comp()->trMemory());
+      osrPoint->setOSRIndex(addOSRPoint(osrPoint));
       }
 
    //Using this flag we avoid processing twice a call before which we are injecting an induceOSR
    bool skipNextTT = false;
-   for (TR::TreeTop* tt = self()->getFirstTreeTop(); tt; tt = tt->getNextTreeTop())
+   for (TR::TreeTop* tt = getFirstTreeTop(); tt; tt = tt->getNextTreeTop())
       {
       TR::Node* ttnode = tt->getNode();
       if (!skipNextTT)
          {
-         int matchCode = self()->matchInduceOSRCall(tt, callSiteInsertionPoint, bcIndexInsertionPoint, childPath);
+         int matchCode = matchInduceOSRCall(tt, callSiteInsertionPoint, bcIndexInsertionPoint, childPath);
          if (matchCode > 0)
             {
             TR::Node *refNode = tt->getNode()->getFirstChild();
             int32_t numChildren   = refNode->getNumChildren();
             int32_t firstArgIndex = refNode->getFirstArgumentIndex();
-            self()->genInduceOSRCallNode(tt, (numChildren - firstArgIndex), matchCode == 1);
+            genInduceOSRCallNode(tt, (numChildren - firstArgIndex), matchCode == 1);
             tt = tt->getPrevTreeTop();
             ttnode = tt->getNode();
             if (trace)
                {
-               const char * mSignature = self()->signature(self()->comp()->trMemory());
-               traceMsg(self()->comp(), "fake induce %p generated for %s at callsite %d bytecode %x\n",
+               const char * mSignature = signature(comp()->trMemory());
+               traceMsg(comp(), "fake induce %p generated for %s at callsite %d bytecode %x\n",
                        ttnode, mSignature, callSiteInsertionPoint, bcIndexInsertionPoint);
                }
             skipNextTT = true;
@@ -951,31 +951,31 @@ OMR::ResolvedMethodSymbol::genAndAttachOSRCodeBlocks(int32_t currentInlinedSiteI
          skipNextTT = false;
       // check potential OSR point using a node to avoid a check for the exception successor
       // which we are responsible for creating if we decide to continue with this OSR point
-      if (self()->comp()->isPotentialOSRPoint(tt->getNode()))
+      if (comp()->isPotentialOSRPoint(tt->getNode()))
          {
          TR::Block * block = tt->getEnclosingBlock();
          // Add the OSR point to the list
          TR::Block * OSRCatchBlock = osrMethodData->findOrCreateOSRCatchBlock(ttnode);
          TR_OSRPoint *osrPoint = NULL;
 
-         if (self()->comp()->isOSRTransitionTarget(TR::preExecutionOSR) || self()->comp()->requiresAnalysisOSRPoint(ttnode))
+         if (comp()->isOSRTransitionTarget(TR::preExecutionOSR) || comp()->requiresAnalysisOSRPoint(ttnode))
             {
-            osrPoint = new (self()->comp()->trHeapMemory()) TR_OSRPoint(ttnode->getByteCodeInfo(), osrMethodData, self()->comp()->trMemory());
-            osrPoint->setOSRIndex(self()->addOSRPoint(osrPoint));
-            if (self()->comp()->getOption(TR_TraceOSR))
-               traceMsg(self()->comp(), "pre osr point added for [%p] for bci %d:%d\n",
+            osrPoint = new (comp()->trHeapMemory()) TR_OSRPoint(ttnode->getByteCodeInfo(), osrMethodData, comp()->trMemory());
+            osrPoint->setOSRIndex(addOSRPoint(osrPoint));
+            if (comp()->getOption(TR_TraceOSR))
+               traceMsg(comp(), "pre osr point added for [%p] for bci %d:%d\n",
                   ttnode, ttnode->getByteCodeInfo().getCallerIndex(),
                   ttnode->getByteCodeInfo().getByteCodeIndex());
             }
 
-         if (self()->comp()->isOSRTransitionTarget(TR::postExecutionOSR))
+         if (comp()->isOSRTransitionTarget(TR::postExecutionOSR))
             {
             TR_ByteCodeInfo offsetBCI = ttnode->getByteCodeInfo();
-            offsetBCI.setByteCodeIndex(offsetBCI.getByteCodeIndex() + self()->comp()->getOSRInductionOffset(ttnode));
-            osrPoint = new (self()->comp()->trHeapMemory()) TR_OSRPoint(offsetBCI, osrMethodData, self()->comp()->trMemory());
-            osrPoint->setOSRIndex(self()->addOSRPoint(osrPoint));
-            if (self()->comp()->getOption(TR_TraceOSR))
-               traceMsg(self()->comp(), "post osr point added for [%p] for bci %d:%d\n",
+            offsetBCI.setByteCodeIndex(offsetBCI.getByteCodeIndex() + comp()->getOSRInductionOffset(ttnode));
+            osrPoint = new (comp()->trHeapMemory()) TR_OSRPoint(offsetBCI, osrMethodData, comp()->trMemory());
+            osrPoint->setOSRIndex(addOSRPoint(osrPoint));
+            if (comp()->getOption(TR_TraceOSR))
+               traceMsg(comp(), "post osr point added for [%p] for bci %d:%d\n",
                   ttnode, offsetBCI.getCallerIndex(), offsetBCI.getByteCodeIndex());
             }
 
@@ -989,7 +989,7 @@ OMR::ResolvedMethodSymbol::genAndAttachOSRCodeBlocks(int32_t currentInlinedSiteI
             }
 
          if (edge == block->getExceptionSuccessors().end())
-            self()->comp()->getFlowGraph()->addEdge( TR::CFGEdge::createExceptionEdge(block, OSRCatchBlock, self()->comp()->trMemory()));
+            comp()->getFlowGraph()->addEdge( TR::CFGEdge::createExceptionEdge(block, OSRCatchBlock, comp()->trMemory()));
          }
       if (tt->getNextTreeTop() == NULL)
          lastTreeTop = tt;
@@ -1050,16 +1050,16 @@ OMR::ResolvedMethodSymbol::sharesStackSlot(TR::SymbolReference *symRef)
    {
    TR_ASSERT(symRef->getSymbol()->isAutoOrParm(), "sharesStackSlot requires #%d to be on the stack", symRef->getReferenceNumber());
    int32_t slot = symRef->getCPIndex();
-   if (slot >= self()->getFirstJitTempIndex())
+   if (slot >= getFirstJitTempIndex())
       return false; // Jit temps don't share slots
    TR::DataType dt = symRef->getSymbol()->getDataType();
    bool takesTwoSlots = dt == TR::Int64 || dt == TR::Double;
 
    List<TR::SymbolReference> *listForPrevSlot, *list, *listForNextSlot;
    if (slot < 0)
-      getNeighboringSymRefLists(-slot - 1, self()->getPendingPushSymRefs(), &listForPrevSlot, &list, &listForNextSlot);
+      getNeighboringSymRefLists(-slot - 1, getPendingPushSymRefs(), &listForPrevSlot, &list, &listForNextSlot);
    else
-      getNeighboringSymRefLists(slot, self()->getAutoSymRefs(), &listForPrevSlot, &list, &listForNextSlot);
+      getNeighboringSymRefLists(slot, getAutoSymRefs(), &listForPrevSlot, &list, &listForNextSlot);
 
    if (list->isMultipleEntry())
       return true;
@@ -1076,15 +1076,15 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
    {
    // If not specified use the outermost CFG
    if (!cfg)
-      cfg = self()->comp()->getFlowGraph();
+      cfg = comp()->getFlowGraph();
 
-   bool trace = self()->comp()->getOption(TR_TraceOSR);
+   bool trace = comp()->getOption(TR_TraceOSR);
    // Use first node of the method for bytecode info
-   TR_ASSERT(self()->getFirstTreeTop(), "first tree top is NULL in %s", self()->signature(self()->comp()->trMemory()));
-   TR::Node *firstNode = self()->getFirstTreeTop()->getNode();
+   TR_ASSERT(getFirstTreeTop(), "first tree top is NULL in %s", signature(comp()->trMemory()));
+   TR::Node *firstNode = getFirstTreeTop()->getNode();
 
    // Create the OSR helper symbol reference
-   TR::Node *vmThread = TR::Node::createWithSymRef(firstNode, TR::loadaddr, 0, new (self()->comp()->trHeapMemory()) TR::SymbolReference(symRefTab, TR::RegisterMappedSymbol::createMethodMetaDataSymbol(self()->comp()->trHeapMemory(), "vmThread")));
+   TR::Node *vmThread = TR::Node::createWithSymRef(firstNode, TR::loadaddr, 0, new (comp()->trHeapMemory()) TR::SymbolReference(symRefTab, TR::RegisterMappedSymbol::createMethodMetaDataSymbol(comp()->trHeapMemory(), "vmThread")));
    TR::SymbolReference *osrHelper = symRefTab->findOrCreateRuntimeHelper(TR_prepareForOSR, false, false, true);
 #if defined(TR_TARGET_X86) || defined(TR_HOST_POWER) || defined(TR_HOST_S390) || defined(TR_HOST_ARM)
    osrHelper->getSymbol()->castToMethodSymbol()->setLinkage(TR_System);
@@ -1093,10 +1093,10 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
    osrHelper->getSymbol()->castToMethodSymbol()->setSystemLinkageDispatch();
 #endif
 
-   TR_OSRMethodData *osrMethodData = self()->comp()->getOSRCompilationData()->findOrCreateOSRMethodData(currentInlinedSiteIndex, self());
+   TR_OSRMethodData *osrMethodData = comp()->getOSRCompilationData()->findOrCreateOSRMethodData(currentInlinedSiteIndex, self());
 
    // Create children to the OSR helper call node and save them to a list
-   TR_Array<TR::Node*> loadNodes(self()->comp()->trMemory());
+   TR_Array<TR::Node*> loadNodes(comp()->trMemory());
    loadNodes.add(vmThread);
    loadNodes.add(TR::Node::iconst(firstNode, osrMethodData->getInlinedSiteIndex()));
    TR::Node *loadNode = NULL;
@@ -1106,7 +1106,7 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
    bool alreadyLoadedThisTempForObjectCtor = false;
 
    // Pending push temporaries
-   TR_Array<List<TR::SymbolReference> > *ppsListArray = self()->getPendingPushSymRefs();
+   TR_Array<List<TR::SymbolReference> > *ppsListArray = getPendingPushSymRefs();
    for (i = 0; ppsListArray && i < ppsListArray->size(); ++i)
       {
       List<TR::SymbolReference> ppsList = (*ppsListArray)[i];
@@ -1114,20 +1114,20 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
       int symRefOrder = 0;
       for (TR::SymbolReference* symRef = ppsIt.getFirst(); symRef; symRef = ppsIt.getNext(), symRefOrder++)
          {
-         bool sharesSlot = self()->sharesStackSlot(symRef);
+         bool sharesSlot = sharesStackSlot(symRef);
          if (sharesSlot)
             {
             if (trace)
-               traceMsg(self()->comp(), "#%d shares pending push slot\n", symRef->getReferenceNumber());
-            if (self()->comp()->getOption(TR_DisableOSRSharedSlots))
+               traceMsg(comp(), "#%d shares pending push slot\n", symRef->getReferenceNumber());
+            if (comp()->getOption(TR_DisableOSRSharedSlots))
                {
-               self()->comp()->failCompilation<TR::ILGenFailure>("Pending push slot sharing detected");
+               comp()->failCompilation<TR::ILGenFailure>("Pending push slot sharing detected");
                }
             }
 
-         if (self()->getSyncObjectTemp() == symRef)
+         if (getSyncObjectTemp() == symRef)
             alreadyLoadedSyncObjectTemp = true;
-         else if (self()->getThisTempForObjectCtor() == symRef)
+         else if (getThisTempForObjectCtor() == symRef)
             alreadyLoadedThisTempForObjectCtor = true;
 
          loadNodes.add(TR::Node::createLoad(firstNode, symRef));
@@ -1137,7 +1137,7 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
       }
 
    //  parameters and autos
-   TR_Array<List<TR::SymbolReference> > *autosListArray = self()->getAutoSymRefs();
+   TR_Array<List<TR::SymbolReference> > *autosListArray = getAutoSymRefs();
    for (i = 0; autosListArray && i < autosListArray->size(); ++i)
       {
       List<TR::SymbolReference> autosList = (*autosListArray)[i];
@@ -1145,27 +1145,27 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
       int symRefOrder = 0;
       for (TR::SymbolReference* symRef = autosIt.getFirst(); symRef; symRef = autosIt.getNext(), symRefOrder++)
          {
-         bool sharesSlot = self()->sharesStackSlot(symRef);
+         bool sharesSlot = sharesStackSlot(symRef);
          if (sharesSlot)
             {
             if (trace)
-               traceMsg(self()->comp(), "#%d shares auto slot\n", symRef->getReferenceNumber());
-            if (self()->comp()->getOption(TR_DisableOSRSharedSlots))
+               traceMsg(comp(), "#%d shares auto slot\n", symRef->getReferenceNumber());
+            if (comp()->getOption(TR_DisableOSRSharedSlots))
                {
-               self()->comp()->failCompilation<TR::ILGenFailure>("Auto/parm slot sharing detected");
+               comp()->failCompilation<TR::ILGenFailure>("Auto/parm slot sharing detected");
                }
             }
          // Certain special temps go into the OSR buffer, but most don't
          //
-         if (self()->getSyncObjectTemp() == symRef)
+         if (getSyncObjectTemp() == symRef)
             alreadyLoadedSyncObjectTemp = true;
-         else if (self()->getThisTempForObjectCtor() == symRef)
+         else if (getThisTempForObjectCtor() == symRef)
             alreadyLoadedThisTempForObjectCtor = true;
-         else if (symRef->getCPIndex() >= self()->getFirstJitTempIndex())
+         else if (symRef->getCPIndex() >= getFirstJitTempIndex())
             continue;
          TR::Symbol *sym = symRef->getSymbol();
          if (trace)
-            traceMsg(self()->comp(), "symref # %d is %s\n", symRef->getReferenceNumber(), (sym->isAuto()?"auto":(sym->isParm()?"parm":"not auto or parm")));
+            traceMsg(comp(), "symref # %d is %s\n", symRef->getReferenceNumber(), (sym->isAuto()?"auto":(sym->isParm()?"parm":"not auto or parm")));
 
          loadNodes.add(TR::Node::createLoad(firstNode, symRef));
          loadNodes.add(TR::Node::iconst(firstNode, symRef->getReferenceNumber()));
@@ -1174,17 +1174,17 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
 
       }
 
-   if (!alreadyLoadedSyncObjectTemp && (self()->getSyncObjectTemp() != NULL))
+   if (!alreadyLoadedSyncObjectTemp && (getSyncObjectTemp() != NULL))
       {
-      loadNodes.add(TR::Node::createLoad(firstNode, self()->getSyncObjectTemp()));
-      loadNodes.add(TR::Node::iconst(firstNode, self()->getSyncObjectTemp()->getReferenceNumber()));
+      loadNodes.add(TR::Node::createLoad(firstNode, getSyncObjectTemp()));
+      loadNodes.add(TR::Node::iconst(firstNode, getSyncObjectTemp()->getReferenceNumber()));
       loadNodes.add(TR::Node::iconst(firstNode, -1));
       }
 
-   if (!alreadyLoadedThisTempForObjectCtor && (self()->getThisTempForObjectCtor() != NULL))
+   if (!alreadyLoadedThisTempForObjectCtor && (getThisTempForObjectCtor() != NULL))
       {
-      loadNodes.add(TR::Node::createLoad(firstNode, self()->getThisTempForObjectCtor()));
-      loadNodes.add(TR::Node::iconst(firstNode, self()->getThisTempForObjectCtor()->getReferenceNumber()));
+      loadNodes.add(TR::Node::createLoad(firstNode, getThisTempForObjectCtor()));
+      loadNodes.add(TR::Node::iconst(firstNode, getThisTempForObjectCtor()->getReferenceNumber()));
       loadNodes.add(TR::Node::iconst(firstNode, -1));
       }
 
@@ -1203,51 +1203,51 @@ OMR::ResolvedMethodSymbol::genOSRHelperCall(int32_t currentInlinedSiteIndex, TR:
    // Add the call to the OSR Block
    TR::Node *osrNode = TR::Node::create(TR::treetop, 1, osrCall);
    TR::Block *OSRCodeBlock = osrMethodData->getOSRCodeBlock();
-   TR::TreeTop *osrTT = TR::TreeTop::create(self()->comp(), osrNode);
+   TR::TreeTop *osrTT = TR::TreeTop::create(comp(), osrNode);
    OSRCodeBlock->append(osrTT);
 
    static bool disableOSRwithTM = feGetEnv("TR_disableOSRwithTM") ? true: false;
-   if (self()->comp()->cg()->getSupportsTM() && !self()->comp()->getOption(TR_DisableTLE) && !disableOSRwithTM)
+   if (comp()->cg()->getSupportsTM() && !comp()->getOption(TR_DisableTLE) && !disableOSRwithTM)
       {
       TR::Node *tabortNode = TR::Node::create(osrNode, TR::tabort, 0, 0);
-      TR::TreeTop *tabortTT = TR::TreeTop::create(self()->comp(),tabortNode, NULL,NULL);
-      tabortNode->setSymbolReference(self()->comp()->getSymRefTab()->findOrCreateTransactionAbortSymbolRef(self()->comp()->getMethodSymbol()));
+      TR::TreeTop *tabortTT = TR::TreeTop::create(comp(),tabortNode, NULL,NULL);
+      tabortNode->setSymbolReference(comp()->getSymRefTab()->findOrCreateTransactionAbortSymbolRef(comp()->getMethodSymbol()));
       if (trace)
-         traceMsg(self()->comp(), "adding tabortNode %p, tabortTT %p, osrNode %p\n", tabortNode, tabortTT, osrNode);
+         traceMsg(comp(), "adding tabortNode %p, tabortTT %p, osrNode %p\n", tabortNode, tabortTT, osrNode);
       osrTT->insertBefore(tabortTT);
       if (trace)
-         traceMsg(self()->comp(), "osrNode->getPrevTreeTop()->getNode() %p\n", osrTT->getPrevTreeTop()->getNode());
+         traceMsg(comp(), "osrNode->getPrevTreeTop()->getNode() %p\n", osrTT->getPrevTreeTop()->getNode());
       }
 
-   if (self()->comp()->getCurrentInlinedSiteIndex() == -1)
+   if (comp()->getCurrentInlinedSiteIndex() == -1)
       {
       //I'm compiling the top-level caller, so put a TR::igoto to vmThread->osrReturnAddress
       //to get the control back to the VM after we fill the OSR buffer
-      TR::Node* osrReturnAddress = TR::Node::createLoad(firstNode , self()->comp()->getSymRefTab()->findOrCreateOSRReturnAddressSymbolRef());
+      TR::Node* osrReturnAddress = TR::Node::createLoad(firstNode , comp()->getSymRefTab()->findOrCreateOSRReturnAddressSymbolRef());
       TR::Node* igotoNode = TR::Node::create(firstNode, TR::igoto, 1);
       igotoNode->setChild(0, osrReturnAddress);
       osrReturnAddress->incReferenceCount();
-      OSRCodeBlock->append(TR::TreeTop::create(self()->comp(), igotoNode));
+      OSRCodeBlock->append(TR::TreeTop::create(comp(), igotoNode));
       }
    else
       {
       // Add the dead stores for this call site
-      TR_OSRMethodData* callerOSRData = self()->comp()->getOSRCompilationData()->findCallerOSRMethodData(osrMethodData);
-      TR_InlinedCallSite &callSiteInfo = self()->comp()->getInlinedCallSite(currentInlinedSiteIndex);
-      callerOSRData->getMethodSymbol()->insertStoresForDeadStackSlots(self()->comp(), callSiteInfo._byteCodeInfo,
+      TR_OSRMethodData* callerOSRData = comp()->getOSRCompilationData()->findCallerOSRMethodData(osrMethodData);
+      TR_InlinedCallSite &callSiteInfo = comp()->getInlinedCallSite(currentInlinedSiteIndex);
+      callerOSRData->getMethodSymbol()->insertStoresForDeadStackSlots(comp(), callSiteInfo._byteCodeInfo,
          OSRCodeBlock->getExit(), false);
 
       //create an appropritely-typed return node and append it to the OSR code block and add
       //the corresponding cfg edge
-      bool voidReturn = self()->getResolvedMethod()->returnOpCode() == TR::Return;
-      TR::Node *retNode = TR::Node::create(firstNode, self()->getResolvedMethod()->returnOpCode(), voidReturn?0:1);
+      bool voidReturn = getResolvedMethod()->returnOpCode() == TR::Return;
+      TR::Node *retNode = TR::Node::create(firstNode, getResolvedMethod()->returnOpCode(), voidReturn?0:1);
       if (!voidReturn)
          {
-         TR::Node *retValNode = TR::Node::create(firstNode, self()->comp()->il.opCodeForConst(self()->getResolvedMethod()->returnType()), 0);
+         TR::Node *retValNode = TR::Node::create(firstNode, comp()->il.opCodeForConst(getResolvedMethod()->returnType()), 0);
          retValNode->setLongInt(0);
          retNode->setAndIncChild(0, retValNode);
          }
-      OSRCodeBlock->append(TR::TreeTop::create(self()->comp(), retNode));
+      OSRCodeBlock->append(TR::TreeTop::create(comp(), retNode));
       }
 
    cfg->addEdge(OSRCodeBlock, cfg->getEnd());
@@ -1269,11 +1269,11 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
       if (comp->isPeekingMethod())
          traceMsg(comp, "<peeking ilgen\n"
                  "\tmethod=\"%s\">\n",
-                 self()->signature(comp->trMemory()));
+                 signature(comp->trMemory()));
       else
          traceMsg(comp, "<ilgen\n"
                  "\tmethod=\"%s\">\n",
-                 self()->signature(comp->trMemory()));
+                 signature(comp->trMemory()));
       if (comp->getDebug())
          {
          traceMsg(comp, "   <request> ");
@@ -1306,7 +1306,7 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
             }
 
          if (_tempIndex == -1)
-            self()->setParameterList();
+            setParameterList();
          _tempIndex = _firstJitTempIndex;
          //_automaticList.setListHead(0); // what's the point ? sym ref tab can use the sym refs anyway by using methodSymbol's auto sym refs and pending push sym refs list; this only confuses analyses into thinking these autos cannot be used when they actually can be
 
@@ -1317,14 +1317,14 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
 
          if (comp->getOutFile() != NULL && comp->getOption(TR_TraceBC))
             {
-            traceMsg(self()->comp(), "genIL() returned %d\n", genIL_rc);
+            traceMsg(comp(), "genIL() returned %d\n", genIL_rc);
             }
 
          if (_methodFlags.testAny(IlGenSuccess))
             {
             if (!comp->isPeekingMethod())
                {
-               if (self()->catchBlocksHaveRealPredecessors(comp->getFlowGraph(), comp))
+               if (catchBlocksHaveRealPredecessors(comp->getFlowGraph(), comp))
                   {
                   comp->failCompilation<TR::CompilationException>("Catch blocks have real predecessors");
                   }
@@ -1339,20 +1339,20 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
                && !comp->isPeekingMethod()
                && !(comp->getOption(TR_DisableNextGenHCR) && comp->getOption(TR_EnableHCR))
                && comp->supportsInduceOSR()
-               && !self()->cannotAttemptOSRDuring(siteIndex, comp);
+               && !cannotAttemptOSRDuring(siteIndex, comp);
 
             optimizer = TR::Optimizer::createOptimizer(comp, self(), true);
             previousOptimizer = comp->getOptimizer();
             comp->setOptimizer(optimizer);
 
-            self()->detectInternalCycles(comp->getFlowGraph(), comp);
+            detectInternalCycles(comp->getFlowGraph(), comp);
 
             if (doOSR)
                {
                TR_OSRCompilationData *osrCompData = comp->getOSRCompilationData();
                TR_ASSERT(osrCompData != NULL, "OSR compilation data is NULL\n");
 
-               self()->genAndAttachOSRCodeBlocks(siteIndex);
+               genAndAttachOSRCodeBlocks(siteIndex);
 
                // Check for the OSR blocks directly, since they're specific
                // to the current inlined call site, unlike getOSRPoints().
@@ -1361,13 +1361,13 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
 
                if (osrMethodData->getOSRCodeBlock() != NULL)
                   {
-                  self()->genOSRHelperCall(siteIndex, symRefTab);
+                  genOSRHelperCall(siteIndex, symRefTab);
                   if (comp->getOption(TR_TraceOSR))
                      comp->dumpMethodTrees("Trees after OSR in genIL", self());
                   }
 
                if (!comp->isOutermostMethod())
-                  self()->cleanupUnreachableOSRBlocks(siteIndex, comp);
+                  cleanupUnreachableOSRBlocks(siteIndex, comp);
                }
 
             if (optimizer)
@@ -1385,7 +1385,7 @@ OMR::ResolvedMethodSymbol::genIL(TR_FrontEnd * fe, TR::Compilation * comp, TR::S
       }
    catch (const TR::RecoverableILGenException &e)
       {
-      if (self()->comp()->isOutermostMethod())
+      if (comp()->isOutermostMethod())
          throw;
       _methodFlags.set(IlGenSuccess, false);
       if (optimizer) //if the exception is from ilgen opts we need to restore previous optimizer
@@ -1498,7 +1498,7 @@ OMR::ResolvedMethodSymbol::getNumberOfBackEdges()
    {
    int32_t numBackEdges = 0;
    bool inColdBlock = false;
-   for (TR::TreeTop *tt = self()->getFirstTreeTop();
+   for (TR::TreeTop *tt = getFirstTreeTop();
         tt;
         tt = tt->getNextTreeTop())
       {
@@ -1520,12 +1520,12 @@ void
 OMR::ResolvedMethodSymbol::resetLiveLocalIndices()
    {
    TR::ParameterSymbol *p1;
-   ListIterator<TR::ParameterSymbol> parms(&self()->getParameterList());
+   ListIterator<TR::ParameterSymbol> parms(&getParameterList());
    for (p1 = parms.getFirst(); p1 != NULL; p1 = parms.getNext())
       p1->setLiveLocalIndexUninitialized();
 
    TR::AutomaticSymbol *p2;
-   ListIterator<TR::AutomaticSymbol> locals(&self()->getAutomaticList());
+   ListIterator<TR::AutomaticSymbol> locals(&getAutomaticList());
    for (p2 = locals.getFirst(); p2 != NULL; p2 = locals.getNext())
       p2->setLiveLocalIndexUninitialized();
    }
@@ -1540,11 +1540,11 @@ OMR::ResolvedMethodSymbol::supportsInduceOSR(TR_ByteCodeInfo &bci,
       return false;
 
    // Check it is possible to transition within this call site
-   if (self()->cannotAttemptOSRDuring(bci.getCallerIndex(), comp, runCleanup))
+   if (cannotAttemptOSRDuring(bci.getCallerIndex(), comp, runCleanup))
       return false;
 
    // Check it is possible to transition at this BCI
-   if (self()->cannotAttemptOSRAt(bci, blockToOSRAt, comp))
+   if (cannotAttemptOSRAt(bci, blockToOSRAt, comp))
       return false;
 
    return true;
@@ -1621,7 +1621,7 @@ OMR::ResolvedMethodSymbol::cannotAttemptOSRDuring(int32_t callSite, TR::Compilat
                traceMsg(comp, "Cannot attempt OSR as OSR code block for site index %d is absent\n",
                   osrMethodData->getInlinedSiteIndex());
             if (runCleanup)
-               self()->cleanupUnreachableOSRBlocks(origCallSite, comp);
+               cleanupUnreachableOSRBlocks(origCallSite, comp);
             cannotAttemptOSR = true;
             break;
             }
@@ -1678,7 +1678,7 @@ OMR::ResolvedMethodSymbol::cannotAttemptOSRAt(TR_ByteCodeInfo &bci,
          callSite, byteCodeIndex);
 
    // Check it is possible to transition at this index
-   if (self()->_cannotAttemptOSR->get(byteCodeIndex))
+   if (_cannotAttemptOSR->get(byteCodeIndex))
       {
       if (comp->getOption(TR_TraceOSR))
          traceMsg(comp, "Cannot attempt OSR at bytecode index %d:%d\n",
@@ -1763,7 +1763,7 @@ OMR::ResolvedMethodSymbol::cleanupUnreachableOSRBlocks(int32_t inlinedSiteIndex,
 
             while (!CallerOSRCatchBlock->getExceptionPredecessors().empty())
                {
-               self()->getFlowGraph()->removeEdge(CallerOSRCatchBlock->getExceptionPredecessors().front());
+               getFlowGraph()->removeEdge(CallerOSRCatchBlock->getExceptionPredecessors().front());
                }
             }
          else
@@ -1851,7 +1851,7 @@ OMR::ResolvedMethodSymbol::isOSRRelatedNode(TR::Node *node, TR_ByteCodeInfo &osr
    TR_ByteCodeInfo &bci = node->getByteCodeInfo();
    bool byteCodeIndex = osrBCI.getCallerIndex() == bci.getCallerIndex()
       && osrBCI.getByteCodeIndex() == bci.getByteCodeIndex();
-   return byteCodeIndex && self()->isOSRRelatedNode(node);
+   return byteCodeIndex && isOSRRelatedNode(node);
    }
 
 /*
@@ -1861,11 +1861,11 @@ OMR::ResolvedMethodSymbol::isOSRRelatedNode(TR::Node *node, TR_ByteCodeInfo &osr
 TR::TreeTop *
 OMR::ResolvedMethodSymbol::getOSRTransitionTreeTop(TR::TreeTop *tt)
    {
-   if (self()->comp()->isOSRTransitionTarget(TR::postExecutionOSR))
+   if (comp()->isOSRTransitionTarget(TR::postExecutionOSR))
       {
-      TR_ByteCodeInfo bci = self()->getOSRByteCodeInfo(tt->getNode());
+      TR_ByteCodeInfo bci = getOSRByteCodeInfo(tt->getNode());
       TR::TreeTop *cursor = tt->getNextTreeTop();
-      while (cursor && self()->isOSRRelatedNode(cursor->getNode(), bci))
+      while (cursor && isOSRRelatedNode(cursor->getNode(), bci))
          {
          tt = cursor;
          cursor = cursor->getNextTreeTop();
@@ -1990,7 +1990,7 @@ OMR::ResolvedMethodSymbol::insertStoresForDeadStackSlotsBeforeInducingOSR(TR::Co
       return;
       }
 
-   self()->insertStoresForDeadStackSlots(comp, byteCodeInfo, induceOSRTree);
+   insertStoresForDeadStackSlots(comp, byteCodeInfo, induceOSRTree);
    }
 
 TR_OSRPoint *
@@ -2013,11 +2013,11 @@ OMR::ResolvedMethodSymbol::addAutomatic(TR::AutomaticSymbol *p)
    {
    if (!_automaticList.find(p))
       {
-      bool compiledMethod = self()->comp()->getJittedMethodSymbol() == self();
+      bool compiledMethod = comp()->getJittedMethodSymbol() == self();
 
-      TR::CodeGenerator *cg = self()->comp()->cg();
+      TR::CodeGenerator *cg = comp()->cg();
       if (cg->getMappingAutomatics() && compiledMethod)
-         cg->getLinkage()->mapSingleAutomatic(p, self()->getLocalMappingCursor());
+         cg->getLinkage()->mapSingleAutomatic(p, getLocalMappingCursor());
 
       _automaticList.add(p);
       }
@@ -2053,7 +2053,7 @@ OMR::ResolvedMethodSymbol::setTempIndex(int32_t index, TR_FrontEnd * fe)
    {
    if ((_tempIndex = index) < 0)
       {
-      self()->comp()->failCompilation<TR::CompilationException>("TR::ResolvedMethodSymbol::_tempIndex overflow");
+      comp()->failCompilation<TR::CompilationException>("TR::ResolvedMethodSymbol::_tempIndex overflow");
       }
    return index;
    }
@@ -2061,16 +2061,16 @@ OMR::ResolvedMethodSymbol::setTempIndex(int32_t index, TR_FrontEnd * fe)
 ncount_t
 OMR::ResolvedMethodSymbol::generateAccurateNodeCount()
    {
-   TR::TreeTop *tt = self()->getFirstTreeTop();
+   TR::TreeTop *tt = getFirstTreeTop();
 
-   self()->comp()->incOrResetVisitCount();
+   comp()->incOrResetVisitCount();
 
    ncount_t count=0;
 
    for (; tt; tt = tt->getNextTreeTop())
       {
       TR::Node *node = tt->getNode();
-      count += self()->recursivelyCountChildren(node);
+      count += recursivelyCountChildren(node);
       }
    return count;
    }
@@ -2080,15 +2080,15 @@ OMR::ResolvedMethodSymbol::recursivelyCountChildren(TR::Node *node)
    {
    ncount_t count=1;
 
-   if( node->getVisitCount() >= self()->comp()->getVisitCount() )
+   if( node->getVisitCount() >= comp()->getVisitCount() )
       return 0;
 
-   node->setVisitCount(self()->comp()->getVisitCount());
+   node->setVisitCount(comp()->getVisitCount());
 
    for(int32_t i=0 ; i < node->getNumChildren(); i++)
       {
       if( node->getChild(i) )
-         count += self()->recursivelyCountChildren(node->getChild(i));
+         count += recursivelyCountChildren(node->getChild(i));
       }
 
    return count;
@@ -2097,10 +2097,10 @@ OMR::ResolvedMethodSymbol::recursivelyCountChildren(TR::Node *node)
 List<TR::SymbolReference> &
 OMR::ResolvedMethodSymbol::getAutoSymRefs(int32_t slot)
    {
-   TR_Memory * m = self()->comp()->trMemory();
+   TR_Memory * m = comp()->trMemory();
    if (!_autoSymRefs)
       {
-      if (self()->comp()->getJittedMethodSymbol() == self())
+      if (comp()->getJittedMethodSymbol() == self())
          _autoSymRefs = new (m->trHeapMemory()) TR_Array<List<TR::SymbolReference> >(m, 100, true);
       else
          _autoSymRefs = new (m->trHeapMemory()) TR_Array<List<TR::SymbolReference> >(m, _resolvedMethod->numberOfParameterSlots() + _resolvedMethod->numberOfTemps() + 5, true);
@@ -2122,14 +2122,14 @@ void
 OMR::ResolvedMethodSymbol::setParmSymRef(int32_t slot, TR::SymbolReference *symRef)
    {
    if (!_parmSymRefs)
-      _parmSymRefs = new (self()->comp()->trHeapMemory()) TR_Array<TR::SymbolReference*>(self()->comp()->trMemory(), self()->getNumParameterSlots());
+      _parmSymRefs = new (comp()->trHeapMemory()) TR_Array<TR::SymbolReference*>(comp()->trMemory(), getNumParameterSlots());
    (*_parmSymRefs)[slot] = symRef;
    }
 
 List<TR::SymbolReference> &
 OMR::ResolvedMethodSymbol::getPendingPushSymRefs(int32_t slot)
    {
-   TR_Memory * m = self()->comp()->trMemory();
+   TR_Memory * m = comp()->trMemory();
    if (!_pendingPushSymRefs)
       {
       _pendingPushSymRefs = new (m->trHeapMemory()) TR_Array<List<TR::SymbolReference> >(m, 10, true);
@@ -2147,8 +2147,8 @@ OMR::ResolvedMethodSymbol::removeTree(TR::TreeTop *tt)
    if (node != NULL)
       {
       node->recursivelyDecReferenceCount();
-      if (self()->comp()->getOption(TR_TraceAddAndRemoveEdge))
-         traceMsg(self()->comp(), "remove [%s]\n", node->getName(self()->comp()->getDebug()));
+      if (comp()->getOption(TR_TraceAddAndRemoveEdge))
+         traceMsg(comp(), "remove [%s]\n", node->getName(comp()->getDebug()));
       }
 
    TR::TreeTop *prev = tt->getPrevTreeTop();
@@ -2178,11 +2178,11 @@ OMR::ResolvedMethodSymbol::getLastTreeTop(TR::Block * b)
 TR::Block *
 OMR::ResolvedMethodSymbol::prependEmptyFirstBlock()
    {
-   TR::Node * firstNode = self()->getFirstTreeTop()->getNode();
+   TR::Node * firstNode = getFirstTreeTop()->getNode();
    TR::Block * firstBlock = firstNode->getBlock();
 
    TR::Block * newBlock = TR::Block::createEmptyBlock(firstNode, _flowGraph->comp(), firstBlock->getFrequency());
-   self()->setFirstTreeTop(newBlock->getEntry());
+   setFirstTreeTop(newBlock->getEntry());
 
    _flowGraph->insertBefore(newBlock, firstBlock);
    _flowGraph->addEdge(_flowGraph->getStart(), newBlock);
@@ -2252,7 +2252,7 @@ OMR::ResolvedMethodSymbol::detectInternalCycles(TR::CFG *cfg, TR::Compilation *c
                         {
                         TR::TreeTop *next = retain->getNextTreeTop();
                         if (next && next->getNode()->getOpCodeValue() == TR::asynccheck)
-                           retain = self()->getOSRTransitionTreeTop(next);
+                           retain = getOSRTransitionTreeTop(next);
                         }
 
                      retain->join(clonedCatch->getExit());
@@ -2347,9 +2347,9 @@ OMR::ResolvedMethodSymbol::removeUnusedLocals()
    uint32_t removedSize = 0;
 #endif
 
-   bool compiledMethod = (self()->comp()->getMethodSymbol() == self());
+   bool compiledMethod = (comp()->getMethodSymbol() == self());
 
-   TR_BitVector *liveButMaybeUnreferencedLocals = self()->comp()->cg()->getLiveButMaybeUnreferencedLocals();
+   TR_BitVector *liveButMaybeUnreferencedLocals = comp()->cg()->getLiveButMaybeUnreferencedLocals();
 
    while (cursor)
       {
@@ -2394,7 +2394,7 @@ OMR::ResolvedMethodSymbol::removeUnusedLocals()
                   afterTotalSize,
                   removedSize,
                   removedTotalSize,
-                  self()->comp()->signature());
+                  comp()->signature());
       }
 #endif
    }
@@ -2402,13 +2402,13 @@ OMR::ResolvedMethodSymbol::removeUnusedLocals()
 int32_t
 OMR::ResolvedMethodSymbol::incTempIndex(TR_FrontEnd * fe)
    {
-   return self()->setTempIndex(_tempIndex+1, fe);
+   return setTempIndex(_tempIndex+1, fe);
    }
 
 bool
 OMR::ResolvedMethodSymbol::hasEscapeAnalysisOpportunities()
    {
-   return self()->hasNews() || self()->hasDememoizationOpportunities();
+   return hasNews() || hasDememoizationOpportunities();
    }
 
 bool
@@ -2421,7 +2421,7 @@ int32_t
 OMR::ResolvedMethodSymbol::getArrayCopyTempSlot(TR_FrontEnd * fe)
    {
    if (_arrayCopyTempSlot == -1)
-      _arrayCopyTempSlot = self()->incTempIndex(fe);
+      _arrayCopyTempSlot = incTempIndex(fe);
    return _arrayCopyTempSlot;
    }
 
@@ -2430,91 +2430,91 @@ OMR::ResolvedMethodSymbol::getArrayCopyTempSlot(TR_FrontEnd * fe)
 uint32_t&
 OMR::ResolvedMethodSymbol::getLocalMappingCursor()
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return _localMappingCursor;
    }
 void
 OMR::ResolvedMethodSymbol::setLocalMappingCursor(uint32_t i)
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    _localMappingCursor = i;
    }
 
 uint32_t
 OMR::ResolvedMethodSymbol::getProloguePushSlots()
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return _prologuePushSlots;
    }
 uint32_t
 OMR::ResolvedMethodSymbol::setProloguePushSlots(uint32_t s)
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return (_prologuePushSlots = s);
    }
 
 uint32_t
 OMR::ResolvedMethodSymbol::getScalarTempSlots()
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return _scalarTempSlots;
    }
 uint32_t
 OMR::ResolvedMethodSymbol::setScalarTempSlots(uint32_t s)
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return (_scalarTempSlots = s);
    }
 
 uint32_t
 OMR::ResolvedMethodSymbol::getObjectTempSlots()
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return _objectTempSlots;
    }
 uint32_t
 OMR::ResolvedMethodSymbol::setObjectTempSlots(uint32_t s)
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return (_objectTempSlots = s);
    }
 
 bool
 OMR::ResolvedMethodSymbol::containsOnlySinglePrecision()
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return _methodFlags.testAny(OnlySinglePrecision);
    }
 void
 OMR::ResolvedMethodSymbol::setContainsOnlySinglePrecision(bool b)
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    _methodFlags.set(OnlySinglePrecision, b);
    }
 
 bool
 OMR::ResolvedMethodSymbol::usesSinglePrecisionMode()
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return _methodFlags.testAny(SinglePrecisionMode);
    }
 void
 OMR::ResolvedMethodSymbol::setUsesSinglePrecisionMode(bool b)
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    _methodFlags.set(SinglePrecisionMode, b);
    }
 
 bool
 OMR::ResolvedMethodSymbol::isNoTemps()
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    return _methodFlags.testAny(NoTempsSet);
    }
 void
 OMR::ResolvedMethodSymbol::setNoTemps(bool b)
    {
-   TR_ASSERT(self()->isJittedMethod(), "Should have been created as a jitted method.");
+   TR_ASSERT(isJittedMethod(), "Should have been created as a jitted method.");
    _methodFlags.set(NoTempsSet, b);
    }
 

@@ -73,7 +73,7 @@ TR::StaticSymbol * OMR::StaticSymbol::createNamed(AllocatorType m, TR::DataType 
 const char *
 OMR::StaticSymbol::getName()
    {
-   TR_ASSERT(self()->isNamed(),"Must have called makeNamed() to get a valid name");
+   TR_ASSERT(isNamed(),"Must have called makeNamed() to get a valid name");
    return _name;
    }
 

@@ -55,7 +55,7 @@ OMR::RegisterMappedSymbol::RegisterMappedSymbol(int32_t o) :
    _mappedOffset(o),
    _GCMapIndex(-1)
    {
-   self()->setLiveLocalIndexUninitialized();
+   setLiveLocalIndexUninitialized();
    }
 
 OMR::RegisterMappedSymbol::RegisterMappedSymbol(TR::DataType d) :
@@ -63,7 +63,7 @@ OMR::RegisterMappedSymbol::RegisterMappedSymbol(TR::DataType d) :
    _mappedOffset(0),
    _GCMapIndex(-1)
    {
-   self()->setLiveLocalIndexUninitialized();
+   setLiveLocalIndexUninitialized();
    }
 
 OMR::RegisterMappedSymbol::RegisterMappedSymbol(TR::DataType d, uint32_t s) :
@@ -71,7 +71,7 @@ OMR::RegisterMappedSymbol::RegisterMappedSymbol(TR::DataType d, uint32_t s) :
    _mappedOffset(0),
    _GCMapIndex(-1)
    {
-   self()->setLiveLocalIndexUninitialized();
+   setLiveLocalIndexUninitialized();
    }
 
 TR::RegisterMappedSymbol *
@@ -84,7 +84,7 @@ void
 OMR::RegisterMappedSymbol::setLiveLocalIndex(uint16_t i, TR_FrontEnd * fe)
    {
    _liveLocalIndex = i;
-   if (self()->isLiveLocalIndexUninitialized())
+   if (isLiveLocalIndexUninitialized())
       {
       TR_ASSERT(0, "OMR::RegisterMappedSymbol::_liveLocalIndex == USHRT_MAX");
       TR::comp()->failCompilation<TR::CompilationException>("OMR::RegisterMappedSymbol::_liveLocalIndex == USHRT_MAX");
@@ -106,14 +106,14 @@ OMR::RegisterMappedSymbol::setLiveLocalIndexUninitialized()
 TR_MethodMetaDataType
 OMR::RegisterMappedSymbol::getMethodMetaDataType()
    {
-   TR_ASSERT(self()->isMethodMetaData(), "should be method metadata!");
+   TR_ASSERT(isMethodMetaData(), "should be method metadata!");
    return _type;
    }
 
 void
 OMR::RegisterMappedSymbol::setMethodMetaDataType(TR_MethodMetaDataType type)
    {
-   TR_ASSERT(self()->isMethodMetaData(), "should be method metadata!");
+   TR_ASSERT(isMethodMetaData(), "should be method metadata!");
    _type = type;
 }
 

@@ -48,7 +48,7 @@ OMR::ParameterSymbol::ParameterSymbol(TR::DataType d, int32_t slot) :
    {
    _flags.setValue(KindMask, IsParameter);
    _addressSize = TR::ParameterSymbol::convertTypeToSize(TR::Address);
-   self()->setOffset(slot * TR::ParameterSymbol::convertTypeToSize(TR::Address));
+   setOffset(slot * TR::ParameterSymbol::convertTypeToSize(TR::Address));
    }
 
 OMR::ParameterSymbol::ParameterSymbol(TR::DataType d, int32_t slot, size_t size) :
@@ -62,19 +62,19 @@ OMR::ParameterSymbol::ParameterSymbol(TR::DataType d, int32_t slot, size_t size)
    {
    _flags.setValue(KindMask, IsParameter);
    _addressSize = TR::ParameterSymbol::convertTypeToSize(TR::Address);
-   self()->setOffset(slot * TR::ParameterSymbol::convertTypeToSize(TR::Address));
+   setOffset(slot * TR::ParameterSymbol::convertTypeToSize(TR::Address));
    }
 
 void
 OMR::ParameterSymbol::setParameterOffset(int32_t o)
    {
-   self()->setOffset(o);
+   setOffset(o);
    }
 
 int32_t
 OMR::ParameterSymbol::getSlot()
    {
-   return self()->getParameterOffset() / (uint32_t)_addressSize; // cast _addressSize explicity
+   return getParameterOffset() / (uint32_t)_addressSize; // cast _addressSize explicity
    }
 
 template <typename AllocatorType>

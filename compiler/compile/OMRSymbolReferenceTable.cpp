@@ -946,7 +946,7 @@ OMR::SymbolReferenceTable::methodSymRefFromName(TR::ResolvedMethodSymbol * ownin
       {
       // fullSignature will be kept as a key by _methodsBySignature, so it needs heapAlloc
       //
-      key = OwningMethodAndString(owningMethodSymbol->getResolvedMethodIndex(), self()->strdup(fullSignature));
+      key = OwningMethodAndString(owningMethodSymbol->getResolvedMethodIndex(), strdup(fullSignature));
       if (comp()->getOption(TR_TraceMethodIndex))
          traceMsg(comp(), "-- MBS cache miss (1) owning method #%d, signature %s\n", owningMethodSymbol->getResolvedMethodIndex().value(), fullSignature);
       }
@@ -1054,7 +1054,7 @@ TR::SymbolReference *
 OMR::SymbolReferenceTable::findOrCreateAsyncCheckSymbolRef(TR::ResolvedMethodSymbol *)
    {
 #ifdef RUBY_PROJECT_SPECIFIC
-   return self()->findOrCreateRubyHelperSymbolRef(RubyHelper_rb_threadptr_execute_interrupts,
+   return findOrCreateRubyHelperSymbolRef(RubyHelper_rb_threadptr_execute_interrupts,
                                           true,    /*canGCandReturn*/
                                           true,    /*canGCandExcept*/
                                           false);  /*preservesAllRegisters*/
@@ -1908,14 +1908,14 @@ void OMR::SymbolReferenceTable::makeSharedAliases(TR::SymbolReference *sr1, TR::
 
     if (aliases1 == NULL)
        {
-       aliases1 = new (comp()->trHeapMemory()) TR_BitVector(self()->getNumSymRefs(), comp()->trMemory(), heapAlloc);
+       aliases1 = new (comp()->trHeapMemory()) TR_BitVector(getNumSymRefs(), comp()->trMemory(), heapAlloc);
        aliases1->empty();
        _sharedAliasMap->insert(std::make_pair(symRefNum1, aliases1));
        }
 
     if (aliases2 == NULL)
        {
-       aliases2 = new (comp()->trHeapMemory()) TR_BitVector(self()->getNumSymRefs(), comp()->trMemory(), heapAlloc);
+       aliases2 = new (comp()->trHeapMemory()) TR_BitVector(getNumSymRefs(), comp()->trMemory(), heapAlloc);
        aliases2->empty();
        _sharedAliasMap->insert(std::make_pair(symRefNum2, aliases2));
        }

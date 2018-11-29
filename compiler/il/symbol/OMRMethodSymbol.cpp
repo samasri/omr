@@ -38,7 +38,7 @@ OMR::MethodSymbol::MethodSymbol(TR_LinkageConventions lc, TR_Method * m) :
 bool
 OMR::MethodSymbol::firstArgumentIsReceiver()
    {
-   if (self()->isSpecial() || self()->isVirtual() || self()->isInterface() || self()->isComputedVirtual())
+   if (isSpecial() || isVirtual() || isInterface() || isComputedVirtual())
       return true;
 
    return false;
@@ -54,7 +54,7 @@ OMR::MethodSymbol::self()
 bool
 OMR::MethodSymbol::isComputed()
    {
-   return self()->isComputedStatic() || self()->isComputedVirtual();
+   return isComputedStatic() || isComputedVirtual();
    }
 
 /**

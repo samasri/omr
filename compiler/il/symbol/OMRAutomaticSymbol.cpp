@@ -40,25 +40,25 @@ namespace TR { class SymbolReference; }
 OMR::AutomaticSymbol::AutomaticSymbol() :
    TR::RegisterMappedSymbol()
    {
-   self()->init();
+   init();
    }
 
 OMR::AutomaticSymbol::AutomaticSymbol(TR::DataType d) :
    TR::RegisterMappedSymbol(d)
    {
-   self()->init();
+   init();
    }
 
 OMR::AutomaticSymbol::AutomaticSymbol(TR::DataType d, uint32_t s) :
    TR::RegisterMappedSymbol(d, s)
    {
-   self()->init();
+   init();
    }
 
 OMR::AutomaticSymbol::AutomaticSymbol(TR::DataType d, uint32_t s, const char *name) :
    TR::RegisterMappedSymbol(d, s)
    {
-   self()->init(); _name = name;
+   init(); _name = name;
    }
 
 TR::AutomaticSymbol *
@@ -70,16 +70,16 @@ OMR::AutomaticSymbol::self()
 rcount_t
 OMR::AutomaticSymbol::setReferenceCount(rcount_t i)
    {
-   if (self()->isVariableSizeSymbol() && i > 0)
-      self()->castToVariableSizeSymbol()->setIsReferenced();
+   if (isVariableSizeSymbol() && i > 0)
+      castToVariableSizeSymbol()->setIsReferenced();
    return (_referenceCount = i);
    }
 
 rcount_t
 OMR::AutomaticSymbol::incReferenceCount()
    {
-   if (self()->isVariableSizeSymbol())
-      self()->castToVariableSizeSymbol()->setIsReferenced();
+   if (isVariableSizeSymbol())
+      castToVariableSizeSymbol()->setIsReferenced();
    return ++_referenceCount;
    }
 
@@ -94,112 +94,112 @@ OMR::AutomaticSymbol::init()
 TR::ILOpCodes
 OMR::AutomaticSymbol::getOpCodeKind()
   {
-  TR_ASSERT(self()->isLocalObject(), "Should be local object");
+  TR_ASSERT(isLocalObject(), "Should be local object");
   return _kind;
   }
 
 TR::SymbolReference *
 OMR::AutomaticSymbol::getClassSymbolReference()
    {
-   TR_ASSERT(self()->isLocalObject(), "Should be tagged as local object");
+   TR_ASSERT(isLocalObject(), "Should be tagged as local object");
    return _kind != TR::newarray ? _classSymRef : 0;
    }
 
 TR::SymbolReference *
 OMR::AutomaticSymbol::setClassSymbolReference(TR::SymbolReference *s)
    {
-   TR_ASSERT(self()->isLocalObject(), "Should be tagged as local object");
+   TR_ASSERT(isLocalObject(), "Should be tagged as local object");
    return (_classSymRef = s);
    }
 
 int32_t
 OMR::AutomaticSymbol::getArrayType()
    {
-   TR_ASSERT(self()->isLocalObject(), "Should be tagged as local object");
+   TR_ASSERT(isLocalObject(), "Should be tagged as local object");
    return _kind == TR::newarray ? _arrayType : 0;
    }
 
 TR::AutomaticSymbol *
 OMR::AutomaticSymbol::getPinningArrayPointer()
    {
-   TR_ASSERT(self()->isInternalPointer(), "Should be internal pointer");
+   TR_ASSERT(isInternalPointer(), "Should be internal pointer");
    return _pinningArrayPointer;
    }
 
 TR::AutomaticSymbol *
 OMR::AutomaticSymbol::setPinningArrayPointer(TR::AutomaticSymbol *s)
    {
-   TR_ASSERT(self()->isInternalPointer(), "Should be internal pointer");
+   TR_ASSERT(isInternalPointer(), "Should be internal pointer");
    return (_pinningArrayPointer = s);
    }
 
 uint32_t
 OMR::AutomaticSymbol::getActiveSize()
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    return _activeSize;
    }
 
 uint32_t
 OMR::AutomaticSymbol::setActiveSize(uint32_t s)
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    return (_activeSize = s);
    }
 
 bool
 OMR::AutomaticSymbol::isReferenced()
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    return _variableSizeSymbolFlags.testAny(IsReferenced);
    }
 
 void
 OMR::AutomaticSymbol::setIsReferenced(bool b)
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    _variableSizeSymbolFlags.set(IsReferenced, b);
    }
 
 bool
 OMR::AutomaticSymbol::isAddressTaken()
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    return _variableSizeSymbolFlags.testAny(IsAddressTaken);
    }
 
 void
 OMR::AutomaticSymbol::setIsAddressTaken(bool b)
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    _variableSizeSymbolFlags.set(IsAddressTaken, b);
    }
 
 bool
 OMR::AutomaticSymbol::isSingleUse()
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    return _variableSizeSymbolFlags.testAny(IsSingleUse);
    }
 
 void
 OMR::AutomaticSymbol::setIsSingleUse(bool b)
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    _variableSizeSymbolFlags.set(IsSingleUse, b);
    }
 
 TR::Node *
 OMR::AutomaticSymbol::getNodeToFreeAfter()
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    return _nodeToFreeAfter;
    }
 
 TR::Node *
 OMR::AutomaticSymbol::setNodeToFreeAfter(TR::Node *n)
    {
-   TR_ASSERT(self()->isVariableSizeSymbol(), "Should be variable sized symbol");
+   TR_ASSERT(isVariableSizeSymbol(), "Should be variable sized symbol");
    return _nodeToFreeAfter = n;
    }
 
