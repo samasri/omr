@@ -2510,7 +2510,7 @@ OMR::Z::CodeGenerator::prepareRegistersForAssignment()
          }
       }
 
-   TR::Machine* machine = machine();
+   TR::Machine* thisMachine = machine();
 
    // Lock vector registers. This is done for testing purposes and to artificially increase register pressure
    // We go from the end since in most cases, we want to test functionality of the first half i.e 0-15 for overlap with FPR etc
@@ -2518,7 +2518,7 @@ OMR::Z::CodeGenerator::prepareRegistersForAssignment()
        {
        for (int32_t i = TR::RealRegister::LastAssignableVRF; i > (TR::RealRegister::LastAssignableVRF - TR::Options::_numVecRegsToLock); --i)
           {
-          machine->realRegister(static_cast<TR::RealRegister::RegNum>(i))->setState(TR::RealRegister::Locked);
+          thisMachine->realRegister(static_cast<TR::RealRegister::RegNum>(i))->setState(TR::RealRegister::Locked);
           }
        }
 
@@ -2530,36 +2530,36 @@ OMR::Z::CodeGenerator::prepareRegistersForAssignment()
    // count up how many registers are locked for each type
    for (int32_t i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastGPR; ++i)
       {
-      TR::RealRegister* realReg = machine->getS390RealRegister((TR::RealRegister::RegNum)i);
+      TR::RealRegister* realReg = thisMachine->getS390RealRegister((TR::RealRegister::RegNum)i);
       if (realReg->getState() == TR::RealRegister::Locked)
          ++lockedGPRs;
       }
 
    for (int32_t i = TR::RealRegister::FirstHPR; i <= TR::RealRegister::LastHPR; ++i)
       {
-      TR::RealRegister* realReg = machine->getS390RealRegister((TR::RealRegister::RegNum)i);
+      TR::RealRegister* realReg = thisMachine->getS390RealRegister((TR::RealRegister::RegNum)i);
       if (realReg->getState() == TR::RealRegister::Locked)
          ++lockedHPRs;
       }
 
    for (int32_t i = TR::RealRegister::FirstFPR; i <= TR::RealRegister::LastFPR; ++i)
       {
-      TR::RealRegister* realReg = machine->getS390RealRegister((TR::RealRegister::RegNum)i);
+      TR::RealRegister* realReg = thisMachine->getS390RealRegister((TR::RealRegister::RegNum)i);
       if (realReg->getState() == TR::RealRegister::Locked)
          ++lockedFPRs;
       }
 
    for (int32_t i = TR::RealRegister::FirstVRF; i <= TR::RealRegister::LastVRF; ++i)
       {
-      TR::RealRegister* realReg = machine->getS390RealRegister((TR::RealRegister::RegNum)i);
+      TR::RealRegister* realReg = thisMachine->getS390RealRegister((TR::RealRegister::RegNum)i);
       if (realReg->getState() == TR::RealRegister::Locked)
          ++lockedVRFs;
       }
 
-   machine->setNumberOfLockedRegisters(TR_GPR, lockedGPRs);
-   machine->setNumberOfLockedRegisters(TR_HPR, lockedHPRs);
-   machine->setNumberOfLockedRegisters(TR_FPR, lockedFPRs);
-   machine->setNumberOfLockedRegisters(TR_VRF, lockedVRFs);
+   thisMachine->setNumberOfLockedRegisters(TR_GPR, lockedGPRs);
+   thisMachine->setNumberOfLockedRegisters(TR_HPR, lockedHPRs);
+   thisMachine->setNumberOfLockedRegisters(TR_FPR, lockedFPRs);
+   thisMachine->setNumberOfLockedRegisters(TR_VRF, lockedVRFs);
 
    return kindsMask;
    }
