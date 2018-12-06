@@ -210,3 +210,4 @@
 # Problematic functions
 * createLinkage(enum TR_LinkageConventions)
 * createLinkageForCompilation()
+The problem description and our suggested solution for it can be found in [this issue](https://github.com/eclipse/omr/issues/3235).
