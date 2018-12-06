@@ -211,3 +211,9 @@
 * createLinkage(enum TR_LinkageConventions)
 * createLinkageForCompilation()
 The problem description and our suggested solution for it can be found in [this issue](https://github.com/eclipse/omr/issues/3235).
+
+# Removing `self()` from member function calls
+Removing all occurences of `self()` caused the following cases to happen:
+* The following sentence appeared: `TR::Compilation* comp = comp()`. This is not allowed in C++. Hence, the `comp` local variable was renamed to `compilation`.
+* Similarly, the following sentence appeared `TR::Machine* machine = machine();`. Hence, `machine` local variable was renamed to `thisMachine`.
+* `OMR::Z::CodeGenerator::insertInstructionPrefetches()` is being called in `OMR::CodeGenerator::doInstructionSelection()` (guarded by `#ifdef` directives). When removing the `self()`, the function had to be added with an empty implementation in `OMR::CodeGenerator` for the code to compilate successfully.
